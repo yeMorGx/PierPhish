@@ -662,14 +662,6 @@ export default function Home() {
               {isSupabaseConfigured ? "Dados conectados" : "Modo demonstração"}
             </span>
             <button
-              className="grid size-[38px] place-items-center rounded-[var(--radius-control)] border border-[var(--line)] bg-[var(--surface)] text-[#6f7883] transition hover:border-[#cbd0d5] hover:text-[#18202b]"
-              aria-label="Atualizar todas as campanhas"
-              onClick={syncAllCampaigns}
-              disabled={syncing}
-            >
-              <Icon name="refresh" size={18} />
-            </button>
-            <button
               className="inline-flex min-h-[38px] items-center gap-[9px] rounded-[12px] border-0 bg-[#18202b] px-[15px] text-[12px] font-bold text-white shadow-[0_5px_15px_rgba(24,32,43,0.14)] transition-colors hover:bg-[#2d3a49] max-[720px]:px-[11px]"
               onClick={syncAllCampaigns}
               disabled={syncing}
@@ -698,10 +690,7 @@ export default function Home() {
               <div className="grid h-full min-h-[266px] grid-cols-[minmax(0,1.2fr)_minmax(330px,0.8fr)] gap-8 max-[900px]:grid-cols-1">
                 <div className="flex min-w-0 flex-col justify-between">
                   <div>
-                    <div className="mb-4 flex items-center gap-2 text-[10px] font-extrabold tracking-[0.15em] text-[#647782] uppercase">
-                      <span className="size-1.5 rounded-full bg-[#9fc52d] shadow-[0_0_0_4px_rgba(159,197,45,0.13)]" />
-                      Portfólio BeePhish
-                    </div>
+
                     <h2 className="m-0 max-w-[700px] text-[clamp(31px,3.7vw,54px)] leading-[0.94] font-[660] tracking-[-0.07em]">
                       {campaignSummary.length || "Todas as"} campanhas.
                       <br />
