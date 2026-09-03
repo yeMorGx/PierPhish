@@ -186,7 +186,7 @@ export function DashboardShell({
             {headerAction}
           </div>
         </header>
-        <div className="min-h-0 flex-1 [scrollbar-width:thin] [scrollbar-color:#d9d9d9_transparent] [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto overscroll-contain [mask-image:linear-gradient(to_bottom,transparent_0,#000_var(--edge-fade),#000_calc(100%_-_var(--edge-fade)),transparent_100%)] py-[14px] pr-2 [--edge-fade:14px] max-[720px]:overflow-visible max-[720px]:[mask-image:none] max-[720px]:p-0">
+        <div className="min-h-0 flex-1 [scrollbar-width:thin] [scrollbar-color:#d9d9d9_transparent] [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto overscroll-contain py-[14px] pr-2 max-[720px]:overflow-visible max-[720px]:p-0">
           {children}
         </div>
       </section>
