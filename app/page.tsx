@@ -236,11 +236,10 @@ export default function Home() {
   return (
     <DashboardShell
       activeSection="overview"
-      selectedCampaignId={selectedCampaign?.id}
       title="Visão geral"
       headerAction={
         <button
-          className="inline-flex min-h-[38px] items-center gap-[9px] rounded-[12px] border-0 bg-[#18202b] px-[15px] text-[12px] font-bold text-white shadow-[0_5px_15px_rgba(24,32,43,0.14)] transition-colors hover:bg-[#2d3a49] max-[720px]:px-[11px]"
+          className="header-sync-button inline-flex min-h-[38px] items-center gap-[9px] rounded-[12px] border-0 px-[15px] text-[12px] font-bold shadow-[0_5px_15px_rgba(24,32,43,0.14)] transition-colors max-[720px]:px-[11px]"
           onClick={() => void syncAllCampaigns()}
           disabled={syncing}
           type="button"
