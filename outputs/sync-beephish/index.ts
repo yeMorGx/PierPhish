@@ -125,11 +125,10 @@ async function main(req: Request) {
     "SUPABASE_SERVICE_ROLE_KEY",
     "SUPABASE_SECRET_KEY",
   );
-  const beephishBaseUrl = Deno.env.get("BEEPHISH_BASE_URL")?.replace(/\/+$/, "");
+  const beephishBaseUrl = Deno.env
+    .get("BEEPHISH_BASE_URL")
+    ?.replace(/\/+$/, "");
   const beephishAuthorization = Deno.env.get("BEEPHISH_AUTHORIZATION");
-  const resultsRetentionDays = Number(
-    Deno.env.get("BEEPHISH_RESULTS_RETENTION_DAYS") ?? "180",
-  );
   const eventsRetentionDays = Number(
     Deno.env.get("BEEPHISH_EVENTS_RETENTION_DAYS") ?? "90",
   );
@@ -139,7 +138,10 @@ async function main(req: Request) {
   }
 
   if (!beephishBaseUrl || !beephishAuthorization) {
-    return jsonResponse({ error: "Secrets da Beephish não configurados." }, 500);
+    return jsonResponse(
+      { error: "Secrets da Beephish não configurados." },
+      500,
+    );
   }
 
   const authorization = req.headers.get("Authorization") ?? "";
@@ -156,9 +158,8 @@ async function main(req: Request) {
     return jsonResponse({ error: "Sessão inválida ou expirada." }, 401);
   }
 
-  const { data: isAdmin, error: adminError } = await userClient.rpc(
-    "is_internal_admin",
-  );
+  const { data: isAdmin, error: adminError } =
+    await userClient.rpc("is_internal_admin");
   if (adminError || isAdmin !== true) {
     return jsonResponse({ error: "Usuário não autorizado." }, 403);
   }
@@ -274,9 +275,10 @@ async function main(req: Request) {
         const event = isRecord(rawEvent) ? rawEvent : { value: rawEvent };
         const explicitId =
           event.id ?? event.event_id ?? event.eventId ?? event.key;
-        const eventId = explicitId === undefined
-          ? await hashEvent(event)
-          : String(explicitId);
+        const eventId =
+          explicitId === undefined
+            ? await hashEvent(event)
+            : String(explicitId);
 
         eventRows.push({
           campaign_id: campaignId,
@@ -308,31 +310,41 @@ async function main(req: Request) {
         eventCount = eventRows.length;
       }
     } catch (error) {
-      eventWarning = error instanceof Error
-        ? error.message
-        : "Não foi possível sincronizar eventos.";
+      eventWarning =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível sincronizar eventos.";
     }
 
-    return { campaignId, results: resultRows.length, events: eventCount, eventWarning };
+    return {
+      campaignId,
+      results: resultRows.length,
+      events: eventCount,
+      eventWarning,
+    };
   }
 
   const requestBody = await req.json().catch(() => ({}));
   const requestedId = requestBody?.campaignId;
-  const campaignId = requestedId === undefined || requestedId === null
-    ? null
-    : numberOrNull(requestedId);
+  const campaignId =
+    requestedId === undefined || requestedId === null
+      ? null
+      : numberOrNull(requestedId);
 
-  if (requestedId !== undefined && requestedId !== null && campaignId === null) {
+  if (
+    requestedId !== undefined &&
+    requestedId !== null &&
+    campaignId === null
+  ) {
     return jsonResponse({ error: "campaignId precisa ser numérico." }, 400);
   }
 
   const campaignsPayload = await beephishGet("/v1/phishing/campaigns");
   const campaigns = extractItems(campaignsPayload).filter(isRecord);
-  const selectedCampaigns = campaignId === null
-    ? campaigns.filter((campaign) =>
-      !isOlderThan(campaign.completed_date, resultsRetentionDays)
-    )
-    : campaigns.filter((campaign) => Number(campaign.id) === campaignId);
+  const selectedCampaigns =
+    campaignId === null
+      ? campaigns
+      : campaigns.filter((campaign) => Number(campaign.id) === campaignId);
 
   if (selectedCampaigns.length === 0) {
     return jsonResponse({ error: "Campanha não encontrada na Beephish." }, 404);
@@ -351,9 +363,7 @@ async function main(req: Request) {
   return jsonResponse({
     success: true,
     userId: userData.user.id,
-    skippedOldCampaigns: campaignId === null
-      ? campaigns.length - selectedCampaigns.length
-      : 0,
+    skippedOldCampaigns: 0,
     campaigns: synced,
   });
 }
@@ -370,7 +380,8 @@ Deno.serve(async (req) => {
   try {
     return await main(req);
   } catch (error) {
-    const details = error instanceof Error ? error.message : "Erro desconhecido";
+    const details =
+      error instanceof Error ? error.message : "Erro desconhecido";
     console.error(details);
     return jsonResponse(
       { error: "Falha ao sincronizar a Beephish.", details },

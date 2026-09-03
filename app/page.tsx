@@ -241,26 +241,26 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const initialSyncStartedRef = useRef(false);
 
   const selectedCampaign =
     campaigns.find((campaign) => campaign.id === selectedId) ??
     campaigns[0] ??
     null;
-  const stats = selectedCampaign?.stats ?? {};
-  const total = Number(stats.total ?? 0);
-  const opened = Number(stats.opened ?? 0);
-  const clicked = Number(stats.clicked ?? 0);
-  const reported = Number(stats.email_reported ?? 0);
-  const delivered = Number(stats.delivered ?? 0);
 
   const campaignBars = useMemo(() => {
-    return campaigns.slice(0, 4).map((campaign) => ({
-      ...campaign,
-      rate: pct(
-        Number(campaign.stats.opened ?? 0),
-        Number(campaign.stats.total ?? 0),
-      ),
-    }));
+    return [...campaigns]
+      .sort(
+        (first, second) =>
+          Number(second.stats.total ?? 0) - Number(first.stats.total ?? 0),
+      )
+      .map((campaign) => ({
+        ...campaign,
+        rate: pct(
+          Number(campaign.stats.opened ?? 0),
+          Number(campaign.stats.total ?? 0),
+        ),
+      }));
   }, [campaigns]);
 
   const campaignSummary = useMemo(() => {
@@ -272,14 +272,20 @@ export default function Home() {
         const openedPeople = Number(campaignStats.opened ?? 0);
         const clickedPeople = Number(campaignStats.clicked ?? 0);
         const reportedPeople = Number(campaignStats.email_reported ?? 0);
+        const sentPeople = Number(campaignStats.sent ?? people);
+        const submittedPeople = Number(campaignStats.submitted_data ?? 0);
+        const errorPeople = Number(campaignStats.error ?? 0);
 
         return {
           ...campaign,
           people,
+          sentPeople,
           deliveredPeople,
           openedPeople,
           clickedPeople,
+          submittedPeople,
           reportedPeople,
+          errorPeople,
           openRate: pct(openedPeople, people),
         };
       })
@@ -291,25 +297,49 @@ export default function Home() {
   }, [campaigns]);
 
   const overviewTotals = useMemo(
-    () => ({
-      people: campaignSummary.reduce(
-        (sum, campaign) => sum + campaign.people,
-        0,
+    () =>
+      campaignSummary.reduce(
+        (totals, campaign) => ({
+          campaigns: totals.campaigns + 1,
+          people: totals.people + campaign.people,
+          sent: totals.sent + campaign.sentPeople,
+          delivered: totals.delivered + campaign.deliveredPeople,
+          opened: totals.opened + campaign.openedPeople,
+          clicked: totals.clicked + campaign.clickedPeople,
+          submitted: totals.submitted + campaign.submittedPeople,
+          reported: totals.reported + campaign.reportedPeople,
+          errors: totals.errors + campaign.errorPeople,
+        }),
+        {
+          campaigns: 0,
+          people: 0,
+          sent: 0,
+          delivered: 0,
+          opened: 0,
+          clicked: 0,
+          submitted: 0,
+          reported: 0,
+          errors: 0,
+        },
       ),
-      delivered: campaignSummary.reduce(
-        (sum, campaign) => sum + campaign.deliveredPeople,
-        0,
-      ),
-      opened: campaignSummary.reduce(
-        (sum, campaign) => sum + campaign.openedPeople,
-        0,
-      ),
-      clicked: campaignSummary.reduce(
-        (sum, campaign) => sum + campaign.clickedPeople,
-        0,
-      ),
-    }),
     [campaignSummary],
+  );
+
+  const total = overviewTotals.people;
+  const opened = overviewTotals.opened;
+  const clicked = overviewTotals.clicked;
+  const reported = overviewTotals.reported;
+  const delivered = overviewTotals.delivered;
+  const submitted = overviewTotals.submitted;
+  const latestSync = useMemo(
+    () =>
+      campaigns.reduce<string | null>((latest, campaign) => {
+        if (!campaign.synced_at) return latest;
+        if (!latest || Date.parse(campaign.synced_at) > Date.parse(latest))
+          return campaign.synced_at;
+        return latest;
+      }, null),
+    [campaigns],
   );
 
   useEffect(() => {
@@ -319,14 +349,14 @@ export default function Home() {
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return;
       setSessionEmail(data.session?.user.email ?? null);
-      if (data.session) void loadCampaigns();
+      if (data.session) startInitialSync();
       else setLoading(false);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, currentSession) => {
         setSessionEmail(currentSession?.user.email ?? null);
-        if (currentSession) void loadCampaigns();
+        if (currentSession) startInitialSync();
         else setLoading(false);
       },
     );
@@ -337,6 +367,12 @@ export default function Home() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function startInitialSync() {
+    if (initialSyncStartedRef.current) return;
+    initialSyncStartedRef.current = true;
+    void syncAllCampaigns();
+  }
 
   useEffect(() => {
     if (supabase && sessionEmail && selectedCampaign)
@@ -435,18 +471,20 @@ export default function Home() {
     setProfileOpen(false);
     setResults([]);
     setEvents([]);
+    initialSyncStartedRef.current = false;
   }
 
-  async function syncSelectedCampaign() {
-    if (!supabase || !selectedCampaign) return;
+  async function syncAllCampaigns() {
+    if (!supabase) return;
     setSyncing(true);
     setError(null);
     const { error: syncError } = await supabase.functions.invoke(
       "sync-beephish",
-      { body: { campaignId: selectedCampaign.id } },
+      { body: {} },
     );
-    if (syncError) setError(syncError.message);
-    else await loadCampaigns();
+    const syncMessage = syncError?.message ?? null;
+    await loadCampaigns();
+    if (syncMessage) setError(syncMessage);
     setSyncing(false);
   }
 
@@ -613,19 +651,19 @@ export default function Home() {
             </span>
             <button
               className="grid size-[38px] place-items-center rounded-[var(--radius-control)] border border-[var(--line)] bg-[var(--surface)] text-[#6f7883] transition hover:border-[#cbd0d5] hover:text-[#18202b]"
-              aria-label="Atualizar dados"
-              onClick={syncSelectedCampaign}
+              aria-label="Atualizar todas as campanhas"
+              onClick={syncAllCampaigns}
               disabled={syncing}
             >
               <Icon name="refresh" size={18} />
             </button>
             <button
               className="inline-flex min-h-[38px] items-center gap-[9px] rounded-[12px] border-0 bg-[#18202b] px-[15px] text-[12px] font-bold text-white shadow-[0_5px_15px_rgba(24,32,43,0.14)] transition-colors hover:bg-[#2d3a49] max-[720px]:px-[11px]"
-              onClick={syncSelectedCampaign}
-              disabled={!selectedCampaign || syncing}
+              onClick={syncAllCampaigns}
+              disabled={syncing}
             >
               <Icon name="refresh" size={16} />
-              {syncing ? "Sincronizando…" : "Sincronizar"}
+              {syncing ? "Sincronizando…" : "Sincronizar tudo"}
             </button>
           </div>
         </header>
@@ -658,11 +696,11 @@ export default function Home() {
                   </em>
                 </h2>
                 <p className="mb-7 max-w-[380px] text-[13px] leading-[1.55] text-[#7b838d]">
-                  Leitura consolidada da campanha selecionada e dos sinais que
-                  pedem atenção.
+                  Leitura consolidada de todas as campanhas BeePhish e dos
+                  sinais que pedem atenção.
                 </p>
                 <label className="flex w-[min(330px,100%)] flex-col gap-[7px] text-[10px] font-bold tracking-[0.12em] text-[#6f7882] uppercase">
-                  Campanha analisada
+                  Campanha para investigar
                   <select
                     className="min-h-[39px] rounded-[11px] border border-[rgba(114,127,137,0.18)] bg-[rgba(255,255,255,0.58)] px-3 text-[12px] font-bold tracking-normal text-[#18202b] normal-case outline-none focus:border-[#7d92a0] focus:ring-[3px] focus:ring-[rgba(125,146,160,0.12)]"
                     value={selectedCampaign?.id ?? ""}
@@ -671,6 +709,9 @@ export default function Home() {
                     }
                     disabled={!campaigns.length}
                   >
+                    {!campaigns.length && (
+                      <option value="">Nenhuma campanha disponível</option>
+                    )}
                     {campaigns.map((campaign) => (
                       <option key={campaign.id} value={campaign.id}>
                         {campaign.name}
@@ -697,23 +738,23 @@ export default function Home() {
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <span className="text-[9px] tracking-[0.12em] text-[#87919a] uppercase">
-                    Campanha {selectedCampaign?.id ?? "—"}
+                    Portfólio completo
                   </span>
                   <strong className="text-[12px]">
-                    {selectedCampaign
-                      ? statusLabel(selectedCampaign.status)
+                    {campaigns.length
+                      ? `${campaigns.length} campanhas consolidadas`
                       : "Sem dados"}
                   </strong>
                   <span className="text-[10px] text-[#87919a]">
-                    Atualizada {formatDate(selectedCampaign?.synced_at ?? null)}
+                    Atualizado {formatDate(latestSync)}
                   </span>
                 </div>
               </div>
               <div className="absolute right-7 bottom-[25px] flex items-center gap-[9px] text-[10px] tracking-[0.08em] text-[#929aa2] uppercase max-[720px]:static max-[720px]:mt-auto max-[720px]:justify-end max-[720px]:self-stretch">
                 <span>HRM</span>
                 <strong className="text-[10px] text-[#5e6974]">
-                  {selectedCampaign
-                    ? "Leitura operacional"
+                  {campaignSummary.length
+                    ? "Leitura consolidada"
                     : "Aguardando dados"}
                 </strong>
                 <span className="grid size-[29px] place-items-center rounded-full border border-[rgba(85,108,121,0.2)] text-[#556c79]">
@@ -729,39 +770,46 @@ export default function Home() {
                     CAMPANHAS
                   </p>
                   <h3 className="m-0 text-[17px] font-bold tracking-[-0.03em]">
-                    Desempenho recente
+                    Abertura por campanha
                   </h3>
                 </div>
                 <Link
-                  href={`/campaigns/${selectedCampaign?.id ?? 5345}`}
+                  href="#campaign-overview"
                   className="inline-flex items-center gap-[5px] text-[11px] text-[#818995] hover:text-[#18202b]"
                 >
-                  Ver tudo <Icon name="arrow" size={15} />
+                  Ver campanhas <Icon name="arrow" size={15} />
                 </Link>
               </div>
               <div
-                className="flex flex-1 items-end gap-[clamp(12px,2vw,24px)] border-b border-[#e9ebec] px-3 pt-6"
-                aria-label="Taxa de abertura por campanha"
+                className="flex min-h-0 flex-1 items-end overflow-x-auto border-b border-[#e9ebec]"
+                aria-label="Taxa de abertura de todas as campanhas"
               >
-                {campaignBars.map((campaign, index) => (
-                  <div
-                    className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-[9px]"
-                    key={campaign.id}
-                  >
-                    <div className="-mb-1 text-[11px] font-extrabold text-[#637887]">
-                      {campaign.rate}%
+                <div
+                  className="flex h-full min-w-full items-end gap-[clamp(12px,2vw,24px)] px-3 pt-6"
+                  style={{
+                    minWidth: `${Math.max(campaignBars.length * 76, 300)}px`,
+                  }}
+                >
+                  {campaignBars.map((campaign, index) => (
+                    <div
+                      className="flex h-full min-w-[52px] flex-1 flex-col items-center justify-end gap-[9px]"
+                      key={campaign.id}
+                    >
+                      <div className="-mb-1 text-[11px] font-extrabold text-[#637887]">
+                        {campaign.rate}%
+                      </div>
+                      <div className="flex h-[66%] w-[min(44px,100%)] items-end overflow-hidden rounded-[9px_9px_0_0] bg-[#eef0f1]">
+                        <div
+                          className={`min-h-[7px] w-full rounded-[9px_9px_0_0] transition-[height] duration-500 ease-in-out ${index === 0 ? "bg-[#7d9aaa]" : "bg-[#a8bfd1]"}`}
+                          style={{ height: `${Math.max(campaign.rate, 5)}%` }}
+                        />
+                      </div>
+                      <span className="max-w-[70px] overflow-hidden text-[9px] text-ellipsis whitespace-nowrap text-[#9ba2a9]">
+                        {campaign.name.split(" ").slice(0, 2).join(" ")}
+                      </span>
                     </div>
-                    <div className="flex h-[66%] w-[min(44px,100%)] items-end overflow-hidden rounded-[9px_9px_0_0] bg-[#eef0f1]">
-                      <div
-                        className={`min-h-[7px] w-full rounded-[9px_9px_0_0] transition-[height] duration-500 ease-in-out ${index === 0 ? "bg-[#7d9aaa]" : "bg-[#a8bfd1]"}`}
-                        style={{ height: `${Math.max(campaign.rate, 5)}%` }}
-                      />
-                    </div>
-                    <span className="max-w-[70px] overflow-hidden text-[9px] text-ellipsis whitespace-nowrap text-[#9ba2a9]">
-                      {campaign.name.split(" ").slice(0, 2).join(" ")}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
               <div className="mt-[15px] flex justify-between gap-3 text-[10px] text-[#9ba2a9]">
                 <span className="inline-flex items-center gap-[7px] text-[#65717b]">
@@ -781,7 +829,7 @@ export default function Home() {
                   {clicked}
                 </strong>
                 <span className="relative z-[1] text-[10px] text-[#8091a1]">
-                  {pct(clicked, total)}% da campanha
+                  {pct(clicked, total)}% do total consolidado
                 </span>
                 <div className="absolute -right-12 -bottom-[67px] size-[165px] rounded-full border-[20px] border-[rgba(72,125,255,0.09)]">
                   <span className="absolute inset-[26px] rounded-full border border-[rgba(72,125,255,0.2)]" />
@@ -795,7 +843,7 @@ export default function Home() {
                   {reported}
                 </strong>
                 <span className="relative z-[1] text-[10px] text-[#8091a1]">
-                  {pct(reported, delivered)}% dos entregues
+                  {pct(reported, delivered)}% dos entregues consolidados
                 </span>
                 <div className="absolute right-[22px] bottom-7 flex h-[46px] items-end gap-1 opacity-50">
                   {[17, 28, 20, 39, 31].map((height, index) => (
@@ -816,7 +864,7 @@ export default function Home() {
                     RISCO HUMANO
                   </p>
                   <h3 className="m-0 text-[17px] font-bold tracking-[-0.03em]">
-                    Leitura da campanha
+                    Leitura consolidada
                   </h3>
                 </div>
                 <span className="grid size-[33px] place-items-center rounded-[11px] bg-[rgba(255,255,255,0.5)] text-[#607268]">
@@ -847,8 +895,8 @@ export default function Home() {
                   ],
                   [
                     "Dados enviados",
-                    `${stats.submitted_data ?? 0}`,
-                    pct(Number(stats.submitted_data ?? 0), total),
+                    `${submitted}`,
+                    pct(submitted, total),
                     "#d09b6d",
                   ],
                 ].map(([label, value, width, color]) => (
@@ -889,7 +937,7 @@ export default function Home() {
                     EVENTOS RECENTES
                   </p>
                   <h3 className="m-0 text-[17px] font-bold tracking-[-0.03em]">
-                    Atividade
+                    Atividade da campanha
                   </h3>
                 </div>
                 <span className="text-[10px] text-[#a0a7ad]">
@@ -942,13 +990,16 @@ export default function Home() {
                 )}
                 {isSupabaseConfigured && !events.length && !loading && (
                   <div className="py-[25px] text-[11px] text-[#9aa1a7]">
-                    Nenhum evento retornado para esta campanha.
+                    Nenhum evento retornado para a campanha selecionada.
                   </div>
                 )}
               </div>
             </article>
 
-            <article className="col-span-full min-w-0 overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] p-[25px] shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
+            <article
+              id="campaign-overview"
+              className="col-span-full min-w-0 scroll-mt-4 overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] p-[25px] shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px] max-[720px]:p-[22px]"
+            >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="mb-[9px] text-[10px] leading-none font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
@@ -974,7 +1025,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="mt-5 grid grid-cols-4 gap-2 max-[720px]:grid-cols-2">
+              <div className="mt-5 grid grid-cols-6 gap-2 max-[1120px]:grid-cols-3 max-[720px]:grid-cols-2">
                 {[
                   ["Campanhas", campaignSummary.length],
                   ["Pessoas", overviewTotals.people],
@@ -983,6 +1034,8 @@ export default function Home() {
                     "Abertura",
                     `${pct(overviewTotals.opened, overviewTotals.people)}%`,
                   ],
+                  ["Cliques", overviewTotals.clicked],
+                  ["Reportes", overviewTotals.reported],
                 ].map(([label, value]) => (
                   <div
                     className="rounded-[16px] bg-[#f7f8f8] px-4 py-3"

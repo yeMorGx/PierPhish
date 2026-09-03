@@ -24,10 +24,9 @@ BEEPHISH_BASE_URL=https://portal.beephish.com/api
 BEEPHISH_AUTHORIZATION=valor exato usado pelo Swagger
 ```
 
-Por padrão, a função não sincroniza campanhas concluídas há mais de 180 dias e não reimporta eventos de campanhas concluídas há mais de 90 dias. Para mudar os períodos, configure também:
+Ao sincronizar todas as campanhas, a função importa também campanhas concluídas antigas. Para evitar uma carga desnecessária, eventos de campanhas concluídas há mais de 90 dias continuam sem ser reimportados. Para mudar esse período, configure:
 
 ```text
-BEEPHISH_RESULTS_RETENTION_DAYS=180
 BEEPHISH_EVENTS_RETENTION_DAYS=90
 ```
 
