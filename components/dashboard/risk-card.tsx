@@ -38,7 +38,7 @@ export function RiskCard({
             Leitura consolidada
           </h3>
         </div>
-        <span className="grid size-[33px] place-items-center rounded-[11px] bg-[rgba(255,255,255,0.5)] text-[#607268]">
+        <span className="theme-inset-panel grid size-[33px] place-items-center rounded-[11px] bg-[rgba(255,255,255,0.5)] text-[#607268]">
           <Icon name="shield" size={18} />
         </span>
       </div>

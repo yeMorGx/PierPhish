@@ -103,7 +103,7 @@ export function OverviewHero({
             <div className="grid flex-1 grid-cols-2 gap-2">
               {highlights.map(([label, value]) => (
                 <div
-                  className="rounded-[13px] border border-[rgba(120,146,160,0.12)] bg-[rgba(255,255,255,0.58)] px-3 py-2.5"
+                  className="theme-inset-panel rounded-[13px] border border-[rgba(120,146,160,0.12)] bg-[rgba(255,255,255,0.58)] px-3 py-2.5"
                   key={label}
                 >
                   <span className="block text-[8px] leading-tight text-[#84909a]">

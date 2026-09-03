@@ -81,7 +81,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--canvas", preferences.canvas);
+    document.documentElement.style.setProperty(
+      "--canvas-custom",
+      preferences.canvas,
+    );
     document.documentElement.style.setProperty(
       "--canvas-image",
       cssImage(preferences.backgroundImage),
