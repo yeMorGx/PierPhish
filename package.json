@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "tsc --noEmit",
     "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"app/*.{ts,tsx,css}\" \"lib/**/*.{ts,tsx}\" \"lib/*.{ts,tsx}\" \"*.mjs\" package.json",
     "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"app/*.{ts,tsx,css}\" \"lib/**/*.{ts,tsx}\" \"lib/*.{ts,tsx}\" \"*.mjs\" package.json"
   },

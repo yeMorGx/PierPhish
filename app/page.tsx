@@ -109,6 +109,57 @@ const demoCampaigns: Campaign[] = [
   },
 ];
 
+const demoEventsByCampaign: Record<number, EventRow[]> = {
+  5345: [
+    {
+      id: 1,
+      event_type: "Email Opened",
+      occurred_at: "2026-08-10T12:43:33Z",
+    },
+    {
+      id: 2,
+      event_type: "Clicked Link",
+      occurred_at: "2026-08-07T20:27:00Z",
+    },
+    {
+      id: 3,
+      event_type: "Email Reported",
+      occurred_at: "2026-08-07T20:23:48Z",
+    },
+  ],
+  5349: [
+    {
+      id: 4,
+      event_type: "Email Opened",
+      occurred_at: "2026-08-08T11:18:00Z",
+    },
+  ],
+  5052: [
+    {
+      id: 5,
+      event_type: "Email Opened",
+      occurred_at: "2026-07-19T14:05:00Z",
+    },
+    {
+      id: 6,
+      event_type: "Clicked Link",
+      occurred_at: "2026-07-19T14:08:00Z",
+    },
+  ],
+  2581: [
+    {
+      id: 7,
+      event_type: "Clicked Link",
+      occurred_at: "2025-11-05T09:12:00Z",
+    },
+    {
+      id: 8,
+      event_type: "Dados enviados",
+      occurred_at: "2025-11-05T09:14:00Z",
+    },
+  ],
+};
+
 function Icon({
   name,
   size = 20,
@@ -118,7 +169,6 @@ function Icon({
     | "chart"
     | "users"
     | "shield"
-    | "settings"
     | "refresh"
     | "arrow"
     | "logout"
@@ -164,12 +214,6 @@ function Icon({
       <>
         <path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3Z" />
         <path d="m9 12 2 2 4-4" />
-      </>
-    ),
-    settings: (
-      <>
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 1.7-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V20h-2.4v-.2a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.7-1.7.06-.06A1.7 1.7 0 0 0 8.4 15a1.7 1.7 0 0 0-1.56-1.03h-.2v-2.4h.2A1.7 1.7 0 0 0 8.4 10a1.7 1.7 0 0 0-.34-1.88L8 8.06l1.7-1.7.06.06A1.7 1.7 0 0 0 11.64 6a1.7 1.7 0 0 0 1.03-1.56V4h2.4v.2A1.7 1.7 0 0 0 16.1 5.76a1.7 1.7 0 0 0 1.88-.34l.06-.06 1.7 1.7-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1.03h.2v2.4h-.2A1.7 1.7 0 0 0 19.4 15Z" />
       </>
     ),
     refresh: (
@@ -247,6 +291,10 @@ export default function Home() {
     campaigns.find((campaign) => campaign.id === selectedId) ??
     campaigns[0] ??
     null;
+
+  const displayedEvents = isSupabaseConfigured
+    ? events
+    : (demoEventsByCampaign[selectedCampaign?.id ?? 0] ?? []);
 
   const campaignBars = useMemo(() => {
     return [...campaigns]
@@ -612,40 +660,42 @@ export default function Home() {
         <div className="flex min-h-0 flex-1 flex-col justify-between rounded-[var(--radius-shell)] bg-[var(--surface)] p-4 px-3 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[1120px]:rounded-[45px] max-[720px]:flex-row max-[720px]:rounded-[23px] max-[720px]:p-[9px_12px]">
           <div className="flex flex-col items-center max-[720px]:flex-row">
             <nav className="mt-[18px] flex flex-col items-center gap-3 max-[720px]:mt-0 max-[720px]:ml-2 max-[720px]:flex-row max-[720px]:gap-[3px]">
-              <button
+              <Link
+                href="/"
                 className="grid size-12 place-items-center rounded-[17px] border-0 bg-[#f1f4f7] text-[#18202b] transition hover:-translate-y-px hover:bg-[#f1f4f7] max-[720px]:size-[46px]"
                 aria-label="Visão geral"
+                aria-current="page"
               >
                 <Icon name="grid" />
-              </button>
-              <button
+              </Link>
+              <Link
+                href="#campaign-overview"
                 className="grid size-12 place-items-center rounded-[17px] border-0 bg-transparent text-[#9299a3] transition hover:-translate-y-px hover:bg-[#f1f4f7] hover:text-[#18202b] max-[720px]:size-[46px]"
                 aria-label="Campanhas"
               >
                 <Icon name="chart" />
-              </button>
-              <button
+              </Link>
+              <Link
+                href={
+                  selectedCampaign
+                    ? `/campaigns/${selectedCampaign.id}`
+                    : "#campaign-overview"
+                }
                 className="grid size-12 place-items-center rounded-[17px] border-0 bg-transparent text-[#9299a3] transition hover:-translate-y-px hover:bg-[#f1f4f7] hover:text-[#18202b] max-[720px]:hidden max-[720px]:size-[46px]"
                 aria-label="Pessoas"
               >
                 <Icon name="users" />
-              </button>
-              <button
+              </Link>
+              <Link
+                href="#risk-overview"
                 className="grid size-12 place-items-center rounded-[17px] border-0 bg-transparent text-[#9299a3] transition hover:-translate-y-px hover:bg-[#f1f4f7] hover:text-[#18202b] max-[720px]:hidden max-[720px]:size-[46px]"
                 aria-label="Proteção"
               >
                 <Icon name="shield" />
-              </button>
+              </Link>
             </nav>
           </div>
-          <div className="flex flex-col items-center gap-3 max-[720px]:hidden">
-            <button
-              className="mb-[18px] grid size-12 place-items-center rounded-[17px] border-0 bg-transparent text-[#9299a3] transition hover:-translate-y-px hover:bg-[#f1f4f7] hover:text-[#18202b]"
-              aria-label="Configurações"
-            >
-              <Icon name="settings" />
-            </button>
-          </div>
+          <div className="max-[720px]:hidden" aria-hidden="true" />
         </div>
       </aside>
 
@@ -690,7 +740,6 @@ export default function Home() {
               <div className="grid h-full min-h-[266px] grid-cols-[minmax(0,1.2fr)_minmax(330px,0.8fr)] gap-8 max-[900px]:grid-cols-1">
                 <div className="flex min-w-0 flex-col justify-between">
                   <div>
-
                     <h2 className="m-0 max-w-[700px] text-[clamp(31px,3.7vw,54px)] leading-[0.94] font-[660] tracking-[-0.07em]">
                       {campaignSummary.length || "Todas as"} campanhas.
                       <br />
@@ -896,7 +945,10 @@ export default function Home() {
               </article>
             </div>
 
-            <article className="min-w-0 overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] p-[25px] shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[1120px]:col-span-full max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
+            <article
+              id="risk-overview"
+              className="min-w-0 scroll-mt-4 overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] p-[25px] shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[1120px]:col-span-full max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px] max-[720px]:p-[22px]"
+            >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="mb-[9px] text-[10px] leading-none font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
@@ -969,7 +1021,10 @@ export default function Home() {
               </div>
             </article>
 
-            <article className="col-span-2 min-w-0 overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] p-[25px] shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[1120px]:col-span-full max-[1120px]:rounded-[45px] max-[720px]:col-span-1 max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
+            <article
+              id="individual-investigation"
+              className="col-span-2 min-w-0 scroll-mt-4 overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] p-[25px] shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[1120px]:col-span-full max-[1120px]:rounded-[45px] max-[720px]:col-span-1 max-[720px]:rounded-[23px] max-[720px]:p-[22px]"
+            >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="mb-[9px] text-[10px] leading-none font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
@@ -1001,31 +1056,12 @@ export default function Home() {
                     </select>
                   </label>
                   <span className="flex-none text-[10px] text-[#a0a7ad]">
-                    {events.length || (isSupabaseConfigured ? 0 : 4)} eventos
+                    {displayedEvents.length} eventos
                   </span>
                 </div>
               </div>
               <div className="mt-[17px]">
-                {(isSupabaseConfigured
-                  ? events
-                  : [
-                      {
-                        id: 1,
-                        event_type: "Email Opened",
-                        occurred_at: "2026-08-10T12:43:33Z",
-                      },
-                      {
-                        id: 2,
-                        event_type: "Clicked Link",
-                        occurred_at: "2026-08-07T20:27:00Z",
-                      },
-                      {
-                        id: 3,
-                        event_type: "Email Reported",
-                        occurred_at: "2026-08-07T20:23:48Z",
-                      },
-                    ]
-                ).map((event, index) => (
+                {displayedEvents.map((event, index) => (
                   <div
                     className="grid grid-cols-[10px_1fr_15px] items-center gap-[11px] border-b border-[#eff0f0] py-[14px] last:border-0"
                     key={event.id}
@@ -1049,11 +1085,13 @@ export default function Home() {
                     Dados de demonstração
                   </div>
                 )}
-                {isSupabaseConfigured && !events.length && !loading && (
-                  <div className="py-[25px] text-[11px] text-[#9aa1a7]">
-                    Nenhum evento retornado para a campanha selecionada.
-                  </div>
-                )}
+                {isSupabaseConfigured &&
+                  !displayedEvents.length &&
+                  !loading && (
+                    <div className="py-[25px] text-[11px] text-[#9aa1a7]">
+                      Nenhum evento retornado para a campanha selecionada.
+                    </div>
+                  )}
               </div>
             </article>
 

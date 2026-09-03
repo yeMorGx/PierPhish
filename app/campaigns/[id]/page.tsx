@@ -64,6 +64,31 @@ const demoCampaign: Campaign = {
   stats: { total: 11, delivered: 10, opened: 7, clicked: 2, email_reported: 5 },
 };
 
+const demoCampaignsById: Record<number, Campaign> = {
+  5345: demoCampaign,
+  5349: {
+    id: 5349,
+    name: "Caju",
+    status: "In progress",
+    synced_at: "2026-09-02T15:14:20Z",
+    stats: { total: 2, delivered: 2, opened: 2, clicked: 0, email_reported: 0 },
+  },
+  5052: {
+    id: 5052,
+    name: "Teste anexo",
+    status: "Completed",
+    synced_at: "2026-09-01T10:20:00Z",
+    stats: { total: 2, delivered: 2, opened: 2, clicked: 1, email_reported: 0 },
+  },
+  2581: {
+    id: 2581,
+    name: "Facebook",
+    status: "Completed",
+    synced_at: "2026-08-30T09:14:00Z",
+    stats: { total: 2, delivered: 2, opened: 2, clicked: 2, email_reported: 0 },
+  },
+};
+
 const demoResults: RawResult[] = [
   {
     beephish_id: "demo-ana",
@@ -248,14 +273,16 @@ function fullName(result: RawResult) {
 export default function CampaignPeoplePage() {
   const params = useParams<{ id: string }>();
   const campaignId = Number(params.id);
+  const invalidCampaignId = !Number.isFinite(campaignId) || campaignId <= 0;
+  const demoCampaignForId = demoCampaignsById[campaignId] ?? null;
   const [campaign, setCampaign] = useState<Campaign | null>(
-    isSupabaseConfigured ? null : demoCampaign,
+    isSupabaseConfigured ? null : demoCampaignForId,
   );
   const [results, setResults] = useState<RawResult[]>(
-    isSupabaseConfigured ? [] : demoResults,
+    isSupabaseConfigured || campaignId !== 5345 ? [] : demoResults,
   );
   const [events, setEvents] = useState<RawEvent[]>(
-    isSupabaseConfigured ? [] : demoEvents,
+    isSupabaseConfigured || campaignId !== 5345 ? [] : demoEvents,
   );
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [sessionReady, setSessionReady] = useState(!isSupabaseConfigured);
@@ -290,10 +317,13 @@ export default function CampaignPeoplePage() {
       listener.subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId]);
+  }, [campaignId, invalidCampaignId]);
 
   async function loadData() {
-    if (!supabase || !Number.isFinite(campaignId)) return;
+    if (!supabase || invalidCampaignId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -428,6 +458,32 @@ export default function CampaignPeoplePage() {
             className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[var(--ink)] px-4 py-3 text-[12px] font-bold text-white"
           >
             Voltar para o login <Icon name="arrow" size={15} />
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (invalidCampaignId || !campaign) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[var(--canvas)] p-7">
+        <div className="w-full max-w-[520px] rounded-[31px] bg-[var(--surface)] p-10 text-center shadow-[0_25px_80px_rgba(21,30,41,0.08)]">
+          <p className="mb-3 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+            BEEPHISH LENS / 404
+          </p>
+          <h1 className="m-0 text-[clamp(30px,5vw,44px)] font-[680] tracking-[-0.07em]">
+            Campanha não encontrada.
+          </h1>
+          <p className="mx-auto mt-4 mb-7 max-w-[380px] text-[13px] leading-relaxed text-[#7b838d]">
+            {invalidCampaignId
+              ? "Informe um ID de campanha válido para abrir os dados individuais."
+              : `Não existe uma campanha com o ID ${campaignId}.`}
+          </p>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[var(--ink)] px-4 py-3 text-[12px] font-bold text-white"
+          >
+            Voltar para visão geral <Icon name="arrow" size={15} />
           </Link>
         </div>
       </main>
