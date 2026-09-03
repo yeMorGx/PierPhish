@@ -5,18 +5,27 @@ import { createContext, useContext, useEffect, useState } from "react";
 export type ThemePreferences = {
   canvas: string;
   backgroundImage: string | null;
+  mode: "light" | "dark";
+  cardStyle: "solid" | "translucent" | "liquid" | "apple";
+  showContrastNotice: boolean;
 };
 
 type ThemeContextValue = {
   preferences: ThemePreferences;
   setCanvas: (canvas: string) => void;
   setBackgroundImage: (image: string | null) => void;
+  setMode: (mode: ThemePreferences["mode"]) => void;
+  setCardStyle: (style: ThemePreferences["cardStyle"]) => void;
+  setShowContrastNotice: (show: boolean) => void;
   reset: () => void;
 };
 
 const defaultPreferences: ThemePreferences = {
   canvas: "#f4f4f4",
   backgroundImage: null,
+  mode: "light",
+  cardStyle: "solid",
+  showContrastNotice: true,
 };
 const storageKey = "pierphish-theme-preferences";
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -54,6 +63,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         backgroundImage: isValidBackgroundImage(parsed.backgroundImage)
           ? parsed.backgroundImage
           : null,
+        mode: parsed.mode === "dark" ? "dark" : defaultPreferences.mode,
+        cardStyle:
+          parsed.cardStyle === "translucent" ||
+          parsed.cardStyle === "liquid" ||
+          parsed.cardStyle === "apple"
+            ? parsed.cardStyle
+            : defaultPreferences.cardStyle,
+        showContrastNotice:
+          typeof parsed.showContrastNotice === "boolean"
+            ? parsed.showContrastNotice
+            : defaultPreferences.showContrastNotice,
       });
     } catch {
       window.localStorage.removeItem(storageKey);
@@ -66,6 +86,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       "--canvas-image",
       cssImage(preferences.backgroundImage),
     );
+    document.documentElement.dataset.theme = preferences.mode;
+    document.documentElement.dataset.cardStyle = preferences.cardStyle;
+    document.documentElement.style.colorScheme = preferences.mode;
     window.localStorage.setItem(storageKey, JSON.stringify(preferences));
   }, [preferences]);
 
@@ -79,6 +102,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       if (backgroundImage === null || isValidBackgroundImage(backgroundImage))
         setPreferences((current) => ({ ...current, backgroundImage }));
     },
+    setMode: (mode) => setPreferences((current) => ({ ...current, mode })),
+    setCardStyle: (cardStyle) =>
+      setPreferences((current) => ({ ...current, cardStyle })),
+    setShowContrastNotice: (showContrastNotice) =>
+      setPreferences((current) => ({ ...current, showContrastNotice })),
     reset: () => setPreferences(defaultPreferences),
   };
 

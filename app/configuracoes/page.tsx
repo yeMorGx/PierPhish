@@ -3,8 +3,11 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import {
+  type ThemePreferences,
+  useTheme,
+} from "@/components/theme/theme-provider";
 import { Icon } from "@/components/ui/icon";
-import { useTheme } from "@/components/theme/theme-provider";
 
 const colorPresets = [
   ["Cinza atual", "#f4f4f4"],
@@ -14,8 +17,43 @@ const colorPresets = [
   ["Lavanda", "#f0eff5"],
 ] as const;
 
+const cardStyles: Array<{
+  id: ThemePreferences["cardStyle"];
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "solid",
+    label: "Sólido",
+    description: "Máxima previsibilidade e contraste.",
+  },
+  {
+    id: "translucent",
+    label: "Translúcido",
+    description: "Leve transparência com desfoque suave.",
+  },
+  {
+    id: "liquid",
+    label: "Liquid Glass",
+    description: "Brilho fluido e profundidade mais evidente.",
+  },
+  {
+    id: "apple",
+    label: "Apple Liquid Glass",
+    description: "Vidro polido, luminoso e discreto.",
+  },
+];
+
 function SettingsContent() {
-  const { preferences, reset, setBackgroundImage, setCanvas } = useTheme();
+  const {
+    preferences,
+    reset,
+    setBackgroundImage,
+    setCanvas,
+    setCardStyle,
+    setMode,
+    setShowContrastNotice,
+  } = useTheme();
   const [imageUrl, setImageUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -63,24 +101,96 @@ function SettingsContent() {
   return (
     <DashboardShell activeSection="settings" title="Configurações">
       <div className="mx-auto grid max-w-[1180px] gap-[var(--cards-gap)] pb-8">
-        <section className="rounded-[var(--radius-card)] bg-[var(--surface)] p-8 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[720px]:rounded-[23px] max-[720px]:p-6">
-          <div className="max-w-[620px]">
+        <section className="surface-card rounded-[var(--radius-card)] p-8 max-[720px]:rounded-[23px] max-[720px]:p-6">
+          <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+            APARÊNCIA DO LENS
+          </p>
+          <h2 className="m-0 max-w-[700px] text-[clamp(28px,4vw,48px)] leading-[0.95] font-[680] tracking-[-0.07em]">
+            Faça o espaço trabalhar a favor da leitura.
+          </h2>
+          <p className="mt-4 mb-0 max-w-[650px] text-[13px] leading-relaxed text-[#7b838d]">
+            A personalização fica salva neste navegador. Ela muda a camada
+            visual do painel, mas nunca altera os dados das campanhas.
+          </p>
+        </section>
+
+        <section className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                TEMA
+              </p>
+              <h3 className="m-0 text-[18px] font-bold tracking-[-0.04em]">
+                Escolha o clima do painel
+              </h3>
+              <p className="mt-2 mb-0 text-[11px] text-[#87919a]">
+                O modo escuro reduz o brilho e preserva a hierarquia dos sinais.
+              </p>
+            </div>
+            <Icon name="palette" size={20} />
+          </div>
+          <div className="mt-6 grid max-w-[560px] grid-cols-2 gap-2 max-[520px]:grid-cols-1">
+            {[
+              ["light", "Claro", "Fundo claro e leitura editorial."],
+              ["dark", "Escuro", "Contraste profundo para baixa luz."],
+            ].map(([mode, label, description]) => (
+              <button
+                className={`appearance-option ${preferences.mode === mode ? "is-selected" : ""}`}
+                type="button"
+                aria-pressed={preferences.mode === mode}
+                key={mode}
+                onClick={() => setMode(mode as ThemePreferences["mode"])}
+              >
+                <span
+                  className={`appearance-swatch appearance-swatch-${mode}`}
+                />
+                <span className="min-w-0 text-left">
+                  <strong>{label}</strong>
+                  <small>{description}</small>
+                </span>
+                {preferences.mode === mode && <Icon name="check" size={16} />}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]">
+          <div>
             <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-              APARÊNCIA
+              ESTILO DOS CARDS
             </p>
-            <h2 className="m-0 text-[clamp(28px,4vw,44px)] leading-none font-[680] tracking-[-0.07em]">
-              Ajuste o campo de trabalho.
-            </h2>
-            <p className="mt-4 mb-0 text-[13px] leading-relaxed text-[#7b838d]">
-              Escolha uma cor ou imagem para o fundo cinza do Lens. A
-              preferência é salva neste navegador e não altera os dados das
-              campanhas.
+            <h3 className="m-0 text-[18px] font-bold tracking-[-0.04em]">
+              Escolha quanto o conteúdo flutua
+            </h3>
+            <p className="mt-2 mb-0 text-[11px] text-[#87919a]">
+              Os presets afetam cards, cabeçalho e navegação do painel.
             </p>
+          </div>
+          <div className="mt-6 grid grid-cols-4 gap-2 max-[980px]:grid-cols-2 max-[520px]:grid-cols-1">
+            {cardStyles.map((style) => (
+              <button
+                className={`card-style-option ${preferences.cardStyle === style.id ? "is-selected" : ""}`}
+                type="button"
+                aria-pressed={preferences.cardStyle === style.id}
+                key={style.id}
+                onClick={() => setCardStyle(style.id)}
+              >
+                <span
+                  className={`card-style-preview card-style-preview-${style.id}`}
+                >
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <strong>{style.label}</strong>
+                <small>{style.description}</small>
+              </button>
+            ))}
           </div>
         </section>
 
         <section className="grid grid-cols-[minmax(0,0.9fr)_minmax(300px,1.1fr)] gap-[var(--cards-gap)] max-[820px]:grid-cols-1">
-          <article className="rounded-[var(--radius-card)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[720px]:rounded-[23px]">
+          <article className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
@@ -127,7 +237,7 @@ function SettingsContent() {
             </div>
           </article>
 
-          <article className="rounded-[var(--radius-card)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[720px]:rounded-[23px]">
+          <article className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
@@ -194,7 +304,39 @@ function SettingsContent() {
           </article>
         </section>
 
-        <section className="flex items-center justify-between gap-4 rounded-[var(--radius-card)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[720px]:rounded-[23px] max-[520px]:flex-col max-[520px]:items-start">
+        <section className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]">
+          {preferences.showContrastNotice ? (
+            <div className="contrast-notice" role="note">
+              <span className="contrast-notice-icon">!</span>
+              <div>
+                <strong>Ajuda de contraste</strong>
+                <p>
+                  Fundos com muita textura e cards muito transparentes podem
+                  esconder números pequenos. Para uma leitura mais segura,
+                  prefira o estilo Sólido ou Translúcido e uma cor de fundo
+                  uniforme.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowContrastNotice(false)}
+                aria-label="Ocultar ajuda de contraste"
+              >
+                Ocultar
+              </button>
+            </div>
+          ) : (
+            <button
+              className="text-[11px] font-bold text-[var(--accent)] underline"
+              type="button"
+              onClick={() => setShowContrastNotice(true)}
+            >
+              Mostrar ajuda de contraste
+            </button>
+          )}
+        </section>
+
+        <section className="surface-card flex items-center justify-between gap-4 rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[520px]:flex-col max-[520px]:items-start">
           <div>
             <p className="m-0 text-[12px] font-bold text-[#34404a]">
               Pré-visualização ativa

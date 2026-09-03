@@ -30,7 +30,7 @@ export function OverviewHero({
   ] as const;
 
   return (
-    <article className="relative col-span-full min-w-0 overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] p-8 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[1120px]:rounded-[45px] max-[900px]:p-7 max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
+    <article className="surface-card relative col-span-full min-w-0 overflow-hidden rounded-[var(--radius-card)] p-8 max-[1120px]:rounded-[45px] max-[900px]:p-7 max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
       <div className="grid h-full min-h-[266px] grid-cols-[minmax(0,1.2fr)_minmax(330px,0.8fr)] gap-8 max-[900px]:grid-cols-1">
         <div className="flex min-w-0 flex-col justify-between">
           <div>

@@ -436,7 +436,7 @@ export default function CampaignPeoplePage() {
   if (!sessionReady || loading) {
     return (
       <main className="theme-canvas grid min-h-screen place-items-center p-7">
-        <div className="rounded-[var(--radius-card)] bg-[var(--surface)] px-8 py-7 text-[12px] text-[#7c8795] shadow-[0_18px_50px_rgba(25,34,45,0.08)]">
+        <div className="surface-card rounded-[var(--radius-card)] px-8 py-7 text-[12px] text-[#7c8795] shadow-[0_18px_50px_rgba(25,34,45,0.08)]">
           Carregando dados da campanha…
         </div>
       </main>
@@ -446,7 +446,7 @@ export default function CampaignPeoplePage() {
   if (isSupabaseConfigured && !sessionEmail) {
     return (
       <main className="theme-canvas grid min-h-screen place-items-center p-7">
-        <div className="w-full max-w-[430px] rounded-[31px] bg-[var(--surface)] p-10 text-center shadow-[0_25px_80px_rgba(21,30,41,0.08)]">
+        <div className="surface-card w-full max-w-[430px] rounded-[31px] p-10 text-center shadow-[0_25px_80px_rgba(21,30,41,0.08)]">
           <p className="mb-3 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
             BEEPHISH LENS / ACCESS
           </p>
@@ -467,7 +467,7 @@ export default function CampaignPeoplePage() {
   if (invalidCampaignId || !campaign) {
     return (
       <main className="theme-canvas grid min-h-screen place-items-center p-7">
-        <div className="w-full max-w-[520px] rounded-[31px] bg-[var(--surface)] p-10 text-center shadow-[0_25px_80px_rgba(21,30,41,0.08)]">
+        <div className="surface-card w-full max-w-[520px] rounded-[31px] p-10 text-center shadow-[0_25px_80px_rgba(21,30,41,0.08)]">
           <p className="mb-3 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
             BEEPHISH LENS / 404
           </p>
@@ -493,7 +493,7 @@ export default function CampaignPeoplePage() {
   return (
     <main className="theme-canvas min-h-screen p-[var(--shell-padding)] max-[1120px]:p-7 max-[720px]:p-[14px]">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-[var(--cards-gap)]">
-        <header className="flex items-center justify-between gap-6 rounded-[var(--radius-shell)] bg-[var(--surface)] px-8 py-6 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-6">
+        <header className="surface-card flex items-center justify-between gap-6 rounded-[var(--radius-shell)] px-8 py-6 max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-6">
           <div className="min-w-0">
             <Link
               href="/"
@@ -520,7 +520,7 @@ export default function CampaignPeoplePage() {
               {sessionEmail ?? "Modo demonstração"}
             </span>
             <button
-              className="grid size-10 place-items-center rounded-[var(--radius-control)] border border-[var(--line)] bg-[var(--surface)] text-[#6f7883] transition hover:border-[#cbd0d5] hover:text-[var(--ink)]"
+              className="surface-card grid size-10 place-items-center rounded-[var(--radius-control)] text-[#6f7883] transition hover:border-[#cbd0d5] hover:text-[var(--ink)]"
               type="button"
               aria-label="Atualizar dados"
               onClick={() => void loadData()}
@@ -561,7 +561,7 @@ export default function CampaignPeoplePage() {
             ],
           ].map(([label, value, helper, color]) => (
             <article
-              className="rounded-[var(--radius-card)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_rgba(25,34,45,0.02)]"
+              className="surface-card rounded-[var(--radius-card)] p-6"
               key={String(label)}
             >
               <p className="m-0 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
@@ -580,7 +580,7 @@ export default function CampaignPeoplePage() {
         </section>
 
         <section className="grid grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-1">
-          <article className="min-w-0 overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[720px]:rounded-[23px] max-[720px]:p-5">
+          <article className="surface-card min-w-0 overflow-hidden rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
             <div className="flex items-start justify-between gap-4 max-[720px]:flex-col">
               <div>
                 <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
@@ -697,7 +697,7 @@ export default function CampaignPeoplePage() {
             </div>
           </article>
 
-          <article className="min-w-0 rounded-[var(--radius-card)] bg-[var(--surface)] p-6 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[720px]:rounded-[23px] max-[720px]:p-5">
+          <article className="surface-card min-w-0 rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
             <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
               LINHA DO TEMPO
             </p>

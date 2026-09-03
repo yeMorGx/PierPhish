@@ -16,7 +16,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!ready || (isSupabaseConfigured && !user)) {
     return (
       <main className="theme-canvas grid min-h-screen place-items-center p-7">
-        <div className="rounded-[var(--radius-card)] bg-[var(--surface)] px-8 py-7 text-[12px] text-[#7c8795] shadow-[0_18px_50px_rgba(25,34,45,0.08)]">
+        <div className="surface-card rounded-[var(--radius-card)] px-8 py-7 text-[12px] text-[#7c8795] shadow-[0_18px_50px_rgba(25,34,45,0.08)]">
           Verificando acesso…
         </div>
       </main>

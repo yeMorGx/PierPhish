@@ -33,7 +33,7 @@ export function CampaignOverviewCard({
   ] as const;
 
   return (
-    <article id="campaign-overview" className="col-span-full min-w-0 scroll-mt-4 overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] p-[25px] shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
+    <article id="campaign-overview" className="surface-card col-span-full min-w-0 scroll-mt-4 overflow-hidden rounded-[var(--radius-card)] p-[25px] max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="mb-[9px] text-[10px] leading-none font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">

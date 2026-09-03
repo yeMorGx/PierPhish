@@ -35,7 +35,7 @@ export function LoginForm() {
   if (!ready || user) {
     return (
       <main className="theme-canvas grid min-h-screen place-items-center p-7">
-        <div className="rounded-[var(--radius-card)] bg-[var(--surface)] px-8 py-7 text-[12px] text-[#7c8795] shadow-[0_18px_50px_rgba(25,34,45,0.08)]">
+        <div className="surface-card rounded-[var(--radius-card)] px-8 py-7 text-[12px] text-[#7c8795] shadow-[0_18px_50px_rgba(25,34,45,0.08)]">
           Abrindo o centro de risco…
         </div>
       </main>
@@ -44,7 +44,7 @@ export function LoginForm() {
 
   return (
     <main className="theme-canvas grid min-h-screen place-items-center p-7">
-      <div className="w-full max-w-[430px] rounded-[31px] bg-[var(--surface)] p-[42px] shadow-[0_25px_80px_rgba(21,30,41,0.08)] max-[720px]:p-[30px_24px]">
+      <div className="surface-card w-full max-w-[430px] rounded-[31px] p-[42px] shadow-[0_25px_80px_rgba(21,30,41,0.08)] max-[720px]:p-[30px_24px]">
         <p className="mb-[9px] text-[10px] leading-none font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
           BEEPHISH LENS / ACCESS
         </p>

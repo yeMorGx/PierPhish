@@ -17,7 +17,7 @@ type DashboardShellProps = {
 };
 
 function navClass(active: boolean) {
-  return `grid size-12 place-items-center rounded-[17px] border-0 transition hover:-translate-y-px hover:bg-[#f1f4f7] max-[720px]:size-[46px] ${active ? "bg-[#f1f4f7] text-[#18202b]" : "bg-transparent text-[#9299a3] hover:text-[#18202b]"}`;
+  return `sidebar-nav-link ${active ? "is-active" : ""}`;
 }
 
 export function DashboardShell({
@@ -84,7 +84,7 @@ export function DashboardShell({
 
           {profileOpen && (
             <div
-              className="absolute top-0 left-[calc(100%+12px)] z-50 w-[250px] rounded-[22px] border border-[#edf0f1] bg-[var(--surface)] p-2 shadow-[0_18px_45px_rgba(25,34,45,0.14)] max-[720px]:top-full max-[720px]:left-0 max-[720px]:mt-2"
+              className="surface-card absolute top-0 left-[calc(100%+12px)] z-50 w-[250px] rounded-[22px] p-2 max-[720px]:top-full max-[720px]:left-0 max-[720px]:mt-2"
               role="menu"
             >
               <Link
@@ -107,16 +107,6 @@ export function DashboardShell({
                 <Icon name="arrow" size={15} />
               </Link>
               <div className="my-2 h-px bg-[#edf0f1]" />
-              <Link
-                className="flex w-full items-center gap-2.5 rounded-[13px] px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#f5f7f7] hover:text-[#18202b] focus-visible:bg-[#f5f7f7] focus-visible:text-[#18202b]"
-                href="/configuracoes"
-                role="menuitem"
-                onClick={() => setProfileOpen(false)}
-              >
-                <Icon name="palette" size={16} />
-                Personalizar fundo
-                <span className="ml-auto text-[14px] leading-none">↗</span>
-              </Link>
               <button
                 className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#fff1ed] hover:text-[#a5553b] focus-visible:bg-[#fff1ed] focus-visible:text-[#a5553b]"
                 type="button"
@@ -130,7 +120,7 @@ export function DashboardShell({
           )}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col justify-between rounded-[var(--radius-shell)] bg-[var(--surface)] p-4 px-3 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[1120px]:rounded-[45px] max-[720px]:flex-row max-[720px]:rounded-[23px] max-[720px]:p-[9px_12px]">
+        <div className="surface-card flex min-h-0 flex-1 flex-col justify-between rounded-[var(--radius-shell)] p-4 px-3 max-[1120px]:rounded-[45px] max-[720px]:flex-row max-[720px]:rounded-[23px] max-[720px]:p-[9px_12px]">
           <nav className="mt-[18px] flex flex-col items-center gap-3 max-[720px]:mt-0 max-[720px]:ml-2 max-[720px]:flex-row max-[720px]:gap-[3px]">
             <Link
               href="/"
@@ -161,13 +151,28 @@ export function DashboardShell({
             >
               <Icon name="shield" />
             </Link>
+            <Link
+              href="/configuracoes"
+              className={`${navClass(activeSection === "settings")} hidden max-[720px]:grid`}
+              aria-label="Configurações"
+              aria-current={activeSection === "settings" ? "page" : undefined}
+            >
+              <Icon name="settings" />
+            </Link>
           </nav>
-          <div className="max-[720px]:hidden" aria-hidden="true" />
+          <Link
+            href="/configuracoes"
+            className={`${navClass(activeSection === "settings")} max-[720px]:hidden`}
+            aria-label="Configurações"
+            aria-current={activeSection === "settings" ? "page" : undefined}
+          >
+            <Icon name="settings" />
+          </Link>
         </div>
       </aside>
 
       <section className="flex h-[calc(100vh-112px)] min-h-0 min-w-0 flex-col overflow-hidden max-[1120px]:h-[calc(100vh-56px)] max-[720px]:h-auto">
-        <header className="flex h-[var(--header-height)] flex-none items-center justify-between gap-5 rounded-[var(--radius-shell)] bg-[var(--surface)] px-8 py-3 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[1120px]:rounded-[45px] max-[720px]:mb-2.5 max-[720px]:h-[118px] max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-[22px] max-[720px]:py-5">
+        <header className="surface-card flex h-[var(--header-height)] flex-none items-center justify-between gap-5 rounded-[var(--radius-shell)] px-8 py-3 max-[1120px]:rounded-[45px] max-[720px]:mb-2.5 max-[720px]:h-[118px] max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-[22px] max-[720px]:py-5">
           <h1 className="m-0 text-[clamp(18px,3vw,24px)] leading-[0.95] font-[680] tracking-[-0.065em]">
             {title}
           </h1>
