@@ -83,6 +83,31 @@ function isOlderThan(value: unknown, days: number): boolean {
   return Date.parse(date) < Date.now() - days * 24 * 60 * 60 * 1000;
 }
 
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+
+  async function runWorker() {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await worker(items[currentIndex]);
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, () =>
+      runWorker(),
+    ),
+  );
+
+  return results;
+}
+
 function eventTypeFrom(event: JsonRecord): string | null {
   const nestedDetails = isRecord(event.details) ? event.details : {};
   const candidates = [
@@ -132,6 +157,12 @@ async function main(req: Request) {
   const eventsRetentionDays = Number(
     Deno.env.get("BEEPHISH_EVENTS_RETENTION_DAYS") ?? "90",
   );
+  const configuredConcurrency = Number(
+    Deno.env.get("BEEPHISH_SYNC_CONCURRENCY") ?? "4",
+  );
+  const syncConcurrency = Number.isFinite(configuredConcurrency)
+    ? Math.min(6, Math.max(1, Math.floor(configuredConcurrency)))
+    : 4;
 
   if (!supabaseUrl || !publishableKey || !secretKey) {
     return jsonResponse({ error: "Configuração do Supabase incompleta." }, 500);
@@ -350,15 +381,15 @@ async function main(req: Request) {
     return jsonResponse({ error: "Campanha não encontrada na Beephish." }, 404);
   }
 
-  const synced = [];
-  for (const campaign of selectedCampaigns) {
-    synced.push(
-      await syncCampaign(
+  const synced = await mapWithConcurrency(
+    selectedCampaigns,
+    syncConcurrency,
+    (campaign) =>
+      syncCampaign(
         campaign,
         !isOlderThan(campaign.completed_date, eventsRetentionDays),
       ),
-    );
-  }
+  );
 
   return jsonResponse({
     success: true,

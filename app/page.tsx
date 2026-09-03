@@ -374,7 +374,13 @@ export default function Home() {
   function startInitialSync() {
     if (initialSyncStartedRef.current) return;
     initialSyncStartedRef.current = true;
-    void syncAllCampaigns();
+    void (async () => {
+      // Mostra imediatamente o último retrato salvo no Supabase. A coleta da
+      // BeePhish acontece depois, sem deixar a tela bloqueada por toda a
+      // duração da sincronização.
+      await loadCampaigns();
+      await syncAllCampaigns();
+    })();
   }
 
   useEffect(() => {
@@ -406,9 +412,9 @@ export default function Home() {
     };
   }, [profileOpen]);
 
-  async function loadCampaigns() {
+  async function loadCampaigns(showLoading = true) {
     if (!supabase) return;
-    setLoading(true);
+    if (showLoading) setLoading(true);
     setError(null);
     const { data, error: queryError } = await supabase
       .from("beephish_campaigns")
@@ -417,7 +423,7 @@ export default function Home() {
 
     if (queryError) {
       setError(queryError.message);
-      setLoading(false);
+      if (showLoading) setLoading(false);
       return;
     }
 
@@ -433,7 +439,7 @@ export default function Home() {
         nextCampaigns.find((campaign) => campaign.id === selectedId)?.id ??
           nextCampaigns[0].id,
       );
-    setLoading(false);
+    if (showLoading) setLoading(false);
   }
 
   async function loadDetails(campaignId: number) {
@@ -481,14 +487,17 @@ export default function Home() {
     if (!supabase) return;
     setSyncing(true);
     setError(null);
-    const { error: syncError } = await supabase.functions.invoke(
-      "sync-beephish",
-      { body: {} },
-    );
-    const syncMessage = syncError?.message ?? null;
-    await loadCampaigns();
-    if (syncMessage) setError(syncMessage);
-    setSyncing(false);
+    try {
+      const { error: syncError } = await supabase.functions.invoke(
+        "sync-beephish",
+        { body: {} },
+      );
+      const syncMessage = syncError?.message ?? null;
+      await loadCampaigns(false);
+      if (syncMessage) setError(syncMessage);
+    } finally {
+      setSyncing(false);
+    }
   }
 
   if (isSupabaseConfigured && !sessionEmail) {

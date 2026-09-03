@@ -30,4 +30,11 @@ Ao sincronizar todas as campanhas, a função importa também campanhas concluí
 BEEPHISH_EVENTS_RETENTION_DAYS=90
 ```
 
+As campanhas são sincronizadas em lotes paralelos de 4 por padrão. Para
+ajustar esse limite sem alterar o código, configure um valor entre 1 e 6:
+
+```text
+BEEPHISH_SYNC_CONCURRENCY=4
+```
+
 Não coloque a credencial da Beephish no frontend.
