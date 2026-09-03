@@ -3,6 +3,7 @@
 
 :root {
   --canvas: #f4f4f4;
+  --canvas-image: none;
   --surface: #ffffff;
   --ink: #18202b;
   --muted: #7c8795;
@@ -51,6 +52,14 @@ body {
     "Segoe UI",
     sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+.theme-canvas {
+  background-color: var(--canvas);
+  background-image: var(--canvas-image);
+  background-attachment: fixed;
+  background-position: center;
+  background-size: cover;
 }
 
 button,

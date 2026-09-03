@@ -435,7 +435,7 @@ export default function CampaignPeoplePage() {
 
   if (!sessionReady || loading) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[var(--canvas)] p-7">
+      <main className="theme-canvas grid min-h-screen place-items-center p-7">
         <div className="rounded-[var(--radius-card)] bg-[var(--surface)] px-8 py-7 text-[12px] text-[#7c8795] shadow-[0_18px_50px_rgba(25,34,45,0.08)]">
           Carregando dados da campanha…
         </div>
@@ -445,7 +445,7 @@ export default function CampaignPeoplePage() {
 
   if (isSupabaseConfigured && !sessionEmail) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[var(--canvas)] p-7">
+      <main className="theme-canvas grid min-h-screen place-items-center p-7">
         <div className="w-full max-w-[430px] rounded-[31px] bg-[var(--surface)] p-10 text-center shadow-[0_25px_80px_rgba(21,30,41,0.08)]">
           <p className="mb-3 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
             BEEPHISH LENS / ACCESS
@@ -466,7 +466,7 @@ export default function CampaignPeoplePage() {
 
   if (invalidCampaignId || !campaign) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[var(--canvas)] p-7">
+      <main className="theme-canvas grid min-h-screen place-items-center p-7">
         <div className="w-full max-w-[520px] rounded-[31px] bg-[var(--surface)] p-10 text-center shadow-[0_25px_80px_rgba(21,30,41,0.08)]">
           <p className="mb-3 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
             BEEPHISH LENS / 404
@@ -491,7 +491,7 @@ export default function CampaignPeoplePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--canvas)] p-[var(--shell-padding)] max-[1120px]:p-7 max-[720px]:p-[14px]">
+    <main className="theme-canvas min-h-screen p-[var(--shell-padding)] max-[1120px]:p-7 max-[720px]:p-[14px]">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-[var(--cards-gap)]">
         <header className="flex items-center justify-between gap-6 rounded-[var(--radius-shell)] bg-[var(--surface)] px-8 py-6 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-6">
           <div className="min-w-0">
