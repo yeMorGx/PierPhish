@@ -341,6 +341,9 @@ export default function Home() {
       }, null),
     [campaigns],
   );
+  const activeCampaigns = campaignSummary.filter(
+    (campaign) => campaign.status === "In progress",
+  ).length;
 
   useEffect(() => {
     if (!supabase) return;
@@ -682,84 +685,122 @@ export default function Home() {
 
         <div className="min-h-0 flex-1 [scrollbar-width:thin] [scrollbar-color:#d9d9d9_transparent] [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto overscroll-contain [mask-image:linear-gradient(to_bottom,transparent_0,#000_var(--edge-fade),#000_calc(100%_-_var(--edge-fade)),transparent_100%)] py-[14px] pr-2 [--edge-fade:14px] max-[720px]:overflow-visible max-[720px]:[mask-image:none] max-[720px]:p-0">
           <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(180px,0.62fr)_minmax(280px,0.82fr)] grid-rows-[minmax(330px,1.05fr)_minmax(320px,0.95fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-[minmax(0,1.2fr)_minmax(180px,0.7fr)] max-[1120px]:grid-rows-[auto_auto_auto] max-[720px]:flex max-[720px]:flex-col">
-            <article className="relative col-span-full grid min-w-0 grid-cols-[minmax(0,1fr)_280px] items-center gap-6 overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] px-12 pt-[43px] pb-[31px] shadow-[0_10px_30px_rgba(25,34,45,0.02)] before:absolute before:top-[-300px] before:right-[14%] before:size-[440px] before:rounded-full before:border before:border-[rgba(110,130,143,0.1)] before:shadow-[0_0_0_40px_rgba(110,130,143,0.025),0_0_0_80px_rgba(110,130,143,0.018)] before:content-[''] max-[1120px]:rounded-[45px] max-[720px]:flex max-[720px]:min-h-[530px] max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-[25px] max-[720px]:py-[30px]">
-              <div className="relative z-[1] max-w-[600px]">
-                <div className="mb-[23px] flex items-center gap-2 text-[11px] font-bold text-[#5e6974]">
-                  <span className="h-px w-6 bg-[#557080]" /> Sinal de risco
-                  humano
-                </div>
-                <h2 className="m-0 mb-[17px] text-[clamp(34px,4vw,62px)] leading-[0.93] font-[650] tracking-[-0.075em]">
-                  O comportamento
-                  <br />
-                  <em className="text-[#7c8795] not-italic">
-                    conta a história.
-                  </em>
-                </h2>
-                <p className="mb-7 max-w-[380px] text-[13px] leading-[1.55] text-[#7b838d]">
-                  Leitura consolidada de todas as campanhas BeePhish e dos
-                  sinais que pedem atenção.
-                </p>
-                <label className="flex w-[min(330px,100%)] flex-col gap-[7px] text-[10px] font-bold tracking-[0.12em] text-[#6f7882] uppercase">
-                  Campanha para investigar
-                  <select
-                    className="min-h-[39px] rounded-[11px] border border-[rgba(114,127,137,0.18)] bg-[rgba(255,255,255,0.58)] px-3 text-[12px] font-bold tracking-normal text-[#18202b] normal-case outline-none focus:border-[#7d92a0] focus:ring-[3px] focus:ring-[rgba(125,146,160,0.12)]"
-                    value={selectedCampaign?.id ?? ""}
-                    onChange={(event) =>
-                      setSelectedId(Number(event.target.value))
-                    }
-                    disabled={!campaigns.length}
-                  >
-                    {!campaigns.length && (
-                      <option value="">Nenhuma campanha disponível</option>
-                    )}
-                    {campaigns.map((campaign) => (
-                      <option key={campaign.id} value={campaign.id}>
-                        {campaign.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <div className="relative z-[1] flex flex-col items-center justify-center gap-4 max-[720px]:mt-2.5 max-[720px]:self-center">
-                <div
-                  className="grid size-[170px] rotate-[-34deg] place-items-center rounded-full [background:conic-gradient(#7892a0_var(--score),rgba(120,146,160,0.12)_0)]"
-                  style={
-                    {
-                      "--score": `${pct(opened, total)}%`,
-                    } as React.CSSProperties
-                  }
-                >
-                  <div className="flex size-[137px] rotate-[34deg] flex-col items-center justify-center rounded-full bg-white">
-                    <strong className="text-[37px] leading-none tracking-[-0.08em]">
-                      {pct(opened, total)}%
-                    </strong>
-                    <span className="text-[10px] text-[#87919a]">abertura</span>
+            <article className="relative col-span-full min-w-0 overflow-hidden rounded-[var(--radius-card)] bg-[var(--surface)] p-8 shadow-[0_10px_30px_rgba(25,34,45,0.02)] max-[1120px]:rounded-[45px] max-[900px]:p-7 max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
+              <div className="grid h-full min-h-[266px] grid-cols-[minmax(0,1.2fr)_minmax(330px,0.8fr)] gap-8 max-[900px]:grid-cols-1">
+                <div className="flex min-w-0 flex-col justify-between">
+                  <div>
+                    <div className="mb-4 flex items-center gap-2 text-[10px] font-extrabold tracking-[0.15em] text-[#647782] uppercase">
+                      <span className="size-1.5 rounded-full bg-[#9fc52d] shadow-[0_0_0_4px_rgba(159,197,45,0.13)]" />
+                      Portfólio BeePhish
+                    </div>
+                    <h2 className="m-0 max-w-[700px] text-[clamp(31px,3.7vw,54px)] leading-[0.94] font-[660] tracking-[-0.07em]">
+                      {campaignSummary.length || "Todas as"} campanhas.
+                      <br />
+                      <em className="text-[#7c8795] not-italic">
+                        Um único panorama.
+                      </em>
+                    </h2>
+                    <p className="mt-4 max-w-[560px] text-[12px] leading-[1.55] text-[#7b838d]">
+                      Alcance, entregas e sinais de exposição somados em toda a
+                      operação, sem privilegiar uma campanha específica.
+                    </p>
+                  </div>
+
+                  <div className="mt-7">
+                    <div className="mb-2 flex items-center justify-between gap-3 text-[9px] font-bold tracking-[0.12em] text-[#9299a2] uppercase">
+                      <span>Jornada consolidada</span>
+                      <span className="font-medium tracking-normal normal-case">
+                        Atualizado {formatDate(latestSync)}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-4 overflow-hidden rounded-[18px] border border-[#e9edef] bg-[#fafbfb] max-[620px]:grid-cols-2">
+                      {[
+                        ["Base total", total, 100],
+                        ["Entregues", delivered, pct(delivered, total)],
+                        ["Aberturas", opened, pct(opened, total)],
+                        ["Cliques", clicked, pct(clicked, total)],
+                      ].map(([label, value, rate], index) => (
+                        <div
+                          className={`relative px-4 py-3.5 ${index < 3 ? "border-r border-[#e9edef] max-[620px]:border-r-0" : ""} ${index < 2 ? "max-[620px]:border-b" : ""} ${index % 2 === 0 ? "max-[620px]:border-r" : ""}`}
+                          key={String(label)}
+                        >
+                          <span className="block text-[9px] text-[#8d969e]">
+                            {label}
+                          </span>
+                          <div className="mt-1 flex items-baseline justify-between gap-2">
+                            <strong className="text-[20px] leading-none tracking-[-0.06em] text-[#18202b]">
+                              {value}
+                            </strong>
+                            <span className="text-[9px] font-bold text-[#718895]">
+                              {rate}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-[9px] tracking-[0.12em] text-[#87919a] uppercase">
-                    Portfólio completo
-                  </span>
-                  <strong className="text-[12px]">
-                    {campaigns.length
-                      ? `${campaigns.length} campanhas consolidadas`
-                      : "Sem dados"}
-                  </strong>
-                  <span className="text-[10px] text-[#87919a]">
-                    Atualizado {formatDate(latestSync)}
-                  </span>
+
+                <div className="relative flex min-w-0 flex-col justify-between overflow-hidden rounded-[24px] bg-[#f3f6f7] p-6 before:absolute before:-top-16 before:-right-12 before:size-44 before:rounded-full before:border before:border-[rgba(112,139,153,0.13)] before:shadow-[0_0_0_28px_rgba(112,139,153,0.035),0_0_0_56px_rgba(112,139,153,0.02)] before:content-[''] max-[720px]:rounded-[19px] max-[720px]:p-5">
+                  <div className="relative z-[1] flex items-start justify-between gap-4">
+                    <div>
+                      <span className="block text-[9px] font-extrabold tracking-[0.14em] text-[#7d8992] uppercase">
+                        Taxa geral
+                      </span>
+                      <strong className="mt-1 block text-[13px] text-[#34434d]">
+                        Abertura consolidada
+                      </strong>
+                    </div>
+                    <span className="rounded-full bg-white px-3 py-1.5 text-[9px] font-bold text-[#687b86] shadow-[0_4px_14px_rgba(26,42,52,0.05)]">
+                      {activeCampaigns} em andamento
+                    </span>
+                  </div>
+
+                  <div className="relative z-[1] my-4 flex items-center gap-5 max-[420px]:flex-col">
+                    <div
+                      className="grid size-[132px] flex-none rotate-[-34deg] place-items-center rounded-full [background:conic-gradient(#7892a0_var(--score),rgba(120,146,160,0.12)_0)]"
+                      style={
+                        {
+                          "--score": `${pct(opened, total)}%`,
+                        } as React.CSSProperties
+                      }
+                    >
+                      <div className="flex size-[104px] rotate-[34deg] flex-col items-center justify-center rounded-full bg-[#f3f6f7]">
+                        <strong className="text-[31px] leading-none tracking-[-0.08em]">
+                          {pct(opened, total)}%
+                        </strong>
+                        <span className="mt-1 text-[9px] text-[#87919a]">
+                          abertura
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid flex-1 grid-cols-2 gap-2">
+                      {[
+                        ["Campanhas", campaignSummary.length],
+                        ["Pessoas", total],
+                        ["Reportes", reported],
+                        ["Dados enviados", submitted],
+                      ].map(([label, value]) => (
+                        <div
+                          className="rounded-[13px] border border-[rgba(120,146,160,0.12)] bg-[rgba(255,255,255,0.58)] px-3 py-2.5"
+                          key={String(label)}
+                        >
+                          <span className="block text-[8px] leading-tight text-[#84909a]">
+                            {label}
+                          </span>
+                          <strong className="mt-1 block text-[17px] leading-none tracking-[-0.05em] text-[#26343e]">
+                            {value}
+                          </strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="relative z-[1] flex items-center gap-2 border-t border-[rgba(115,139,151,0.13)] pt-3 text-[9px] text-[#788791]">
+                    <span className="size-1.5 rounded-full bg-[#9fc52d]" />
+                    Dados de todas as campanhas sincronizadas
+                  </div>
                 </div>
-              </div>
-              <div className="absolute right-7 bottom-[25px] flex items-center gap-[9px] text-[10px] tracking-[0.08em] text-[#929aa2] uppercase max-[720px]:static max-[720px]:mt-auto max-[720px]:justify-end max-[720px]:self-stretch">
-                <span>HRM</span>
-                <strong className="text-[10px] text-[#5e6974]">
-                  {campaignSummary.length
-                    ? "Leitura consolidada"
-                    : "Aguardando dados"}
-                </strong>
-                <span className="grid size-[29px] place-items-center rounded-full border border-[rgba(85,108,121,0.2)] text-[#556c79]">
-                  <Icon name="arrow" size={18} />
-                </span>
               </div>
             </article>
 
@@ -937,12 +978,34 @@ export default function Home() {
                     EVENTOS RECENTES
                   </p>
                   <h3 className="m-0 text-[17px] font-bold tracking-[-0.03em]">
-                    Atividade da campanha
+                    Investigação individual
                   </h3>
                 </div>
-                <span className="text-[10px] text-[#a0a7ad]">
-                  {events.length || (isSupabaseConfigured ? 0 : 4)} eventos
-                </span>
+                <div className="flex max-w-[58%] items-center gap-2 max-[720px]:max-w-full max-[720px]:flex-1">
+                  <label className="min-w-0 flex-1">
+                    <span className="sr-only">Campanha para investigar</span>
+                    <select
+                      className="min-h-[34px] w-full max-w-[250px] rounded-[10px] border border-[#e4e8ea] bg-[#fafbfb] px-2.5 text-[10px] font-bold text-[#52616c] outline-none focus:border-[#7d92a0] focus:ring-[3px] focus:ring-[rgba(125,146,160,0.12)]"
+                      value={selectedCampaign?.id ?? ""}
+                      onChange={(event) =>
+                        setSelectedId(Number(event.target.value))
+                      }
+                      disabled={!campaigns.length}
+                    >
+                      {!campaigns.length && (
+                        <option value="">Nenhuma campanha disponível</option>
+                      )}
+                      {campaigns.map((campaign) => (
+                        <option key={campaign.id} value={campaign.id}>
+                          {campaign.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <span className="flex-none text-[10px] text-[#a0a7ad]">
+                    {events.length || (isSupabaseConfigured ? 0 : 4)} eventos
+                  </span>
+                </div>
               </div>
               <div className="mt-[17px]">
                 {(isSupabaseConfigured
