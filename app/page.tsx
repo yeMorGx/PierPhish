@@ -236,6 +236,7 @@ export default function Home() {
   return (
     <DashboardShell
       activeSection="overview"
+      selectedCampaignId={selectedCampaign?.id}
       title="Visão geral"
       headerAction={
         <button

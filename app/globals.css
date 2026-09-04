@@ -532,45 +532,6 @@ button:disabled {
   background: #2d3a49;
 }
 
-.profile-trigger {
-  border: 1px solid rgba(24, 32, 43, 0.1);
-  color: #ffffff;
-  background: var(--ink);
-  box-shadow: 0 6px 16px rgba(24, 32, 43, 0.12);
-}
-
-.profile-trigger:hover {
-  transform: translateY(-1px);
-}
-
-.profile-menu-account {
-  color: var(--ink);
-  background: var(--surface-soft);
-}
-
-.profile-menu-account:hover {
-  background: var(--surface-muted);
-}
-
-.profile-menu-avatar {
-  color: #ffffff;
-  background: var(--ink);
-}
-
-.profile-menu-divider {
-  background: var(--line-soft);
-}
-
-.profile-menu-link {
-  color: var(--muted);
-}
-
-.profile-menu-link:hover,
-.profile-menu-link:focus-visible {
-  color: var(--ink);
-  background: var(--surface-muted);
-}
-
 html[data-theme="dark"] .header-sync-button {
   color: #122027 !important;
   background: #dcebef !important;
@@ -586,17 +547,6 @@ html[data-theme="dark"] .header-sync-button:disabled {
   color: #e5f0f2 !important;
   background: #52656e !important;
   opacity: 0.86;
-}
-
-html[data-theme="dark"] .profile-trigger {
-  border-color: rgba(220, 241, 247, 0.25);
-  color: #122027 !important;
-  background: #dcebef !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24);
-}
-
-html[data-theme="dark"] .profile-trigger:hover {
-  background: #f1fafb !important;
 }
 
 html[data-theme="dark"] .campaign-overview-table-wrap {
