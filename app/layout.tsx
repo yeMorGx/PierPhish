@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { PageTransition } from "@/components/ui/page-transition";
 
 export const metadata: Metadata = {
   title: "PierPhish",
@@ -15,7 +16,9 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body>
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <PageTransition>{children}</PageTransition>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
