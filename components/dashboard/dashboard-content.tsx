@@ -24,7 +24,7 @@ export function DashboardContent({
   totals,
 }: DashboardContentProps) {
   return (
-    <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(180px,0.62fr)_minmax(280px,0.82fr)] grid-rows-[minmax(330px,1.05fr)_minmax(320px,0.95fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-[minmax(0,1.2fr)_minmax(180px,0.7fr)] max-[1120px]:grid-rows-[auto_auto_auto] max-[720px]:flex max-[720px]:flex-col">
+    <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(180px,0.62fr)_minmax(280px,0.82fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-[minmax(0,1.2fr)_minmax(180px,0.7fr)] max-[1120px]:grid-rows-[auto_auto_auto] max-[720px]:flex max-[720px]:flex-col">
       <OverviewHero
         activeCampaigns={campaignSummary.filter((campaign) => campaign.status === "In progress").length}
         latestSync={campaigns.reduce<string | null>((latest, campaign) => {
