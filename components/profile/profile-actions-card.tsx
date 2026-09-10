@@ -15,6 +15,12 @@ const actions = [
     description: "Investigue sinais por pessoa.",
   },
   {
+    href: "/apresentacao",
+    icon: "grid" as const,
+    label: "Apresentação",
+    description: "Escolha os slides e apresente sem distrações.",
+  },
+  {
     href: "/configuracoes",
     icon: "tune" as const,
     label: "Configurações",

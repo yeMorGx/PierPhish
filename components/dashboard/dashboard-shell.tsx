@@ -6,7 +6,12 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { useProfile } from "@/components/profile/profile-provider";
 import { Icon } from "@/components/ui/icon";
 
-type ActiveSection = "overview" | "profile" | "risk" | "settings";
+type ActiveSection =
+  | "overview"
+  | "profile"
+  | "risk"
+  | "settings"
+  | "presentation";
 
 type DashboardShellProps = {
   activeSection: ActiveSection;
