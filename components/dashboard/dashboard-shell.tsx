@@ -164,7 +164,7 @@ export function DashboardShell({
       </aside>
 
       <section className="flex min-w-0 flex-col">
-        <header className="surface-card sticky top-[24px] z-30 flex h-[var(--header-height)] flex-none items-center justify-between gap-5 rounded-[var(--radius-shell)] px-8 py-3 max-[1120px]:top-7 max-[1120px]:rounded-[45px] max-[720px]:static max-[720px]:mb-2.5 max-[720px]:h-[118px] max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-[22px] max-[720px]:py-5">
+        <header className="surface-card flex h-[var(--header-height)] flex-none items-center justify-between gap-5 rounded-[var(--radius-shell)] px-8 py-3 max-[1120px]:rounded-[45px] max-[720px]:mb-2.5 max-[720px]:h-[118px] max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-[22px] max-[720px]:py-5">
           <h1 className="m-0 text-[clamp(18px,3vw,24px)] leading-[0.95] font-[680] tracking-[-0.065em]">
             {title}
           </h1>
@@ -178,7 +178,7 @@ export function DashboardShell({
             {headerAction}
           </div>
         </header>
-        <div className="min-w-0 overflow-x-hidden py-[14px] pr-2 pb-8 max-[720px]:p-0">
+        <div className="min-w-0 overflow-x-clip py-[14px] pr-2 pb-8 max-[720px]:p-0">
           {children}
         </div>
       </section>
