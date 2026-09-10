@@ -493,7 +493,7 @@ export default function CampaignPeoplePage() {
       <main className="theme-canvas grid min-h-screen place-items-center p-7">
         <div className="surface-card w-full max-w-[430px] rounded-[31px] p-10 text-center shadow-[0_25px_80px_rgba(21,30,41,0.08)]">
           <p className="mb-3 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-            BEEPHISH LENS / ACCESS
+            PIERPHISH / ACESSO
           </p>
           <h1 className="m-0 mb-4 text-[29px] font-[680] tracking-[-0.06em]">
             Faça login para ver as pessoas.
@@ -514,7 +514,7 @@ export default function CampaignPeoplePage() {
       <main className="theme-canvas grid min-h-screen place-items-center p-7">
         <div className="surface-card w-full max-w-[520px] rounded-[31px] p-10 text-center shadow-[0_25px_80px_rgba(21,30,41,0.08)]">
           <p className="mb-3 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-            BEEPHISH LENS / 404
+            PIERPHISH / 404
           </p>
           <h1 className="m-0 text-[clamp(30px,5vw,44px)] font-[680] tracking-[-0.07em]">
             Campanha não encontrada.
@@ -809,7 +809,7 @@ export default function CampaignPeoplePage() {
           <span>
             Última sincronização: {formatDateTime(campaign?.synced_at ?? null)}
           </span>
-          <span>BEEPHISH LENS · {sessionEmail ?? "DEMO"}</span>
+          <span>PIERPHISH · {sessionEmail ?? "DEMO"}</span>
         </footer>
       </div>
       <PersonDetailsModal

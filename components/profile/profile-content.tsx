@@ -5,12 +5,14 @@ import { useAuth } from "@/components/auth/auth-provider";
 import type { Campaign } from "@/components/dashboard/types";
 import { ProfileActionsCard } from "@/components/profile/profile-actions-card";
 import { ProfileActivityCard } from "@/components/profile/profile-activity-card";
+import { ProfileEditorCard } from "@/components/profile/profile-editor-card";
 import { ProfileHero } from "@/components/profile/profile-hero";
 import { ProfileIdentityCard } from "@/components/profile/profile-identity-card";
 import { ProfileSummaryCard } from "@/components/profile/profile-summary-card";
 import { demoCampaigns } from "@/lib/demo-data";
 import { formatDateTime } from "@/lib/format";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { useProfile } from "@/components/profile/profile-provider";
 
 type ProfileTotals = {
   campaigns: number;
@@ -53,13 +55,15 @@ function latestSyncFromCampaigns(campaigns: Campaign[]) {
 
 export function ProfileContent() {
   const { user } = useAuth();
+  const { preferences: profilePreferences } = useProfile();
   const [campaigns, setCampaigns] = useState<Campaign[]>(
     isSupabaseConfigured ? [] : demoCampaigns,
   );
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const [error, setError] = useState<string | null>(null);
   const email = user?.email ?? "demo@beephish.local";
-  const initial = email.slice(0, 1).toUpperCase();
+  const profileName = profilePreferences.displayName.trim();
+  const initial = (profileName || email).slice(0, 1).toUpperCase();
 
   useEffect(() => {
     const client = supabase;
@@ -117,7 +121,14 @@ export function ProfileContent() {
 
   return (
     <div className="grid w-full gap-[var(--cards-gap)] pb-8">
-      <ProfileHero email={email} initial={initial} lastSync={lastSync} />
+      <ProfileHero
+        avatar={profilePreferences.avatar}
+        displayName={profileName}
+        email={email}
+        initial={initial}
+        lastSync={lastSync}
+      />
+      <ProfileEditorCard />
       <ProfileSummaryCard totals={totals} />
       <div className="grid grid-cols-2 gap-[var(--cards-gap)] max-[900px]:grid-cols-1">
         <ProfileIdentityCard email={email} lastSignIn={lastSignIn} />

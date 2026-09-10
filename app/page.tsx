@@ -228,7 +228,7 @@ export default function Home() {
         <span>
           Última sincronização: {latestSync ?? "Nenhuma coleta realizada"}
         </span>
-        <span>BEEPHISH LENS · {user?.email ?? "DEMO"}</span>
+        <span>PIERPHISH · {user?.email ?? "DEMO"}</span>
       </footer>
     </DashboardShell>
   );

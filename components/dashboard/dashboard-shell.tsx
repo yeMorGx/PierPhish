@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
+import { useProfile } from "@/components/profile/profile-provider";
 import { Icon } from "@/components/ui/icon";
 
 type ActiveSection = "overview" | "profile" | "risk" | "settings";
@@ -25,9 +26,14 @@ export function DashboardShell({
   title,
 }: DashboardShellProps) {
   const { user, signOut } = useAuth();
+  const { preferences: profilePreferences } = useProfile();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const sessionEmail = user?.email ?? null;
+  const profileName = profilePreferences.displayName.trim();
+  const profileInitial = (profileName || sessionEmail || "D")
+    .slice(0, 1)
+    .toUpperCase();
   const riskPeopleHref = "/riscos";
 
   useEffect(() => {
@@ -66,12 +72,24 @@ export function DashboardShell({
           <button
             className="sidebar-profile-button group grid size-[var(--avatar-size)] place-items-center rounded-full border-1 bg-[var(--ink)] text-[16px] font-extrabold text-white shadow-[0_8px_18px_rgba(24,32,43,0.12)] transition-all duration-200 outline-none hover:border-5 focus-visible:ring-4 focus-visible:ring-[#b9c7cf] max-[720px]:size-[54px]"
             type="button"
-            aria-label="Abrir menu do perfil"
+            aria-label={
+              profileName
+                ? `Abrir menu do perfil de ${profileName}`
+                : "Abrir menu do perfil"
+            }
             aria-haspopup="menu"
             aria-expanded={profileOpen}
             onClick={() => setProfileOpen((open) => !open)}
           >
-            {sessionEmail ? sessionEmail.slice(0, 1).toUpperCase() : "D"}
+            {profilePreferences.avatar ? (
+              <img
+                className="size-full object-cover"
+                src={profilePreferences.avatar}
+                alt=""
+              />
+            ) : (
+              profileInitial
+            )}
           </button>
 
           {profileOpen && (
@@ -85,12 +103,21 @@ export function DashboardShell({
                 role="menuitem"
                 onClick={() => setProfileOpen(false)}
               >
-                <span className="profile-menu-avatar grid size-9 flex-none place-items-center rounded-full bg-[#18202b] text-[11px] font-extrabold text-white">
-                  {sessionEmail ? sessionEmail.slice(0, 1).toUpperCase() : "D"}
+                <span className="profile-menu-avatar grid size-9 flex-none place-items-center overflow-hidden rounded-full bg-[#18202b] text-[11px] font-extrabold text-white">
+                  {profilePreferences.avatar ? (
+                    <img
+                      className="size-full object-cover"
+                      src={profilePreferences.avatar}
+                      alt=""
+                    />
+                  ) : (
+                    profileInitial
+                  )}
                 </span>
                 <span className="min-w-0">
                   <strong className="block text-[11px] text-[#18202b]">
-                    {sessionEmail ? "Conta conectada" : "Modo demonstração"}
+                    {profileName ||
+                      (sessionEmail ? "Conta conectada" : "Modo demonstração")}
                   </strong>
                   <span className="mt-0.5 block max-w-[180px] overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-[#87919a]">
                     {sessionEmail ?? "Dados locais de demonstração"}

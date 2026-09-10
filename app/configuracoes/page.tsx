@@ -104,7 +104,7 @@ function SettingsContent() {
       <div className="mx-auto grid max-w-[1180px] gap-[var(--cards-gap)] pb-8">
         <section className="surface-card rounded-[var(--radius-card)] p-8 max-[720px]:rounded-[23px] max-[720px]:p-6">
           <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-            APARÊNCIA DO LENS
+            APARÊNCIA DO PIERPHISH
           </p>
           <h2 className="m-0 max-w-[700px] text-[clamp(28px,4vw,48px)] leading-[0.95] font-[680] tracking-[-0.07em]">
             Faça o espaço trabalhar a favor da leitura.
