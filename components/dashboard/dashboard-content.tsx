@@ -1,6 +1,5 @@
 import { CampaignOpeningsCard } from "@/components/dashboard/campaign-openings-card";
 import { CampaignOverviewCard } from "@/components/dashboard/campaign-overview-card";
-import { InvestigationCard } from "@/components/dashboard/investigation-card";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { OverviewHero } from "@/components/dashboard/overview-hero";
 import { RiskCard } from "@/components/dashboard/risk-card";
@@ -8,7 +7,6 @@ import type {
   Campaign,
   CampaignBar,
   CampaignSummary,
-  EventRow,
   OverviewTotals,
 } from "@/components/dashboard/types";
 
@@ -16,10 +14,6 @@ type DashboardContentProps = {
   campaignBars: CampaignBar[];
   campaigns: Campaign[];
   campaignSummary: CampaignSummary[];
-  displayedEvents: EventRow[];
-  loading: boolean;
-  onSelectedChange: (id: number) => void;
-  selectedCampaignId: number | null;
   totals: OverviewTotals;
 };
 
@@ -27,10 +21,6 @@ export function DashboardContent({
   campaignBars,
   campaigns,
   campaignSummary,
-  displayedEvents,
-  loading,
-  onSelectedChange,
-  selectedCampaignId,
   totals,
 }: DashboardContentProps) {
   return (
@@ -50,7 +40,6 @@ export function DashboardContent({
         <MetricCard label="Reportes" value={totals.reported} helper={`${totals.delivered ? Math.round((totals.reported / totals.delivered) * 100) : 0}% dos entregues consolidados`} tone="orange" />
       </div>
       <RiskCard clicked={totals.clicked} delivered={totals.delivered} opened={totals.opened} reported={totals.reported} submitted={totals.submitted} total={totals.people} />
-      <InvestigationCard campaigns={campaigns} events={displayedEvents} loading={loading} onSelectedChange={onSelectedChange} selectedCampaignId={selectedCampaignId} />
       <CampaignOverviewCard campaigns={campaignSummary} totals={totals} />
     </div>
   );

@@ -10,9 +10,8 @@ import type {
   Campaign,
   CampaignBar,
   CampaignSummary,
-  EventRow,
 } from "@/components/dashboard/types";
-import { demoCampaigns, demoEventsByCampaign } from "@/lib/demo-data";
+import { demoCampaigns } from "@/lib/demo-data";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 function pct(value: number, total: number) {
@@ -21,13 +20,11 @@ function pct(value: number, total: number) {
 
 export default function Home() {
   const router = useRouter();
-  const { ready, signOut, user } = useAuth();
+  const { ready, user } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>(
     isSupabaseConfigured ? [] : demoCampaigns,
   );
   const [selectedId, setSelectedId] = useState(5345);
-  const [events, setEvents] = useState<EventRow[]>([]);
-  const [loading, setLoading] = useState(isSupabaseConfigured);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const initialSyncStartedRef = useRef(false);
@@ -129,10 +126,6 @@ export default function Home() {
     [campaigns],
   );
 
-  const displayedEvents = isSupabaseConfigured
-    ? events
-    : (demoEventsByCampaign[selectedCampaign?.id ?? 0] ?? []);
-
   useEffect(() => {
     if (!ready) return;
     if (isSupabaseConfigured && !user) {
@@ -143,15 +136,8 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, router, user]);
 
-  useEffect(() => {
-    if (supabase && user && selectedCampaign)
-      void loadDetails(selectedCampaign.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, user?.id]);
-
-  async function loadCampaigns(showLoading = true) {
+  async function loadCampaigns() {
     if (!supabase) return;
-    if (showLoading) setLoading(true);
     setError(null);
 
     const { data, error: queryError } = await supabase
@@ -161,7 +147,6 @@ export default function Home() {
 
     if (queryError) {
       setError(queryError.message);
-      if (showLoading) setLoading(false);
       return;
     }
 
@@ -172,23 +157,6 @@ export default function Home() {
       !nextCampaigns.some((campaign) => campaign.id === selectedId)
     )
       setSelectedId(nextCampaigns[0].id);
-    if (nextCampaigns.length)
-      await loadDetails(
-        nextCampaigns.find((campaign) => campaign.id === selectedId)?.id ??
-          nextCampaigns[0].id,
-      );
-    if (showLoading) setLoading(false);
-  }
-
-  async function loadDetails(campaignId: number) {
-    if (!supabase) return;
-    const { data: nextEvents } = await supabase
-      .from("beephish_events")
-      .select("id,event_type,occurred_at")
-      .eq("campaign_id", campaignId)
-      .order("occurred_at", { ascending: false })
-      .limit(8);
-    setEvents((nextEvents ?? []) as EventRow[]);
   }
 
   function startInitialSync() {
@@ -210,17 +178,11 @@ export default function Home() {
         { body: {} },
       );
       const syncMessage = syncError?.message ?? null;
-      await loadCampaigns(false);
+      await loadCampaigns();
       if (syncMessage) setError(syncMessage);
     } finally {
       setSyncing(false);
     }
-  }
-
-  async function handleSignOut() {
-    await signOut();
-    setEvents([]);
-    initialSyncStartedRef.current = false;
   }
 
   if (!ready || (isSupabaseConfigured && !user)) {
@@ -266,10 +228,6 @@ export default function Home() {
         campaignBars={campaignBars}
         campaigns={campaigns}
         campaignSummary={campaignSummary}
-        displayedEvents={displayedEvents}
-        loading={loading}
-        onSelectedChange={setSelectedId}
-        selectedCampaignId={selectedCampaign?.id ?? null}
         totals={totals}
       />
       <footer className="hidden">
