@@ -6,7 +6,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
-type ActiveSection = "overview" | "profile" | "settings";
+type ActiveSection = "overview" | "profile" | "risk" | "settings";
 
 type DashboardShellProps = {
   activeSection: ActiveSection;
@@ -30,7 +30,7 @@ export function DashboardShell({
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const sessionEmail = user?.email ?? null;
   const isDashboard = activeSection === "overview";
-  const riskPeopleHref = isDashboard ? "#risk-overview" : "/#risk-overview";
+  const riskPeopleHref = "/riscos";
 
   useEffect(() => {
     if (!profileOpen) return;
@@ -126,8 +126,9 @@ export function DashboardShell({
             </Link>
             <Link
               href={riskPeopleHref}
-              className={`${navClass(false)} max-[720px]:hidden`}
+              className={`${navClass(activeSection === "risk")} max-[720px]:hidden`}
               aria-label="Pessoas por risco"
+              aria-current={activeSection === "risk" ? "page" : undefined}
             >
               <Icon name="users" />
             </Link>
