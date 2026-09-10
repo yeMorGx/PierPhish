@@ -1052,6 +1052,7 @@ html[data-theme="dark"] .person-risk-badge.is-low {
 .profile-hero-card {
   position: relative;
   overflow: hidden;
+  border-radius: var(--radius-card);
   padding: 31px 34px 22px;
 }
 
@@ -1198,6 +1199,8 @@ html[data-theme="dark"] .person-risk-badge.is-low {
 
 .profile-panel-card {
   min-width: 0;
+  overflow: hidden;
+  border-radius: var(--radius-card);
   padding: 25px;
 }
 

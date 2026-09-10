@@ -116,7 +116,7 @@ export function ProfileContent() {
     : null;
 
   return (
-    <div className="mx-auto grid max-w-[1180px] gap-[var(--cards-gap)] pb-8">
+    <div className="grid w-full gap-[var(--cards-gap)] pb-8">
       <ProfileHero email={email} initial={initial} lastSync={lastSync} />
       <ProfileSummaryCard totals={totals} />
       <div className="grid grid-cols-2 gap-[var(--cards-gap)] max-[900px]:grid-cols-1">
