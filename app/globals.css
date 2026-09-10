@@ -22,7 +22,7 @@
   --card-shadow: 0 10px 30px rgba(25, 34, 45, 0.04);
 
   /* Ajuste estas medidas para alterar a escala geral da interface. */
-  --shell-padding: 56px;
+  --shell-padding: 24px;
   --shell-gap: 16px;
   --cards-gap: 10px;
   --sidebar-width: 82px;
