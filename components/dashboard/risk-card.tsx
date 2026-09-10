@@ -67,7 +67,7 @@ export function RiskCard({
           !
         </span>
         <p className="m-0 text-[10px] leading-[1.35] text-[#7d8b80]">
-          Use os eventos para investigar a linha do tempo individual.
+          Abra uma campanha para ver os detalhes individuais.
         </p>
       </div>
     </article>

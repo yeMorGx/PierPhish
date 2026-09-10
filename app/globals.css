@@ -34,22 +34,22 @@
 }
 
 html[data-theme="dark"] {
-  --canvas: #0b1116;
-  --surface: #152128;
-  --surface-soft: #1a2932;
-  --surface-muted: #21333c;
-  --ink: #f0f7f8;
-  --ink-strong: #d8e6ea;
-  --muted: #aec0c9;
-  --muted-soft: #91a6b0;
-  --line: #344a54;
-  --line-soft: #2a3d46;
-  --soft: #21333c;
-  --accent: #a4c6d0;
-  --accent-soft: #29404a;
-  --success: #b8dc59;
-  --card-border: rgba(219, 237, 242, 0.1);
-  --card-shadow: 0 18px 45px rgba(0, 0, 0, 0.2);
+  --canvas: #090f13;
+  --surface: #111d23;
+  --surface-soft: #17272f;
+  --surface-muted: #1d3038;
+  --ink: #edf5f7;
+  --ink-strong: #d4e3e7;
+  --muted: #94aab3;
+  --muted-soft: #7f969f;
+  --line: #2a4049;
+  --line-soft: #22353d;
+  --soft: #1d3038;
+  --accent: #9fc3cf;
+  --accent-soft: #24404a;
+  --success: #b9df64;
+  --card-border: rgba(164, 199, 209, 0.07);
+  --card-shadow: 0 14px 32px rgba(0, 0, 0, 0.13);
 }
 
 * {
@@ -78,6 +78,57 @@ body {
     "Segoe UI",
     sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+html,
+body,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c5d0d5 transparent;
+}
+
+html[data-theme="dark"],
+html[data-theme="dark"] body,
+html[data-theme="dark"] * {
+  scrollbar-color: #2a424c transparent;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #c5d0d5;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9eafb7;
+  background-clip: padding-box;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #2a424c;
+  background-clip: padding-box;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #466572;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .theme-canvas {
@@ -112,9 +163,9 @@ html[data-card-style="translucent"] .surface-card {
 }
 
 html[data-theme="dark"][data-card-style="translucent"] .surface-card {
-  border-color: rgba(216, 237, 244, 0.12);
-  background: rgba(22, 31, 38, 0.7);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
+  border-color: rgba(190, 224, 232, 0.08);
+  background: rgba(19, 29, 35, 0.72);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.12);
 }
 
 html[data-card-style="liquid"] .surface-card {
@@ -134,7 +185,7 @@ html[data-card-style="liquid"] .surface-card {
 }
 
 html[data-theme="dark"][data-card-style="liquid"] .surface-card {
-  border-color: rgba(202, 230, 239, 0.19);
+  border-color: rgba(202, 230, 239, 0.13);
   background:
     radial-gradient(
       circle at 10% 0%,
@@ -143,8 +194,8 @@ html[data-theme="dark"][data-card-style="liquid"] .surface-card {
     ),
     linear-gradient(135deg, rgba(35, 51, 60, 0.83), rgba(17, 26, 32, 0.72));
   box-shadow:
-    inset 0 1px 0 rgba(221, 244, 250, 0.14),
-    0 22px 55px rgba(0, 0, 0, 0.23);
+    inset 0 1px 0 rgba(221, 244, 250, 0.1),
+    0 16px 40px rgba(0, 0, 0, 0.16);
 }
 
 html[data-card-style="apple"] .surface-card {
@@ -164,7 +215,7 @@ html[data-card-style="apple"] .surface-card {
 }
 
 html[data-theme="dark"][data-card-style="apple"] .surface-card {
-  border-color: rgba(220, 241, 247, 0.2);
+  border-color: rgba(220, 241, 247, 0.13);
   background: linear-gradient(
     145deg,
     rgba(52, 72, 82, 0.78),
@@ -172,9 +223,9 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
     rgba(17, 27, 34, 0.76)
   );
   box-shadow:
-    inset 0 1px 0 rgba(227, 247, 252, 0.18),
-    inset 0 -1px 0 rgba(5, 12, 16, 0.24),
-    0 24px 62px rgba(0, 0, 0, 0.28);
+    inset 0 1px 0 rgba(227, 247, 252, 0.12),
+    inset 0 -1px 0 rgba(5, 12, 16, 0.18),
+    0 18px 44px rgba(0, 0, 0, 0.18);
 }
 
 .sidebar-nav-link {
@@ -476,7 +527,7 @@ html[data-theme="dark"] [class*="bg-[rgba(255,255,255"] {
 }
 
 html[data-theme="dark"] [class*="bg-[#182"] {
-  background-color: var(--ink) !important;
+  background-color: #29424c !important;
 }
 
 html[data-theme="dark"] [class*="text-white"] {
@@ -486,6 +537,18 @@ html[data-theme="dark"] [class*="text-white"] {
 html[data-theme="dark"] .theme-inset-panel {
   border-color: var(--line-soft);
   background: var(--surface-muted) !important;
+}
+
+html[data-theme="dark"] .sidebar-profile-button {
+  border-color: rgba(170, 207, 216, 0.14) !important;
+  color: #eff8fa !important;
+  background: #29424c !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .profile-menu-avatar {
+  color: #eff8fa !important;
+  background: #29424c !important;
 }
 
 html[data-theme="dark"] .card-style-preview-solid {
@@ -533,45 +596,48 @@ button:disabled {
 }
 
 html[data-theme="dark"] .header-sync-button {
-  color: #122027 !important;
-  background: #dcebef !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(160, 198, 209, 0.18) !important;
+  color: #eaf5f7 !important;
+  background: #27404a !important;
+  box-shadow: none !important;
 }
 
 html[data-theme="dark"] .header-sync-button:hover:not(:disabled) {
-  color: #0c171c !important;
-  background: #f1fafb !important;
+  color: #f2fbfc !important;
+  background: #315361 !important;
+  border-color: rgba(175, 213, 222, 0.28) !important;
 }
 
 html[data-theme="dark"] .header-sync-button:disabled {
-  color: #e5f0f2 !important;
-  background: #52656e !important;
+  color: #a7bdc4 !important;
+  background: #20343c !important;
+  border-color: rgba(130, 165, 175, 0.12) !important;
   opacity: 0.86;
 }
 
 html[data-theme="dark"] .campaign-overview-table-wrap {
-  border-color: #344a54 !important;
-  background: #152128 !important;
+  border-color: #223842 !important;
+  background: #111d23 !important;
 }
 
 html[data-theme="dark"] .campaign-overview-table-head {
-  border-color: #344a54 !important;
+  border-color: #2a424b !important;
   color: #a9c0c8 !important;
-  background: #20333d !important;
+  background: #1b2d35 !important;
 }
 
 html[data-theme="dark"] .campaign-overview-table-row {
-  border-color: #2b3e47 !important;
+  border-color: #243a43 !important;
   color: #aec0c9 !important;
-  background: #17262e !important;
+  background: #132329 !important;
 }
 
 html[data-theme="dark"] .campaign-overview-table-row:hover {
-  background: #1e323c !important;
+  background: #1a313a !important;
 }
 
 html[data-theme="dark"] .campaign-overview-metric {
-  background: #1e3038 !important;
+  background: #1a2d35 !important;
 }
 
 html[data-theme="dark"] .campaign-count-pill {
