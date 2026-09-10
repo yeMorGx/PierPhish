@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useProfile } from "@/components/profile/profile-provider";
 import { Icon } from "@/components/ui/icon";
+import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
 
 type ActiveSection =
   | "overview"
@@ -33,6 +34,7 @@ export function DashboardShell({
   const { user, signOut } = useAuth();
   const { preferences: profilePreferences } = useProfile();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const sessionEmail = user?.email ?? null;
   const profileName = profilePreferences.displayName.trim();
@@ -132,6 +134,20 @@ export function DashboardShell({
               </Link>
               <div className="my-2 h-px bg-[#edf0f1]" />
               <button
+                className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#edf4f5] hover:text-[#3e6573] focus-visible:bg-[#edf4f5] focus-visible:text-[#3e6573]"
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setProfileOpen(false);
+                  setWorkspaceOpen(true);
+                }}
+              >
+                <Icon name="grid" size={16} />
+                Trocar workspace
+                <span className="ml-auto text-[14px] leading-none">›</span>
+              </button>
+              <div className="my-2 h-px bg-[#edf0f1]" />
+              <button
                 className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#fff1ed] hover:text-[#a5553b] focus-visible:bg-[#fff1ed] focus-visible:text-[#a5553b]"
                 type="button"
                 role="menuitem"
@@ -189,6 +205,10 @@ export function DashboardShell({
           {children}
         </div>
       </section>
+      <WorkspaceSwitcher
+        onClose={() => setWorkspaceOpen(false)}
+        open={workspaceOpen}
+      />
     </main>
   );
 }
