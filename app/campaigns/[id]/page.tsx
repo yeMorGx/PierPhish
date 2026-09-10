@@ -650,7 +650,9 @@ export default function CampaignPeoplePage() {
               </div>
               <label className="relative block w-[220px] max-[720px]:w-full">
                 <span className="sr-only">Buscar pessoa</span>
-                <Icon name="search" size={15} />
+                <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[#7d8790]">
+                  <Icon name="search" size={15} />
+                </span>
                 <input
                   className="h-10 w-full rounded-[var(--radius-control)] border border-[var(--line)] bg-[#fbfcfc] pr-3 pl-9 text-[11px] text-[var(--ink)] outline-none focus:border-[#8a9ba6] focus:ring-2 focus:ring-[#e6edef]"
                   placeholder="Buscar nome ou e-mail"
