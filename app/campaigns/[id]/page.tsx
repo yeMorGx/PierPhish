@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CampaignLogoPicker } from "@/components/campaigns/campaign-logo";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import {
   PersonDetailsModal,
   type PersonDetails,
@@ -536,9 +537,28 @@ export default function CampaignPeoplePage() {
   }
 
   return (
-    <main className="theme-canvas min-h-screen p-[var(--shell-padding)] max-[1120px]:p-7 max-[720px]:p-[14px]">
+    <DashboardShell
+      activeSection="overview"
+      title="Campanha"
+      headerAction={
+        <div className="flex flex-none items-center gap-3 max-[720px]:w-full max-[720px]:justify-between">
+          <span className="inline-flex items-center gap-2 text-[11px] text-[#69717d]">
+            <span className="size-2 rounded-full bg-[var(--success)] shadow-[0_0_0_4px_rgba(159,197,45,0.14)]" />
+            {sessionEmail ?? "Modo demonstração"}
+          </span>
+          <button
+            className="surface-card grid size-10 place-items-center rounded-[var(--radius-control)] text-[#6f7883] transition hover:border-[#cbd0d5] hover:text-[var(--ink)]"
+            type="button"
+            aria-label="Atualizar dados"
+            onClick={() => void loadData()}
+          >
+            <Icon name="refresh" size={17} />
+          </button>
+        </div>
+      }
+    >
       <div className="mx-auto flex max-w-[1600px] flex-col gap-[var(--cards-gap)]">
-        <header className="surface-card flex items-center justify-between gap-6 rounded-[30px] px-8 py-7 max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[22px] max-[720px]:px-6">
+        <header className="surface-card flex items-center rounded-[30px] px-8 py-7 max-[720px]:rounded-[22px] max-[720px]:px-6">
           <div className="min-w-0">
             <Link
               href="/"
@@ -568,20 +588,6 @@ export default function CampaignPeoplePage() {
                 </p>
               </div>
             </div>
-          </div>
-          <div className="flex flex-none items-center gap-3 max-[720px]:w-full max-[720px]:justify-between">
-            <span className="inline-flex items-center gap-2 text-[11px] text-[#69717d]">
-              <span className="size-2 rounded-full bg-[var(--success)] shadow-[0_0_0_4px_rgba(159,197,45,0.14)]" />
-              {sessionEmail ?? "Modo demonstração"}
-            </span>
-            <button
-              className="surface-card grid size-10 place-items-center rounded-[var(--radius-control)] text-[#6f7883] transition hover:border-[#cbd0d5] hover:text-[var(--ink)]"
-              type="button"
-              aria-label="Atualizar dados"
-              onClick={() => void loadData()}
-            >
-              <Icon name="refresh" size={17} />
-            </button>
           </div>
         </header>
 
@@ -816,7 +822,7 @@ export default function CampaignPeoplePage() {
         person={selectedPerson}
         onClose={() => setSelectedPerson(null)}
       />
-    </main>
+    </DashboardShell>
   );
 }
 
