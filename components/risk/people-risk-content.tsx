@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import {
+  PersonDetailsModal,
+  type PersonDetails,
+} from "@/components/people/person-details-modal";
 import { Icon } from "@/components/ui/icon";
 import { demoCampaigns } from "@/lib/demo-data";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -32,26 +36,7 @@ type RawEvent = {
   occurred_at: string | null;
 };
 
-type CampaignReference = {
-  id: number;
-  name: string;
-};
-
-type RiskPerson = {
-  id: string;
-  name: string;
-  email: string;
-  position: string;
-  department: string;
-  campaigns: CampaignReference[];
-  opened: boolean;
-  clicked: boolean;
-  reported: boolean;
-  submitted: boolean;
-  lastActivity: string | null;
-  risk: RiskLevel;
-  score: number;
-};
+type RiskPerson = PersonDetails;
 
 type CampaignRow = {
   id: number;
@@ -67,13 +52,22 @@ const demoRiskPeople: RiskPerson[] = [
     position: "Analista",
     department: "Financeiro",
     campaigns: [{ id: 5345, name: demoCampaigns[0].name }],
+    status: "Abriu",
     opened: true,
     clicked: false,
     reported: false,
     submitted: false,
     lastActivity: "2026-09-02T14:42:00Z",
+    sentAt: "2026-09-02T09:00:00Z",
     risk: "attention",
     score: 2,
+    events: [
+      {
+        id: "demo-ana-opened",
+        label: "Abriu",
+        occurredAt: "2026-09-02T14:42:00Z",
+      },
+    ],
   },
   {
     id: "demo-carlos",
@@ -82,13 +76,22 @@ const demoRiskPeople: RiskPerson[] = [
     position: "Coordenador",
     department: "Operações",
     campaigns: [{ id: 5345, name: demoCampaigns[0].name }],
+    status: "Clicou",
     opened: true,
     clicked: true,
     reported: false,
     submitted: false,
     lastActivity: "2026-09-02T13:18:00Z",
+    sentAt: "2026-09-02T09:00:00Z",
     risk: "high",
     score: 3,
+    events: [
+      {
+        id: "demo-carlos-clicked",
+        label: "Clicou",
+        occurredAt: "2026-09-02T13:18:00Z",
+      },
+    ],
   },
   {
     id: "demo-juliana",
@@ -97,13 +100,22 @@ const demoRiskPeople: RiskPerson[] = [
     position: "Assistente",
     department: "Recursos Humanos",
     campaigns: [{ id: 5349, name: demoCampaigns[1].name }],
+    status: "Reportou",
     opened: false,
     clicked: false,
     reported: true,
     submitted: false,
     lastActivity: "2026-09-02T12:06:00Z",
+    sentAt: "2026-09-02T09:00:00Z",
     risk: "low",
     score: 1,
+    events: [
+      {
+        id: "demo-juliana-reported",
+        label: "Reportou",
+        occurredAt: "2026-09-02T12:06:00Z",
+      },
+    ],
   },
   {
     id: "demo-rafael",
@@ -112,13 +124,16 @@ const demoRiskPeople: RiskPerson[] = [
     position: "Especialista",
     department: "Tecnologia",
     campaigns: [{ id: 5052, name: demoCampaigns[2].name }],
+    status: "Entregue",
     opened: false,
     clicked: false,
     reported: false,
     submitted: false,
     lastActivity: "2026-09-02T09:04:00Z",
+    sentAt: "2026-09-02T09:00:00Z",
     risk: "low",
     score: 0,
+    events: [],
   },
   {
     id: "demo-marina",
@@ -130,13 +145,22 @@ const demoRiskPeople: RiskPerson[] = [
       { id: 5345, name: demoCampaigns[0].name },
       { id: 2581, name: demoCampaigns[3].name },
     ],
+    status: "Abriu",
     opened: true,
     clicked: false,
     reported: false,
     submitted: false,
     lastActivity: "2026-09-01T17:22:00Z",
+    sentAt: "2026-09-01T09:00:00Z",
     risk: "attention",
     score: 2,
+    events: [
+      {
+        id: "demo-marina-opened",
+        label: "Abriu",
+        occurredAt: "2026-09-01T17:22:00Z",
+      },
+    ],
   },
 ];
 
@@ -151,6 +175,16 @@ function fullName(result: RawResult) {
     .join(" ")
     .trim();
   return name || result.email || "Pessoa sem nome";
+}
+
+function statusLabel(value: string | null) {
+  if (!value) return "Sem status";
+  if (containsSignal(value, ["click", "link", "clicou"])) return "Clicou";
+  if (containsSignal(value, ["report", "reportou"])) return "Reportou";
+  if (containsSignal(value, ["open", "abriu"])) return "Abriu";
+  if (containsSignal(value, ["deliver", "entregue"])) return "Entregue";
+  if (containsSignal(value, ["send", "enviado"])) return "Enviado";
+  return value;
 }
 
 function latestDate(values: (string | null | undefined)[]) {
@@ -177,10 +211,7 @@ function scoreFromSignals({
   opened,
   reported,
   submitted,
-}: Pick<
-  RiskPerson,
-  "clicked" | "opened" | "reported" | "submitted"
->) {
+}: Pick<RiskPerson, "clicked" | "opened" | "reported" | "submitted">) {
   if (submitted) return 4;
   if (clicked) return 3;
   if (opened) return 2;
@@ -201,10 +232,7 @@ function buildPeople(
   for (const event of events) {
     if (!event.email) continue;
     const key = `${event.campaign_id}:${event.email.toLowerCase()}`;
-    eventsByPerson.set(key, [
-      ...(eventsByPerson.get(key) ?? []),
-      event,
-    ]);
+    eventsByPerson.set(key, [...(eventsByPerson.get(key) ?? []), event]);
   }
 
   const peopleByKey = new Map<string, RiskPerson>();
@@ -246,11 +274,23 @@ function buildPeople(
       existing.clicked ||= clicked;
       existing.reported ||= reported;
       existing.submitted ||= submitted;
-      existing.lastActivity = latestDate([
-        existing.lastActivity,
-        activity,
-      ]);
-      if (campaign && !existing.campaigns.some((item) => item.id === campaign.id)) {
+      existing.lastActivity = latestDate([existing.lastActivity, activity]);
+      existing.sentAt = latestDate([existing.sentAt, result.send_date]);
+      existing.events = [
+        ...existing.events,
+        ...relatedEvents.map((event) => ({
+          id: event.beephish_event_id,
+          label: statusLabel(event.event_type),
+          occurredAt: event.occurred_at,
+        })),
+      ].filter(
+        (event, index, allEvents) =>
+          allEvents.findIndex((item) => item.id === event.id) === index,
+      );
+      if (
+        campaign &&
+        !existing.campaigns.some((item) => item.id === campaign.id)
+      ) {
         existing.campaigns.push({ id: campaign.id, name: campaign.name });
       }
       existing.risk = riskFromSignals(existing);
@@ -264,14 +304,27 @@ function buildPeople(
       email: result.email ?? "E-mail não informado",
       position: result.position ?? "—",
       department: result.department ?? "—",
+      status: statusLabel(result.status),
       campaigns: campaign ? [{ id: campaign.id, name: campaign.name }] : [],
       opened,
       clicked,
       reported,
       submitted,
       lastActivity: activity,
+      sentAt: result.send_date,
       risk: riskFromSignals({ clicked, opened, submitted }),
       score: scoreFromSignals({ clicked, opened, reported, submitted }),
+      events: relatedEvents
+        .map((event) => ({
+          id: event.beephish_event_id,
+          label: statusLabel(event.event_type),
+          occurredAt: event.occurred_at,
+        }))
+        .sort(
+          (first, second) =>
+            (Date.parse(second.occurredAt ?? "") || 0) -
+            (Date.parse(first.occurredAt ?? "") || 0),
+        ),
     };
     peopleByKey.set(personKey, person);
   }
@@ -327,7 +380,9 @@ function Signal({
   tone: "blue" | "orange" | "green" | "red";
 }) {
   return (
-    <span className={`risk-signal risk-signal-${tone} ${active ? "is-active" : ""}`}>
+    <span
+      className={`risk-signal risk-signal-${tone} ${active ? "is-active" : ""}`}
+    >
       <span aria-hidden="true" />
       {label}
     </span>
@@ -358,6 +413,9 @@ function PeopleRiskPage() {
   const [filter, setFilter] = useState<RiskFilter>("all");
   const [department, setDepartment] = useState("all");
   const [search, setSearch] = useState("");
+  const [selectedPerson, setSelectedPerson] = useState<PersonDetails | null>(
+    null,
+  );
 
   async function loadData() {
     if (!supabase) return;
@@ -423,9 +481,13 @@ function PeopleRiskPage() {
 
   const departments = useMemo(
     () =>
-      [...new Set(people.map((person) => person.department).filter((item) => item !== "—"))].sort(
-        (first, second) => first.localeCompare(second, "pt-BR"),
-      ),
+      [
+        ...new Set(
+          people
+            .map((person) => person.department)
+            .filter((item) => item !== "—"),
+        ),
+      ].sort((first, second) => first.localeCompare(second, "pt-BR")),
     [people],
   );
 
@@ -517,13 +579,21 @@ function PeopleRiskPage() {
         <section className="grid grid-cols-4 gap-[var(--cards-gap)] max-[900px]:grid-cols-2 max-[520px]:grid-cols-1">
           {(
             [
-              ["Pessoas analisadas", summary.total, "todas as campanhas", "neutral"],
+              [
+                "Pessoas analisadas",
+                summary.total,
+                "todas as campanhas",
+                "neutral",
+              ],
               ["Risco alto", summary.high, "clicou ou enviou dados", "high"],
               ["Atenção", summary.attention, "abriu a mensagem", "attention"],
               ["Baixo", summary.low, "sem exposição crítica", "low"],
             ] as [string, number, string, "neutral" | RiskLevel][]
           ).map(([label, value, helper, tone]) => (
-            <article className={`risk-summary-card risk-summary-${tone}`} key={label}>
+            <article
+              className={`risk-summary-card risk-summary-${tone}`}
+              key={label}
+            >
               <span>{label}</span>
               <strong>{value}</strong>
               <small>{helper}</small>
@@ -611,35 +681,65 @@ function PeopleRiskPage() {
                     <tr key={person.id}>
                       <td>
                         <div className="risk-person-cell">
-                          <span className="risk-person-avatar">{initials(person.name)}</span>
+                          <span className="risk-person-avatar">
+                            {initials(person.name)}
+                          </span>
                           <span className="min-w-0">
-                            <strong>{person.name}</strong>
-                            <small>{person.email}</small>
-                            <em>
-                              {person.department} · {person.position}
-                            </em>
+                            <button
+                              aria-label={`Abrir detalhes de ${person.name}`}
+                              className="risk-person-trigger"
+                              onClick={() => setSelectedPerson(person)}
+                              type="button"
+                            >
+                              <strong>{person.name}</strong>
+                              <small>{person.email}</small>
+                              <em>
+                                {person.department} · {person.position}
+                              </em>
+                            </button>
                           </span>
                         </div>
                       </td>
                       <td>
                         <div className="risk-campaign-list">
                           {person.campaigns.slice(0, 2).map((campaign) => (
-                            <a href={`/campaigns/${campaign.id}`} key={campaign.id}>
+                            <a
+                              href={`/campaigns/${campaign.id}`}
+                              key={campaign.id}
+                            >
                               {campaign.name}
                             </a>
                           ))}
                           {person.campaigns.length > 2 && (
                             <span>+{person.campaigns.length - 2} outras</span>
                           )}
-                          {!person.campaigns.length && <span>Sem campanha</span>}
+                          {!person.campaigns.length && (
+                            <span>Sem campanha</span>
+                          )}
                         </div>
                       </td>
                       <td>
                         <div className="flex flex-wrap gap-1.5">
-                          <Signal active={person.submitted} label="dados" tone="red" />
-                          <Signal active={person.clicked} label="clicou" tone="orange" />
-                          <Signal active={person.opened} label="abriu" tone="blue" />
-                          <Signal active={person.reported} label="reportou" tone="green" />
+                          <Signal
+                            active={person.submitted}
+                            label="dados"
+                            tone="red"
+                          />
+                          <Signal
+                            active={person.clicked}
+                            label="clicou"
+                            tone="orange"
+                          />
+                          <Signal
+                            active={person.opened}
+                            label="abriu"
+                            tone="blue"
+                          />
+                          <Signal
+                            active={person.reported}
+                            label="reportou"
+                            tone="green"
+                          />
                         </div>
                       </td>
                       <td>
@@ -663,7 +763,8 @@ function PeopleRiskPage() {
               )}
             </div>
             <p className="mt-4 mb-0 text-[10px] text-[#87919a]">
-              Mostrando {visiblePeople.length} de {people.length} pessoas consolidadas.
+              Mostrando {visiblePeople.length} de {people.length} pessoas
+              consolidadas.
             </p>
           </article>
 
@@ -675,8 +776,8 @@ function PeopleRiskPage() {
               O que cada nível significa
             </h2>
             <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[#87919a]">
-              A classificação prioriza comportamento observado, não o cargo ou
-              a área da pessoa.
+              A classificação prioriza comportamento observado, não o cargo ou a
+              área da pessoa.
             </p>
             <div className="risk-guide-list">
               {(["high", "attention", "low"] as RiskLevel[]).map((level) => (
@@ -696,6 +797,10 @@ function PeopleRiskPage() {
           </aside>
         </section>
       </div>
+      <PersonDetailsModal
+        person={selectedPerson}
+        onClose={() => setSelectedPerson(null)}
+      />
     </DashboardShell>
   );
 }

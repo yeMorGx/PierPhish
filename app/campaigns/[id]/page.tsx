@@ -4,6 +4,11 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CampaignLogoPicker } from "@/components/campaigns/campaign-logo";
+import {
+  PersonDetailsModal,
+  type PersonDetails,
+  type PersonRiskLevel,
+} from "@/components/people/person-details-modal";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type Stats = {
@@ -42,18 +47,7 @@ type RawEvent = {
   occurred_at: string | null;
 };
 
-type Person = {
-  id: string;
-  name: string;
-  email: string;
-  position: string;
-  department: string;
-  status: string;
-  opened: boolean;
-  clicked: boolean;
-  reported: boolean;
-  lastActivity: string | null;
-};
+type Person = PersonDetails;
 
 type Filter = "all" | "opened" | "clicked" | "reported";
 
@@ -271,6 +265,29 @@ function fullName(result: RawResult) {
   return name || result.email || "Pessoa sem nome";
 }
 
+function riskFromSignals({
+  clicked,
+  opened,
+  submitted,
+}: Pick<Person, "clicked" | "opened" | "submitted">): PersonRiskLevel {
+  if (submitted || clicked) return "high";
+  if (opened) return "attention";
+  return "low";
+}
+
+function scoreFromSignals({
+  clicked,
+  opened,
+  reported,
+  submitted,
+}: Pick<Person, "clicked" | "opened" | "reported" | "submitted">) {
+  if (submitted) return 4;
+  if (clicked) return 3;
+  if (opened) return 2;
+  if (reported) return 1;
+  return 0;
+}
+
 export default function CampaignPeoplePage() {
   const params = useParams<{ id: string }>();
   const campaignId = Number(params.id);
@@ -291,6 +308,7 @@ export default function CampaignPeoplePage() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
   useEffect(() => {
     if (!supabase) return;
@@ -391,6 +409,17 @@ export default function CampaignPeoplePage() {
           .filter(Boolean)
           .sort()
           .at(-1) ?? null;
+      const opened = containsSignal(signals, ["open"]);
+      const clicked = containsSignal(signals, ["click", "link"]);
+      const reported =
+        Boolean(result.reported) || containsSignal(signals, ["report"]);
+      const submitted = containsSignal(signals, [
+        "submitted",
+        "submit",
+        "dados enviados",
+        "data sent",
+        "enviou dados",
+      ]);
       return {
         id: result.beephish_id,
         name: fullName(result),
@@ -398,14 +427,29 @@ export default function CampaignPeoplePage() {
         position: result.position ?? "—",
         department: result.department ?? "—",
         status: statusLabel(result.status),
-        opened: containsSignal(signals, ["open"]),
-        clicked: containsSignal(signals, ["click", "link"]),
-        reported:
-          Boolean(result.reported) || containsSignal(signals, ["report"]),
+        campaigns: campaign ? [{ id: campaign.id, name: campaign.name }] : [],
+        opened,
+        clicked,
+        reported,
+        submitted,
         lastActivity,
+        sentAt: result.send_date,
+        risk: riskFromSignals({ clicked, opened, submitted }),
+        score: scoreFromSignals({ clicked, opened, reported, submitted }),
+        events: relatedEvents
+          .map((event) => ({
+            id: event.beephish_event_id,
+            label: statusLabel(event.event_type),
+            occurredAt: event.occurred_at,
+          }))
+          .sort(
+            (first, second) =>
+              (Date.parse(second.occurredAt ?? "") || 0) -
+              (Date.parse(first.occurredAt ?? "") || 0),
+          ),
       };
     });
-  }, [events, results]);
+  }, [campaign, events, results]);
 
   const visiblePeople = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -654,12 +698,19 @@ export default function CampaignPeoplePage() {
                       key={person.id}
                     >
                       <td className="px-2 py-4">
-                        <strong className="block text-[12px] text-[#34404a]">
-                          {person.name}
-                        </strong>
-                        <span className="mt-1 block max-w-[230px] overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-[#9aa2a8]">
-                          {person.email}
-                        </span>
+                        <button
+                          aria-label={`Abrir detalhes de ${person.name}`}
+                          className="person-trigger"
+                          onClick={() => setSelectedPerson(person)}
+                          type="button"
+                        >
+                          <strong className="block text-[12px] text-[#34404a]">
+                            {person.name}
+                          </strong>
+                          <span className="mt-1 block max-w-[230px] overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-[#9aa2a8]">
+                            {person.email}
+                          </span>
+                        </button>
                       </td>
                       <td className="px-2 py-4">
                         <span className="block text-[11px] text-[#65717b]">
@@ -759,6 +810,10 @@ export default function CampaignPeoplePage() {
           <span>BEEPHISH LENS · {sessionEmail ?? "DEMO"}</span>
         </footer>
       </div>
+      <PersonDetailsModal
+        person={selectedPerson}
+        onClose={() => setSelectedPerson(null)}
+      />
     </main>
   );
 }

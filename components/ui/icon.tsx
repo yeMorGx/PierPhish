@@ -12,7 +12,8 @@ export type IconName =
   | "image"
   | "settings"
   | "tune"
-  | "check";
+  | "check"
+  | "close";
 
 export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const common = {
@@ -120,6 +121,12 @@ export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
       </>
     ),
     check: <path d="m5 12 4 4L19 6" />,
+    close: (
+      <>
+        <path d="m6 6 12 12" />
+        <path d="m18 6-12 12" />
+      </>
+    ),
   };
 
   return <svg {...common}>{paths[name]}</svg>;
