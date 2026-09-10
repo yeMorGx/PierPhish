@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import {
@@ -334,6 +335,33 @@ function SettingsContent() {
               Mostrar ajuda de contraste
             </button>
           )}
+        </section>
+
+        <section className="status-settings-card surface-card flex items-center justify-between gap-6 rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[620px]:flex-col max-[620px]:items-start">
+          <div className="flex min-w-0 items-start gap-4">
+            <span className="status-settings-icon grid size-11 flex-none place-items-center rounded-[15px]">
+              <Icon name="shield" size={19} />
+            </span>
+            <div>
+              <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                SAÚDE DO AMBIENTE
+              </p>
+              <h3 className="m-0 text-[18px] font-bold tracking-[-0.04em]">
+                Status da conexão
+              </h3>
+              <p className="mt-2 mb-0 max-w-[560px] text-[11px] leading-relaxed text-[#87919a]">
+                Veja a conexão com o BeePhish, a última sincronização e a
+                disponibilidade dos dados consolidados.
+              </p>
+            </div>
+          </div>
+          <Link
+            className="inline-flex flex-none items-center gap-2 rounded-[11px] border border-[#dce3e5] px-3.5 py-2.5 text-[11px] font-bold text-[#526572] transition-colors hover:border-[#9aadb7] hover:text-[#18202b]"
+            href="/status"
+          >
+            Abrir status
+            <Icon name="arrow" size={15} />
+          </Link>
         </section>
 
         <section className="surface-card flex items-center justify-between gap-4 rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[520px]:flex-col max-[520px]:items-start">

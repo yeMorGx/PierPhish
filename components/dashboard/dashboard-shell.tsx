@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Icon } from "@/components/ui/icon";
-import { isSupabaseConfigured } from "@/lib/supabase";
 
 type ActiveSection = "overview" | "profile" | "risk" | "settings";
 
@@ -29,7 +28,6 @@ export function DashboardShell({
   const [profileOpen, setProfileOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const sessionEmail = user?.email ?? null;
-  const isDashboard = activeSection === "overview";
   const riskPeopleHref = "/riscos";
 
   useEffect(() => {
@@ -149,15 +147,11 @@ export function DashboardShell({
           <h1 className="m-0 text-[clamp(18px,3vw,24px)] leading-[0.95] font-[680] tracking-[-0.065em]">
             {title}
           </h1>
-          <div className="flex items-center gap-2.5 max-[720px]:w-full max-[720px]:justify-between">
-            <span className="mr-[7px] inline-flex items-center gap-2 text-[12px] text-[#69717d] max-[720px]:mr-auto">
-              <span className="inline-block size-[7px] rounded-full bg-[#9fc52d] shadow-[0_0_0_4px_rgba(159,197,45,0.14)]" />
-              {isSupabaseConfigured && sessionEmail
-                ? "Dados conectados"
-                : "Modo demonstração"}
-            </span>
-            {headerAction}
-          </div>
+          {headerAction && (
+            <div className="flex items-center gap-2.5 max-[720px]:w-full max-[720px]:justify-between">
+              {headerAction}
+            </div>
+          )}
         </header>
         <div className="min-w-0 overflow-x-clip py-[14px] pr-2 pb-8 max-[720px]:p-0">
           {children}
