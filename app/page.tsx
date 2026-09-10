@@ -29,11 +29,6 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const initialSyncStartedRef = useRef(false);
 
-  const selectedCampaign =
-    campaigns.find((campaign) => campaign.id === selectedId) ??
-    campaigns[0] ??
-    null;
-
   const campaignBars = useMemo<CampaignBar[]>(
     () =>
       [...campaigns]
@@ -198,7 +193,6 @@ export default function Home() {
   return (
     <DashboardShell
       activeSection="overview"
-      selectedCampaignId={selectedCampaign?.id}
       title="Visão geral"
       headerAction={
         <button

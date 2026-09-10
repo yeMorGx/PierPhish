@@ -12,7 +12,6 @@ type DashboardShellProps = {
   activeSection: ActiveSection;
   children: React.ReactNode;
   headerAction?: React.ReactNode;
-  selectedCampaignId?: number | null;
   title: string;
 };
 
@@ -24,7 +23,6 @@ export function DashboardShell({
   activeSection,
   children,
   headerAction,
-  selectedCampaignId,
   title,
 }: DashboardShellProps) {
   const { user, signOut } = useAuth();
@@ -32,11 +30,7 @@ export function DashboardShell({
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const sessionEmail = user?.email ?? null;
   const isDashboard = activeSection === "overview";
-  const campaignsHref = isDashboard ? "#campaign-overview" : "/#campaign-overview";
-  const protectionHref = isDashboard ? "#risk-overview" : "/#risk-overview";
-  const peopleHref = selectedCampaignId
-    ? `/campaigns/${selectedCampaignId}`
-    : "/#campaign-overview";
+  const riskPeopleHref = isDashboard ? "#risk-overview" : "/#risk-overview";
 
   useEffect(() => {
     if (!profileOpen) return;
@@ -128,28 +122,14 @@ export function DashboardShell({
               aria-label="Visão geral"
               aria-current={activeSection === "overview" ? "page" : undefined}
             >
-              <Icon name="grid" />
-            </Link>
-            <Link
-              href={campaignsHref}
-              className={navClass(false)}
-              aria-label="Campanhas"
-            >
               <Icon name="chart" />
             </Link>
             <Link
-              href={peopleHref}
+              href={riskPeopleHref}
               className={`${navClass(false)} max-[720px]:hidden`}
-              aria-label="Pessoas"
+              aria-label="Pessoas por risco"
             >
               <Icon name="users" />
-            </Link>
-            <Link
-              href={protectionHref}
-              className={`${navClass(false)} max-[720px]:hidden`}
-              aria-label="Proteção"
-            >
-              <Icon name="shield" />
             </Link>
           </nav>
           <Link
