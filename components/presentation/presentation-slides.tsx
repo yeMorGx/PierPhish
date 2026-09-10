@@ -84,19 +84,19 @@ function PresentationRiskSlide({ data }: { data: PresentationData }) {
           <small>em todas as campanhas</small>
         </article>
         <article className="surface-card presentation-risk-stat is-high">
-          <span>Risco alto</span>
+          <span>Sinais críticos</span>
           <strong>{highRisk}</strong>
-          <small>clicou ou enviou dados</small>
+          <small>cliques ou dados enviados</small>
         </article>
         <article className="surface-card presentation-risk-stat is-attention">
-          <span>Atenção</span>
+          <span>Sinais de atenção</span>
           <strong>{attention}</strong>
           <small>abriu a mensagem</small>
         </article>
         <article className="surface-card presentation-risk-stat is-low">
-          <span>Baixo</span>
+          <span>Sem sinal crítico</span>
           <strong>{lowRisk}</strong>
-          <small>sem exposição crítica</small>
+          <small>estimativa da base sem sinais</small>
         </article>
       </div>
 

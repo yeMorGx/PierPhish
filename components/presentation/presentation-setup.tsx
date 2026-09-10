@@ -99,8 +99,8 @@ export function PresentationSetup({
             <p className="presentation-eyebrow">01 · ROTEIRO</p>
             <h3>Escolha os slides</h3>
             <p>
-              Você pode alterar a ordem depois usando os controles da
-              apresentação.
+              A apresentação segue este fluxo e avança automaticamente entre as
+              páginas escolhidas.
             </p>
           </div>
           <span className="presentation-selection-count">
