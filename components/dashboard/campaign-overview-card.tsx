@@ -1,4 +1,8 @@
 import Link from "next/link";
+import {
+  CampaignLogo,
+  useCampaignLogos,
+} from "@/components/campaigns/campaign-logo";
 import type { CampaignSummary, OverviewTotals } from "@/components/dashboard/types";
 
 type CampaignOverviewCardProps = {
@@ -23,6 +27,7 @@ export function CampaignOverviewCard({
   campaigns,
   totals,
 }: CampaignOverviewCardProps) {
+  const { logos } = useCampaignLogos();
   const metrics = [
     ["Campanhas", totals.campaigns],
     ["Pessoas", totals.people],
@@ -89,9 +94,10 @@ export function CampaignOverviewCard({
                 <td className="px-4 py-3.5 font-bold text-[#9aa3aa]">{String(index + 1).padStart(2, "0")}</td>
                 <td className="px-4 py-3.5">
                   <Link className="campaign-link flex min-w-0 items-center gap-3 hover:text-[#18202b]" href={`/campaigns/${campaign.id}`}>
-                    <span className="campaign-avatar grid size-8 flex-none place-items-center rounded-[10px] bg-[#18202b] text-[11px] font-bold text-white">
-                      {campaign.name.charAt(0).toUpperCase()}
-                    </span>
+                    <CampaignLogo
+                      fallback={campaign.name.charAt(0).toUpperCase()}
+                      src={logos[String(campaign.id)]}
+                    />
                     <span className="flex min-w-0 flex-col">
                       <strong className="campaign-name overflow-hidden text-[12px] text-ellipsis whitespace-nowrap text-[#35414d]">{campaign.name}</strong>
                       <span className="campaign-id mt-0.5 text-[10px] text-[#a0a7ad]">ID {campaign.id}</span>

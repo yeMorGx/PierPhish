@@ -2286,3 +2286,157 @@ html[data-theme="dark"] .status-signal-icon.is-orange {
     padding-inline: 10px;
   }
 }
+
+.campaign-logo {
+  display: grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  color: #f8fbfc;
+  background: #18202b;
+  font-weight: 800;
+  object-fit: cover;
+}
+
+.campaign-logo-compact {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.campaign-logo-hero {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  border: 1px solid var(--line-soft);
+  color: var(--ink);
+  background: var(--surface-muted);
+  font-size: 20px;
+}
+
+.campaign-detail-title-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 17px;
+}
+
+.campaign-logo-picker {
+  display: flex;
+  max-width: 220px;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.campaign-logo-picker-label {
+  display: flex;
+  min-width: 170px;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 7px 10px 7px 7px;
+  background: var(--surface-soft);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.campaign-logo-picker-label:hover,
+.campaign-logo-picker-label:focus-within {
+  border-color: var(--accent);
+  background: var(--surface-muted);
+  transform: translateY(-1px);
+}
+
+.campaign-logo-picker-copy {
+  min-width: 0;
+}
+
+.campaign-logo-picker-copy strong,
+.campaign-logo-picker-copy small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.campaign-logo-picker-copy strong {
+  color: var(--ink-strong);
+  font-size: 10px;
+}
+
+.campaign-logo-picker-copy small {
+  margin-top: 4px;
+  color: var(--muted-soft);
+  font-size: 9px;
+}
+
+.campaign-logo-remove {
+  border: 0;
+  padding: 2px 3px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 9px;
+  text-decoration: underline;
+}
+
+.campaign-logo-remove:hover,
+.campaign-logo-remove:focus-visible {
+  color: #a85d43;
+}
+
+.campaign-logo-error {
+  flex-basis: 100%;
+  color: #a85d43;
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+.profile-activity-mark .campaign-logo-compact {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+}
+
+.profile-activity-mark {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 11px;
+}
+
+.profile-activity-mark .campaign-logo {
+  color: #f8fbfc;
+  background: #18202b;
+}
+
+html[data-theme="dark"] .campaign-logo {
+  color: #f2fafb;
+  background: #29424c;
+}
+
+html[data-theme="dark"] .campaign-logo-hero {
+  color: var(--ink);
+  background: var(--surface-muted);
+}
+
+html[data-theme="dark"] .campaign-logo-error {
+  color: #f0ad91;
+}
+
+@media (max-width: 720px) {
+  .campaign-detail-title-row {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+
+  .campaign-logo-picker {
+    max-width: 100%;
+  }
+}

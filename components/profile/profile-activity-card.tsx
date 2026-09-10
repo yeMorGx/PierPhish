@@ -1,4 +1,8 @@
 import Link from "next/link";
+import {
+  CampaignLogo,
+  useCampaignLogos,
+} from "@/components/campaigns/campaign-logo";
 import { Icon } from "@/components/ui/icon";
 import type { Campaign } from "@/components/dashboard/types";
 
@@ -37,6 +41,8 @@ export function ProfileActivityCard({
   error,
   loading,
 }: ProfileActivityCardProps) {
+  const { logos } = useCampaignLogos();
+
   return (
     <section className="surface-card profile-panel-card">
       <div className="profile-panel-heading">
@@ -64,7 +70,10 @@ export function ProfileActivityCard({
               key={campaign.id}
             >
               <span className="profile-activity-mark" aria-hidden="true">
-                <span />
+                <CampaignLogo
+                  fallback={campaign.name.charAt(0).toUpperCase()}
+                  src={logos[String(campaign.id)]}
+                />
               </span>
               <span className="profile-activity-copy">
                 <strong>{campaign.name}</strong>

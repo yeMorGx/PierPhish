@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { CampaignLogoPicker } from "@/components/campaigns/campaign-logo";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type Stats = {
@@ -504,15 +505,25 @@ export default function CampaignPeoplePage() {
               </span>{" "}
               Voltar para visão geral
             </Link>
-            <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-              CAMPANHA / {campaignId}
-            </p>
-            <h1 className="m-0 max-w-[920px] text-[clamp(28px,3.6vw,48px)] leading-[1] font-[680] tracking-[-0.06em]">
-              {campaign?.name ?? `Campanha ${campaignId}`}
-            </h1>
-            <p className="mt-3 mb-0 text-[12px] text-[#7b838d]">
-              Pessoas alcançadas e sinais registrados nesta campanha.
-            </p>
+            <div className="campaign-detail-title-row">
+              <CampaignLogoPicker
+                campaignId={campaignId}
+                fallback={(campaign?.name ?? `Campanha ${campaignId}`)
+                  .charAt(0)
+                  .toUpperCase()}
+              />
+              <div className="min-w-0">
+                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                  CAMPANHA / {campaignId}
+                </p>
+                <h1 className="m-0 max-w-[920px] text-[clamp(28px,3.6vw,48px)] leading-[1] font-[680] tracking-[-0.06em]">
+                  {campaign?.name ?? `Campanha ${campaignId}`}
+                </h1>
+                <p className="mt-3 mb-0 text-[12px] text-[#7b838d]">
+                  Pessoas alcançadas e sinais registrados nesta campanha.
+                </p>
+              </div>
+            </div>
           </div>
           <div className="flex flex-none items-center gap-3 max-[720px]:w-full max-[720px]:justify-between">
             <span className="inline-flex items-center gap-2 text-[11px] text-[#69717d]">
