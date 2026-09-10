@@ -11,6 +11,7 @@ export type IconName =
   | "palette"
   | "image"
   | "settings"
+  | "tune"
   | "check";
 
 export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
@@ -103,6 +104,19 @@ export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
       <>
         <circle cx="12" cy="12" r="3" />
         <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 1.7-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-2.4v-.2a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.7-1.7.06-.06A1.7 1.7 0 0 0 8.4 15a1.7 1.7 0 0 0-1.56-1.03H6.6v-2.4h.24A1.7 1.7 0 0 0 8.4 10a1.7 1.7 0 0 0-.34-1.88L8 8.06l1.7-1.7.06.06A1.7 1.7 0 0 0 11.64 6a1.7 1.7 0 0 0 1.03-1.56V4h2.4v.44A1.7 1.7 0 0 0 16.1 6a1.7 1.7 0 0 0 1.88.34l.06-.06 1.7 1.7-.06.06A1.7 1.7 0 0 0 19.34 10a1.7 1.7 0 0 0 1.56 1.03h.3v2.4h-.3A1.7 1.7 0 0 0 19.4 15Z" />
+      </>
+    ),
+    tune: (
+      <>
+        <path d="M4 6h5" />
+        <path d="M15 6h5" />
+        <path d="M4 12h2" />
+        <path d="M12 12h8" />
+        <path d="M4 18h8" />
+        <path d="M18 18h2" />
+        <circle cx="12" cy="6" r="2" />
+        <circle cx="9" cy="12" r="2" />
+        <circle cx="15" cy="18" r="2" />
       </>
     ),
     check: <path d="m5 12 4 4L19 6" />,

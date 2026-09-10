@@ -151,22 +151,14 @@ export function DashboardShell({
             >
               <Icon name="shield" />
             </Link>
-            <Link
-              href="/configuracoes"
-              className={`${navClass(activeSection === "settings")} hidden max-[720px]:grid`}
-              aria-label="Configurações"
-              aria-current={activeSection === "settings" ? "page" : undefined}
-            >
-              <Icon name="settings" />
-            </Link>
           </nav>
           <Link
             href="/configuracoes"
-            className={`${navClass(activeSection === "settings")} max-[720px]:hidden`}
+            className={navClass(activeSection === "settings")}
             aria-label="Configurações"
             aria-current={activeSection === "settings" ? "page" : undefined}
           >
-            <Icon name="settings" />
+            <Icon name="tune" />
           </Link>
         </div>
       </aside>
