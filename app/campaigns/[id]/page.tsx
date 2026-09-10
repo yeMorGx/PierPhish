@@ -493,7 +493,7 @@ export default function CampaignPeoplePage() {
   return (
     <main className="theme-canvas min-h-screen p-[var(--shell-padding)] max-[1120px]:p-7 max-[720px]:p-[14px]">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-[var(--cards-gap)]">
-        <header className="surface-card flex items-center justify-between gap-6 rounded-[var(--radius-shell)] px-8 py-6 max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-6">
+        <header className="surface-card flex items-center justify-between gap-6 rounded-[30px] px-8 py-7 max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[22px] max-[720px]:px-6">
           <div className="min-w-0">
             <Link
               href="/"
@@ -502,16 +502,16 @@ export default function CampaignPeoplePage() {
               <span className="rotate-180">
                 <Icon name="arrow" size={15} />
               </span>{" "}
-              Visão geral
+              Voltar para visão geral
             </Link>
             <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-              CAMPAIGN / {campaignId}
+              CAMPANHA / {campaignId}
             </p>
-            <h1 className="m-0 text-[clamp(30px,4vw,52px)] leading-[0.95] font-[680] tracking-[-0.07em]">
+            <h1 className="m-0 max-w-[920px] text-[clamp(28px,3.6vw,48px)] leading-[1] font-[680] tracking-[-0.06em]">
               {campaign?.name ?? `Campanha ${campaignId}`}
             </h1>
-            <p className="mt-3 mb-0 text-[13px] text-[#7b838d]">
-              Pessoas impactadas e sinais individuais desta campanha.
+            <p className="mt-3 mb-0 text-[12px] text-[#7b838d]">
+              Pessoas alcançadas e sinais registrados nesta campanha.
             </p>
           </div>
           <div className="flex flex-none items-center gap-3 max-[720px]:w-full max-[720px]:justify-between">
