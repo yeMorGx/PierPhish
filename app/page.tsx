@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { VisualDashboardContent } from "@/components/dashboard/visual-dashboard-content";
+import { useTheme } from "@/components/theme/theme-provider";
 import { Icon } from "@/components/ui/icon";
 import type {
   Campaign,
@@ -52,6 +54,7 @@ function pct(value: number, total: number) {
 export default function Home() {
   const router = useRouter();
   const { ready, user } = useAuth();
+  const { preferences: themePreferences } = useTheme();
   const [campaigns, setCampaigns] = useState<Campaign[]>(
     isSupabaseConfigured ? [] : demoCampaigns,
   );
@@ -287,13 +290,20 @@ export default function Home() {
       title="Visão geral"
       headerAction={
         <button
+          aria-label={syncing ? "Sincronizando dados" : "Sincronizar tudo"}
           className="header-sync-button inline-flex min-h-[38px] items-center gap-[9px] rounded-[12px] border-0 px-[15px] text-[12px] font-bold shadow-[0_5px_15px_rgba(24,32,43,0.14)] transition-colors max-[720px]:px-[11px]"
           onClick={() => void syncAllCampaigns()}
           disabled={syncing}
           type="button"
         >
           <Icon name="refresh" size={16} />
-          {syncing ? "Sincronizando…" : "Sincronizar tudo"}
+          <span
+            className={
+              themePreferences.dashboardMode === "visual" ? "sr-only" : ""
+            }
+          >
+            {syncing ? "Sincronizando…" : "Sincronizar tudo"}
+          </span>
         </button>
       }
     >
@@ -309,14 +319,24 @@ export default function Home() {
           </button>
         </div>
       )}
-      <DashboardContent
-        campaignBars={campaignBars}
-        campaigns={campaigns}
-        campaignSummary={campaignSummary}
-        personAvatars={personAvatars}
-        participantsByCampaign={participantsByCampaign}
-        totals={totals}
-      />
+      {themePreferences.dashboardMode === "visual" ? (
+        <VisualDashboardContent
+          campaignBars={campaignBars}
+          campaignSummary={campaignSummary}
+          personAvatars={personAvatars}
+          participantsByCampaign={participantsByCampaign}
+          totals={totals}
+        />
+      ) : (
+        <DashboardContent
+          campaignBars={campaignBars}
+          campaigns={campaigns}
+          campaignSummary={campaignSummary}
+          personAvatars={personAvatars}
+          participantsByCampaign={participantsByCampaign}
+          totals={totals}
+        />
+      )}
       <footer className="hidden">
         <span>
           Última sincronização: {latestSync ?? "Nenhuma coleta realizada"}

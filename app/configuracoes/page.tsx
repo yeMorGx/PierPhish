@@ -188,6 +188,7 @@ function SettingsContent() {
     reset: resetTheme,
     setBackgroundImage,
     setCanvas,
+    setDashboardMode,
     setMode,
   } = useTheme();
   const {
@@ -542,6 +543,35 @@ function SettingsContent() {
                 <p>Escolha o modo de exibição e a base visual do PierPhish.</p>
               </div>
               <div className="settings-row-main settings-panel-main">
+                <div className="settings-panel-block">
+                  <span className="settings-panel-label">
+                    Layout do dashboard
+                  </span>
+                  <div
+                    className="settings-segmented"
+                    role="group"
+                    aria-label="Escolher layout do dashboard"
+                  >
+                    {(["editorial", "visual"] as const).map((mode) => (
+                      <button
+                        className={
+                          themePreferences.dashboardMode === mode
+                            ? "is-active"
+                            : ""
+                        }
+                        type="button"
+                        key={mode}
+                        aria-pressed={themePreferences.dashboardMode === mode}
+                        onClick={() => setDashboardMode(mode)}
+                      >
+                        {mode === "editorial" ? "Detalhado" : "Visual"}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="settings-panel-hint">
+                    Visual prioriza números, gráficos e sinais.
+                  </p>
+                </div>
                 <div className="settings-panel-block">
                   <span className="settings-panel-label">Modo de exibição</span>
                   <div className="settings-segmented">

@@ -7,6 +7,7 @@ export type ThemePreferences = {
   backgroundImage: string | null;
   mode: "light" | "dark";
   cardStyle: "solid" | "translucent" | "liquid" | "apple";
+  dashboardMode: "editorial" | "visual";
   showContrastNotice: boolean;
 };
 
@@ -16,6 +17,7 @@ type ThemeContextValue = {
   setBackgroundImage: (image: string | null) => void;
   setMode: (mode: ThemePreferences["mode"]) => void;
   setCardStyle: (style: ThemePreferences["cardStyle"]) => void;
+  setDashboardMode: (mode: ThemePreferences["dashboardMode"]) => void;
   setShowContrastNotice: (show: boolean) => void;
   reset: () => void;
 };
@@ -25,6 +27,7 @@ const defaultPreferences: ThemePreferences = {
   backgroundImage: null,
   mode: "light",
   cardStyle: "solid",
+  dashboardMode: "editorial",
   showContrastNotice: true,
 };
 const storageKey = "pierphish-theme-preferences";
@@ -37,7 +40,9 @@ function isValidCanvas(value: unknown): value is string {
 function isValidBackgroundImage(value: unknown): value is string {
   return (
     typeof value === "string" &&
-    (value.startsWith("data:image/") || value.startsWith("https://") || value.startsWith("http://"))
+    (value.startsWith("data:image/") ||
+      value.startsWith("https://") ||
+      value.startsWith("http://"))
   );
 }
 
@@ -70,6 +75,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           parsed.cardStyle === "apple"
             ? parsed.cardStyle
             : defaultPreferences.cardStyle,
+        dashboardMode:
+          parsed.dashboardMode === "visual"
+            ? "visual"
+            : defaultPreferences.dashboardMode,
         showContrastNotice:
           typeof parsed.showContrastNotice === "boolean"
             ? parsed.showContrastNotice
@@ -108,12 +117,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setMode: (mode) => setPreferences((current) => ({ ...current, mode })),
     setCardStyle: (cardStyle) =>
       setPreferences((current) => ({ ...current, cardStyle })),
+    setDashboardMode: (dashboardMode) =>
+      setPreferences((current) => ({ ...current, dashboardMode })),
     setShowContrastNotice: (showContrastNotice) =>
       setPreferences((current) => ({ ...current, showContrastNotice })),
     reset: () => setPreferences(defaultPreferences),
   };
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {
