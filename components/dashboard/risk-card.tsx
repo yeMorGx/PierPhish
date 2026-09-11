@@ -28,7 +28,7 @@ export function RiskCard({
   ] as const;
 
   return (
-    <article id="risk-overview" className="surface-card bento-risk-card scroll-mt-4 min-w-0 overflow-hidden rounded-[var(--radius-card)] p-[25px] max-[1120px]:col-span-full max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
+    <article id="risk-overview" className="surface-card risk-overview bento-risk-card scroll-mt-4 min-w-0 overflow-hidden rounded-[var(--radius-card)] p-[25px] max-[1120px]:col-span-full max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="mb-[9px] text-[10px] leading-none font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">

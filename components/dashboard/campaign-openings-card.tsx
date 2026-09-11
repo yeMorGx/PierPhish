@@ -12,7 +12,7 @@ export function CampaignOpeningsCard({
   total,
 }: CampaignOpeningsCardProps) {
   return (
-    <article className="surface-card flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] p-[25px] max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
+    <article className="surface-card campaign-openings-card flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] p-[25px] max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="mb-[9px] text-[10px] leading-none font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
