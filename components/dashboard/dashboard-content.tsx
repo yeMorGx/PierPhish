@@ -6,6 +6,7 @@ import { RiskCard } from "@/components/dashboard/risk-card";
 import type {
   Campaign,
   CampaignBar,
+  CampaignParticipants,
   CampaignSummary,
   OverviewTotals,
 } from "@/components/dashboard/types";
@@ -13,6 +14,7 @@ import type {
 type DashboardContentProps = {
   campaignBars: CampaignBar[];
   campaigns: Campaign[];
+  participantsByCampaign: CampaignParticipants;
   campaignSummary: CampaignSummary[];
   totals: OverviewTotals;
 };
@@ -20,6 +22,7 @@ type DashboardContentProps = {
 export function DashboardContent({
   campaignBars,
   campaigns,
+  participantsByCampaign,
   campaignSummary,
   totals,
 }: DashboardContentProps) {
@@ -40,7 +43,11 @@ export function DashboardContent({
         <MetricCard label="Reportes" value={totals.reported} helper={`${totals.delivered ? Math.round((totals.reported / totals.delivered) * 100) : 0}% dos entregues consolidados`} tone="orange" />
       </div>
       <RiskCard clicked={totals.clicked} delivered={totals.delivered} opened={totals.opened} reported={totals.reported} submitted={totals.submitted} total={totals.people} />
-      <CampaignOverviewCard campaigns={campaignSummary} totals={totals} />
+      <CampaignOverviewCard
+        campaigns={campaignSummary}
+        participantsByCampaign={participantsByCampaign}
+        totals={totals}
+      />
     </div>
   );
 }

@@ -3,12 +3,31 @@ import {
   CampaignLogo,
   useCampaignLogos,
 } from "@/components/campaigns/campaign-logo";
-import type { CampaignSummary, OverviewTotals } from "@/components/dashboard/types";
+import { AvatarCircles } from "@/components/ui/avatar-circles";
+import type {
+  CampaignParticipants,
+  CampaignSummary,
+  OverviewTotals,
+} from "@/components/dashboard/types";
 
 type CampaignOverviewCardProps = {
   campaigns: CampaignSummary[];
+  participantsByCampaign?: CampaignParticipants;
   totals: OverviewTotals;
 };
+
+function avatarUrl(name: string, index: number) {
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+  const fills = ["#202831", "#66737b", "#9aa3a6", "#c9cfcc"];
+  const fill = fills[index % fills.length];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="40" cy="40" r="40" fill="${fill}"/><text x="40" y="44" fill="#ffffff" font-family="Arial,sans-serif" font-size="24" text-anchor="middle">${initials}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
 
 function statusLabel(status: string | null) {
   if (!status) return "Sem status";
@@ -25,6 +44,7 @@ function statusClass(status: string | null) {
 
 export function CampaignOverviewCard({
   campaigns,
+  participantsByCampaign = {},
   totals,
 }: CampaignOverviewCardProps) {
   const { logos } = useCampaignLogos();
@@ -104,7 +124,25 @@ export function CampaignOverviewCard({
                     </span>
                   </Link>
                 </td>
-                <td className="px-4 py-3.5"><strong className="text-[14px] text-[#18202b]">{campaign.people}</strong>{index === 0 && <span className="ml-2 rounded-full bg-[#edf2f3] px-2 py-1 text-[9px] font-bold text-[#5f7681]">maior alcance</span>}</td>
+                <td className="px-4 py-3.5">
+                  <div className="flex min-w-[170px] items-center gap-3">
+                    <AvatarCircles
+                      avatarUrls={(participantsByCampaign[String(campaign.id)] ?? [])
+                        .slice(0, 4)
+                        .map(avatarUrl)}
+                      numPeople={Math.max(
+                        campaign.people -
+                          (participantsByCampaign[String(campaign.id)] ?? [])
+                            .length,
+                        0,
+                      )}
+                    />
+                    <div className="min-w-0">
+                      <strong className="block text-[14px] text-[#18202b]">{campaign.people}</strong>
+                      {index === 0 && <span className="mt-1 inline-flex rounded-full bg-[#edf2f3] px-2 py-1 text-[9px] font-bold text-[#5f7681]">maior alcance</span>}
+                    </div>
+                  </div>
+                </td>
                 <td className="px-4 py-3.5">{campaign.deliveredPeople}/{campaign.people}</td>
                 <td className="campaign-open-rate px-4 py-3.5 font-bold text-[#5d7161]">{campaign.openRate}%</td>
                 <td className="px-4 py-3.5">{campaign.clickedPeople}</td>

@@ -9,10 +9,25 @@ import { Icon } from "@/components/ui/icon";
 import type {
   Campaign,
   CampaignBar,
+  CampaignParticipants,
   CampaignSummary,
 } from "@/components/dashboard/types";
 import { demoCampaigns } from "@/lib/demo-data";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+
+type RawParticipant = {
+  campaign_id: number;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+};
+
+const demoParticipantsByCampaign: CampaignParticipants = {
+  "5345": ["Ana Souza", "Carlos Lima", "Juliana Alves", "Marina Costa"],
+  "5349": ["Paula Nunes", "Rafael Dias"],
+  "5052": ["Bianca Reis", "Caio Martins"],
+  "2581": ["Lucas Prado", "Fernanda Alves"],
+};
 
 function pct(value: number, total: number) {
   return total ? Math.round((value / total) * 100) : 0;
@@ -24,6 +39,10 @@ export default function Home() {
   const [campaigns, setCampaigns] = useState<Campaign[]>(
     isSupabaseConfigured ? [] : demoCampaigns,
   );
+  const [participantsByCampaign, setParticipantsByCampaign] =
+    useState<CampaignParticipants>(
+      isSupabaseConfigured ? {} : demoParticipantsByCampaign,
+    );
   const [selectedId, setSelectedId] = useState(5345);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -147,6 +166,32 @@ export default function Home() {
 
     const nextCampaigns = (data ?? []) as Campaign[];
     setCampaigns(nextCampaigns);
+    const nextParticipants: CampaignParticipants = {};
+    if (nextCampaigns.length) {
+      const { data: participantData } = await supabase
+        .from("beephish_results")
+        .select("campaign_id,first_name,last_name,email,modified_date")
+        .in(
+          "campaign_id",
+          nextCampaigns.map((campaign) => campaign.id),
+        )
+        .order("modified_date", { ascending: false })
+        .limit(500);
+      for (const participant of (participantData ?? []) as RawParticipant[]) {
+        const name =
+          [participant.first_name, participant.last_name]
+            .filter(Boolean)
+            .join(" ") ||
+          participant.email ||
+          "Pessoa participante";
+        const key = String(participant.campaign_id);
+        const current = nextParticipants[key] ?? [];
+        if (current.length < 4 && !current.includes(name)) {
+          nextParticipants[key] = [...current, name];
+        }
+      }
+    }
+    setParticipantsByCampaign(nextParticipants);
     if (
       nextCampaigns.length &&
       !nextCampaigns.some((campaign) => campaign.id === selectedId)
@@ -222,6 +267,7 @@ export default function Home() {
         campaignBars={campaignBars}
         campaigns={campaigns}
         campaignSummary={campaignSummary}
+        participantsByCampaign={participantsByCampaign}
         totals={totals}
       />
       <footer className="hidden">
