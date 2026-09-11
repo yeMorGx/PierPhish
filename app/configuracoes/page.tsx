@@ -18,40 +18,12 @@ const colorPresets = [
   ["Lavanda", "#f0eff5"],
 ] as const;
 
-const cardStyles: Array<{
-  id: ThemePreferences["cardStyle"];
-  label: string;
-  description: string;
-}> = [
-  {
-    id: "solid",
-    label: "Sólido",
-    description: "Máxima previsibilidade e contraste.",
-  },
-  {
-    id: "translucent",
-    label: "Translúcido",
-    description: "Leve transparência com desfoque suave.",
-  },
-  {
-    id: "liquid",
-    label: "Liquid Glass",
-    description: "Brilho fluido e profundidade mais evidente.",
-  },
-  {
-    id: "apple",
-    label: "Apple Liquid Glass",
-    description: "Vidro polido, luminoso e discreto.",
-  },
-];
-
 function SettingsContent() {
   const {
     preferences,
     reset,
     setBackgroundImage,
     setCanvas,
-    setCardStyle,
     setMode,
     setShowContrastNotice,
   } = useTheme();
@@ -150,41 +122,6 @@ function SettingsContent() {
                   <small>{description}</small>
                 </span>
                 {preferences.mode === mode && <Icon name="check" size={16} />}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]">
-          <div>
-            <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-              ESTILO DOS CARDS
-            </p>
-            <h3 className="m-0 text-[18px] font-bold tracking-[-0.04em]">
-              Escolha quanto o conteúdo flutua
-            </h3>
-            <p className="mt-2 mb-0 text-[11px] text-[#87919a]">
-              Os presets afetam cards, cabeçalho e navegação do painel.
-            </p>
-          </div>
-          <div className="mt-6 grid grid-cols-4 gap-2 max-[980px]:grid-cols-2 max-[520px]:grid-cols-1">
-            {cardStyles.map((style) => (
-              <button
-                className={`card-style-option ${preferences.cardStyle === style.id ? "is-selected" : ""}`}
-                type="button"
-                aria-pressed={preferences.cardStyle === style.id}
-                key={style.id}
-                onClick={() => setCardStyle(style.id)}
-              >
-                <span
-                  className={`card-style-preview card-style-preview-${style.id}`}
-                >
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                <strong>{style.label}</strong>
-                <small>{style.description}</small>
               </button>
             ))}
           </div>
