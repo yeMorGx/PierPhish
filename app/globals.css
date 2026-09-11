@@ -7349,9 +7349,13 @@ html[data-theme="dark"] .settings-placeholder button {
   }
 }
 
-/* Ajuste final do bento de configurações: branco limpo, cards contrastados e perfil dividido. */
+/* Ajuste final do bento de configurações: canvas externo separado dos cards. */
 .settings-page {
-  background: #ffffff;
+  background: transparent;
+}
+
+html[data-theme="dark"] .settings-page {
+  background: transparent;
 }
 
 .settings-bento-card.settings-row,
