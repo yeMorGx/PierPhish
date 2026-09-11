@@ -3,7 +3,10 @@ import {
   CampaignLogo,
   useCampaignLogos,
 } from "@/components/campaigns/campaign-logo";
-import { AvatarCircles } from "@/components/ui/avatar-circles";
+import {
+  AnimatedTooltip,
+  type AnimatedTooltipItem,
+} from "@/components/ui/animated-tooltip";
 import type {
   CampaignParticipants,
   CampaignSummary,
@@ -35,6 +38,21 @@ function avatarUrl(
   const fill = fills[index % fills.length];
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="40" cy="40" r="40" fill="${fill}"/><text x="40" y="44" fill="#ffffff" font-family="Arial,sans-serif" font-size="24" text-anchor="middle">${initials}</text></svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+function tooltipPeople(
+  campaignId: number,
+  participants: CampaignParticipants[string],
+  personAvatars: PersonAvatarMap,
+): AnimatedTooltipItem[] {
+  return participants.slice(0, 4).map((participant, index) => ({
+    id: campaignId * 10 + index,
+    name: participant.name,
+    designation: participant.id.includes("@")
+      ? participant.id
+      : "Pessoa participante",
+    image: avatarUrl(participant.name, index, personAvatars[participant.id]),
+  }));
 }
 
 function statusLabel(status: string | null) {
@@ -161,18 +179,12 @@ export function CampaignOverviewCard({
                 </td>
                 <td className="px-4 py-3.5">
                   <div className="flex min-w-[170px] items-center gap-3">
-                    <AvatarCircles
-                      avatarUrls={(
-                        participantsByCampaign[String(campaign.id)] ?? []
-                      )
-                        .slice(0, 4)
-                        .map((participant, participantIndex) =>
-                          avatarUrl(
-                            participant.name,
-                            participantIndex,
-                            personAvatars[participant.id],
-                          ),
-                        )}
+                    <AnimatedTooltip
+                      items={tooltipPeople(
+                        campaign.id,
+                        participantsByCampaign[String(campaign.id)] ?? [],
+                        personAvatars,
+                      )}
                       numPeople={Math.max(
                         campaign.people -
                           (participantsByCampaign[String(campaign.id)] ?? [])

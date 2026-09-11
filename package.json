@@ -13,6 +13,7 @@
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@supabase/supabase-js": "2.53.0",
+    "framer-motion": "^13.2.0",
     "gsap": "^3.13.0",
     "next": "15.5.24",
     "react": "19.1.2",
