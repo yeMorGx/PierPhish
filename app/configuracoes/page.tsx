@@ -2,13 +2,40 @@
 
 import { ChangeEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/components/auth/auth-provider";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { useProfile } from "@/components/profile/profile-provider";
 import {
   type ThemePreferences,
   useTheme,
 } from "@/components/theme/theme-provider";
 import { Icon } from "@/components/ui/icon";
+
+type SettingsTab =
+  | "account"
+  | "notifications"
+  | "sharing"
+  | "schedule"
+  | "billing"
+  | "questions";
+
+const settingsTabs: Array<{ id: SettingsTab; label: string }> = [
+  { id: "account", label: "Conta" },
+  { id: "notifications", label: "Notificações" },
+  { id: "sharing", label: "Compartilhamento" },
+  { id: "schedule", label: "Atualização automática" },
+  { id: "billing", label: "Faturamento" },
+  { id: "questions", label: "Dúvidas" },
+];
+
+const tabTitles: Record<Exclude<SettingsTab, "account">, string> = {
+  notifications: "Notificações",
+  sharing: "Compartilhamento",
+  schedule: "Atualização automática",
+  billing: "Faturamento",
+  questions: "Dúvidas",
+};
 
 const colorPresets = [
   ["Cinza atual", "#f4f4f4"],
@@ -18,36 +45,86 @@ const colorPresets = [
   ["Lavanda", "#f0eff5"],
 ] as const;
 
+const maxAvatarSize = 1.5 * 1024 * 1024;
+const supportedAvatarTypes = ["image/png", "image/jpeg", "image/webp"];
+
+function updateFullName(
+  firstName: string,
+  lastName: string,
+  update: (value: string) => void,
+) {
+  update([firstName.trim(), lastName.trim()].filter(Boolean).join(" "));
+}
+
 function SettingsContent() {
+  const { user } = useAuth();
   const {
-    preferences,
+    preferences: themePreferences,
     reset,
     setBackgroundImage,
     setCanvas,
     setMode,
     setShowContrastNotice,
   } = useTheme();
+  const {
+    preferences: profilePreferences,
+    setAvatar,
+    setDisplayName,
+  } = useProfile();
+  const [activeTab, setActiveTab] = useState<SettingsTab>("account");
   const [imageUrl, setImageUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [city, setCity] = useState("São Paulo");
+  const [timezone, setTimezone] = useState("America/Sao_Paulo");
+  const [dateFormat, setDateFormat] = useState("dd/MM/yyyy HH:mm");
+  const [dailyHours, setDailyHours] = useState(7);
+  const [weeklyFocus, setWeeklyFocus] = useState(6);
+  const [functionName, setFunctionName] = useState("Segurança da informação");
+  const [jobTitle, setJobTitle] = useState("Administrador interno");
+
+  const email = user?.email ?? "admin@teste.com";
+  const profileName = profilePreferences.displayName.trim();
+  const profileInitial = (profileName || email).slice(0, 1).toUpperCase();
+  const usingDefaultAvatar = profilePreferences.avatar?.startsWith("/avatars/");
 
   useEffect(() => {
-    if (preferences.backgroundImage?.startsWith("http"))
-      setImageUrl(preferences.backgroundImage);
-  }, [preferences.backgroundImage]);
+    if (themePreferences.backgroundImage?.startsWith("http")) {
+      setImageUrl(themePreferences.backgroundImage);
+    }
+  }, [themePreferences.backgroundImage]);
 
-  function handleFile(event: ChangeEvent<HTMLInputElement>) {
+  useEffect(() => {
+    const parts = profileName.split(/\s+/).filter(Boolean);
+    setFirstName(parts[0] ?? "");
+    setLastName(parts.slice(1).join(" "));
+  }, [profileName]);
+
+  function handleAvatar(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+    event.target.value = "";
     if (!file) return;
-    if (file.size > 2.5 * 1024 * 1024) {
-      setError("Escolha uma imagem de até 2,5 MB.");
+    if (!supportedAvatarTypes.includes(file.type)) {
+      setError("Escolha uma imagem PNG, JPG ou WEBP.");
       return;
     }
+    if (file.size > maxAvatarSize) {
+      setError("Escolha uma foto de até 1,5 MB.");
+      return;
+    }
+
     setError(null);
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === "string") setBackgroundImage(reader.result);
+      if (typeof reader.result === "string") setAvatar(reader.result);
     };
     reader.readAsDataURL(file);
+  }
+
+  function handleTab(tab: SettingsTab) {
+    setActiveTab(tab);
+    setError(null);
   }
 
   function applyImageUrl() {
@@ -73,278 +150,382 @@ function SettingsContent() {
 
   return (
     <DashboardShell activeSection="settings" title="Configurações">
-      <div className="mx-auto grid max-w-[1180px] gap-[var(--cards-gap)] pb-8">
-        <section className="surface-card rounded-[var(--radius-card)] p-8 max-[720px]:rounded-[23px] max-[720px]:p-6">
-          <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-            APARÊNCIA DO PIERPHISH
-          </p>
-          <h2 className="m-0 max-w-[700px] text-[clamp(28px,4vw,48px)] leading-[0.95] font-[680] tracking-[-0.07em]">
-            Faça o espaço trabalhar a favor da leitura.
-          </h2>
-          <p className="mt-4 mb-0 max-w-[650px] text-[13px] leading-relaxed text-[#7b838d]">
-            A personalização fica salva neste navegador. Ela muda a camada
-            visual do painel, mas nunca altera os dados das campanhas.
-          </p>
-        </section>
+      <div className="settings-page">
+        <div className="settings-heading">
+          <h1>Configurações</h1>
+          <p>Gerencie sua conta e suas preferências.</p>
+        </div>
 
-        <section className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-                TEMA
-              </p>
-              <h3 className="m-0 text-[18px] font-bold tracking-[-0.04em]">
-                Escolha o clima do painel
-              </h3>
-              <p className="mt-2 mb-0 text-[11px] text-[#87919a]">
-                O modo escuro reduz o brilho e preserva a hierarquia dos sinais.
-              </p>
-            </div>
-            <Icon name="palette" size={20} />
-          </div>
-          <div className="mt-6 grid max-w-[560px] grid-cols-2 gap-2 max-[520px]:grid-cols-1">
-            {[
-              ["light", "Claro", "Fundo claro e leitura editorial."],
-              ["dark", "Escuro", "Contraste profundo para baixa luz."],
-            ].map(([mode, label, description]) => (
-              <button
-                className={`appearance-option ${preferences.mode === mode ? "is-selected" : ""}`}
-                type="button"
-                aria-pressed={preferences.mode === mode}
-                key={mode}
-                onClick={() => setMode(mode as ThemePreferences["mode"])}
-              >
-                <span
-                  className={`appearance-swatch appearance-swatch-${mode}`}
-                />
-                <span className="min-w-0 text-left">
-                  <strong>{label}</strong>
-                  <small>{description}</small>
-                </span>
-                {preferences.mode === mode && <Icon name="check" size={16} />}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="grid grid-cols-[minmax(0,0.9fr)_minmax(300px,1.1fr)] gap-[var(--cards-gap)] max-[820px]:grid-cols-1">
-          <article className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-                  COR DO FUNDO
-                </p>
-                <h3 className="m-0 text-[18px] font-bold tracking-[-0.04em]">
-                  Uma base mais sua
-                </h3>
-              </div>
-              <Icon name="palette" size={20} />
-            </div>
-            <label className="mt-6 flex items-center gap-3 rounded-[15px] border border-[#edf0f1] bg-[#fafbfb] p-3">
-              <input
-                className="size-12 cursor-pointer rounded-[11px] border-0 bg-transparent p-0"
-                type="color"
-                value={preferences.canvas}
-                onChange={(event) => setCanvas(event.target.value)}
-                aria-label="Escolher cor do fundo"
-              />
-              <span>
-                <strong className="block text-[12px] text-[#34404a]">
-                  {preferences.canvas.toUpperCase()}
-                </strong>
-                <span className="mt-1 block text-[10px] text-[#87919a]">
-                  Aplicado imediatamente.
-                </span>
-              </span>
-            </label>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {colorPresets.map(([label, color]) => (
-                <button
-                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-bold transition-colors ${preferences.canvas === color ? "border-[#18202b] text-[#18202b]" : "border-[#e5e9ea] text-[#7d8790] hover:border-[#aab5bb]"}`}
-                  type="button"
-                  key={color}
-                  onClick={() => setCanvas(color)}
-                >
-                  <span
-                    className="size-3 rounded-full border border-black/5"
-                    style={{ backgroundColor: color }}
-                  />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </article>
-
-          <article className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-                  IMAGEM DO FUNDO
-                </p>
-                <h3 className="m-0 text-[18px] font-bold tracking-[-0.04em]">
-                  Textura ou fotografia
-                </h3>
-              </div>
-              <Icon name="image" size={20} />
-            </div>
-            <label className="mt-6 flex cursor-pointer items-center gap-3 rounded-[15px] border border-dashed border-[#dce3e5] bg-[#fafbfb] p-4 transition-colors hover:border-[#9aadb7]">
-              <span className="grid size-10 place-items-center rounded-[12px] bg-[#edf2f3] text-[#627b87]">
-                <Icon name="image" size={18} />
-              </span>
-              <span>
-                <strong className="block text-[12px] text-[#34404a]">
-                  Escolher imagem do dispositivo
-                </strong>
-                <span className="mt-1 block text-[10px] text-[#87919a]">
-                  PNG, JPG ou WEBP · até 2,5 MB
-                </span>
-              </span>
-              <input
-                className="sr-only"
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                onChange={handleFile}
-              />
-            </label>
-            <div className="mt-4 flex gap-2">
-              <input
-                className="h-10 min-w-0 flex-1 rounded-[11px] border border-[#e3e6e7] bg-[#fbfcfc] px-3 text-[11px] text-[#18202b] outline-none focus:border-[#8a9ba6]"
-                placeholder="https://exemplo.com/fundo.jpg"
-                value={imageUrl}
-                onChange={(event) => setImageUrl(event.target.value)}
-                aria-label="URL da imagem de fundo"
-              />
-              <button
-                className="rounded-[11px] border-0 bg-[#18202b] px-3 text-[11px] font-bold text-white transition-colors hover:bg-[#2d3a49]"
-                type="button"
-                onClick={applyImageUrl}
-              >
-                Aplicar
-              </button>
-            </div>
-            {error && (
-              <p className="mt-3 mb-0 rounded-[9px] bg-[#fff0e9] px-3 py-2.5 text-[11px] text-[#8b4d39]">
-                {error}
-              </p>
-            )}
-            {preferences.backgroundImage && (
-              <button
-                className="mt-4 text-[11px] font-bold text-[#9a5a43] underline"
-                type="button"
-                onClick={() => {
-                  setBackgroundImage(null);
-                  setImageUrl("");
-                }}
-              >
-                Remover imagem
-              </button>
-            )}
-          </article>
-        </section>
-
-        <section className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]">
-          {preferences.showContrastNotice ? (
-            <div className="contrast-notice" role="note">
-              <span className="contrast-notice-icon">!</span>
-              <div>
-                <strong>Ajuda de contraste</strong>
-                <p>
-                  Fundos com muita textura e cards muito transparentes podem
-                  esconder números pequenos. Para uma leitura mais segura,
-                  prefira o estilo Sólido ou Translúcido e uma cor de fundo
-                  uniforme.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowContrastNotice(false)}
-                aria-label="Ocultar ajuda de contraste"
-              >
-                Ocultar
-              </button>
-            </div>
-          ) : (
+        <nav className="settings-tabs" aria-label="Seções das configurações">
+          {settingsTabs.map((tab) => (
             <button
-              className="text-[11px] font-bold text-[var(--accent)] underline"
+              className={`settings-tab ${activeTab === tab.id ? "is-active" : ""}`}
               type="button"
-              onClick={() => setShowContrastNotice(true)}
+              key={tab.id}
+              aria-current={activeTab === tab.id ? "page" : undefined}
+              onClick={() => handleTab(tab.id)}
             >
-              Mostrar ajuda de contraste
+              {tab.label}
             </button>
-          )}
-        </section>
+          ))}
+        </nav>
 
-        <section className="status-settings-card surface-card flex items-center justify-between gap-6 rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[620px]:flex-col max-[620px]:items-start">
-          <div className="flex min-w-0 items-start gap-4">
-            <span className="status-settings-icon grid size-11 flex-none place-items-center rounded-[15px]">
-              <Icon name="shield" size={19} />
-            </span>
-            <div>
-              <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-                SAÚDE DO AMBIENTE
-              </p>
-              <h3 className="m-0 text-[18px] font-bold tracking-[-0.04em]">
-                Status da conexão
-              </h3>
-              <p className="mt-2 mb-0 max-w-[560px] text-[11px] leading-relaxed text-[#87919a]">
-                Veja a conexão com o BeePhish, a última sincronização e a
-                disponibilidade dos dados consolidados.
-              </p>
+        {activeTab === "account" ? (
+          <div className="settings-sections">
+            <section className="settings-row settings-profile-row">
+              <div className="settings-row-copy">
+                <h2>Perfil</h2>
+                <p>Defina os detalhes da sua conta.</p>
+              </div>
+              <div className="settings-row-main">
+                <div className="settings-profile-grid">
+                  <label className="settings-field">
+                    <span>Nome</span>
+                    <input
+                      value={firstName}
+                      onChange={(event) => {
+                        setFirstName(event.target.value);
+                        updateFullName(
+                          event.target.value,
+                          lastName,
+                          setDisplayName,
+                        );
+                      }}
+                      placeholder="Seu nome"
+                      autoComplete="given-name"
+                    />
+                  </label>
+                  <label className="settings-field">
+                    <span>Sobrenome</span>
+                    <input
+                      value={lastName}
+                      onChange={(event) => {
+                        setLastName(event.target.value);
+                        updateFullName(
+                          firstName,
+                          event.target.value,
+                          setDisplayName,
+                        );
+                      }}
+                      placeholder="Seu sobrenome"
+                      autoComplete="family-name"
+                    />
+                  </label>
+                  <label className="settings-field settings-email-field">
+                    <span>E-mail</span>
+                    <input value={email} readOnly aria-readonly="true" />
+                  </label>
+                  <div className="settings-photo-column">
+                    <div className="settings-photo-frame">
+                      {profilePreferences.avatar ? (
+                        <img src={profilePreferences.avatar} alt="" />
+                      ) : (
+                        profileInitial
+                      )}
+                    </div>
+                    <div className="settings-photo-actions">
+                      <label className="settings-photo-button">
+                        {profilePreferences.avatar
+                          ? "Editar foto"
+                          : "Adicionar foto"}
+                        <input
+                          className="sr-only"
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          onChange={handleAvatar}
+                        />
+                      </label>
+                      {profilePreferences.avatar && (
+                        <button type="button" onClick={() => setAvatar(null)}>
+                          <Icon name="close" size={13} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {error && <p className="settings-inline-error">{error}</p>}
+              </div>
+            </section>
+
+            <section className="settings-row">
+              <div className="settings-row-copy">
+                <h2>Fuso horário e preferências</h2>
+                <p>Informe o fuso e o formato de data.</p>
+              </div>
+              <div className="settings-row-main settings-three-fields">
+                <label className="settings-field">
+                  <span>Cidade</span>
+                  <input
+                    value={city}
+                    onChange={(event) => setCity(event.target.value)}
+                  />
+                </label>
+                <label className="settings-field">
+                  <span>Fuso horário</span>
+                  <select
+                    value={timezone}
+                    onChange={(event) => setTimezone(event.target.value)}
+                  >
+                    <option value="America/Sao_Paulo">UTC/GMT -3 horas</option>
+                    <option value="America/New_York">UTC/GMT -4 horas</option>
+                    <option value="Europe/Lisbon">UTC/GMT +0 horas</option>
+                  </select>
+                </label>
+                <label className="settings-field">
+                  <span>Data e hora</span>
+                  <select
+                    value={dateFormat}
+                    onChange={(event) => setDateFormat(event.target.value)}
+                  >
+                    <option value="dd/MM/yyyy HH:mm">dd/mm/aaaa 00:00</option>
+                    <option value="MM/dd/yyyy hh:mm a">
+                      mm/dd/aaaa 00:00 AM
+                    </option>
+                    <option value="yyyy-MM-dd HH:mm">aaaa-mm-dd 00:00</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+
+            <section className="settings-row">
+              <div className="settings-row-copy">
+                <h2>Motivação e desempenho</h2>
+                <p>Calibre os níveis de atividade da sua equipe.</p>
+                <button className="settings-learn-more" type="button">
+                  Saiba mais sobre a classificação
+                  <span>i</span>
+                </button>
+              </div>
+              <div className="settings-row-main settings-slider-grid">
+                <label className="settings-slider-field">
+                  <span>
+                    <span>Uso diário desejado</span>
+                    <strong>{dailyHours} horas</strong>
+                  </span>
+                  <input
+                    className="settings-range"
+                    type="range"
+                    min="1"
+                    max="12"
+                    value={dailyHours}
+                    onChange={(event) =>
+                      setDailyHours(Number(event.target.value))
+                    }
+                    aria-label="Uso diário desejado"
+                  />
+                  <small>
+                    Encontre a alocação ideal para o seu ritmo de trabalho.
+                  </small>
+                </label>
+                <label className="settings-slider-field">
+                  <span>
+                    <span>Faixa de trabalho concentrado</span>
+                    <strong>{weeklyFocus}–8 horas</strong>
+                  </span>
+                  <input
+                    className="settings-range"
+                    type="range"
+                    min="2"
+                    max="10"
+                    value={weeklyFocus}
+                    onChange={(event) =>
+                      setWeeklyFocus(Number(event.target.value))
+                    }
+                    aria-label="Faixa de trabalho concentrado"
+                  />
+                  <small>
+                    Defina as horas de maior foco para acompanhar o ritmo.
+                  </small>
+                </label>
+              </div>
+            </section>
+
+            <section className="settings-row">
+              <div className="settings-row-copy">
+                <h2>Seu trabalho</h2>
+                <p>Adicione informações sobre sua função.</p>
+              </div>
+              <div className="settings-row-main settings-two-fields">
+                <label className="settings-field">
+                  <span>Função</span>
+                  <input
+                    value={functionName}
+                    onChange={(event) => setFunctionName(event.target.value)}
+                  />
+                </label>
+                <label className="settings-field">
+                  <span>Cargo</span>
+                  <input
+                    value={jobTitle}
+                    onChange={(event) => setJobTitle(event.target.value)}
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="settings-row settings-panel-row">
+              <div className="settings-row-copy">
+                <h2>Experiência do painel</h2>
+                <p>Escolha como o PierPhish aparece para você.</p>
+              </div>
+              <div className="settings-row-main settings-panel-main">
+                <div className="settings-panel-block">
+                  <span className="settings-panel-label">Modo de exibição</span>
+                  <div className="settings-segmented">
+                    {(["light", "dark"] as const).map((mode) => (
+                      <button
+                        className={
+                          themePreferences.mode === mode ? "is-active" : ""
+                        }
+                        type="button"
+                        key={mode}
+                        onClick={() =>
+                          setMode(mode as ThemePreferences["mode"])
+                        }
+                      >
+                        {mode === "light" ? "Claro" : "Escuro"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="settings-panel-block">
+                  <span className="settings-panel-label">Cor do fundo</span>
+                  <div className="settings-color-row">
+                    <input
+                      type="color"
+                      value={themePreferences.canvas}
+                      onChange={(event) => setCanvas(event.target.value)}
+                      aria-label="Escolher cor do fundo"
+                    />
+                    <span>{themePreferences.canvas.toUpperCase()}</span>
+                    {colorPresets.map(([label, color]) => (
+                      <button
+                        className={
+                          themePreferences.canvas === color ? "is-active" : ""
+                        }
+                        type="button"
+                        key={color}
+                        title={label}
+                        aria-label={label}
+                        onClick={() => setCanvas(color)}
+                      >
+                        <span style={{ backgroundColor: color }} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="settings-panel-block settings-background-block">
+                  <span className="settings-panel-label">Imagem do fundo</span>
+                  <div className="settings-background-controls">
+                    <label className="settings-upload-control">
+                      <Icon name="image" size={15} />
+                      Escolher imagem
+                      <input
+                        className="sr-only"
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 2.5 * 1024 * 1024) {
+                            setError("Escolha uma imagem de até 2,5 MB.");
+                            return;
+                          }
+                          setError(null);
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            if (typeof reader.result === "string")
+                              setBackgroundImage(reader.result);
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                    </label>
+                    <input
+                      className="settings-url-input"
+                      placeholder="URL da imagem"
+                      value={imageUrl}
+                      onChange={(event) => setImageUrl(event.target.value)}
+                      aria-label="URL da imagem de fundo"
+                    />
+                    <button
+                      className="settings-small-button"
+                      type="button"
+                      onClick={applyImageUrl}
+                    >
+                      Aplicar
+                    </button>
+                    {themePreferences.backgroundImage && (
+                      <button
+                        className="settings-remove-link"
+                        type="button"
+                        onClick={() => {
+                          setBackgroundImage(null);
+                          setImageUrl("");
+                        }}
+                      >
+                        Remover
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {themePreferences.showContrastNotice && (
+                  <div className="settings-contrast-note" role="note">
+                    <span>!</span>
+                    <p>
+                      Fundos uniformes ajudam a manter os dados pequenos
+                      legíveis.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowContrastNotice(false)}
+                    >
+                      Ocultar
+                    </button>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section className="settings-row settings-link-row">
+              <div className="settings-row-copy">
+                <h2>Saúde do ambiente</h2>
+                <p>Veja a conexão e a última sincronização dos dados.</p>
+              </div>
+              <div className="settings-row-main settings-link-actions">
+                <Link className="settings-outline-button" href="/status">
+                  Status da conexão
+                  <Icon name="arrow" size={15} />
+                </Link>
+                <Link className="settings-outline-button" href="/usuarios">
+                  Usuários e acessos
+                  <Icon name="arrow" size={15} />
+                </Link>
+              </div>
+            </section>
+
+            <div className="settings-footer">
+              <p>As preferências visuais ficam salvas neste navegador.</p>
+              <button type="button" onClick={restoreDefaults}>
+                Restaurar padrão
+              </button>
             </div>
           </div>
-          <Link
-            className="inline-flex flex-none items-center gap-2 rounded-[11px] border border-[#dce3e5] px-3.5 py-2.5 text-[11px] font-bold text-[#526572] transition-colors hover:border-[#9aadb7] hover:text-[#18202b]"
-            href="/status"
-          >
-            Abrir status
-            <Icon name="arrow" size={15} />
-          </Link>
-        </section>
-
-        <section className="status-settings-card surface-card flex items-center justify-between gap-6 rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[620px]:flex-col max-[620px]:items-start">
-          <div className="flex min-w-0 items-start gap-4">
-            <span className="status-settings-icon grid size-11 flex-none place-items-center rounded-[15px]">
-              <Icon name="users" size={19} />
+        ) : (
+          <section className="settings-placeholder">
+            <span className="settings-placeholder-icon">
+              <Icon name="settings" size={18} />
             </span>
-            <div>
-              <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-                ADMINISTRAÇÃO
-              </p>
-              <h3 className="m-0 text-[18px] font-bold tracking-[-0.04em]">
-                Usuários e acessos
-              </h3>
-              <p className="mt-2 mb-0 max-w-[560px] text-[11px] leading-relaxed text-[#87919a]">
-                Crie contas internas, defina uma senha inicial e acompanhe o
-                acesso de cada pessoa ao PierPhish.
-              </p>
-            </div>
-          </div>
-          <Link
-            className="inline-flex flex-none items-center gap-2 rounded-[11px] border border-[#dce3e5] px-3.5 py-2.5 text-[11px] font-bold text-[#526572] transition-colors hover:border-[#9aadb7] hover:text-[#18202b]"
-            href="/usuarios"
-          >
-            Gerenciar usuários
-            <Icon name="arrow" size={15} />
-          </Link>
-        </section>
-
-        <section className="surface-card flex items-center justify-between gap-4 rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[520px]:flex-col max-[520px]:items-start">
-          <div>
-            <p className="m-0 text-[12px] font-bold text-[#34404a]">
-              Pré-visualização ativa
+            <h2>{tabTitles[activeTab]}</h2>
+            <p>
+              Esta área está preparada para receber suas preferências em uma
+              próxima etapa.
             </p>
-            <p className="mt-1 mb-0 text-[11px] text-[#87919a]">
-              O próximo acesso neste navegador mantém esta aparência.
-            </p>
-          </div>
-          <button
-            className="inline-flex items-center gap-2 rounded-[11px] border border-[#e2e7e8] bg-transparent px-3 py-2.5 text-[11px] font-bold text-[#697680] transition-colors hover:border-[#aab5bb]"
-            type="button"
-            onClick={restoreDefaults}
-          >
-            Restaurar padrão
-          </button>
-        </section>
+            <button type="button" onClick={() => setActiveTab("account")}>
+              Voltar para Conta
+            </button>
+          </section>
+        )}
       </div>
     </DashboardShell>
   );
