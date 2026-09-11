@@ -166,13 +166,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 
 .theme-canvas {
   background-color: var(--canvas);
-  background-image:
-    radial-gradient(
-      circle at 8% 0%,
-      color-mix(in srgb, var(--accent) 8%, transparent),
-      transparent 30%
-    ),
-    var(--canvas-image);
+  background-image: var(--canvas-image);
   background-attachment: fixed;
   background-position: center;
   background-size: cover;
