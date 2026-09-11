@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useState } from "react";
+import { defaultProfileAvatars } from "@/lib/default-avatars";
 import { useProfile } from "@/components/profile/profile-provider";
 import { Icon } from "@/components/ui/icon";
 
@@ -10,6 +11,7 @@ const supportedAvatarTypes = ["image/png", "image/jpeg", "image/webp"];
 export function ProfileEditorCard() {
   const { preferences, setAvatar, setDisplayName } = useProfile();
   const [error, setError] = useState<string | null>(null);
+  const usingDefaultAvatar = preferences.avatar?.startsWith("/avatars/");
 
   function handleAvatar(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -60,7 +62,11 @@ export function ProfileEditorCard() {
           </span>
           <span className="profile-editor-copy">
             <strong>
-              {preferences.avatar ? "Trocar foto" : "Adicionar foto"}
+              {preferences.avatar
+                ? usingDefaultAvatar
+                  ? "Trocar avatar"
+                  : "Trocar foto"
+                : "Adicionar foto"}
             </strong>
             <small>PNG, JPG ou WEBP · até 1,5 MB</small>
           </span>
@@ -82,11 +88,54 @@ export function ProfileEditorCard() {
           />
         </label>
       </div>
+      <div className="mt-7 border-t border-[#edf0f1] pt-5">
+        <div className="flex items-end justify-between gap-4 max-[560px]:flex-col max-[560px]:items-start">
+          <div>
+            <p className="m-0 text-[10px] font-extrabold tracking-[0.14em] text-[#9299a2] uppercase">
+              AVATARES DO PIERPHISH
+            </p>
+            <p className="mt-1.5 mb-0 text-[11px] text-[#87919a]">
+              Escolha um enquanto não usa uma foto pessoal.
+            </p>
+          </div>
+          {preferences.avatar?.startsWith("/avatars/") && (
+            <span className="text-[10px] font-bold text-[var(--aqua)]">
+              Avatar escolhido
+            </span>
+          )}
+        </div>
+        <div className="mt-4 grid grid-cols-10 gap-2 max-[850px]:grid-cols-5 max-[420px]:grid-cols-4">
+          {defaultProfileAvatars.map((avatar) => {
+            const selected = preferences.avatar === avatar.src;
+            return (
+              <button
+                className={`group relative aspect-square overflow-hidden rounded-[13px] border-2 bg-[#f1f3f2] transition-transform hover:-translate-y-0.5 ${selected ? "border-[var(--ink)]" : "border-transparent"}`}
+                type="button"
+                key={avatar.id}
+                aria-label={`Usar ${avatar.label}`}
+                aria-pressed={selected}
+                onClick={() => setAvatar(avatar.src)}
+              >
+                <img
+                  className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  src={avatar.src}
+                  alt=""
+                />
+                {selected && (
+                  <span className="absolute right-1 bottom-1 grid size-4 place-items-center rounded-full bg-[var(--ink)] text-white">
+                    <Icon name="check" size={10} />
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <div className="profile-editor-footer">
         <span>O e-mail de acesso continua vinculado à sua conta.</span>
         {preferences.avatar && (
           <button type="button" onClick={() => setAvatar(null)}>
-            Remover foto
+            Remover {usingDefaultAvatar ? "avatar" : "foto"}
           </button>
         )}
       </div>

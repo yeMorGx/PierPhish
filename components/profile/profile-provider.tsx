@@ -30,8 +30,9 @@ function storageKeyFor(userId: string | null, email: string | null) {
 function isValidAvatar(value: unknown): value is string {
   return (
     typeof value === "string" &&
-    value.length <= 4_500_000 &&
-    /^data:image\/(?:png|jpe?g|webp);base64,/i.test(value)
+    ((value.length <= 4_500_000 &&
+      /^data:image\/(?:png|jpe?g|webp);base64,/i.test(value)) ||
+      /^\/avatars\/monkey-\d{2}-[a-z-]+\.png$/i.test(value))
   );
 }
 
