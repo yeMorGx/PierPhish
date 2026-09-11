@@ -30,7 +30,7 @@ export function OverviewHero({
   ] as const;
 
   return (
-    <article className="surface-card relative col-span-full min-w-0 overflow-hidden rounded-[var(--radius-card)] p-8 max-[1120px]:rounded-[45px] max-[900px]:p-7 max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
+    <article className="surface-card overview-hero-card relative col-span-full min-w-0 overflow-hidden rounded-[var(--radius-card)] p-8 max-[1120px]:rounded-[45px] max-[900px]:p-7 max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
       <div className="grid h-full min-h-[266px] grid-cols-[minmax(0,1.2fr)_minmax(330px,0.8fr)] gap-8 max-[900px]:grid-cols-1">
         <div className="flex min-w-0 flex-col justify-between">
           <div>
@@ -58,7 +58,9 @@ export function OverviewHero({
                   className={`relative px-4 py-3.5 ${index < 3 ? "border-r border-[#e9edef] max-[620px]:border-r-0" : ""} ${index < 2 ? "max-[620px]:border-b" : ""} ${index % 2 === 0 ? "max-[620px]:border-r" : ""}`}
                   key={label}
                 >
-                  <span className="block text-[9px] text-[#8d969e]">{label}</span>
+                  <span className="block text-[9px] text-[#8d969e]">
+                    {label}
+                  </span>
                   <div className="mt-1 flex items-baseline justify-between gap-2">
                     <strong className="text-[20px] leading-none tracking-[-0.06em] text-[#18202b]">
                       {value}
@@ -91,7 +93,11 @@ export function OverviewHero({
           <div className="relative z-[1] my-4 flex items-center gap-5 max-[420px]:flex-col">
             <div
               className="grid size-[132px] flex-none rotate-[-34deg] place-items-center rounded-full [background:conic-gradient(#7892a0_var(--score),rgba(120,146,160,0.12)_0)]"
-              style={{ "--score": `${pct(totals.opened, totals.people)}%` } as React.CSSProperties}
+              style={
+                {
+                  "--score": `${pct(totals.opened, totals.people)}%`,
+                } as React.CSSProperties
+              }
             >
               <div className="flex size-[104px] rotate-[34deg] flex-col items-center justify-center rounded-full bg-[#f3f6f7]">
                 <strong className="text-[31px] leading-none tracking-[-0.08em]">

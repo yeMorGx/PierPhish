@@ -5025,3 +5025,21 @@ html[data-theme="dark"] .risk-signal-orange.is-active {
   color: var(--signal);
   background: var(--signal-soft);
 }
+
+/* Flat surfaces: hierarchy comes from borders, contrast and spacing. */
+.surface-card,
+html[data-card-style="translucent"] .surface-card,
+html[data-card-style="liquid"] .surface-card,
+html[data-card-style="apple"] .surface-card,
+.sidebar-profile-button,
+.header-sync-button,
+.person-modal,
+.workspace-modal,
+.profile-avatar {
+  box-shadow: none !important;
+}
+
+.overview-hero-card::before,
+.profile-hero-orbit-large {
+  box-shadow: none !important;
+}
