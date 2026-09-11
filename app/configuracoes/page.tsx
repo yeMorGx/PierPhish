@@ -292,39 +292,39 @@ function SettingsContent() {
     setError(null);
   }
 
-  return (
-    <DashboardShell activeSection="settings" title="Configurações">
-      <div className="settings-page" data-text-size={textSize}>
-        <div className="settings-heading">
-          <div>
-            <h1>Configurações</h1>
-            <p>Gerencie sua conta e suas preferências.</p>
-          </div>
-          <div className="settings-accessibility" aria-label="Tamanho do texto">
-            <span className="settings-accessibility-label">Acessibilidade</span>
-            <div className="settings-text-size-control">
-              {(["normal", "large", "larger"] as const).map((size) => (
-                <button
-                  className={textSize === size ? "is-active" : ""}
-                  type="button"
-                  key={size}
-                  aria-label={
-                    size === "normal"
-                      ? "Texto normal"
-                      : size === "large"
-                        ? "Texto grande"
-                        : "Texto extra grande"
-                  }
-                  aria-pressed={textSize === size}
-                  onClick={() => setTextSize(size)}
-                >
-                  {size === "normal" ? "A" : size === "large" ? "A+" : "A++"}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+  const accessibilityControl = (
+    <div className="settings-accessibility" aria-label="Tamanho do texto">
+      <span className="settings-accessibility-label">Acessibilidade</span>
+      <div className="settings-text-size-control">
+        {(["normal", "large", "larger"] as const).map((size) => (
+          <button
+            className={textSize === size ? "is-active" : ""}
+            type="button"
+            key={size}
+            aria-label={
+              size === "normal"
+                ? "Texto normal"
+                : size === "large"
+                  ? "Texto grande"
+                  : "Texto extra grande"
+            }
+            aria-pressed={textSize === size}
+            onClick={() => setTextSize(size)}
+          >
+            {size === "normal" ? "A" : size === "large" ? "A+" : "A++"}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
+  return (
+    <DashboardShell
+      activeSection="settings"
+      title="Configurações"
+      headerAction={accessibilityControl}
+    >
+      <div className="settings-page" data-text-size={textSize}>
         <nav className="settings-tabs" aria-label="Seções das configurações">
           {settingsTabs.map((tab) => (
             <button
@@ -341,7 +341,7 @@ function SettingsContent() {
 
         {activeTab === "account" && (
           <div className="settings-bento-grid settings-account-grid">
-            <section className="settings-row settings-bento-card settings-bento-profile">
+            <section className="settings-row settings-bento-card settings-bento-profile-info">
               <div className="settings-row-copy">
                 <h2>Perfil</h2>
                 <p>Defina os detalhes que aparecem no seu ambiente.</p>
@@ -384,31 +384,36 @@ function SettingsContent() {
                     <span>E-mail</span>
                     <input value={email} readOnly aria-readonly="true" />
                   </label>
-                  <div className="settings-photo-column">
-                    <button
-                      className="settings-photo-frame"
-                      type="button"
-                      aria-label="Trocar foto de perfil"
-                      onClick={() => setPhotoModalOpen(true)}
-                    >
-                      {profilePreferences.avatar ? (
-                        <img src={profilePreferences.avatar} alt="" />
-                      ) : (
-                        profileInitial
-                      )}
-                    </button>
-                    <button
-                      className="settings-photo-button"
-                      type="button"
-                      onClick={() => setPhotoModalOpen(true)}
-                    >
-                      {profilePreferences.avatar
-                        ? "Editar foto"
-                        : "Adicionar foto"}
-                    </button>
-                  </div>
                 </div>
                 {error && <p className="settings-inline-error">{error}</p>}
+              </div>
+            </section>
+
+            <section className="settings-row settings-bento-card settings-bento-photo">
+              <div className="settings-row-copy">
+                <h2>Foto de perfil</h2>
+                <p>Escolha uma imagem para identificar sua conta.</p>
+              </div>
+              <div className="settings-photo-card-content">
+                <button
+                  className="settings-photo-frame"
+                  type="button"
+                  aria-label="Trocar foto de perfil"
+                  onClick={() => setPhotoModalOpen(true)}
+                >
+                  {profilePreferences.avatar ? (
+                    <img src={profilePreferences.avatar} alt="" />
+                  ) : (
+                    profileInitial
+                  )}
+                </button>
+                <button
+                  className="settings-photo-button"
+                  type="button"
+                  onClick={() => setPhotoModalOpen(true)}
+                >
+                  {profilePreferences.avatar ? "Editar foto" : "Adicionar foto"}
+                </button>
               </div>
             </section>
 

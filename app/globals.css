@@ -7348,3 +7348,105 @@ html[data-theme="dark"] .settings-placeholder button {
     padding: 20px;
   }
 }
+
+/* Ajuste final do bento de configurações: branco limpo, cards contrastados e perfil dividido. */
+.settings-page {
+  background: #ffffff;
+}
+
+.settings-bento-card.settings-row,
+.settings-style-preview,
+.settings-summary-panel.settings-bento-card {
+  border-color: #e1e4e2;
+  background: var(--surface-soft);
+}
+
+.settings-bento-profile-info {
+  grid-column: span 7;
+}
+
+.settings-bento-photo {
+  grid-column: span 5;
+}
+
+.settings-page .settings-profile-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.settings-page .settings-email-field {
+  grid-column: 1 / -1;
+}
+
+.settings-photo-card-content {
+  display: grid;
+  flex: 1;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+}
+
+.settings-page .settings-photo-frame {
+  width: 116px;
+  height: 116px;
+  border: 4px solid var(--surface);
+  font-size: 32px;
+}
+
+.settings-page .settings-photo-button {
+  height: 32px;
+  padding: 0 13px;
+  background: var(--surface);
+}
+
+.settings-bento-preferences {
+  grid-column: span 5;
+}
+
+.settings-bento-work {
+  grid-column: span 7;
+}
+
+.settings-bento-security {
+  grid-column: 1 / -1;
+  min-height: auto;
+}
+
+.settings-bento-security .settings-row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+@media (max-width: 980px) {
+  .settings-bento-profile-info,
+  .settings-bento-photo,
+  .settings-bento-preferences,
+  .settings-bento-work {
+    grid-column: span 6;
+  }
+
+  .settings-bento-profile-info,
+  .settings-bento-photo {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 720px) {
+  .settings-page .settings-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-bento-profile-info,
+  .settings-bento-photo,
+  .settings-bento-preferences,
+  .settings-bento-work,
+  .settings-bento-security {
+    grid-column: 1;
+  }
+
+  .settings-bento-security .settings-row-main {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
