@@ -536,15 +536,13 @@ function PeopleRiskPage() {
           </div>
         )}
 
-        <section className="neo-risk-hero surface-card grid grid-cols-[minmax(0,1fr)_260px] gap-8 rounded-[var(--radius-card)] p-8 max-[900px]:grid-cols-1 max-[720px]:p-6">
+        <section className="surface-card grid grid-cols-[minmax(0,1fr)_300px] gap-8 overflow-hidden rounded-[var(--radius-card)] p-8 max-[900px]:grid-cols-1 max-[720px]:rounded-[23px] max-[720px]:p-6">
           <div className="min-w-0">
             <p className="mb-3 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
               CENTRO DE RISCO
             </p>
             <h2 className="m-0 max-w-[640px] text-[clamp(34px,5vw,58px)] leading-[0.93] font-[680] tracking-[-0.08em]">
-              Pessoas em foco.
-              <br />
-              Risco no radar.
+              Pessoas que pedem atenção.
             </h2>
             <p className="mt-5 mb-0 max-w-[620px] text-[13px] leading-relaxed text-[#7c8795]">
               Uma leitura consolidada de todas as campanhas, com os sinais que

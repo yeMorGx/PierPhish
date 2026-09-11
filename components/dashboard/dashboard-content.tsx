@@ -24,7 +24,7 @@ export function DashboardContent({
   totals,
 }: DashboardContentProps) {
   return (
-    <div className="neo-dashboard-grid">
+    <div className="dashboard-grid grid grid-cols-[minmax(0,1.35fr)_minmax(180px,0.62fr)_minmax(280px,0.82fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-[minmax(0,1.2fr)_minmax(180px,0.7fr)] max-[1120px]:grid-rows-[auto_auto_auto] max-[720px]:flex max-[720px]:flex-col">
       <OverviewHero
         activeCampaigns={
           campaignSummary.filter(
@@ -40,7 +40,7 @@ export function DashboardContent({
         totals={totals}
       />
       <CampaignOpeningsCard campaigns={campaignBars} total={totals.people} />
-      <div className="neo-metric-stack">
+      <div className="grid min-h-0 grid-rows-2 gap-[var(--cards-gap)] max-[1120px]:col-span-full max-[720px]:min-h-[260px]">
         <MetricCard
           label="Cliques"
           value={totals.clicked}

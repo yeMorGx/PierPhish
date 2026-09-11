@@ -161,7 +161,7 @@ export function StatusContent() {
 
   return (
     <DashboardShell activeSection="settings" title="Status do ambiente">
-      <div className="status-page grid gap-[var(--cards-gap)] pb-8">
+      <div className="status-page mx-auto grid max-w-[1180px] gap-[var(--cards-gap)] pb-8">
         <section className="status-hero-card surface-card">
           <div className="status-hero-copy">
             <p className="status-eyebrow">STATUS DO AMBIENTE</p>

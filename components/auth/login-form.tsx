@@ -54,14 +54,8 @@ export function LoginForm() {
 
           <div className="login-copy">
             <p className="login-eyebrow">Acesso protegido</p>
-            <h1>
-              De olho
-              <br />
-              em cada clique.
-            </h1>
-            <p>
-              Entre para acompanhar suas campanhas e os riscos da sua equipe.
-            </p>
+            <h1>Entre no centro de risco.</h1>
+            <p>Acompanhe sinais de exposição humana com clareza operacional.</p>
           </div>
 
           {isSupabaseConfigured ? (
@@ -105,7 +99,7 @@ export function LoginForm() {
           )}
 
           <p className="login-footer">
-            PierPhish — gestão de campanhas e risco humano.
+            Acesso interno protegido pelo Supabase Auth.
           </p>
         </div>
       </section>

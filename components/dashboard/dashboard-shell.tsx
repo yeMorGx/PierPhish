@@ -4,11 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useProfile } from "@/components/profile/profile-provider";
-import { Icon, type IconName } from "@/components/ui/icon";
-import {
-  connectedWorkspace,
-  WorkspaceSwitcher,
-} from "@/components/workspace/workspace-switcher";
+import { Icon } from "@/components/ui/icon";
+import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
 
 type ActiveSection =
   | "overview"
@@ -16,27 +13,17 @@ type ActiveSection =
   | "risk"
   | "settings"
   | "presentation";
+
 type DashboardShellProps = {
   activeSection: ActiveSection;
   children: React.ReactNode;
   headerAction?: React.ReactNode;
   title: string;
 };
-const navigation: {
-  id: ActiveSection;
-  href: string;
-  label: string;
-  icon: IconName;
-}[] = [
-  { id: "overview", href: "/", label: "Visão geral", icon: "chart" },
-  { id: "risk", href: "/riscos", label: "Pessoas por risco", icon: "users" },
-  {
-    id: "presentation",
-    href: "/apresentacao",
-    label: "Apresentação",
-    icon: "screen",
-  },
-];
+
+function navClass(active: boolean) {
+  return `sidebar-nav-link ${active ? "is-active" : ""}`;
+}
 
 export function DashboardShell({
   activeSection,
@@ -45,187 +32,176 @@ export function DashboardShell({
   title,
 }: DashboardShellProps) {
   const { user, signOut } = useAuth();
-  const { preferences } = useProfile();
+  const { preferences: profilePreferences } = useProfile();
   const [profileOpen, setProfileOpen] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  const profileButtonRef = useRef<HTMLButtonElement>(null);
-  const name =
-    preferences.displayName.trim() ||
-    user?.email?.split("@")[0] ||
-    "Meu perfil";
-  const initial = name.slice(0, 1).toUpperCase();
+  const sessionEmail = user?.email ?? null;
+  const profileName = profilePreferences.displayName.trim();
+  const profileInitial = (profileName || sessionEmail || "D")
+    .slice(0, 1)
+    .toUpperCase();
+  const riskPeopleHref = "/riscos";
 
   useEffect(() => {
     if (!profileOpen) return;
-    profileMenuRef.current
-      ?.querySelector<HTMLElement>('[role="menuitem"]')
-      ?.focus();
-    function outside(event: PointerEvent) {
-      if (!profileMenuRef.current?.contains(event.target as Node))
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      )
         setProfileOpen(false);
     }
-    function keyboard(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setProfileOpen(false);
-        profileButtonRef.current?.focus();
-      }
-      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-        const items = Array.from(
-          profileMenuRef.current?.querySelectorAll<HTMLElement>(
-            '[role="menuitem"]',
-          ) ?? [],
-        );
-        const index = items.indexOf(document.activeElement as HTMLElement);
-        event.preventDefault();
-        items[
-          (index + (event.key === "ArrowDown" ? 1 : -1) + items.length) %
-            items.length
-        ]?.focus();
-      }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setProfileOpen(false);
     }
-    document.addEventListener("pointerdown", outside);
-    document.addEventListener("keydown", keyboard);
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener("pointerdown", outside);
-      document.removeEventListener("keydown", keyboard);
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [profileOpen]);
 
   return (
-    <main className="theme-canvas dashboard-shell neo-shell">
-      <a href="#page-content" className="neo-skip-link">
-        Pular para o conteúdo
-      </a>
-      <aside className="neo-sidebar" aria-label="Navegação principal">
-        <Link
-          className="neo-brand"
-          href="/"
-          aria-label="PierPhish — Visão geral"
+    <main className="dashboard-shell theme-canvas grid min-h-screen grid-cols-[var(--sidebar-width)_minmax(0,1fr)] gap-[var(--shell-gap)] overflow-visible p-[var(--shell-padding)] transition-all duration-200 max-[1120px]:p-7 max-[720px]:grid-cols-1 max-[720px]:gap-2.5 max-[720px]:p-[14px]">
+      <aside
+        className="dashboard-sidebar sticky top-[24px] z-40 flex h-[calc(100vh-48px)] min-h-0 flex-col gap-[var(--shell-gap)] max-[1120px]:top-7 max-[1120px]:h-[calc(100vh-56px)] max-[720px]:static max-[720px]:h-[67px] max-[720px]:flex-row max-[720px]:gap-2"
+        aria-label="Navegação principal"
+      >
+        <div
+          className="relative z-50 grid size-[var(--sidebar-width)] flex-none place-items-center max-[720px]:size-[67px] max-[720px]:basis-[67px]"
+          ref={profileMenuRef}
         >
-          <span className="neo-brand-symbol" aria-hidden="true">
-            <Icon name="shield" size={28} />
-          </span>
-          <span>
-            Pier<span>Phish</span>
-            <small>Risco humano, em foco.</small>
-          </span>
-        </Link>
-        <button
-          className="neo-workspace"
-          type="button"
-          onClick={() => setWorkspaceOpen(true)}
-          aria-label="Trocar workspace"
-        >
-          <Icon name="grid" size={17} />
-          <span>
-            <small>WORKSPACE</small>
-            <strong>{connectedWorkspace.name}</strong>
-          </span>
-          <Icon name="chevron" size={15} />
-        </button>
-        <span className="neo-nav-label">PAINEL DE CONTROLE</span>
-        <nav className="neo-nav">
-          {navigation.map((item) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              className="neo-nav-item"
-              aria-label={item.label}
-              aria-current={activeSection === item.id ? "page" : undefined}
+          <button
+            className="sidebar-profile-button group grid size-[var(--avatar-size)] place-items-center rounded-full border-1 bg-[var(--ink)] text-[16px] font-extrabold text-white shadow-[0_8px_18px_rgba(24,32,43,0.12)] transition-all duration-200 outline-none hover:border-5 focus-visible:ring-4 focus-visible:ring-[#b9c7cf] max-[720px]:size-[54px]"
+            type="button"
+            aria-label={
+              profileName
+                ? `Abrir menu do perfil de ${profileName}`
+                : "Abrir menu do perfil"
+            }
+            aria-haspopup="menu"
+            aria-expanded={profileOpen}
+            onClick={() => setProfileOpen((open) => !open)}
+          >
+            {profilePreferences.avatar ? (
+              <img
+                className="size-full object-cover"
+                src={profilePreferences.avatar}
+                alt=""
+              />
+            ) : (
+              profileInitial
+            )}
+          </button>
+
+          {profileOpen && (
+            <div
+              className="surface-card absolute top-0 left-[calc(100%+12px)] z-50 w-[250px] rounded-[22px] p-2 max-[720px]:top-full max-[720px]:left-0 max-[720px]:mt-2"
+              role="menu"
             >
-              <Icon name={item.icon} size={21} />
-              <span>{item.label}</span>
-              <Icon name="arrow" size={16} />
+              <Link
+                href="/perfil"
+                className="flex items-center gap-3 rounded-[16px] bg-[#f5f7f7] p-3 transition-colors hover:bg-[#edf2f3]"
+                role="menuitem"
+                onClick={() => setProfileOpen(false)}
+              >
+                <span className="profile-menu-avatar grid size-9 flex-none place-items-center overflow-hidden rounded-full bg-[#18202b] text-[11px] font-extrabold text-white">
+                  {profilePreferences.avatar ? (
+                    <img
+                      className="size-full object-cover"
+                      src={profilePreferences.avatar}
+                      alt=""
+                    />
+                  ) : (
+                    profileInitial
+                  )}
+                </span>
+                <span className="min-w-0">
+                  <strong className="block text-[11px] text-[#18202b]">
+                    {profileName ||
+                      (sessionEmail ? "Conta conectada" : "Modo demonstração")}
+                  </strong>
+                  <span className="mt-0.5 block max-w-[180px] overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-[#87919a]">
+                    {sessionEmail ?? "Dados locais de demonstração"}
+                  </span>
+                </span>
+                <Icon name="arrow" size={15} />
+              </Link>
+              <div className="my-2 h-px bg-[#edf0f1]" />
+              <button
+                className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#edf4f5] hover:text-[#3e6573] focus-visible:bg-[#edf4f5] focus-visible:text-[#3e6573]"
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setProfileOpen(false);
+                  setWorkspaceOpen(true);
+                }}
+              >
+                <Icon name="grid" size={16} />
+                Trocar workspace
+                <span className="ml-auto text-[14px] leading-none">›</span>
+              </button>
+              <div className="my-2 h-px bg-[#edf0f1]" />
+              <button
+                className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#fff1ed] hover:text-[#a5553b] focus-visible:bg-[#fff1ed] focus-visible:text-[#a5553b]"
+                type="button"
+                role="menuitem"
+                onClick={() => void signOut()}
+              >
+                <Icon name="logout" size={16} />
+                Sair<span className="ml-auto text-[14px] leading-none">↗</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="surface-card flex min-h-0 flex-1 flex-col items-center justify-between rounded-[var(--radius-shell)] p-4 px-3 max-[1120px]:rounded-[45px] max-[720px]:flex-row max-[720px]:rounded-[23px] max-[720px]:p-[9px_12px]">
+          <nav className="mt-[18px] flex flex-col items-center gap-3 max-[720px]:mt-0 max-[720px]:ml-2 max-[720px]:flex-row max-[720px]:gap-[3px]">
+            <Link
+              href="/"
+              className={navClass(activeSection === "overview")}
+              aria-label="Visão geral"
+              aria-current={activeSection === "overview" ? "page" : undefined}
+            >
+              <Icon name="chart" />
             </Link>
-          ))}
-        </nav>
-        <div className="neo-sidebar-bottom">
+            <Link
+              href={riskPeopleHref}
+              className={`${navClass(activeSection === "risk")} max-[720px]:hidden`}
+              aria-label="Pessoas por risco"
+              aria-current={activeSection === "risk" ? "page" : undefined}
+            >
+              <Icon name="users" />
+            </Link>
+          </nav>
           <Link
             href="/configuracoes"
-            className="neo-nav-item"
+            className={navClass(activeSection === "settings")}
             aria-label="Configurações"
             aria-current={activeSection === "settings" ? "page" : undefined}
           >
-            <Icon name="tune" size={21} />
-            <span>Configurações</span>
-            <Icon name="arrow" size={16} />
+            <Icon name="tune" />
           </Link>
-          <div className="neo-account" ref={profileMenuRef}>
-            <button
-              ref={profileButtonRef}
-              className="neo-account-button"
-              type="button"
-              aria-label={`Abrir menu do perfil de ${name}`}
-              aria-haspopup="menu"
-              aria-expanded={profileOpen}
-              onClick={() => setProfileOpen(!profileOpen)}
-            >
-              <span className="neo-avatar">
-                {preferences.avatar ? (
-                  <img src={preferences.avatar} alt="" />
-                ) : (
-                  initial
-                )}
-              </span>
-              <span className="neo-account-copy">
-                <strong>{name}</strong>
-                <small>Minha conta</small>
-              </span>
-              <Icon name="chevron" size={16} />
-            </button>
-            {profileOpen && (
-              <div
-                className="neo-account-menu"
-                role="menu"
-                aria-label="Menu da conta"
-              >
-                <p>{user?.email ?? "Modo demonstração"}</p>
-                <Link
-                  href="/perfil"
-                  role="menuitem"
-                  onClick={() => setProfileOpen(false)}
-                >
-                  <Icon name="users" size={18} />
-                  Meu perfil
-                  <Icon name="arrow" size={16} />
-                </Link>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setProfileOpen(false);
-                    setWorkspaceOpen(true);
-                  }}
-                >
-                  <Icon name="grid" size={18} />
-                  Trocar workspace
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="neo-signout"
-                  onClick={() => void signOut()}
-                >
-                  <Icon name="logout" size={18} />
-                  Sair da conta
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </aside>
-      <section className="neo-main">
-        <header className="neo-header">
-          <div className="neo-header-copy">
-            <span>
-              PIERPHISH <b>/</b> PAINEL
-            </span>
-            <h1>{title}</h1>
-          </div>
-          <div className="neo-header-actions">{headerAction}</div>
+
+      <section className="dashboard-main flex min-w-0 flex-col">
+        <header className="dashboard-header surface-card flex h-[var(--header-height)] flex-none items-center justify-between gap-5 rounded-[var(--radius-shell)] px-8 py-3 max-[1120px]:rounded-[45px] max-[720px]:mb-2.5 max-[720px]:h-[118px] max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-[22px] max-[720px]:py-5">
+          <h1 className="m-0 text-[clamp(18px,3vw,24px)] leading-[0.95] font-[680] tracking-[-0.065em]">
+            {title}
+          </h1>
+          {headerAction && (
+            <div className="flex items-center gap-2.5 max-[720px]:w-full max-[720px]:justify-between">
+              {headerAction}
+            </div>
+          )}
         </header>
-        <div className="neo-page-content" id="page-content" tabIndex={-1}>
+        <div className="min-w-0 overflow-x-clip py-[14px] pr-2 pb-8 max-[720px]:p-0">
           {children}
         </div>
       </section>

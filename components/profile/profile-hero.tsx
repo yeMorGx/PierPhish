@@ -18,6 +18,8 @@ export function ProfileHero({
 }: ProfileHeroProps) {
   return (
     <section className="surface-card profile-hero-card">
+      <div className="profile-hero-orbit profile-hero-orbit-large" />
+      <div className="profile-hero-orbit profile-hero-orbit-small" />
       <div className="profile-hero-layout">
         <div className="profile-hero-identity">
           <div className="profile-avatar overflow-hidden" aria-hidden="true">

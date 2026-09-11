@@ -557,8 +557,8 @@ export default function CampaignPeoplePage() {
         </div>
       }
     >
-      <div className="neo-campaign-page flex flex-col gap-[var(--cards-gap)]">
-        <header className="neo-campaign-hero surface-card flex items-center px-8 py-7 max-[720px]:px-6">
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-[var(--cards-gap)]">
+        <header className="surface-card flex items-center rounded-[30px] px-8 py-7 max-[720px]:rounded-[22px] max-[720px]:px-6">
           <div className="min-w-0">
             <Link
               href="/"
@@ -580,9 +580,9 @@ export default function CampaignPeoplePage() {
                 <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
                   CAMPANHA / {campaignId}
                 </p>
-                <h2 className="m-0 max-w-[920px] text-[clamp(28px,3.6vw,48px)] leading-[1] font-[680] tracking-[-0.06em]">
+                <h1 className="m-0 max-w-[920px] text-[clamp(28px,3.6vw,48px)] leading-[1] font-[680] tracking-[-0.06em]">
                   {campaign?.name ?? `Campanha ${campaignId}`}
-                </h2>
+                </h1>
                 <p className="mt-3 mb-0 text-[12px] text-[#7b838d]">
                   Pessoas alcançadas e sinais registrados nesta campanha.
                 </p>
@@ -604,7 +604,7 @@ export default function CampaignPeoplePage() {
           </div>
         )}
 
-        <section className="neo-campaign-metrics grid grid-cols-4 gap-[var(--cards-gap)] max-[900px]:grid-cols-2 max-[520px]:grid-cols-1">
+        <section className="grid grid-cols-4 gap-[var(--cards-gap)] max-[900px]:grid-cols-2 max-[520px]:grid-cols-1">
           {[
             ["Pessoas", summary.total, "na campanha", "text-[var(--ink)]"],
             [
@@ -677,8 +677,7 @@ export default function CampaignPeoplePage() {
                 ] as [Filter, string][]
               ).map(([value, label]) => (
                 <button
-                  className="neo-campaign-filter"
-                  aria-pressed={filter === value}
+                  className={`rounded-full border px-3 py-2 text-[10px] font-bold transition-colors ${filter === value ? "border-[var(--ink)] bg-[var(--ink)] text-white" : "border-[#e5e9ea] bg-transparent text-[#7d8790] hover:border-[#aab5bb]"}`}
                   type="button"
                   key={value}
                   onClick={() => setFilter(value)}
