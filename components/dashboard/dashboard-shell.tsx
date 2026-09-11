@@ -77,7 +77,7 @@ export function DashboardShell({
           ref={profileMenuRef}
         >
           <button
-            className="sidebar-profile-button group grid size-[var(--avatar-size)] place-items-center rounded-full border-1 bg-[var(--ink)] text-[16px] font-extrabold text-white shadow-[0_8px_18px_rgba(24,32,43,0.12)] transition-all duration-200 outline-none hover:border-5 focus-visible:ring-4 focus-visible:ring-[#b9c7cf] max-[720px]:size-[54px]"
+            className="sidebar-profile-button group grid size-[var(--avatar-size)] place-items-center overflow-hidden rounded-full border-1 bg-[var(--ink)] p-0 text-[16px] font-extrabold text-white shadow-[0_8px_18px_rgba(24,32,43,0.12)] transition-all duration-200 outline-none hover:border-5 focus-visible:ring-4 focus-visible:ring-[#b9c7cf] max-[720px]:size-[54px]"
             type="button"
             aria-label={
               profileName
