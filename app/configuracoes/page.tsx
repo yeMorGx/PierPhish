@@ -614,28 +614,95 @@ function SettingsContent() {
             </section>
             <aside className="settings-bento-card settings-style-preview">
               <span className="settings-panel-label">PRÉVIA DO PAINEL</span>
-              <div className="settings-preview-window">
+              <div
+                className="settings-preview-window settings-visual-dashboard"
+                role="img"
+                aria-label="Prévia visual do dashboard com métricas, gráfico, progresso e avatares"
+              >
                 <div className="settings-preview-window-top">
-                  <span />
-                  <span />
-                  <span />
+                  <span className="settings-preview-brand-mark">P</span>
+                  <span className="settings-preview-status-dot" />
+                  <span className="settings-preview-top-line" />
                 </div>
-                <div className="settings-preview-window-content">
-                  <span className="settings-preview-kicker">PIERPHISH</span>
-                  <strong>Visão geral</strong>
-                  <div className="settings-preview-lines">
-                    <span />
-                    <span />
-                    <span />
+                <div
+                  className="settings-visual-preview-content"
+                  aria-hidden="true"
+                >
+                  <div className="settings-visual-preview-toolbar">
+                    <span className="settings-preview-side-rail">
+                      <Icon name="grid" size={10} />
+                      <Icon name="chart" size={10} />
+                      <Icon name="users" size={10} />
+                    </span>
+                    <span className="settings-preview-toolbar-icons">
+                      <Icon name="refresh" size={11} />
+                      <Icon name="tune" size={11} />
+                    </span>
                   </div>
-                  <div className="settings-preview-blocks">
-                    <span />
-                    <span />
-                    <span />
+                  <div className="settings-visual-preview-main">
+                    <div className="settings-visual-preview-hero">
+                      <div className="settings-preview-ring">
+                        <svg viewBox="0 0 44 44">
+                          <circle
+                            className="settings-preview-ring-track"
+                            cx="22"
+                            cy="22"
+                            r="16"
+                          />
+                          <circle
+                            className="settings-preview-ring-value"
+                            cx="22"
+                            cy="22"
+                            r="16"
+                          />
+                        </svg>
+                        <strong>69%</strong>
+                      </div>
+                      <div className="settings-preview-hero-bars">
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                      </div>
+                    </div>
+                    <div className="settings-preview-metrics">
+                      <span>
+                        <strong>18</strong>
+                        <i />
+                      </span>
+                      <span>
+                        <strong>57</strong>
+                        <i />
+                      </span>
+                      <span>
+                        <strong>36</strong>
+                        <i />
+                      </span>
+                      <span>
+                        <strong>7</strong>
+                        <i />
+                      </span>
+                    </div>
+                    <div className="settings-preview-visual-footer">
+                      <div className="settings-preview-chart-bars">
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                      </div>
+                      <div className="settings-preview-avatars">
+                        <span>H</span>
+                        <span>T</span>
+                        <span>R</span>
+                        <span>+8</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <p>Uma prévia simples para você reconhecer o tema escolhido.</p>
+              <p>Uma leitura visual, com menos palavras e mais sinais.</p>
             </aside>
             <div className="settings-footer">
               <p>As preferências visuais ficam salvas neste navegador.</p>
