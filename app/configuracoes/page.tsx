@@ -11,6 +11,7 @@ import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 type SettingsTab = "account" | "users" | "style" | "status";
+type TextSize = "normal" | "large" | "larger";
 
 const settingsTabs: Array<{ id: SettingsTab; label: string }> = [
   { id: "account", label: "Conta" },
@@ -190,6 +191,11 @@ function SettingsContent() {
     setDisplayName,
   } = useProfile();
   const [activeTab, setActiveTab] = useState<SettingsTab>("account");
+  const [textSize, setTextSize] = useState<TextSize>(() => {
+    if (typeof window === "undefined") return "normal";
+    const stored = window.localStorage.getItem("pierphish-settings-text-size");
+    return stored === "large" || stored === "larger" ? stored : "normal";
+  });
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
@@ -212,6 +218,10 @@ function SettingsContent() {
     setFirstName(parts[0] ?? "");
     setLastName(parts.slice(1).join(" "));
   }, [profileName]);
+
+  useEffect(() => {
+    window.localStorage.setItem("pierphish-settings-text-size", textSize);
+  }, [textSize]);
 
   useEffect(() => {
     if (!photoModalOpen) return;
@@ -284,10 +294,35 @@ function SettingsContent() {
 
   return (
     <DashboardShell activeSection="settings" title="Configurações">
-      <div className="settings-page">
+      <div className="settings-page" data-text-size={textSize}>
         <div className="settings-heading">
-          <h1>Configurações</h1>
-          <p>Gerencie sua conta e suas preferências.</p>
+          <div>
+            <h1>Configurações</h1>
+            <p>Gerencie sua conta e suas preferências.</p>
+          </div>
+          <div className="settings-accessibility" aria-label="Tamanho do texto">
+            <span className="settings-accessibility-label">Acessibilidade</span>
+            <div className="settings-text-size-control">
+              {(["normal", "large", "larger"] as const).map((size) => (
+                <button
+                  className={textSize === size ? "is-active" : ""}
+                  type="button"
+                  key={size}
+                  aria-label={
+                    size === "normal"
+                      ? "Texto normal"
+                      : size === "large"
+                        ? "Texto grande"
+                        : "Texto extra grande"
+                  }
+                  aria-pressed={textSize === size}
+                  onClick={() => setTextSize(size)}
+                >
+                  {size === "normal" ? "A" : size === "large" ? "A+" : "A++"}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <nav className="settings-tabs" aria-label="Seções das configurações">
@@ -305,8 +340,8 @@ function SettingsContent() {
         </nav>
 
         {activeTab === "account" && (
-          <div className="settings-sections">
-            <section className="settings-row settings-profile-row">
+          <div className="settings-bento-grid settings-account-grid">
+            <section className="settings-row settings-bento-card settings-bento-profile">
               <div className="settings-row-copy">
                 <h2>Perfil</h2>
                 <p>Defina os detalhes que aparecem no seu ambiente.</p>
@@ -377,7 +412,7 @@ function SettingsContent() {
               </div>
             </section>
 
-            <section className="settings-row">
+            <section className="settings-row settings-bento-card settings-bento-preferences">
               <div className="settings-row-copy">
                 <h2>Fuso horário e preferências</h2>
                 <p>Informe o fuso e o formato de data do painel.</p>
@@ -417,7 +452,7 @@ function SettingsContent() {
               </div>
             </section>
 
-            <section className="settings-row">
+            <section className="settings-row settings-bento-card settings-bento-work">
               <div className="settings-row-copy">
                 <h2>Seu trabalho</h2>
                 <p>Adicione informações sobre sua função na operação.</p>
@@ -440,7 +475,7 @@ function SettingsContent() {
               </div>
             </section>
 
-            <section className="settings-row">
+            <section className="settings-row settings-bento-card settings-bento-security">
               <div className="settings-row-copy">
                 <h2>Segurança da conta</h2>
                 <p>Atualize sua senha sempre que precisar.</p>
@@ -456,7 +491,7 @@ function SettingsContent() {
         )}
 
         {activeTab === "users" && (
-          <section className="settings-summary-panel">
+          <section className="settings-summary-panel settings-bento-card">
             <div className="settings-summary-heading">
               <div>
                 <span className="settings-panel-label">
@@ -490,8 +525,8 @@ function SettingsContent() {
         )}
 
         {activeTab === "style" && (
-          <div className="settings-sections settings-style-sections">
-            <section className="settings-row settings-style-main-row">
+          <div className="settings-bento-grid settings-style-grid">
+            <section className="settings-row settings-bento-card settings-style-main-card">
               <div className="settings-row-copy">
                 <h2>Estilo do painel</h2>
                 <p>Escolha o modo de exibição e a base visual do PierPhish.</p>
@@ -567,6 +602,31 @@ function SettingsContent() {
                 {error && <p className="settings-inline-error">{error}</p>}
               </div>
             </section>
+            <aside className="settings-bento-card settings-style-preview">
+              <span className="settings-panel-label">PRÉVIA DO PAINEL</span>
+              <div className="settings-preview-window">
+                <div className="settings-preview-window-top">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <div className="settings-preview-window-content">
+                  <span className="settings-preview-kicker">PIERPHISH</span>
+                  <strong>Visão geral</strong>
+                  <div className="settings-preview-lines">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <div className="settings-preview-blocks">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                </div>
+              </div>
+              <p>Uma prévia simples para você reconhecer o tema escolhido.</p>
+            </aside>
             <div className="settings-footer">
               <p>As preferências visuais ficam salvas neste navegador.</p>
               <button type="button" onClick={restoreDefaults}>
@@ -577,7 +637,7 @@ function SettingsContent() {
         )}
 
         {activeTab === "status" && (
-          <section className="settings-summary-panel settings-status-panel">
+          <section className="settings-summary-panel settings-bento-card settings-status-panel">
             <div className="settings-summary-heading">
               <div>
                 <span className="settings-panel-label">SAÚDE DO AMBIENTE</span>
