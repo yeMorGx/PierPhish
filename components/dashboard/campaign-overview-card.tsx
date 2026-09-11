@@ -45,7 +45,7 @@ function tooltipPeople(
   participants: CampaignParticipants[string],
   personAvatars: PersonAvatarMap,
 ): AnimatedTooltipItem[] {
-  return participants.slice(0, 4).map((participant, index) => ({
+  return participants.map((participant, index) => ({
     id: campaignId * 10 + index,
     name: participant.name,
     designation: participant.id.includes("@")
@@ -53,6 +53,35 @@ function tooltipPeople(
       : "Pessoa participante",
     image: avatarUrl(participant.name, index, personAvatars[participant.id]),
   }));
+}
+
+function CampaignPeopleAvatars({
+  campaignId,
+  peopleCount,
+  participants,
+  personAvatars,
+}: {
+  campaignId: number;
+  peopleCount: number;
+  participants: CampaignParticipants[string];
+  personAvatars: PersonAvatarMap;
+}) {
+  const allPeople = tooltipPeople(campaignId, participants, personAvatars);
+  const visiblePeople = allPeople.slice(0, 4);
+  const remainingPeople = allPeople.slice(4);
+  const remainingCount = Math.max(
+    peopleCount - visiblePeople.length,
+    remainingPeople.length,
+    0,
+  );
+
+  return (
+    <AnimatedTooltip
+      items={visiblePeople}
+      numPeople={remainingCount}
+      remainingItems={remainingPeople}
+    />
+  );
 }
 
 function statusLabel(status: string | null) {
@@ -179,18 +208,13 @@ export function CampaignOverviewCard({
                 </td>
                 <td className="px-4 py-3.5">
                   <div className="flex min-w-[170px] items-center gap-3">
-                    <AnimatedTooltip
-                      items={tooltipPeople(
-                        campaign.id,
-                        participantsByCampaign[String(campaign.id)] ?? [],
-                        personAvatars,
-                      )}
-                      numPeople={Math.max(
-                        campaign.people -
-                          (participantsByCampaign[String(campaign.id)] ?? [])
-                            .length,
-                        0,
-                      )}
+                    <CampaignPeopleAvatars
+                      campaignId={campaign.id}
+                      peopleCount={campaign.people}
+                      participants={
+                        participantsByCampaign[String(campaign.id)] ?? []
+                      }
+                      personAvatars={personAvatars}
                     />
                     {index === 0 && (
                       <span className="inline-flex rounded-full bg-[#edf2f3] px-2 py-1 text-[9px] font-bold text-[#5f7681]">

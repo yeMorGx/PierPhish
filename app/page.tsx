@@ -232,10 +232,7 @@ export default function Home() {
           `${participant.campaign_id}:${name.toLowerCase()}`;
         const key = String(participant.campaign_id);
         const current = nextParticipants[key] ?? [];
-        if (
-          current.length < 4 &&
-          !current.some((participant) => participant.id === personId)
-        ) {
+        if (!current.some((participant) => participant.id === personId)) {
           nextParticipants[key] = [...current, { id: personId, name }];
         }
       }
