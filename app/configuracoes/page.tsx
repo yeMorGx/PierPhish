@@ -39,6 +39,11 @@ const monkeyAvatars = [
   ["/avatars/monkey-08-forest.png", "Floresta"],
   ["/avatars/monkey-09-cream.png", "Creme"],
   ["/avatars/monkey-10-navy.png", "Marinho"],
+  ["/avatars/monkey-11-fine.png", "Tudo bem"],
+  ["/avatars/monkey-12-stonks.png", "Stonks"],
+  ["/avatars/monkey-13-disaster.png", "Caos"],
+  ["/avatars/monkey-14-deal-with-it.png", "Óculos"],
+  ["/avatars/monkey-15-shocked.png", "Surpreso"],
 ] as const;
 
 const maxAvatarSize = 1.5 * 1024 * 1024;
@@ -147,7 +152,7 @@ function ProfilePhotoModal({
               </span>
               <h3>Escolha um macaco</h3>
             </div>
-            <span>10 opções</span>
+            <span>15 opções</span>
           </div>
           <div className="settings-avatar-grid">
             {monkeyAvatars.map(([src, label]) => (
