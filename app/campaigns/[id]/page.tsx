@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CampaignLogoPicker } from "@/components/campaigns/campaign-logo";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { AvatarCircles } from "@/components/ui/avatar-circles";
 import {
   PersonDetailsModal,
   type PersonDetails,
@@ -52,19 +51,6 @@ type RawEvent = {
 type Person = PersonDetails;
 
 type Filter = "all" | "opened" | "clicked" | "reported";
-
-function personAvatarUrl(name: string, index: number) {
-  const initials = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-  const fills = ["#202831", "#66737b", "#9aa3a6", "#c9cfcc"];
-  const fill = fills[index % fills.length];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="40" cy="40" r="40" fill="${fill}"/><text x="40" y="44" fill="#ffffff" font-family="Arial,sans-serif" font-size="24" text-anchor="middle">${initials}</text></svg>`;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-}
 
 const demoCampaign: Campaign = {
   id: 5345,
@@ -493,14 +479,6 @@ export default function CampaignPeoplePage() {
     [people],
   );
 
-  const participantAvatarUrls = people
-    .slice(0, 4)
-    .map((person, index) => personAvatarUrl(person.name, index));
-  const additionalParticipants = Math.max(
-    people.length - participantAvatarUrls.length,
-    0,
-  );
-
   if (!sessionReady || loading) {
     return (
       <main className="theme-canvas grid min-h-screen place-items-center p-7">
@@ -608,21 +586,6 @@ export default function CampaignPeoplePage() {
                 <p className="mt-3 mb-0 text-[12px] text-[#7b838d]">
                   Pessoas alcançadas e sinais registrados nesta campanha.
                 </p>
-                <div className="mt-5 flex flex-wrap items-center gap-4 rounded-[16px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 py-3">
-                  <div>
-                    <span className="block text-[9px] font-extrabold tracking-[0.14em] text-[#9299a2] uppercase">
-                      Participantes
-                    </span>
-                    <strong className="mt-1 block text-[12px] font-medium text-[var(--ink)]">
-                      {summary.total} pessoas alcançadas
-                    </strong>
-                  </div>
-                  <AvatarCircles
-                    avatarUrls={participantAvatarUrls}
-                    numPeople={additionalParticipants}
-                    className="ml-auto"
-                  />
-                </div>
               </div>
             </div>
           </div>
