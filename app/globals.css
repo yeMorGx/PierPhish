@@ -4799,12 +4799,12 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 
 .login-panel-inner {
   display: flex;
-  width: min(100%, 560px);
+  width: min(100%, 720px);
   min-height: 100%;
   margin: 0 auto;
   flex-direction: column;
   justify-content: center;
-  padding: clamp(34px, 6vw, 88px) clamp(24px, 7vw, 92px);
+  padding: clamp(34px, 5vh, 64px) clamp(28px, 5vw, 68px);
 }
 
 .login-brand {
@@ -4833,7 +4833,7 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 }
 
 .login-copy {
-  margin-top: clamp(58px, 10vh, 116px);
+  margin-top: clamp(46px, 7vh, 82px);
 }
 
 .login-eyebrow {
@@ -4846,7 +4846,7 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 }
 
 .login-copy h1 {
-  max-width: 430px;
+  max-width: 520px;
   margin: 0;
   color: var(--ink);
   font-size: clamp(40px, 4.2vw, 60px);
@@ -4856,8 +4856,8 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 }
 
 .login-copy > p:last-child {
-  max-width: 340px;
-  margin: 20px 0 0;
+  max-width: 430px;
+  margin: 16px 0 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.55;
@@ -4865,7 +4865,7 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 
 .login-form {
   display: flex;
-  margin-top: 42px;
+  margin-top: 34px;
   flex-direction: column;
   gap: 17px;
 }
