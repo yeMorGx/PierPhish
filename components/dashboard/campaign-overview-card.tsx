@@ -9,14 +9,22 @@ import type {
   CampaignSummary,
   OverviewTotals,
 } from "@/components/dashboard/types";
+import type { PersonAvatarMap } from "@/lib/person-avatars";
 
 type CampaignOverviewCardProps = {
   campaigns: CampaignSummary[];
+  personAvatars?: PersonAvatarMap;
   participantsByCampaign?: CampaignParticipants;
   totals: OverviewTotals;
 };
 
-function avatarUrl(name: string, index: number) {
+function avatarUrl(
+  name: string,
+  index: number,
+  avatar: string | null | undefined,
+) {
+  if (avatar) return avatar;
+
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -46,6 +54,7 @@ function statusClass(status: string | null) {
 
 export function CampaignOverviewCard({
   campaigns,
+  personAvatars = {},
   participantsByCampaign = {},
   totals,
 }: CampaignOverviewCardProps) {
@@ -157,7 +166,13 @@ export function CampaignOverviewCard({
                         participantsByCampaign[String(campaign.id)] ?? []
                       )
                         .slice(0, 4)
-                        .map(avatarUrl)}
+                        .map((participant, participantIndex) =>
+                          avatarUrl(
+                            participant.name,
+                            participantIndex,
+                            personAvatars[participant.id],
+                          ),
+                        )}
                       numPeople={Math.max(
                         campaign.people -
                           (participantsByCampaign[String(campaign.id)] ?? [])

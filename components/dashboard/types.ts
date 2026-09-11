@@ -46,7 +46,12 @@ export type CampaignSummary = Campaign & {
 
 export type CampaignBar = Campaign & { rate: number };
 
-export type CampaignParticipants = Record<string, string[]>;
+export type CampaignParticipant = {
+  id: string;
+  name: string;
+};
+
+export type CampaignParticipants = Record<string, CampaignParticipant[]>;
 
 export type OverviewTotals = {
   campaigns: number;

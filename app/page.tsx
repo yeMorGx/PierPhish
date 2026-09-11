@@ -13,20 +13,36 @@ import type {
   CampaignSummary,
 } from "@/components/dashboard/types";
 import { demoCampaigns } from "@/lib/demo-data";
+import { readPersonAvatars, type PersonAvatarMap } from "@/lib/person-avatars";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type RawParticipant = {
   campaign_id: number;
+  beephish_id: string | null;
   first_name: string | null;
   last_name: string | null;
   email: string | null;
 };
 
 const demoParticipantsByCampaign: CampaignParticipants = {
-  "5345": ["Ana Souza", "Carlos Lima", "Juliana Alves", "Marina Costa"],
-  "5349": ["Paula Nunes", "Rafael Dias"],
-  "5052": ["Bianca Reis", "Caio Martins"],
-  "2581": ["Lucas Prado", "Fernanda Alves"],
+  "5345": [
+    { id: "ana.souza@empresa.com", name: "Ana Souza" },
+    { id: "carlos.lima@empresa.com", name: "Carlos Lima" },
+    { id: "juliana.alves@empresa.com", name: "Juliana Alves" },
+    { id: "marina.costa@empresa.com", name: "Marina Costa" },
+  ],
+  "5349": [
+    { id: "paula.nunes@empresa.com", name: "Paula Nunes" },
+    { id: "rafael.dias@empresa.com", name: "Rafael Dias" },
+  ],
+  "5052": [
+    { id: "bianca.reis@empresa.com", name: "Bianca Reis" },
+    { id: "caio.martins@empresa.com", name: "Caio Martins" },
+  ],
+  "2581": [
+    { id: "lucas.prado@empresa.com", name: "Lucas Prado" },
+    { id: "fernanda.alves@empresa.com", name: "Fernanda Alves" },
+  ],
 };
 
 function pct(value: number, total: number) {
@@ -43,6 +59,7 @@ export default function Home() {
     useState<CampaignParticipants>(
       isSupabaseConfigured ? {} : demoParticipantsByCampaign,
     );
+  const [personAvatars, setPersonAvatars] = useState<PersonAvatarMap>({});
   const [selectedId, setSelectedId] = useState(5345);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -141,6 +158,27 @@ export default function Home() {
   );
 
   useEffect(() => {
+    const refreshPersonAvatars = () => {
+      setPersonAvatars(readPersonAvatars());
+    };
+
+    refreshPersonAvatars();
+    window.addEventListener("storage", refreshPersonAvatars);
+    window.addEventListener(
+      "pierphish-person-avatars-change",
+      refreshPersonAvatars,
+    );
+
+    return () => {
+      window.removeEventListener("storage", refreshPersonAvatars);
+      window.removeEventListener(
+        "pierphish-person-avatars-change",
+        refreshPersonAvatars,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
     if (!ready) return;
     if (isSupabaseConfigured && !user) {
       router.replace("/login");
@@ -166,11 +204,15 @@ export default function Home() {
 
     const nextCampaigns = (data ?? []) as Campaign[];
     setCampaigns(nextCampaigns);
+    const avatars = readPersonAvatars();
+    setPersonAvatars(avatars);
     const nextParticipants: CampaignParticipants = {};
     if (nextCampaigns.length) {
       const { data: participantData } = await supabase
         .from("beephish_results")
-        .select("campaign_id,first_name,last_name,email,modified_date")
+        .select(
+          "campaign_id,beephish_id,first_name,last_name,email,modified_date",
+        )
         .in(
           "campaign_id",
           nextCampaigns.map((campaign) => campaign.id),
@@ -184,10 +226,17 @@ export default function Home() {
             .join(" ") ||
           participant.email ||
           "Pessoa participante";
+        const personId =
+          participant.email?.trim().toLowerCase() ||
+          participant.beephish_id ||
+          `${participant.campaign_id}:${name.toLowerCase()}`;
         const key = String(participant.campaign_id);
         const current = nextParticipants[key] ?? [];
-        if (current.length < 4 && !current.includes(name)) {
-          nextParticipants[key] = [...current, name];
+        if (
+          current.length < 4 &&
+          !current.some((participant) => participant.id === personId)
+        ) {
+          nextParticipants[key] = [...current, { id: personId, name }];
         }
       }
     }
@@ -267,6 +316,7 @@ export default function Home() {
         campaignBars={campaignBars}
         campaigns={campaigns}
         campaignSummary={campaignSummary}
+        personAvatars={personAvatars}
         participantsByCampaign={participantsByCampaign}
         totals={totals}
       />

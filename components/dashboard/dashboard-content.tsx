@@ -10,10 +10,12 @@ import type {
   CampaignSummary,
   OverviewTotals,
 } from "@/components/dashboard/types";
+import type { PersonAvatarMap } from "@/lib/person-avatars";
 
 type DashboardContentProps = {
   campaignBars: CampaignBar[];
   campaigns: Campaign[];
+  personAvatars: PersonAvatarMap;
   participantsByCampaign: CampaignParticipants;
   campaignSummary: CampaignSummary[];
   totals: OverviewTotals;
@@ -22,6 +24,7 @@ type DashboardContentProps = {
 export function DashboardContent({
   campaignBars,
   campaigns,
+  personAvatars,
   participantsByCampaign,
   campaignSummary,
   totals,
@@ -60,6 +63,7 @@ export function DashboardContent({
       />
       <CampaignOverviewCard
         campaigns={campaignSummary}
+        personAvatars={personAvatars}
         participantsByCampaign={participantsByCampaign}
         totals={totals}
       />

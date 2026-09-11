@@ -35,6 +35,7 @@ export function writePersonAvatars(avatars: PersonAvatarMap) {
 
   try {
     window.localStorage.setItem(storageKey, JSON.stringify(avatars));
+    window.dispatchEvent(new CustomEvent("pierphish-person-avatars-change"));
   } catch {
     // A foto continua disponível nesta sessão mesmo se o storage estiver cheio.
   }
