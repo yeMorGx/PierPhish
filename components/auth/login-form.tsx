@@ -16,7 +16,13 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (ready && user) router.replace("/");
+    if (ready && user) {
+      router.replace(
+        user.app_metadata?.password_rotation_required === true
+          ? "/alterar-senha"
+          : "/",
+      );
+    }
   }, [ready, router, user]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
