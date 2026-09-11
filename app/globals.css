@@ -550,6 +550,127 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
   gap: 14px;
 }
 
+.person-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--surface-muted);
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.person-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.person-avatar-sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 10px;
+}
+
+.person-avatar-md {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 13px;
+}
+
+.person-avatar-lg {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 17px;
+}
+
+.person-modal-avatar-upload {
+  position: relative;
+  display: block;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.campaign-person-trigger,
+.risk-person-trigger-with-avatar {
+  display: flex;
+  align-items: center;
+}
+
+.campaign-person-trigger {
+  gap: 12px;
+}
+
+.risk-person-trigger-with-avatar {
+  gap: 10px;
+}
+
+.person-modal-avatar-upload:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.person-modal-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: inherit;
+  color: #ffffff;
+  background: rgba(24, 32, 43, 0.78);
+  font-size: 8px;
+  font-weight: 750;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.person-modal-avatar-upload:hover .person-modal-avatar-overlay,
+.person-modal-avatar-upload:focus-within .person-modal-avatar-overlay {
+  opacity: 1;
+}
+
+.person-modal-avatar-edit {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  color: #ffffff;
+  background: var(--ink);
+  transition: opacity 160ms ease;
+}
+
+.person-modal-avatar-upload:hover .person-modal-avatar-edit,
+.person-modal-avatar-upload:focus-within .person-modal-avatar-edit {
+  opacity: 0;
+}
+
+.person-avatar-error {
+  margin: 0 0 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  border-radius: 11px;
+  padding: 9px 11px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-size: 10px;
+}
+
 .person-modal-avatar {
   display: grid;
   width: 52px;
@@ -560,7 +681,6 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
   border-radius: 16px;
   color: var(--ink);
   background: var(--surface-muted);
-  font-size: 15px;
   font-weight: 800;
 }
 

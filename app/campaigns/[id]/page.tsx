@@ -10,6 +10,12 @@ import {
   type PersonDetails,
   type PersonRiskLevel,
 } from "@/components/people/person-details-modal";
+import { PersonAvatar } from "@/components/people/person-avatar";
+import {
+  readPersonAvatars,
+  type PersonAvatarMap,
+  writePersonAvatars,
+} from "@/lib/person-avatars";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type Stats = {
@@ -310,6 +316,11 @@ export default function CampaignPeoplePage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [personAvatars, setPersonAvatars] = useState<PersonAvatarMap>({});
+
+  useEffect(() => {
+    setPersonAvatars(readPersonAvatars());
+  }, []);
 
   useEffect(() => {
     if (!supabase) return;
@@ -395,6 +406,7 @@ export default function CampaignPeoplePage() {
     }
 
     return results.map((result) => {
+      const personKey = result.email?.toLowerCase() ?? result.beephish_id;
       const relatedEvents = result.email
         ? (eventsByEmail.get(result.email.toLowerCase()) ?? [])
         : [];
@@ -422,7 +434,8 @@ export default function CampaignPeoplePage() {
         "enviou dados",
       ]);
       return {
-        id: result.beephish_id,
+        avatar: personAvatars[personKey] ?? null,
+        id: personKey,
         name: fullName(result),
         email: result.email ?? "E-mail não informado",
         position: result.position ?? "—",
@@ -450,7 +463,7 @@ export default function CampaignPeoplePage() {
           ),
       };
     });
-  }, [campaign, events, results]);
+  }, [campaign, events, personAvatars, results]);
 
   const visiblePeople = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -468,6 +481,15 @@ export default function CampaignPeoplePage() {
       return matchesFilter && matchesSearch;
     });
   }, [filter, people, search]);
+
+  function handleAvatarChange(personId: string, avatar: string) {
+    const nextAvatars = { ...personAvatars, [personId]: avatar };
+    setPersonAvatars(nextAvatars);
+    writePersonAvatars(nextAvatars);
+    setSelectedPerson((current) =>
+      current?.id === personId ? { ...current, avatar } : current,
+    );
+  }
 
   const summary = useMemo(
     () => ({
@@ -708,15 +730,22 @@ export default function CampaignPeoplePage() {
                       <td className="px-2 py-4">
                         <button
                           aria-label={`Abrir detalhes de ${person.name}`}
-                          className="person-trigger"
+                          className="person-trigger campaign-person-trigger"
                           onClick={() => setSelectedPerson(person)}
                           type="button"
                         >
-                          <strong className="block text-[12px] text-[#34404a]">
-                            {person.name}
-                          </strong>
-                          <span className="mt-1 block max-w-[230px] overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-[#9aa2a8]">
-                            {person.email}
+                          <PersonAvatar
+                            avatar={person.avatar}
+                            name={person.name}
+                            size="sm"
+                          />
+                          <span className="min-w-0">
+                            <strong className="block text-[12px] text-[#34404a]">
+                              {person.name}
+                            </strong>
+                            <span className="mt-1 block max-w-[230px] overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-[#9aa2a8]">
+                              {person.email}
+                            </span>
                           </span>
                         </button>
                       </td>
@@ -821,6 +850,7 @@ export default function CampaignPeoplePage() {
       <PersonDetailsModal
         person={selectedPerson}
         onClose={() => setSelectedPerson(null)}
+        onAvatarChange={handleAvatarChange}
       />
     </DashboardShell>
   );

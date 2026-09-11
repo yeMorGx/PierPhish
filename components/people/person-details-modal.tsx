@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { PersonAvatar } from "@/components/people/person-avatar";
 import { Icon } from "@/components/ui/icon";
 
 export type PersonRiskLevel = "high" | "attention" | "low";
 
 export type PersonDetails = {
+  avatar?: string | null;
   id: string;
   name: string;
   email: string;
@@ -48,6 +50,9 @@ const signalItems = [
   { key: "submitted", label: "Dados enviados", helper: "Enviou informações" },
 ] as const;
 
+const maxAvatarSize = 1.5 * 1024 * 1024;
+const supportedAvatarTypes = ["image/png", "image/jpeg", "image/webp"];
+
 function formatDateTime(value: string | null) {
   if (!value) return "Não registrado";
   return new Intl.DateTimeFormat("pt-BR", {
@@ -59,26 +64,23 @@ function formatDateTime(value: string | null) {
   }).format(new Date(value));
 }
 
-function initials(name: string) {
-  return (
-    name
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase() || "?"
-  );
-}
-
 export function PersonDetailsModal({
   person,
   onClose,
+  onAvatarChange,
 }: {
   person: PersonDetails | null;
   onClose: () => void;
+  onAvatarChange?: (personId: string, avatar: string) => void;
 }) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setAvatarPreview(person?.avatar ?? null);
+    setAvatarError(null);
+  }, [person?.avatar, person?.id]);
 
   useEffect(() => {
     if (!person) return;
@@ -100,6 +102,29 @@ export function PersonDetailsModal({
     };
   }, [onClose, person]);
 
+  function handleAvatar(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !person) return;
+    if (!supportedAvatarTypes.includes(file.type)) {
+      setAvatarError("Escolha uma imagem PNG, JPG ou WEBP.");
+      return;
+    }
+    if (file.size > maxAvatarSize) {
+      setAvatarError("Escolha uma foto de até 1,5 MB.");
+      return;
+    }
+
+    setAvatarError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") return;
+      setAvatarPreview(reader.result);
+      onAvatarChange?.(person.id, reader.result);
+    };
+    reader.readAsDataURL(file);
+  }
+
   if (!person) return null;
 
   return (
@@ -118,9 +143,30 @@ export function PersonDetailsModal({
       >
         <header className="person-modal-header">
           <div className="person-modal-heading">
-            <span className="person-modal-avatar" aria-hidden="true">
-              {initials(person.name)}
-            </span>
+            <label
+              className="person-modal-avatar-upload"
+              title="Trocar foto de perfil"
+            >
+              <PersonAvatar
+                avatar={avatarPreview ?? person.avatar}
+                name={person.name}
+                size="lg"
+              />
+              <span className="person-modal-avatar-overlay" aria-hidden="true">
+                <Icon name="image" size={14} />
+                <span>Trocar</span>
+              </span>
+              <span className="person-modal-avatar-edit" aria-hidden="true">
+                <Icon name="image" size={12} />
+              </span>
+              <input
+                className="sr-only"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                aria-label={`Trocar foto de ${person.name}`}
+                onChange={handleAvatar}
+              />
+            </label>
             <div className="min-w-0">
               <p className="person-modal-eyebrow">DETALHES DA PESSOA</p>
               <h2 id="person-details-title">{person.name}</h2>
@@ -145,6 +191,11 @@ export function PersonDetailsModal({
         </header>
 
         <div className="person-modal-body">
+          {avatarError && (
+            <p className="person-avatar-error" role="alert">
+              {avatarError}
+            </p>
+          )}
           <section className="person-modal-score" aria-label="Resumo do risco">
             <div>
               <span className="person-modal-label">LEITURA DE RISCO</span>

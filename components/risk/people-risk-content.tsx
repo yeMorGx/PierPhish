@@ -7,8 +7,14 @@ import {
   PersonDetailsModal,
   type PersonDetails,
 } from "@/components/people/person-details-modal";
+import { PersonAvatar } from "@/components/people/person-avatar";
 import { Icon } from "@/components/ui/icon";
 import { demoCampaigns } from "@/lib/demo-data";
+import {
+  readPersonAvatars,
+  type PersonAvatarMap,
+  writePersonAvatars,
+} from "@/lib/person-avatars";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type RiskLevel = "high" | "attention" | "low";
@@ -223,6 +229,7 @@ function buildPeople(
   results: RawResult[],
   events: RawEvent[],
   campaigns: CampaignRow[],
+  personAvatars: PersonAvatarMap = {},
 ) {
   const campaignById = new Map(
     campaigns.map((campaign) => [campaign.id, campaign]),
@@ -299,6 +306,7 @@ function buildPeople(
     }
 
     const person: RiskPerson = {
+      avatar: personAvatars[personKey] ?? null,
       id: personKey,
       name: fullName(result),
       email: result.email ?? "E-mail não informado",
@@ -346,16 +354,6 @@ function formatDateTime(value: string | null) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
-}
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
 }
 
 const riskLabels: Record<RiskLevel, string> = {
@@ -416,6 +414,18 @@ function PeopleRiskPage() {
   const [selectedPerson, setSelectedPerson] = useState<PersonDetails | null>(
     null,
   );
+  const [personAvatars, setPersonAvatars] = useState<PersonAvatarMap>({});
+
+  useEffect(() => {
+    const avatars = readPersonAvatars();
+    setPersonAvatars(avatars);
+    setPeople((current) =>
+      current.map((person) => ({
+        ...person,
+        avatar: avatars[person.id] ?? person.avatar ?? null,
+      })),
+    );
+  }, []);
 
   async function loadData() {
     if (!supabase) return;
@@ -456,6 +466,7 @@ function PeopleRiskPage() {
         (resultResult.data ?? []) as RawResult[],
         (eventResult.data ?? []) as RawEvent[],
         campaignRows,
+        readPersonAvatars(),
       ),
     );
     setUpdatedAt(
@@ -468,6 +479,20 @@ function PeopleRiskPage() {
     if (supabase) void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function handleAvatarChange(personId: string, avatar: string) {
+    const nextAvatars = { ...personAvatars, [personId]: avatar };
+    setPersonAvatars(nextAvatars);
+    writePersonAvatars(nextAvatars);
+    setPeople((current) =>
+      current.map((person) =>
+        person.id === personId ? { ...person, avatar } : person,
+      ),
+    );
+    setSelectedPerson((current) =>
+      current?.id === personId ? { ...current, avatar } : current,
+    );
+  }
 
   const summary = useMemo(
     () => ({
@@ -681,23 +706,25 @@ function PeopleRiskPage() {
                     <tr key={person.id}>
                       <td>
                         <div className="risk-person-cell">
-                          <span className="risk-person-avatar">
-                            {initials(person.name)}
-                          </span>
-                          <span className="min-w-0">
-                            <button
-                              aria-label={`Abrir detalhes de ${person.name}`}
-                              className="risk-person-trigger"
-                              onClick={() => setSelectedPerson(person)}
-                              type="button"
-                            >
+                          <button
+                            aria-label={`Abrir detalhes de ${person.name}`}
+                            className="risk-person-trigger risk-person-trigger-with-avatar"
+                            onClick={() => setSelectedPerson(person)}
+                            type="button"
+                          >
+                            <PersonAvatar
+                              avatar={person.avatar}
+                              name={person.name}
+                              size="sm"
+                            />
+                            <span className="min-w-0">
                               <strong>{person.name}</strong>
                               <small>{person.email}</small>
                               <em>
                                 {person.department} · {person.position}
                               </em>
-                            </button>
-                          </span>
+                            </span>
+                          </button>
                         </div>
                       </td>
                       <td>
@@ -800,6 +827,7 @@ function PeopleRiskPage() {
       <PersonDetailsModal
         person={selectedPerson}
         onClose={() => setSelectedPerson(null)}
+        onAvatarChange={handleAvatarChange}
       />
     </DashboardShell>
   );
