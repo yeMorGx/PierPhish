@@ -2,31 +2,31 @@
 @source "./**/*.{ts,tsx}";
 
 :root {
-  --canvas-custom: #f5f0e8;
+  --canvas-custom: #f3f2ee;
   --canvas: var(--canvas-custom);
   --canvas-image: none;
-  --surface: #fffdf8;
-  --surface-soft: #fbf6ed;
-  --surface-muted: #ece4d8;
-  --ink: #173347;
-  --ink-strong: #294b59;
-  --muted: #6f7e82;
-  --muted-soft: #8b9897;
-  --line: #b9c9c8;
-  --line-soft: #dbe3df;
-  --soft: #ece4d8;
-  --accent: #4f919d;
-  --accent-soft: #e2f0ed;
-  --success: #87a961;
-  --signal: #c8794f;
-  --signal-soft: #fbe9dc;
-  --aqua: #4f9fa2;
-  --font-display: "Segoe Print", "Bradley Hand ITC", "Comic Sans MS", cursive;
-  --font-body:
-    "Avenir Next", "Segoe UI Variable", "Century Gothic", "Trebuchet MS",
+  --surface: #ffffff;
+  --surface-soft: #f7f7f3;
+  --surface-muted: #e6e6df;
+  --ink: #111111;
+  --ink-strong: #282828;
+  --muted: #656565;
+  --muted-soft: #8a8a84;
+  --line: #111111;
+  --line-soft: #d5d5ce;
+  --soft: #e6e6df;
+  --accent: #2d43c7;
+  --accent-soft: #e8ebff;
+  --success: #72983f;
+  --signal: #e56f91;
+  --signal-soft: #ffe6ed;
+  --aqua: #2d43c7;
+  --font-display:
+    "Arial Narrow", "Franklin Gothic Condensed", "Roboto Condensed", Impact,
     sans-serif;
-  --font-data: "Bahnschrift", "Arial Narrow", "Segoe UI", sans-serif;
-  --card-border: rgba(24, 32, 43, 0.035);
+  --font-body: Arial, "Helvetica Neue", sans-serif;
+  --font-data: "Arial Narrow", Arial, sans-serif;
+  --card-border: #111111;
   --card-shadow: none;
 
   /* Ajuste estas medidas para alterar a escala geral da interface. */
@@ -36,30 +36,30 @@
   --sidebar-width: 82px;
   --header-height: 82px;
   --avatar-size: 69px;
-  --radius-shell: 63px;
-  --radius-card: 30px;
-  --radius-control: 12px;
+  --radius-shell: 0px;
+  --radius-card: 8px;
+  --radius-control: 4px;
 }
 
 html[data-theme="dark"] {
-  --canvas: #0f1b20;
-  --surface: #15282f;
-  --surface-soft: #1b333b;
-  --surface-muted: #223b44;
-  --ink: #eaf3f1;
-  --ink-strong: #d3e3e2;
-  --muted: #9bb0b4;
-  --muted-soft: #81979d;
-  --line: #3b5962;
-  --line-soft: #2d474f;
-  --soft: #223b44;
-  --accent: #9dd1d0;
-  --accent-soft: #24444d;
-  --success: #b8d878;
-  --signal: #f3b36c;
-  --signal-soft: #3c2b21;
-  --aqua: #78d5d0;
-  --card-border: rgba(164, 199, 209, 0.07);
+  --canvas: #0e1010;
+  --surface: #151817;
+  --surface-soft: #1b1e1c;
+  --surface-muted: #282d29;
+  --ink: #f3f1ea;
+  --ink-strong: #dfddd5;
+  --muted: #a4a49c;
+  --muted-soft: #7e817b;
+  --line: #74776f;
+  --line-soft: #343834;
+  --soft: #282d29;
+  --accent: #8795ff;
+  --accent-soft: #252b58;
+  --success: #b1d66a;
+  --signal: #ff8eaa;
+  --signal-soft: #422531;
+  --aqua: #8795ff;
+  --card-border: #74776f;
   --card-shadow: none;
 }
 
@@ -5036,54 +5036,383 @@ html[data-card-style="apple"] .surface-card,
   box-shadow: none !important;
 }
 
-/* Hand-drawn system: tactile contours without adding visual noise. */
-.surface-card {
-  border: 2px solid var(--line) !important;
-  border-radius: 14px 18px 15px 12px !important;
+/* PierPhish poster system: bold ink, flat paper and one electric accent. */
+.theme-canvas {
+  background-attachment: scroll;
+  background-position: 0 0;
+  background-size: auto;
+}
+
+.theme-canvas .surface-card {
+  border: 2px solid var(--ink) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.theme-canvas :where(h1, h2, h3, h4) {
+  color: var(--ink) !important;
+  font-weight: 900;
+  letter-spacing: -0.065em;
+  text-transform: none;
+}
+
+.theme-canvas :where(p, label, small, time) {
+  color: var(--muted);
+}
+
+.theme-canvas :where(a) {
+  color: var(--accent);
+}
+
+.theme-canvas :where(button, input, select, textarea) {
+  border-radius: 4px !important;
+}
+
+.dashboard-sidebar > div:nth-child(2) {
+  position: relative;
+  overflow: hidden;
+  border-top: 8px solid var(--accent) !important;
+  border-radius: 0 0 18px 18px !important;
+  background: var(--surface) !important;
+}
+
+.dashboard-sidebar > div:nth-child(2)::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: var(--signal);
+  content: "";
+}
+
+.sidebar-profile-button {
+  overflow: hidden;
+  border: 3px solid var(--ink) !important;
+  background: var(--accent) !important;
   box-shadow: none !important;
 }
 
 .sidebar-nav-link {
-  border-radius: 12px;
+  width: 46px;
+  height: 46px;
+  border: 2px solid transparent;
+  border-radius: 5px !important;
 }
 
 .sidebar-nav-link:hover,
 .sidebar-nav-link:focus-visible,
 .sidebar-nav-link[aria-current="page"],
 .sidebar-nav-link.is-active {
-  border: 2px solid var(--ink);
-  background: var(--accent-soft);
+  border-color: var(--ink);
+  color: var(--surface) !important;
+  background: var(--accent) !important;
   transform: rotate(-1deg) translateY(-1px);
+}
+
+.dashboard-header {
+  border-width: 0 0 3px !important;
+  border-radius: 0 !important;
+  background: var(--surface) !important;
+}
+
+.dashboard-header h1 {
+  font-size: clamp(22px, 3vw, 31px) !important;
+  text-transform: uppercase;
+}
+
+.theme-canvas .header-sync-button {
+  border: 2px solid var(--ink) !important;
+  color: var(--surface) !important;
+  background: var(--ink) !important;
+  box-shadow: none !important;
+}
+
+.overview-hero-card {
+  border-width: 3px !important;
+  border-radius: 0 28px 0 28px !important;
+  background: var(--surface) !important;
+}
+
+.overview-hero-card::before {
+  position: absolute;
+  top: -2px;
+  left: -5px;
+  z-index: 3;
+  padding: 7px 14px 6px;
+  color: var(--surface);
+  background: var(--accent);
+  content: "PIERPHISH / FIELD NOTES";
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  transform: rotate(-1.5deg);
+}
+
+.overview-hero-card h2 {
+  max-width: 760px !important;
+  font-size: clamp(40px, 5.4vw, 76px) !important;
+  line-height: 0.84 !important;
+  text-transform: uppercase;
 }
 
 .overview-hero-card h2 em {
   position: relative;
   display: inline-block;
+  color: var(--accent) !important;
 }
 
 .overview-hero-card h2 em::after {
   position: absolute;
-  right: 5%;
-  bottom: -8px;
-  left: 1%;
-  height: 3px;
-  border-radius: 55% 45% 48% 52%;
-  background: var(--aqua);
+  right: 3%;
+  bottom: -10px;
+  left: 0;
+  height: 5px;
+  border-radius: 60% 40% 45% 55%;
+  background: var(--signal);
   content: "";
-  transform: rotate(-1.5deg);
+  transform: rotate(-2deg);
+}
+
+.overview-hero-card .grid.grid-cols-4 {
+  border: 2px solid var(--ink) !important;
+  border-radius: 4px !important;
+  background: var(--surface-soft) !important;
+}
+
+.overview-hero-card .grid.grid-cols-4 > div {
+  border-color: var(--ink) !important;
+}
+
+.overview-hero-card > div > div:nth-child(2) {
+  border: 2px solid var(--ink);
+  border-radius: 0 18px 0 18px !important;
+  color: var(--surface) !important;
+  background: var(--accent) !important;
+}
+
+.overview-hero-card > div > div:nth-child(2) span,
+.overview-hero-card > div > div:nth-child(2) strong {
+  color: var(--surface) !important;
+}
+
+.overview-hero-card > div > div:nth-child(2) .theme-inset-panel,
+.overview-hero-card > div > div:nth-child(2) .theme-inset-panel * {
+  border-color: var(--ink) !important;
+  color: var(--ink) !important;
+  background: var(--surface) !important;
+}
+
+.overview-hero-card > div > div:nth-child(2) div[style*="--score"] > div {
+  color: var(--ink) !important;
+  background: var(--surface) !important;
+}
+
+.campaign-openings-card {
+  border-top: 8px solid var(--accent) !important;
+}
+
+.campaign-openings-card h3,
+.campaign-overview-card h3,
+#risk-overview h3 {
+  text-transform: uppercase;
+}
+
+.campaign-openings-card > div:nth-child(2) {
+  border-color: var(--ink) !important;
+}
+
+.campaign-openings-card div[class*="h-[66%]"] {
+  border: 2px solid var(--ink);
+  border-bottom: 0;
+  border-radius: 5px 5px 0 0 !important;
+  background: var(--surface-muted) !important;
+}
+
+.campaign-openings-card div[style*="height"] {
+  border-radius: 3px 3px 0 0 !important;
+  background: var(--accent) !important;
+}
+
+.metric-card {
+  border-top: 8px solid var(--ink) !important;
+}
+
+.metric-card-blue {
+  border-top-color: var(--accent) !important;
+}
+
+.metric-card-orange,
+#risk-overview {
+  border-top-color: var(--signal) !important;
+}
+
+.metric-card strong,
+#risk-overview > div:nth-child(2) strong {
+  font-family: var(--font-display);
+  font-weight: 900;
+}
+
+.campaign-overview-card {
+  border-top: 8px solid var(--signal) !important;
+}
+
+.campaign-overview-metric {
+  border: 2px solid var(--ink);
+  border-radius: 4px !important;
+  background: var(--surface-soft) !important;
 }
 
 .campaign-overview-table-wrap,
 .risk-table {
+  border-color: var(--ink) !important;
+  border-radius: 4px !important;
+}
+
+.campaign-overview-table-head {
+  border-color: var(--ink) !important;
+  color: var(--surface) !important;
+  background: var(--ink) !important;
+}
+
+.campaign-overview-table-head th {
+  color: var(--surface) !important;
+}
+
+.campaign-overview-table-row {
+  border-color: var(--line-soft) !important;
+}
+
+.campaign-overview-table-row:hover {
+  background: var(--accent-soft) !important;
+}
+
+.campaign-status,
+.campaign-count-pill,
+.campaign-reach-pill {
+  border: 1px solid currentColor;
+  border-radius: 4px !important;
+}
+
+.profile-hero-card,
+.status-hero-card,
+.presentation-risk-hero,
+.presentation-setup-intro {
+  border-top: 8px solid var(--accent) !important;
+}
+
+.profile-panel-card,
+.status-panel,
+.status-footer-card,
+.presentation-setup-panel,
+.presentation-risk-stat,
+.presentation-risk-breakdown {
+  border-radius: 4px !important;
+}
+
+.risk-filter.is-selected,
+.risk-level,
+.risk-signal {
+  border-radius: 4px !important;
+}
+
+.person-modal,
+.workspace-modal {
+  border: 2px solid var(--ink) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.login-page {
+  background: var(--canvas);
+}
+
+.login-panel {
+  border-right: 3px solid var(--ink);
+  background: var(--surface) !important;
+}
+
+.login-brand-mark {
+  border: 2px solid var(--ink);
+  border-radius: 4px !important;
+  background: var(--accent) !important;
+}
+
+.login-copy h1 {
+  max-width: 500px;
+  font-size: clamp(48px, 6.4vw, 92px) !important;
+  line-height: 0.82 !important;
+  text-transform: uppercase;
+}
+
+.login-eyebrow,
+.login-artwork-caption span {
+  color: var(--signal) !important;
+}
+
+.login-form input {
+  border: 2px solid var(--ink) !important;
+  border-radius: 4px !important;
+  background: var(--surface-soft) !important;
+  box-shadow: none !important;
+}
+
+.login-form button,
+.login-demo-card a {
+  border: 2px solid var(--ink) !important;
+  border-radius: 4px !important;
+  background: var(--ink) !important;
+  box-shadow: none !important;
+}
+
+.login-artwork {
+  border-left: 0;
+  background: var(--accent) !important;
+}
+
+.login-artwork::after {
+  background: var(--ink);
+  opacity: 0.35;
+}
+
+html[data-theme="dark"] .theme-canvas .surface-card {
   border-color: var(--line) !important;
 }
 
-html[data-theme="dark"] .surface-card {
-  border-color: var(--line) !important;
+html[data-theme="dark"] .dashboard-header {
+  background: var(--surface) !important;
+}
+
+html[data-theme="dark"] .campaign-overview-table-head {
+  background: var(--ink) !important;
+}
+
+@media (max-width: 720px) {
+  .dashboard-header {
+    border-width: 0 0 3px !important;
+  }
+
+  .overview-hero-card {
+    border-radius: 0 18px 0 18px !important;
+  }
+
+  .overview-hero-card h2 {
+    font-size: clamp(38px, 12vw, 60px) !important;
+  }
+
+  .login-panel {
+    border-right: 0;
+    border-bottom: 3px solid var(--ink);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sidebar-nav-link {
+  .sidebar-nav-link,
+  .theme-canvas .surface-card,
+  .login-form button,
+  .login-demo-card a {
     transform: none !important;
+    transition: none !important;
   }
 }
