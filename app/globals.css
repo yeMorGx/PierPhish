@@ -5192,21 +5192,9 @@ html[data-card-style="apple"] .surface-card,
   background: var(--accent) !important;
 }
 
-.overview-hero-card > div > div:nth-child(2)::before,
-.profile-hero-orbit,
-.status-hero-card::after,
-.presentation-mode::before {
-  display: none !important;
-}
-
 .overview-hero-card > div > div:nth-child(2) span,
 .overview-hero-card > div > div:nth-child(2) strong {
   color: var(--surface) !important;
-}
-
-.overview-hero-card > div > div:nth-child(2) > div:first-child > span {
-  color: var(--ink) !important;
-  background: var(--surface) !important;
 }
 
 .overview-hero-card > div > div:nth-child(2) .theme-inset-panel,
