@@ -11,6 +11,8 @@ import {
   type PersonRiskLevel,
 } from "@/components/people/person-details-modal";
 import { PersonAvatar } from "@/components/people/person-avatar";
+import { VisualCampaignContent } from "@/components/campaigns/visual-campaign-content";
+import { useTheme } from "@/components/theme/theme-provider";
 import {
   readPersonAvatars,
   type PersonAvatarMap,
@@ -296,6 +298,7 @@ function scoreFromSignals({
 }
 
 export default function CampaignPeoplePage() {
+  const { preferences: themePreferences } = useTheme();
   const params = useParams<{ id: string }>();
   const campaignId = Number(params.id);
   const invalidCampaignId = !Number.isFinite(campaignId) || campaignId <= 0;
@@ -580,39 +583,6 @@ export default function CampaignPeoplePage() {
       }
     >
       <div className="mx-auto flex max-w-[1600px] flex-col gap-[var(--cards-gap)]">
-        <header className="surface-card flex items-center rounded-[30px] px-8 py-7 max-[720px]:rounded-[22px] max-[720px]:px-6">
-          <div className="min-w-0">
-            <Link
-              href="/"
-              className="mb-5 inline-flex items-center gap-2 text-[11px] font-bold text-[#7f8a94] transition-colors hover:text-[var(--ink)]"
-            >
-              <span className="rotate-180">
-                <Icon name="arrow" size={15} />
-              </span>{" "}
-              Voltar para visão geral
-            </Link>
-            <div className="campaign-detail-title-row">
-              <CampaignLogoPicker
-                campaignId={campaignId}
-                fallback={(campaign?.name ?? `Campanha ${campaignId}`)
-                  .charAt(0)
-                  .toUpperCase()}
-              />
-              <div className="min-w-0">
-                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-                  CAMPANHA / {campaignId}
-                </p>
-                <h1 className="m-0 max-w-[920px] text-[clamp(28px,3.6vw,48px)] leading-[1] font-[680] tracking-[-0.06em]">
-                  {campaign?.name ?? `Campanha ${campaignId}`}
-                </h1>
-                <p className="mt-3 mb-0 text-[12px] text-[#7b838d]">
-                  Pessoas alcançadas e sinais registrados nesta campanha.
-                </p>
-              </div>
-            </div>
-          </div>
-        </header>
-
         {error && (
           <div className="flex items-center justify-between gap-4 rounded-[14px] bg-[#fff0e8] px-4 py-3 text-[12px] text-[#75402d]">
             <span>{error}</span>
@@ -626,226 +596,282 @@ export default function CampaignPeoplePage() {
           </div>
         )}
 
-        <section className="grid grid-cols-4 gap-[var(--cards-gap)] max-[900px]:grid-cols-2 max-[520px]:grid-cols-1">
-          {[
-            ["Pessoas", summary.total, "na campanha", "text-[var(--ink)]"],
-            [
-              "Abriram",
-              summary.opened,
-              "visualizaram o e-mail",
-              "text-[#617b88]",
-            ],
-            ["Clicaram", summary.clicked, "acessaram o link", "text-[#b4775e]"],
-            [
-              "Reportaram",
-              summary.reported,
-              "sinalizaram a mensagem",
-              "text-[#768c4f]",
-            ],
-          ].map(([label, value, helper, color]) => (
-            <article
-              className="surface-card rounded-[var(--radius-card)] p-6"
-              key={String(label)}
-            >
-              <p className="m-0 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-                {label}
-              </p>
-              <strong
-                className={`mt-4 block text-[48px] leading-none font-[650] tracking-[-0.08em] ${color}`}
-              >
-                {value}
-              </strong>
-              <span className="mt-2 block text-[11px] text-[#87919a]">
-                {helper}
-              </span>
-            </article>
-          ))}
-        </section>
-
-        <section className="grid grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-1">
-          <article className="surface-card min-w-0 overflow-hidden rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
-            <div className="flex items-start justify-between gap-4 max-[720px]:flex-col">
-              <div>
-                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-                  PESSOAS IMPACTADAS
-                </p>
-                <h2 className="m-0 text-[20px] font-bold tracking-[-0.04em]">
-                  Quem recebeu e interagiu
-                </h2>
-                <p className="mt-2 mb-0 text-[12px] text-[#87919a]">
-                  Use os filtros para investigar cada sinal da campanha.
-                </p>
-              </div>
-              <label className="relative block w-[220px] max-[720px]:w-full">
-                <span className="sr-only">Buscar pessoa</span>
-                <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[#7d8790]">
-                  <Icon name="search" size={15} />
-                </span>
-                <input
-                  className="h-10 w-full rounded-[var(--radius-control)] border border-[var(--line)] bg-[#fbfcfc] pr-3 pl-9 text-[11px] text-[var(--ink)] outline-none focus:border-[#8a9ba6] focus:ring-2 focus:ring-[#e6edef]"
-                  placeholder="Buscar nome ou e-mail"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-              </label>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-2 border-b border-[#edf0f1] pb-4">
-              {(
-                [
-                  ["all", "Todas"],
-                  ["opened", "Abriram"],
-                  ["clicked", "Clicaram"],
-                  ["reported", "Reportaram"],
-                ] as [Filter, string][]
-              ).map(([value, label]) => (
-                <button
-                  className={`rounded-full border px-3 py-2 text-[10px] font-bold transition-colors ${filter === value ? "border-[var(--ink)] bg-[var(--ink)] text-white" : "border-[#e5e9ea] bg-transparent text-[#7d8790] hover:border-[#aab5bb]"}`}
-                  type="button"
-                  key={value}
-                  onClick={() => setFilter(value)}
+        {themePreferences.dashboardMode === "visual" ? (
+          <VisualCampaignContent
+            campaign={campaign}
+            events={events}
+            filter={filter}
+            onFilterChange={setFilter}
+            onSearchChange={setSearch}
+            onSelectPerson={setSelectedPerson}
+            people={people}
+            search={search}
+            summary={summary}
+            visiblePeople={visiblePeople}
+          />
+        ) : (
+          <>
+            <header className="surface-card flex items-center rounded-[30px] px-8 py-7 max-[720px]:rounded-[22px] max-[720px]:px-6">
+              <div className="min-w-0">
+                <Link
+                  href="/"
+                  className="mb-5 inline-flex items-center gap-2 text-[11px] font-bold text-[#7f8a94] transition-colors hover:text-[var(--ink)]"
                 >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div className="mt-2 overflow-x-auto">
-              <table className="w-full min-w-[700px] border-collapse text-left">
-                <thead>
-                  <tr className="border-b border-[#edf0f1] text-[10px] font-extrabold tracking-[0.12em] text-[#9aa2a8] uppercase">
-                    <th className="px-2 py-4 font-extrabold">Pessoa</th>
-                    <th className="px-2 py-4 font-extrabold">Área</th>
-                    <th className="px-2 py-4 font-extrabold">Status</th>
-                    <th className="px-2 py-4 font-extrabold">Sinais</th>
-                    <th className="px-2 py-4 text-right font-extrabold">
-                      Última atividade
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visiblePeople.map((person) => (
-                    <tr
-                      className="border-b border-[#f0f2f2] last:border-0"
-                      key={person.id}
-                    >
-                      <td className="px-2 py-4">
-                        <button
-                          aria-label={`Abrir detalhes de ${person.name}`}
-                          className="person-trigger campaign-person-trigger"
-                          onClick={() => setSelectedPerson(person)}
-                          type="button"
-                        >
-                          <PersonAvatar
-                            avatar={person.avatar}
-                            name={person.name}
-                            size="sm"
-                          />
-                          <span className="min-w-0">
-                            <strong className="block text-[12px] text-[#34404a]">
-                              {person.name}
-                            </strong>
-                            <span className="mt-1 block max-w-[230px] overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-[#9aa2a8]">
-                              {person.email}
-                            </span>
-                          </span>
-                        </button>
-                      </td>
-                      <td className="px-2 py-4">
-                        <span className="block text-[11px] text-[#65717b]">
-                          {person.department}
-                        </span>
-                        <span className="mt-1 block text-[10px] text-[#a2a9ae]">
-                          {person.position}
-                        </span>
-                      </td>
-                      <td className="px-2 py-4">
-                        <span className="inline-flex rounded-full bg-[#f3f5f5] px-2.5 py-1.5 text-[10px] font-bold text-[#697680]">
-                          {person.status}
-                        </span>
-                      </td>
-                      <td className="px-2 py-4">
-                        <div className="flex gap-1.5">
-                          <Signal
-                            active={person.opened}
-                            label="abriu"
-                            tone="blue"
-                          />
-                          <Signal
-                            active={person.clicked}
-                            label="clicou"
-                            tone="orange"
-                          />
-                          <Signal
-                            active={person.reported}
-                            label="reportou"
-                            tone="green"
-                          />
-                        </div>
-                      </td>
-                      <td className="px-2 py-4 text-right text-[10px] text-[#9aa2a8]">
-                        {formatDateTime(person.lastActivity)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {!visiblePeople.length && (
-                <div className="py-12 text-center text-[12px] text-[#9299a2]">
-                  Nenhuma pessoa corresponde a este filtro.
-                </div>
-              )}
-            </div>
-          </article>
-
-          <article className="surface-card min-w-0 rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
-            <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-              LINHA DO TEMPO
-            </p>
-            <h2 className="m-0 text-[20px] font-bold tracking-[-0.04em]">
-              Atividade recente
-            </h2>
-            <div className="mt-6 flex flex-col">
-              {events.slice(0, 8).map((event, index) => (
-                <div
-                  className="relative flex gap-3 border-b border-[#f0f2f2] py-4 first:pt-0 last:border-0"
-                  key={event.beephish_event_id}
-                >
-                  <span
-                    className={`mt-1.5 size-2 flex-none rounded-full ${containsSignal(event.event_type, ["click", "link"]) ? "bg-[#cf8b6b]" : containsSignal(event.event_type, ["report"]) ? "bg-[#9dbd47]" : "bg-[#8aa5b2]"}`}
+                  <span className="rotate-180">
+                    <Icon name="arrow" size={15} />
+                  </span>{" "}
+                  Voltar para visão geral
+                </Link>
+                <div className="campaign-detail-title-row">
+                  <CampaignLogoPicker
+                    campaignId={campaignId}
+                    fallback={(campaign?.name ?? `Campanha ${campaignId}`)
+                      .charAt(0)
+                      .toUpperCase()}
                   />
                   <div className="min-w-0">
-                    <strong className="block text-[11px] text-[#4f5963]">
-                      {statusLabel(event.event_type)}
-                    </strong>
-                    <span className="mt-1 block max-w-[190px] overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-[#a0a7ad]">
-                      {event.email ?? "Pessoa não identificada"}
-                    </span>
-                    <time className="mt-1 block text-[10px] text-[#b0b6ba]">
-                      {formatDateTime(event.occurred_at)}
-                    </time>
+                    <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                      CAMPANHA / {campaignId}
+                    </p>
+                    <h1 className="m-0 max-w-[920px] text-[clamp(28px,3.6vw,48px)] leading-[1] font-[680] tracking-[-0.06em]">
+                      {campaign?.name ?? `Campanha ${campaignId}`}
+                    </h1>
+                    <p className="mt-3 mb-0 text-[12px] text-[#7b838d]">
+                      Pessoas alcançadas e sinais registrados nesta campanha.
+                    </p>
                   </div>
-                  <span className="ml-auto text-[#b8c0c4]">
-                    <Icon name="arrow" size={14} />
+                </div>
+              </div>
+            </header>
+
+            <section className="grid grid-cols-4 gap-[var(--cards-gap)] max-[900px]:grid-cols-2 max-[520px]:grid-cols-1">
+              {[
+                ["Pessoas", summary.total, "na campanha", "text-[var(--ink)]"],
+                [
+                  "Abriram",
+                  summary.opened,
+                  "visualizaram o e-mail",
+                  "text-[#617b88]",
+                ],
+                [
+                  "Clicaram",
+                  summary.clicked,
+                  "acessaram o link",
+                  "text-[#b4775e]",
+                ],
+                [
+                  "Reportaram",
+                  summary.reported,
+                  "sinalizaram a mensagem",
+                  "text-[#768c4f]",
+                ],
+              ].map(([label, value, helper, color]) => (
+                <article
+                  className="surface-card rounded-[var(--radius-card)] p-6"
+                  key={String(label)}
+                >
+                  <p className="m-0 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                    {label}
+                  </p>
+                  <strong
+                    className={`mt-4 block text-[48px] leading-none font-[650] tracking-[-0.08em] ${color}`}
+                  >
+                    {value}
+                  </strong>
+                  <span className="mt-2 block text-[11px] text-[#87919a]">
+                    {helper}
                   </span>
-                  {index < Math.min(events.length, 8) - 1 && (
-                    <span className="absolute bottom-[-1px] left-[3px] h-4 w-px bg-[#edf0f1]" />
+                </article>
+              ))}
+            </section>
+
+            <section className="grid grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-1">
+              <article className="surface-card min-w-0 overflow-hidden rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
+                <div className="flex items-start justify-between gap-4 max-[720px]:flex-col">
+                  <div>
+                    <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                      PESSOAS IMPACTADAS
+                    </p>
+                    <h2 className="m-0 text-[20px] font-bold tracking-[-0.04em]">
+                      Quem recebeu e interagiu
+                    </h2>
+                    <p className="mt-2 mb-0 text-[12px] text-[#87919a]">
+                      Use os filtros para investigar cada sinal da campanha.
+                    </p>
+                  </div>
+                  <label className="relative block w-[220px] max-[720px]:w-full">
+                    <span className="sr-only">Buscar pessoa</span>
+                    <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[#7d8790]">
+                      <Icon name="search" size={15} />
+                    </span>
+                    <input
+                      className="h-10 w-full rounded-[var(--radius-control)] border border-[var(--line)] bg-[#fbfcfc] pr-3 pl-9 text-[11px] text-[var(--ink)] outline-none focus:border-[#8a9ba6] focus:ring-2 focus:ring-[#e6edef]"
+                      placeholder="Buscar nome ou e-mail"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                    />
+                  </label>
+                </div>
+                <div className="mt-6 flex flex-wrap gap-2 border-b border-[#edf0f1] pb-4">
+                  {(
+                    [
+                      ["all", "Todas"],
+                      ["opened", "Abriram"],
+                      ["clicked", "Clicaram"],
+                      ["reported", "Reportaram"],
+                    ] as [Filter, string][]
+                  ).map(([value, label]) => (
+                    <button
+                      className={`rounded-full border px-3 py-2 text-[10px] font-bold transition-colors ${filter === value ? "border-[var(--ink)] bg-[var(--ink)] text-white" : "border-[#e5e9ea] bg-transparent text-[#7d8790] hover:border-[#aab5bb]"}`}
+                      type="button"
+                      key={value}
+                      onClick={() => setFilter(value)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2 overflow-x-auto">
+                  <table className="w-full min-w-[700px] border-collapse text-left">
+                    <thead>
+                      <tr className="border-b border-[#edf0f1] text-[10px] font-extrabold tracking-[0.12em] text-[#9aa2a8] uppercase">
+                        <th className="px-2 py-4 font-extrabold">Pessoa</th>
+                        <th className="px-2 py-4 font-extrabold">Área</th>
+                        <th className="px-2 py-4 font-extrabold">Status</th>
+                        <th className="px-2 py-4 font-extrabold">Sinais</th>
+                        <th className="px-2 py-4 text-right font-extrabold">
+                          Última atividade
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visiblePeople.map((person) => (
+                        <tr
+                          className="border-b border-[#f0f2f2] last:border-0"
+                          key={person.id}
+                        >
+                          <td className="px-2 py-4">
+                            <button
+                              aria-label={`Abrir detalhes de ${person.name}`}
+                              className="person-trigger campaign-person-trigger"
+                              onClick={() => setSelectedPerson(person)}
+                              type="button"
+                            >
+                              <PersonAvatar
+                                avatar={person.avatar}
+                                name={person.name}
+                                size="sm"
+                              />
+                              <span className="min-w-0">
+                                <strong className="block text-[12px] text-[#34404a]">
+                                  {person.name}
+                                </strong>
+                                <span className="mt-1 block max-w-[230px] overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-[#9aa2a8]">
+                                  {person.email}
+                                </span>
+                              </span>
+                            </button>
+                          </td>
+                          <td className="px-2 py-4">
+                            <span className="block text-[11px] text-[#65717b]">
+                              {person.department}
+                            </span>
+                            <span className="mt-1 block text-[10px] text-[#a2a9ae]">
+                              {person.position}
+                            </span>
+                          </td>
+                          <td className="px-2 py-4">
+                            <span className="inline-flex rounded-full bg-[#f3f5f5] px-2.5 py-1.5 text-[10px] font-bold text-[#697680]">
+                              {person.status}
+                            </span>
+                          </td>
+                          <td className="px-2 py-4">
+                            <div className="flex gap-1.5">
+                              <Signal
+                                active={person.opened}
+                                label="abriu"
+                                tone="blue"
+                              />
+                              <Signal
+                                active={person.clicked}
+                                label="clicou"
+                                tone="orange"
+                              />
+                              <Signal
+                                active={person.reported}
+                                label="reportou"
+                                tone="green"
+                              />
+                            </div>
+                          </td>
+                          <td className="px-2 py-4 text-right text-[10px] text-[#9aa2a8]">
+                            {formatDateTime(person.lastActivity)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {!visiblePeople.length && (
+                    <div className="py-12 text-center text-[12px] text-[#9299a2]">
+                      Nenhuma pessoa corresponde a este filtro.
+                    </div>
                   )}
                 </div>
-              ))}
-              {!events.length && (
-                <p className="py-6 text-[11px] text-[#9aa2a8]">
-                  Nenhum evento sincronizado.
-                </p>
-              )}
-            </div>
-          </article>
-        </section>
+              </article>
 
-        <footer className="flex items-center justify-between px-2 py-2 text-[10px] text-[#a0a7ad] max-[720px]:flex-col max-[720px]:items-start max-[720px]:gap-2">
-          <span>
-            Última sincronização: {formatDateTime(campaign?.synced_at ?? null)}
-          </span>
-          <span>PIERPHISH · {sessionEmail ?? "DEMO"}</span>
-        </footer>
+              <article className="surface-card min-w-0 rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
+                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                  LINHA DO TEMPO
+                </p>
+                <h2 className="m-0 text-[20px] font-bold tracking-[-0.04em]">
+                  Atividade recente
+                </h2>
+                <div className="mt-6 flex flex-col">
+                  {events.slice(0, 8).map((event, index) => (
+                    <div
+                      className="relative flex gap-3 border-b border-[#f0f2f2] py-4 first:pt-0 last:border-0"
+                      key={event.beephish_event_id}
+                    >
+                      <span
+                        className={`mt-1.5 size-2 flex-none rounded-full ${containsSignal(event.event_type, ["click", "link"]) ? "bg-[#cf8b6b]" : containsSignal(event.event_type, ["report"]) ? "bg-[#9dbd47]" : "bg-[#8aa5b2]"}`}
+                      />
+                      <div className="min-w-0">
+                        <strong className="block text-[11px] text-[#4f5963]">
+                          {statusLabel(event.event_type)}
+                        </strong>
+                        <span className="mt-1 block max-w-[190px] overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-[#a0a7ad]">
+                          {event.email ?? "Pessoa não identificada"}
+                        </span>
+                        <time className="mt-1 block text-[10px] text-[#b0b6ba]">
+                          {formatDateTime(event.occurred_at)}
+                        </time>
+                      </div>
+                      <span className="ml-auto text-[#b8c0c4]">
+                        <Icon name="arrow" size={14} />
+                      </span>
+                      {index < Math.min(events.length, 8) - 1 && (
+                        <span className="absolute bottom-[-1px] left-[3px] h-4 w-px bg-[#edf0f1]" />
+                      )}
+                    </div>
+                  ))}
+                  {!events.length && (
+                    <p className="py-6 text-[11px] text-[#9aa2a8]">
+                      Nenhum evento sincronizado.
+                    </p>
+                  )}
+                </div>
+              </article>
+            </section>
+
+            <footer className="flex items-center justify-between px-2 py-2 text-[10px] text-[#a0a7ad] max-[720px]:flex-col max-[720px]:items-start max-[720px]:gap-2">
+              <span>
+                Última sincronização:{" "}
+                {formatDateTime(campaign?.synced_at ?? null)}
+              </span>
+              <span>PIERPHISH · {sessionEmail ?? "DEMO"}</span>
+            </footer>
+          </>
+        )}
       </div>
       <PersonDetailsModal
         person={selectedPerson}

@@ -9,6 +9,8 @@ import {
 } from "@/components/people/person-details-modal";
 import { PersonAvatar } from "@/components/people/person-avatar";
 import { Icon } from "@/components/ui/icon";
+import { useTheme } from "@/components/theme/theme-provider";
+import { VisualRiskContent } from "@/components/risk/visual-risk-content";
 import { demoCampaigns } from "@/lib/demo-data";
 import {
   readPersonAvatars,
@@ -397,6 +399,7 @@ function RiskBadge({ level }: { level: RiskLevel }) {
 }
 
 function PeopleRiskPage() {
+  const { preferences: themePreferences } = useTheme();
   const [people, setPeople] = useState<RiskPerson[]>(
     isSupabaseConfigured ? [] : demoRiskPeople,
   );
@@ -545,9 +548,16 @@ function PeopleRiskPage() {
           onClick={() => void loadData()}
           disabled={loading}
           type="button"
+          aria-label={loading ? "Atualizando leitura" : "Atualizar leitura"}
         >
           <Icon name="refresh" size={16} />
-          {loading ? "Atualizando…" : "Atualizar leitura"}
+          <span
+            className={
+              themePreferences.dashboardMode === "visual" ? "sr-only" : ""
+            }
+          >
+            {loading ? "Atualizando…" : "Atualizar leitura"}
+          </span>
         </button>
       }
     >
@@ -561,268 +571,302 @@ function PeopleRiskPage() {
           </div>
         )}
 
-        <section className="surface-card grid grid-cols-[minmax(0,1fr)_300px] gap-8 overflow-hidden rounded-[var(--radius-card)] p-8 max-[900px]:grid-cols-1 max-[720px]:rounded-[23px] max-[720px]:p-6">
-          <div className="min-w-0">
-            <p className="mb-3 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-              CENTRO DE RISCO
-            </p>
-            <h2 className="m-0 max-w-[640px] text-[clamp(34px,5vw,58px)] leading-[0.93] font-[680] tracking-[-0.08em]">
-              Pessoas que pedem atenção.
-            </h2>
-            <p className="mt-5 mb-0 max-w-[620px] text-[13px] leading-relaxed text-[#7c8795]">
-              Uma leitura consolidada de todas as campanhas, com os sinais que
-              ajudam a priorizar orientação e resposta.
-            </p>
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] text-[#87919a]">
-              <span>{campaignTotal} campanhas analisadas</span>
-              <span>{summary.total} pessoas consolidadas</span>
-              <span>Atualizado {formatDateTime(updatedAt)}</span>
-            </div>
-          </div>
-          <div className="risk-hero-meter">
-            <div className="risk-hero-meter-top">
-              <span>PRIORIDADE MÁXIMA</span>
-              <Icon name="shield" size={18} />
-            </div>
-            <strong>{summary.high}</strong>
-            <span>pessoas em risco alto</span>
-            <div className="risk-hero-meter-track">
-              <span
-                style={{
-                  width: `${summary.total ? Math.round((summary.high / summary.total) * 100) : 0}%`,
-                }}
-              />
-            </div>
-            <small>
-              {summary.total
-                ? `${Math.round((summary.high / summary.total) * 100)}% da base consolidada`
-                : "Nenhuma pessoa analisada"}
-            </small>
-          </div>
-        </section>
+        {themePreferences.dashboardMode === "visual" ? (
+          <VisualRiskContent
+            campaignTotal={campaignTotal}
+            departments={departments}
+            department={department}
+            filter={filter}
+            onDepartmentChange={setDepartment}
+            onFilterChange={setFilter}
+            onSearchChange={setSearch}
+            onSelectPerson={setSelectedPerson}
+            search={search}
+            summary={summary}
+            updatedAt={updatedAt}
+            visiblePeople={visiblePeople}
+          />
+        ) : (
+          <>
+            <section className="surface-card grid grid-cols-[minmax(0,1fr)_300px] gap-8 overflow-hidden rounded-[var(--radius-card)] p-8 max-[900px]:grid-cols-1 max-[720px]:rounded-[23px] max-[720px]:p-6">
+              <div className="min-w-0">
+                <p className="mb-3 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                  CENTRO DE RISCO
+                </p>
+                <h2 className="m-0 max-w-[640px] text-[clamp(34px,5vw,58px)] leading-[0.93] font-[680] tracking-[-0.08em]">
+                  Pessoas que pedem atenção.
+                </h2>
+                <p className="mt-5 mb-0 max-w-[620px] text-[13px] leading-relaxed text-[#7c8795]">
+                  Uma leitura consolidada de todas as campanhas, com os sinais
+                  que ajudam a priorizar orientação e resposta.
+                </p>
+                <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] text-[#87919a]">
+                  <span>{campaignTotal} campanhas analisadas</span>
+                  <span>{summary.total} pessoas consolidadas</span>
+                  <span>Atualizado {formatDateTime(updatedAt)}</span>
+                </div>
+              </div>
+              <div className="risk-hero-meter">
+                <div className="risk-hero-meter-top">
+                  <span>PRIORIDADE MÁXIMA</span>
+                  <Icon name="shield" size={18} />
+                </div>
+                <strong>{summary.high}</strong>
+                <span>pessoas em risco alto</span>
+                <div className="risk-hero-meter-track">
+                  <span
+                    style={{
+                      width: `${summary.total ? Math.round((summary.high / summary.total) * 100) : 0}%`,
+                    }}
+                  />
+                </div>
+                <small>
+                  {summary.total
+                    ? `${Math.round((summary.high / summary.total) * 100)}% da base consolidada`
+                    : "Nenhuma pessoa analisada"}
+                </small>
+              </div>
+            </section>
 
-        <section className="grid grid-cols-4 gap-[var(--cards-gap)] max-[900px]:grid-cols-2 max-[520px]:grid-cols-1">
-          {(
-            [
-              [
-                "Pessoas analisadas",
-                summary.total,
-                "todas as campanhas",
-                "neutral",
-              ],
-              ["Risco alto", summary.high, "clicou ou enviou dados", "high"],
-              ["Atenção", summary.attention, "abriu a mensagem", "attention"],
-              ["Baixo", summary.low, "sem exposição crítica", "low"],
-            ] as [string, number, string, "neutral" | RiskLevel][]
-          ).map(([label, value, helper, tone]) => (
-            <article
-              className={`risk-summary-card risk-summary-${tone}`}
-              key={label}
-            >
-              <span>{label}</span>
-              <strong>{value}</strong>
-              <small>{helper}</small>
-            </article>
-          ))}
-        </section>
+            <section className="grid grid-cols-4 gap-[var(--cards-gap)] max-[900px]:grid-cols-2 max-[520px]:grid-cols-1">
+              {(
+                [
+                  [
+                    "Pessoas analisadas",
+                    summary.total,
+                    "todas as campanhas",
+                    "neutral",
+                  ],
+                  [
+                    "Risco alto",
+                    summary.high,
+                    "clicou ou enviou dados",
+                    "high",
+                  ],
+                  [
+                    "Atenção",
+                    summary.attention,
+                    "abriu a mensagem",
+                    "attention",
+                  ],
+                  ["Baixo", summary.low, "sem exposição crítica", "low"],
+                ] as [string, number, string, "neutral" | RiskLevel][]
+              ).map(([label, value, helper, tone]) => (
+                <article
+                  className={`risk-summary-card risk-summary-${tone}`}
+                  key={label}
+                >
+                  <span>{label}</span>
+                  <strong>{value}</strong>
+                  <small>{helper}</small>
+                </article>
+              ))}
+            </section>
 
-        <section className="grid grid-cols-[minmax(0,1.45fr)_minmax(270px,0.55fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-1">
-          <article className="surface-card min-w-0 overflow-hidden rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
-            <div className="flex items-end justify-between gap-4 max-[720px]:flex-col max-[720px]:items-stretch">
-              <div>
+            <section className="grid grid-cols-[minmax(0,1.45fr)_minmax(270px,0.55fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-1">
+              <article className="surface-card min-w-0 overflow-hidden rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
+                <div className="flex items-end justify-between gap-4 max-[720px]:flex-col max-[720px]:items-stretch">
+                  <div>
+                    <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                      PRIORIZAÇÃO INDIVIDUAL
+                    </p>
+                    <h2 className="m-0 text-[20px] font-bold tracking-[-0.04em]">
+                      Mapa de exposição
+                    </h2>
+                    <p className="mt-2 mb-0 text-[12px] text-[#87919a]">
+                      Uma pessoa pode aparecer em mais de uma campanha.
+                    </p>
+                  </div>
+                  <label className="risk-search-field relative block w-[230px] max-[720px]:w-full">
+                    <span className="sr-only">Buscar pessoa</span>
+                    <Icon name="search" size={15} />
+                    <input
+                      className="risk-search-input"
+                      placeholder="Buscar nome, e-mail ou campanha"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                    />
+                  </label>
+                </div>
+
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-b border-[#edf0f1] pb-4">
+                  <div className="flex flex-wrap gap-2">
+                    {(
+                      [
+                        ["all", "Todas"],
+                        ["high", "Risco alto"],
+                        ["attention", "Atenção"],
+                        ["low", "Baixo"],
+                      ] as [RiskFilter, string][]
+                    ).map(([value, label]) => (
+                      <button
+                        className={`risk-filter ${filter === value ? "is-selected" : ""}`}
+                        type="button"
+                        key={value}
+                        onClick={() => setFilter(value)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <label className="sr-only" htmlFor="risk-department">
+                    Filtrar por área
+                  </label>
+                  <select
+                    className="risk-department-select"
+                    id="risk-department"
+                    value={department}
+                    onChange={(event) => setDepartment(event.target.value)}
+                  >
+                    <option value="all">Todas as áreas</option>
+                    {departments.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mt-2 overflow-x-auto">
+                  <table className="risk-table w-full min-w-[820px] border-collapse text-left">
+                    <thead>
+                      <tr>
+                        <th>Pessoa</th>
+                        <th>Campanhas</th>
+                        <th>Sinais observados</th>
+                        <th>Risco</th>
+                        <th>Última atividade</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visiblePeople.map((person) => (
+                        <tr key={person.id}>
+                          <td>
+                            <div className="risk-person-cell">
+                              <button
+                                aria-label={`Abrir detalhes de ${person.name}`}
+                                className="risk-person-trigger risk-person-trigger-with-avatar"
+                                onClick={() => setSelectedPerson(person)}
+                                type="button"
+                              >
+                                <PersonAvatar
+                                  avatar={person.avatar}
+                                  name={person.name}
+                                  size="sm"
+                                />
+                                <span className="min-w-0">
+                                  <strong>{person.name}</strong>
+                                  <small>{person.email}</small>
+                                  <em>
+                                    {person.department} · {person.position}
+                                  </em>
+                                </span>
+                              </button>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="risk-campaign-list">
+                              {person.campaigns.slice(0, 2).map((campaign) => (
+                                <a
+                                  href={`/campaigns/${campaign.id}`}
+                                  key={campaign.id}
+                                >
+                                  {campaign.name}
+                                </a>
+                              ))}
+                              {person.campaigns.length > 2 && (
+                                <span>
+                                  +{person.campaigns.length - 2} outras
+                                </span>
+                              )}
+                              {!person.campaigns.length && (
+                                <span>Sem campanha</span>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="flex flex-wrap gap-1.5">
+                              <Signal
+                                active={person.submitted}
+                                label="dados"
+                                tone="red"
+                              />
+                              <Signal
+                                active={person.clicked}
+                                label="clicou"
+                                tone="orange"
+                              />
+                              <Signal
+                                active={person.opened}
+                                label="abriu"
+                                tone="blue"
+                              />
+                              <Signal
+                                active={person.reported}
+                                label="reportou"
+                                tone="green"
+                              />
+                            </div>
+                          </td>
+                          <td>
+                            <div className="risk-cell">
+                              <RiskBadge level={person.risk} />
+                              <small>{riskDescriptions[person.risk]}</small>
+                            </div>
+                          </td>
+                          <td className="risk-last-activity">
+                            {formatDateTime(person.lastActivity)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {!visiblePeople.length && (
+                    <div className="risk-empty-state">
+                      <strong>Nenhuma pessoa encontrada.</strong>
+                      <span>Tente mudar o filtro ou a busca.</span>
+                    </div>
+                  )}
+                </div>
+                <p className="mt-4 mb-0 text-[10px] text-[#87919a]">
+                  Mostrando {visiblePeople.length} de {people.length} pessoas
+                  consolidadas.
+                </p>
+              </article>
+
+              <aside className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
                 <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-                  PRIORIZAÇÃO INDIVIDUAL
+                  LEITURA DO RISCO
                 </p>
                 <h2 className="m-0 text-[20px] font-bold tracking-[-0.04em]">
-                  Mapa de exposição
+                  O que cada nível significa
                 </h2>
-                <p className="mt-2 mb-0 text-[12px] text-[#87919a]">
-                  Uma pessoa pode aparecer em mais de uma campanha.
+                <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[#87919a]">
+                  A classificação prioriza comportamento observado, não o cargo
+                  ou a área da pessoa.
                 </p>
-              </div>
-              <label className="risk-search-field relative block w-[230px] max-[720px]:w-full">
-                <span className="sr-only">Buscar pessoa</span>
-                <Icon name="search" size={15} />
-                <input
-                  className="risk-search-input"
-                  placeholder="Buscar nome, e-mail ou campanha"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-              </label>
-            </div>
-
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-b border-[#edf0f1] pb-4">
-              <div className="flex flex-wrap gap-2">
-                {(
-                  [
-                    ["all", "Todas"],
-                    ["high", "Risco alto"],
-                    ["attention", "Atenção"],
-                    ["low", "Baixo"],
-                  ] as [RiskFilter, string][]
-                ).map(([value, label]) => (
-                  <button
-                    className={`risk-filter ${filter === value ? "is-selected" : ""}`}
-                    type="button"
-                    key={value}
-                    onClick={() => setFilter(value)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <label className="sr-only" htmlFor="risk-department">
-                Filtrar por área
-              </label>
-              <select
-                className="risk-department-select"
-                id="risk-department"
-                value={department}
-                onChange={(event) => setDepartment(event.target.value)}
-              >
-                <option value="all">Todas as áreas</option>
-                {departments.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mt-2 overflow-x-auto">
-              <table className="risk-table w-full min-w-[820px] border-collapse text-left">
-                <thead>
-                  <tr>
-                    <th>Pessoa</th>
-                    <th>Campanhas</th>
-                    <th>Sinais observados</th>
-                    <th>Risco</th>
-                    <th>Última atividade</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visiblePeople.map((person) => (
-                    <tr key={person.id}>
-                      <td>
-                        <div className="risk-person-cell">
-                          <button
-                            aria-label={`Abrir detalhes de ${person.name}`}
-                            className="risk-person-trigger risk-person-trigger-with-avatar"
-                            onClick={() => setSelectedPerson(person)}
-                            type="button"
-                          >
-                            <PersonAvatar
-                              avatar={person.avatar}
-                              name={person.name}
-                              size="sm"
-                            />
-                            <span className="min-w-0">
-                              <strong>{person.name}</strong>
-                              <small>{person.email}</small>
-                              <em>
-                                {person.department} · {person.position}
-                              </em>
-                            </span>
-                          </button>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="risk-campaign-list">
-                          {person.campaigns.slice(0, 2).map((campaign) => (
-                            <a
-                              href={`/campaigns/${campaign.id}`}
-                              key={campaign.id}
-                            >
-                              {campaign.name}
-                            </a>
-                          ))}
-                          {person.campaigns.length > 2 && (
-                            <span>+{person.campaigns.length - 2} outras</span>
-                          )}
-                          {!person.campaigns.length && (
-                            <span>Sem campanha</span>
-                          )}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="flex flex-wrap gap-1.5">
-                          <Signal
-                            active={person.submitted}
-                            label="dados"
-                            tone="red"
-                          />
-                          <Signal
-                            active={person.clicked}
-                            label="clicou"
-                            tone="orange"
-                          />
-                          <Signal
-                            active={person.opened}
-                            label="abriu"
-                            tone="blue"
-                          />
-                          <Signal
-                            active={person.reported}
-                            label="reportou"
-                            tone="green"
-                          />
-                        </div>
-                      </td>
-                      <td>
-                        <div className="risk-cell">
-                          <RiskBadge level={person.risk} />
-                          <small>{riskDescriptions[person.risk]}</small>
-                        </div>
-                      </td>
-                      <td className="risk-last-activity">
-                        {formatDateTime(person.lastActivity)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {!visiblePeople.length && (
-                <div className="risk-empty-state">
-                  <strong>Nenhuma pessoa encontrada.</strong>
-                  <span>Tente mudar o filtro ou a busca.</span>
+                <div className="risk-guide-list">
+                  {(["high", "attention", "low"] as RiskLevel[]).map(
+                    (level) => (
+                      <div className="risk-guide-item" key={level}>
+                        <RiskBadge level={level} />
+                        <span>{riskDescriptions[level]}</span>
+                      </div>
+                    ),
+                  )}
                 </div>
-              )}
-            </div>
-            <p className="mt-4 mb-0 text-[10px] text-[#87919a]">
-              Mostrando {visiblePeople.length} de {people.length} pessoas
-              consolidadas.
-            </p>
-          </article>
-
-          <aside className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
-            <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-              LEITURA DO RISCO
-            </p>
-            <h2 className="m-0 text-[20px] font-bold tracking-[-0.04em]">
-              O que cada nível significa
-            </h2>
-            <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[#87919a]">
-              A classificação prioriza comportamento observado, não o cargo ou a
-              área da pessoa.
-            </p>
-            <div className="risk-guide-list">
-              {(["high", "attention", "low"] as RiskLevel[]).map((level) => (
-                <div className="risk-guide-item" key={level}>
-                  <RiskBadge level={level} />
-                  <span>{riskDescriptions[level]}</span>
+                <div className="risk-guide-note">
+                  <Icon name="shield" size={16} />
+                  <span>
+                    Use esta visão para priorizar orientação e acompanhamento.
+                    Um risco baixo não substitui a análise dos eventos da
+                    campanha.
+                  </span>
                 </div>
-              ))}
-            </div>
-            <div className="risk-guide-note">
-              <Icon name="shield" size={16} />
-              <span>
-                Use esta visão para priorizar orientação e acompanhamento. Um
-                risco baixo não substitui a análise dos eventos da campanha.
-              </span>
-            </div>
-          </aside>
-        </section>
+              </aside>
+            </section>
+          </>
+        )}
       </div>
       <PersonDetailsModal
         person={selectedPerson}
