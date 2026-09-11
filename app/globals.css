@@ -2,32 +2,34 @@
 @source "./**/*.{ts,tsx}";
 
 :root {
-  --canvas-custom: #f5f0e8;
+  --canvas-custom: #f4f4f4;
   --canvas: var(--canvas-custom);
   --canvas-image: none;
-  --surface: #fffdf8;
-  --surface-soft: #fbf6ed;
-  --surface-muted: #ece4d8;
-  --ink: #173347;
-  --ink-strong: #294b59;
-  --muted: #6f7e82;
-  --muted-soft: #8b9897;
-  --line: #b9c9c8;
-  --line-soft: #dbe3df;
-  --soft: #ece4d8;
-  --accent: #4f919d;
-  --accent-soft: #e2f0ed;
-  --success: #87a961;
-  --signal: #c8794f;
-  --signal-soft: #fbe9dc;
-  --aqua: #4f9fa2;
-  --font-display: "Segoe Print", "Bradley Hand ITC", "Comic Sans MS", cursive;
+  --surface: #ffffff;
+  --surface-soft: #fafbfb;
+  --surface-muted: #f1f4f7;
+  --ink: #18202b;
+  --ink-strong: #34404a;
+  --muted: #7c8795;
+  --muted-soft: #9299a2;
+  --line: #e5e7e8;
+  --line-soft: #edf0f1;
+  --soft: #f1f4f7;
+  --accent: #7892a0;
+  --accent-soft: #edf2f3;
+  --success: #9fc52d;
+  --signal: #c9834f;
+  --signal-soft: #fff0e8;
+  --aqua: #4e9ba0;
+  --font-display:
+    "Avenir Next", "Segoe UI Variable", "Century Gothic", "Trebuchet MS",
+    sans-serif;
   --font-body:
     "Avenir Next", "Segoe UI Variable", "Century Gothic", "Trebuchet MS",
     sans-serif;
   --font-data: "Bahnschrift", "Arial Narrow", "Segoe UI", sans-serif;
   --card-border: rgba(24, 32, 43, 0.035);
-  --card-shadow: none;
+  --card-shadow: 0 10px 30px rgba(25, 34, 45, 0.04);
 
   /* Ajuste estas medidas para alterar a escala geral da interface. */
   --shell-padding: 24px;
@@ -42,25 +44,25 @@
 }
 
 html[data-theme="dark"] {
-  --canvas: #0f1b20;
-  --surface: #15282f;
-  --surface-soft: #1b333b;
-  --surface-muted: #223b44;
-  --ink: #eaf3f1;
-  --ink-strong: #d3e3e2;
-  --muted: #9bb0b4;
-  --muted-soft: #81979d;
-  --line: #3b5962;
-  --line-soft: #2d474f;
-  --soft: #223b44;
-  --accent: #9dd1d0;
-  --accent-soft: #24444d;
-  --success: #b8d878;
+  --canvas: #090f13;
+  --surface: #111d23;
+  --surface-soft: #17272f;
+  --surface-muted: #1d3038;
+  --ink: #edf5f7;
+  --ink-strong: #d4e3e7;
+  --muted: #94aab3;
+  --muted-soft: #7f969f;
+  --line: #2a4049;
+  --line-soft: #22353d;
+  --soft: #1d3038;
+  --accent: #9fc3cf;
+  --accent-soft: #24404a;
+  --success: #b9df64;
   --signal: #f3b36c;
   --signal-soft: #3c2b21;
   --aqua: #78d5d0;
   --card-border: rgba(164, 199, 209, 0.07);
-  --card-shadow: none;
+  --card-shadow: 0 14px 32px rgba(0, 0, 0, 0.13);
 }
 
 * {
@@ -5034,56 +5036,4 @@ html[data-card-style="apple"] .surface-card,
 .overview-hero-card::before,
 .profile-hero-orbit-large {
   box-shadow: none !important;
-}
-
-/* Hand-drawn system: tactile contours without adding visual noise. */
-.surface-card {
-  border: 2px solid var(--line) !important;
-  border-radius: 14px 18px 15px 12px !important;
-  box-shadow: none !important;
-}
-
-.sidebar-nav-link {
-  border-radius: 12px;
-}
-
-.sidebar-nav-link:hover,
-.sidebar-nav-link:focus-visible,
-.sidebar-nav-link[aria-current="page"],
-.sidebar-nav-link.is-active {
-  border: 2px solid var(--ink);
-  background: var(--accent-soft);
-  transform: rotate(-1deg) translateY(-1px);
-}
-
-.overview-hero-card h2 em {
-  position: relative;
-  display: inline-block;
-}
-
-.overview-hero-card h2 em::after {
-  position: absolute;
-  right: 5%;
-  bottom: -8px;
-  left: 1%;
-  height: 3px;
-  border-radius: 55% 45% 48% 52%;
-  background: var(--aqua);
-  content: "";
-  transform: rotate(-1.5deg);
-}
-
-.campaign-overview-table-wrap,
-.risk-table {
-  border-color: var(--line) !important;
-}
-
-html[data-theme="dark"] .surface-card {
-  border-color: var(--line) !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sidebar-nav-link {
-    transform: none !important;
-  }
 }
