@@ -1,4 +1,5 @@
 export type IconName =
+  | "screen"
   | "grid"
   | "chart"
   | "users"
@@ -29,6 +30,12 @@ export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   };
 
   const paths = {
+    screen: (
+      <>
+        <rect x="3" y="3" width="18" height="13" rx="1" />
+        <path d="M12 16v5m-5 0h10m-7-15 5 3.5-5 3.5Z" />
+      </>
+    ),
     grid: (
       <>
         <rect x="3" y="3" width="7" height="7" rx="1" />

@@ -21,7 +21,7 @@ type ThemeContextValue = {
 };
 
 const defaultPreferences: ThemePreferences = {
-  canvas: "#f4f4f4",
+  canvas: "#f0f0e8",
   backgroundImage: null,
   mode: "light",
   cardStyle: "solid",
@@ -37,7 +37,9 @@ function isValidCanvas(value: unknown): value is string {
 function isValidBackgroundImage(value: unknown): value is string {
   return (
     typeof value === "string" &&
-    (value.startsWith("data:image/") || value.startsWith("https://") || value.startsWith("http://"))
+    (value.startsWith("data:image/") ||
+      value.startsWith("https://") ||
+      value.startsWith("http://"))
   );
 }
 
@@ -113,7 +115,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     reset: () => setPreferences(defaultPreferences),
   };
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./neobrutalism.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { ProfileProvider } from "@/components/profile/profile-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";

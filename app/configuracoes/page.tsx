@@ -101,8 +101,8 @@ function SettingsContent() {
 
   return (
     <DashboardShell activeSection="settings" title="Configurações">
-      <div className="mx-auto grid max-w-[1180px] gap-[var(--cards-gap)] pb-8">
-        <section className="surface-card rounded-[var(--radius-card)] p-8 max-[720px]:rounded-[23px] max-[720px]:p-6">
+      <div className="neo-settings-page grid gap-[var(--cards-gap)] pb-8">
+        <section className="neo-settings-hero surface-card rounded-[var(--radius-card)] p-8 max-[720px]:rounded-[23px] max-[720px]:p-6">
           <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
             APARÊNCIA DO PIERPHISH
           </p>
