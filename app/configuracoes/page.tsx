@@ -6,36 +6,18 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { useProfile } from "@/components/profile/profile-provider";
-import {
-  type ThemePreferences,
-  useTheme,
-} from "@/components/theme/theme-provider";
+import { useTheme } from "@/components/theme/theme-provider";
 import { Icon } from "@/components/ui/icon";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
-type SettingsTab =
-  | "account"
-  | "notifications"
-  | "sharing"
-  | "schedule"
-  | "billing"
-  | "questions";
+type SettingsTab = "account" | "users" | "style" | "status";
 
 const settingsTabs: Array<{ id: SettingsTab; label: string }> = [
   { id: "account", label: "Conta" },
-  { id: "notifications", label: "Notificações" },
-  { id: "sharing", label: "Compartilhamento" },
-  { id: "schedule", label: "Atualização automática" },
-  { id: "billing", label: "Faturamento" },
-  { id: "questions", label: "Dúvidas" },
+  { id: "users", label: "Usuários" },
+  { id: "style", label: "Estilo" },
+  { id: "status", label: "Status" },
 ];
-
-const tabTitles: Record<Exclude<SettingsTab, "account">, string> = {
-  notifications: "Notificações",
-  sharing: "Compartilhamento",
-  schedule: "Atualização automática",
-  billing: "Faturamento",
-  questions: "Dúvidas",
-};
 
 const colorPresets = [
   ["Cinza atual", "#f4f4f4"],
@@ -43,6 +25,19 @@ const colorPresets = [
   ["Areia clara", "#f3f0ea"],
   ["Verde suave", "#eef3ed"],
   ["Lavanda", "#f0eff5"],
+] as const;
+
+const monkeyAvatars = [
+  ["/avatars/monkey-01-coral.png", "Coral"],
+  ["/avatars/monkey-02-cobalt.png", "Cobalto"],
+  ["/avatars/monkey-03-mint.png", "Menta"],
+  ["/avatars/monkey-04-mustard.png", "Mostarda"],
+  ["/avatars/monkey-05-violet.png", "Violeta"],
+  ["/avatars/monkey-06-orange.png", "Laranja"],
+  ["/avatars/monkey-07-sky.png", "Céu"],
+  ["/avatars/monkey-08-forest.png", "Floresta"],
+  ["/avatars/monkey-09-cream.png", "Creme"],
+  ["/avatars/monkey-10-navy.png", "Marinho"],
 ] as const;
 
 const maxAvatarSize = 1.5 * 1024 * 1024;
@@ -56,15 +51,138 @@ function updateFullName(
   update([firstName.trim(), lastName.trim()].filter(Boolean).join(" "));
 }
 
+type ProfilePhotoModalProps = {
+  open: boolean;
+  avatar: string | null;
+  initial: string;
+  onClose: () => void;
+  onRemove: () => void;
+  onSelect: (avatar: string) => void;
+  onUpload: (event: ChangeEvent<HTMLInputElement>) => void;
+};
+
+function ProfilePhotoModal({
+  open,
+  avatar,
+  initial,
+  onClose,
+  onRemove,
+  onSelect,
+  onUpload,
+}: ProfilePhotoModalProps) {
+  if (!open) return null;
+
+  return (
+    <div
+      className="settings-modal-backdrop"
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) onClose();
+      }}
+    >
+      <div
+        className="settings-photo-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-photo-modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header className="settings-modal-header">
+          <div>
+            <p className="settings-modal-eyebrow">PERFIL</p>
+            <h2 id="settings-photo-modal-title">Escolha sua foto</h2>
+            <p>Use uma imagem sua ou escolha um dos macacos do PierPhish.</p>
+          </div>
+          <button
+            className="settings-modal-close"
+            type="button"
+            aria-label="Fechar escolha de foto"
+            onClick={onClose}
+          >
+            <Icon name="close" size={17} />
+          </button>
+        </header>
+
+        <div className="settings-modal-current">
+          <div className="settings-modal-current-avatar">
+            {avatar ? <img src={avatar} alt="Foto atual" /> : initial}
+          </div>
+          <div>
+            <strong>Foto atual</strong>
+            <span>PNG, JPG ou WEBP · até 1,5 MB</span>
+          </div>
+          {avatar && (
+            <button
+              className="settings-modal-remove"
+              type="button"
+              onClick={onRemove}
+            >
+              Remover foto
+            </button>
+          )}
+        </div>
+
+        <label className="settings-avatar-upload">
+          <span className="settings-avatar-upload-icon">
+            <Icon name="image" size={18} />
+          </span>
+          <span>
+            <strong>Enviar uma foto do dispositivo</strong>
+            <small>Selecione um arquivo de imagem</small>
+          </span>
+          <span className="settings-avatar-upload-action">Escolher</span>
+          <input
+            className="sr-only"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={onUpload}
+          />
+        </label>
+
+        <div className="settings-avatar-library">
+          <div className="settings-avatar-library-heading">
+            <div>
+              <span className="settings-panel-label">
+                AVATARES DO PIERPHISH
+              </span>
+              <h3>Escolha um macaco</h3>
+            </div>
+            <span>10 opções</span>
+          </div>
+          <div className="settings-avatar-grid">
+            {monkeyAvatars.map(([src, label]) => (
+              <button
+                className={`settings-avatar-option ${avatar === src ? "is-selected" : ""}`}
+                type="button"
+                key={src}
+                aria-pressed={avatar === src}
+                onClick={() => onSelect(src)}
+              >
+                <span className="settings-avatar-option-image">
+                  <img src={src} alt={`Macaco ${label}`} />
+                  {avatar === src && (
+                    <span className="settings-avatar-option-check">
+                      <Icon name="check" size={13} />
+                    </span>
+                  )}
+                </span>
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SettingsContent() {
   const { user } = useAuth();
   const {
     preferences: themePreferences,
-    reset,
+    reset: resetTheme,
     setBackgroundImage,
     setCanvas,
     setMode,
-    setShowContrastNotice,
   } = useTheme();
   const {
     preferences: profilePreferences,
@@ -72,28 +190,22 @@ function SettingsContent() {
     setDisplayName,
   } = useProfile();
   const [activeTab, setActiveTab] = useState<SettingsTab>("account");
-  const [imageUrl, setImageUrl] = useState("");
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [city, setCity] = useState("São Paulo");
   const [timezone, setTimezone] = useState("America/Sao_Paulo");
   const [dateFormat, setDateFormat] = useState("dd/MM/yyyy HH:mm");
-  const [dailyHours, setDailyHours] = useState(7);
-  const [weeklyFocus, setWeeklyFocus] = useState(6);
   const [functionName, setFunctionName] = useState("Segurança da informação");
   const [jobTitle, setJobTitle] = useState("Administrador interno");
 
   const email = user?.email ?? "admin@teste.com";
   const profileName = profilePreferences.displayName.trim();
   const profileInitial = (profileName || email).slice(0, 1).toUpperCase();
-  const usingDefaultAvatar = profilePreferences.avatar?.startsWith("/avatars/");
-
-  useEffect(() => {
-    if (themePreferences.backgroundImage?.startsWith("http")) {
-      setImageUrl(themePreferences.backgroundImage);
-    }
-  }, [themePreferences.backgroundImage]);
+  const connectionLabel = isSupabaseConfigured
+    ? "Conexão ativa"
+    : "Modo demonstração";
 
   useEffect(() => {
     const parts = profileName.split(/\s+/).filter(Boolean);
@@ -101,7 +213,21 @@ function SettingsContent() {
     setLastName(parts.slice(1).join(" "));
   }, [profileName]);
 
-  function handleAvatar(event: ChangeEvent<HTMLInputElement>) {
+  useEffect(() => {
+    if (!photoModalOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setPhotoModalOpen(false);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [photoModalOpen]);
+
+  function handleAvatarUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
@@ -117,7 +243,31 @@ function SettingsContent() {
     setError(null);
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === "string") setAvatar(reader.result);
+      if (typeof reader.result === "string") {
+        setAvatar(reader.result);
+        setPhotoModalOpen(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleBackgroundUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!supportedAvatarTypes.includes(file.type)) {
+      setError("Escolha uma imagem PNG, JPG ou WEBP.");
+      return;
+    }
+    if (file.size > 2.5 * 1024 * 1024) {
+      setError("Escolha uma imagem de até 2,5 MB.");
+      return;
+    }
+
+    setError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") setBackgroundImage(reader.result);
     };
     reader.readAsDataURL(file);
   }
@@ -127,24 +277,8 @@ function SettingsContent() {
     setError(null);
   }
 
-  function applyImageUrl() {
-    const value = imageUrl.trim();
-    if (!value) {
-      setBackgroundImage(null);
-      setError(null);
-      return;
-    }
-    if (!/^https?:\/\//i.test(value)) {
-      setError("Use uma URL pública iniciando com http:// ou https://.");
-      return;
-    }
-    setError(null);
-    setBackgroundImage(value);
-  }
-
   function restoreDefaults() {
-    reset();
-    setImageUrl("");
+    resetTheme();
     setError(null);
   }
 
@@ -170,12 +304,12 @@ function SettingsContent() {
           ))}
         </nav>
 
-        {activeTab === "account" ? (
+        {activeTab === "account" && (
           <div className="settings-sections">
             <section className="settings-row settings-profile-row">
               <div className="settings-row-copy">
                 <h2>Perfil</h2>
-                <p>Defina os detalhes da sua conta.</p>
+                <p>Defina os detalhes que aparecem no seu ambiente.</p>
               </div>
               <div className="settings-row-main">
                 <div className="settings-profile-grid">
@@ -216,31 +350,27 @@ function SettingsContent() {
                     <input value={email} readOnly aria-readonly="true" />
                   </label>
                   <div className="settings-photo-column">
-                    <div className="settings-photo-frame">
+                    <button
+                      className="settings-photo-frame"
+                      type="button"
+                      aria-label="Trocar foto de perfil"
+                      onClick={() => setPhotoModalOpen(true)}
+                    >
                       {profilePreferences.avatar ? (
                         <img src={profilePreferences.avatar} alt="" />
                       ) : (
                         profileInitial
                       )}
-                    </div>
-                    <div className="settings-photo-actions">
-                      <label className="settings-photo-button">
-                        {profilePreferences.avatar
-                          ? "Editar foto"
-                          : "Adicionar foto"}
-                        <input
-                          className="sr-only"
-                          type="file"
-                          accept="image/png,image/jpeg,image/webp"
-                          onChange={handleAvatar}
-                        />
-                      </label>
-                      {profilePreferences.avatar && (
-                        <button type="button" onClick={() => setAvatar(null)}>
-                          <Icon name="close" size={13} />
-                        </button>
-                      )}
-                    </div>
+                    </button>
+                    <button
+                      className="settings-photo-button"
+                      type="button"
+                      onClick={() => setPhotoModalOpen(true)}
+                    >
+                      {profilePreferences.avatar
+                        ? "Editar foto"
+                        : "Adicionar foto"}
+                    </button>
                   </div>
                 </div>
                 {error && <p className="settings-inline-error">{error}</p>}
@@ -250,7 +380,7 @@ function SettingsContent() {
             <section className="settings-row">
               <div className="settings-row-copy">
                 <h2>Fuso horário e preferências</h2>
-                <p>Informe o fuso e o formato de data.</p>
+                <p>Informe o fuso e o formato de data do painel.</p>
               </div>
               <div className="settings-row-main settings-three-fields">
                 <label className="settings-field">
@@ -289,61 +419,8 @@ function SettingsContent() {
 
             <section className="settings-row">
               <div className="settings-row-copy">
-                <h2>Motivação e desempenho</h2>
-                <p>Calibre os níveis de atividade da sua equipe.</p>
-                <button className="settings-learn-more" type="button">
-                  Saiba mais sobre a classificação
-                  <span>i</span>
-                </button>
-              </div>
-              <div className="settings-row-main settings-slider-grid">
-                <label className="settings-slider-field">
-                  <span>
-                    <span>Uso diário desejado</span>
-                    <strong>{dailyHours} horas</strong>
-                  </span>
-                  <input
-                    className="settings-range"
-                    type="range"
-                    min="1"
-                    max="12"
-                    value={dailyHours}
-                    onChange={(event) =>
-                      setDailyHours(Number(event.target.value))
-                    }
-                    aria-label="Uso diário desejado"
-                  />
-                  <small>
-                    Encontre a alocação ideal para o seu ritmo de trabalho.
-                  </small>
-                </label>
-                <label className="settings-slider-field">
-                  <span>
-                    <span>Faixa de trabalho concentrado</span>
-                    <strong>{weeklyFocus}–8 horas</strong>
-                  </span>
-                  <input
-                    className="settings-range"
-                    type="range"
-                    min="2"
-                    max="10"
-                    value={weeklyFocus}
-                    onChange={(event) =>
-                      setWeeklyFocus(Number(event.target.value))
-                    }
-                    aria-label="Faixa de trabalho concentrado"
-                  />
-                  <small>
-                    Defina as horas de maior foco para acompanhar o ritmo.
-                  </small>
-                </label>
-              </div>
-            </section>
-
-            <section className="settings-row">
-              <div className="settings-row-copy">
                 <h2>Seu trabalho</h2>
-                <p>Adicione informações sobre sua função.</p>
+                <p>Adicione informações sobre sua função na operação.</p>
               </div>
               <div className="settings-row-main settings-two-fields">
                 <label className="settings-field">
@@ -363,10 +440,61 @@ function SettingsContent() {
               </div>
             </section>
 
-            <section className="settings-row settings-panel-row">
+            <section className="settings-row">
               <div className="settings-row-copy">
-                <h2>Experiência do painel</h2>
-                <p>Escolha como o PierPhish aparece para você.</p>
+                <h2>Segurança da conta</h2>
+                <p>Atualize sua senha sempre que precisar.</p>
+              </div>
+              <div className="settings-row-main settings-link-actions">
+                <Link className="settings-outline-button" href="/alterar-senha">
+                  Alterar senha
+                  <Icon name="arrow" size={15} />
+                </Link>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {activeTab === "users" && (
+          <section className="settings-summary-panel">
+            <div className="settings-summary-heading">
+              <div>
+                <span className="settings-panel-label">
+                  ACESSOS DO AMBIENTE
+                </span>
+                <h2>Usuários e permissões</h2>
+                <p>
+                  Crie contas internas e acompanhe quem pode acessar o
+                  PierPhish.
+                </p>
+              </div>
+              <span className="settings-summary-icon">
+                <Icon name="users" size={21} />
+              </span>
+            </div>
+            <div className="settings-summary-divider" />
+            <div className="settings-summary-item">
+              <div>
+                <strong>Administração de usuários</strong>
+                <span>
+                  Convide pessoas, defina acessos e acompanhe a troca de senha
+                  inicial.
+                </span>
+              </div>
+              <Link className="settings-primary-button" href="/usuarios">
+                Abrir usuários
+                <Icon name="arrow" size={15} />
+              </Link>
+            </div>
+          </section>
+        )}
+
+        {activeTab === "style" && (
+          <div className="settings-sections settings-style-sections">
+            <section className="settings-row settings-style-main-row">
+              <div className="settings-row-copy">
+                <h2>Estilo do painel</h2>
+                <p>Escolha o modo de exibição e a base visual do PierPhish.</p>
               </div>
               <div className="settings-row-main settings-panel-main">
                 <div className="settings-panel-block">
@@ -379,9 +507,7 @@ function SettingsContent() {
                         }
                         type="button"
                         key={mode}
-                        onClick={() =>
-                          setMode(mode as ThemePreferences["mode"])
-                        }
+                        onClick={() => setMode(mode)}
                       >
                         {mode === "light" ? "Claro" : "Escuro"}
                       </button>
@@ -414,7 +540,7 @@ function SettingsContent() {
                     ))}
                   </div>
                 </div>
-                <div className="settings-panel-block settings-background-block">
+                <div className="settings-panel-block">
                   <span className="settings-panel-label">Imagem do fundo</span>
                   <div className="settings-background-controls">
                     <label className="settings-upload-control">
@@ -424,86 +550,23 @@ function SettingsContent() {
                         className="sr-only"
                         type="file"
                         accept="image/png,image/jpeg,image/webp"
-                        onChange={(event) => {
-                          const file = event.target.files?.[0];
-                          if (!file) return;
-                          if (file.size > 2.5 * 1024 * 1024) {
-                            setError("Escolha uma imagem de até 2,5 MB.");
-                            return;
-                          }
-                          setError(null);
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            if (typeof reader.result === "string")
-                              setBackgroundImage(reader.result);
-                          };
-                          reader.readAsDataURL(file);
-                        }}
+                        onChange={handleBackgroundUpload}
                       />
                     </label>
-                    <input
-                      className="settings-url-input"
-                      placeholder="URL da imagem"
-                      value={imageUrl}
-                      onChange={(event) => setImageUrl(event.target.value)}
-                      aria-label="URL da imagem de fundo"
-                    />
-                    <button
-                      className="settings-small-button"
-                      type="button"
-                      onClick={applyImageUrl}
-                    >
-                      Aplicar
-                    </button>
                     {themePreferences.backgroundImage && (
                       <button
                         className="settings-remove-link"
                         type="button"
-                        onClick={() => {
-                          setBackgroundImage(null);
-                          setImageUrl("");
-                        }}
+                        onClick={() => setBackgroundImage(null)}
                       >
-                        Remover
+                        Remover imagem
                       </button>
                     )}
                   </div>
                 </div>
-                {themePreferences.showContrastNotice && (
-                  <div className="settings-contrast-note" role="note">
-                    <span>!</span>
-                    <p>
-                      Fundos uniformes ajudam a manter os dados pequenos
-                      legíveis.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setShowContrastNotice(false)}
-                    >
-                      Ocultar
-                    </button>
-                  </div>
-                )}
+                {error && <p className="settings-inline-error">{error}</p>}
               </div>
             </section>
-
-            <section className="settings-row settings-link-row">
-              <div className="settings-row-copy">
-                <h2>Saúde do ambiente</h2>
-                <p>Veja a conexão e a última sincronização dos dados.</p>
-              </div>
-              <div className="settings-row-main settings-link-actions">
-                <Link className="settings-outline-button" href="/status">
-                  Status da conexão
-                  <Icon name="arrow" size={15} />
-                </Link>
-                <Link className="settings-outline-button" href="/usuarios">
-                  Usuários e acessos
-                  <Icon name="arrow" size={15} />
-                </Link>
-              </div>
-            </section>
-
             <div className="settings-footer">
               <p>As preferências visuais ficam salvas neste navegador.</p>
               <button type="button" onClick={restoreDefaults}>
@@ -511,21 +574,73 @@ function SettingsContent() {
               </button>
             </div>
           </div>
-        ) : (
-          <section className="settings-placeholder">
-            <span className="settings-placeholder-icon">
-              <Icon name="settings" size={18} />
-            </span>
-            <h2>{tabTitles[activeTab]}</h2>
-            <p>
-              Esta área está preparada para receber suas preferências em uma
-              próxima etapa.
-            </p>
-            <button type="button" onClick={() => setActiveTab("account")}>
-              Voltar para Conta
-            </button>
+        )}
+
+        {activeTab === "status" && (
+          <section className="settings-summary-panel settings-status-panel">
+            <div className="settings-summary-heading">
+              <div>
+                <span className="settings-panel-label">SAÚDE DO AMBIENTE</span>
+                <h2>Conexão e sincronização</h2>
+                <p>
+                  Confira rapidamente se os dados estão disponíveis para
+                  leitura.
+                </p>
+              </div>
+              <span className="settings-status-state">
+                <span />
+                {connectionLabel}
+              </span>
+            </div>
+            <div className="settings-status-grid">
+              <div>
+                <span>Conta</span>
+                <strong>{email}</strong>
+                <small>
+                  {isSupabaseConfigured
+                    ? "Conta autenticada"
+                    : "Dados locais de demonstração"}
+                </small>
+              </div>
+              <div>
+                <span>Dados</span>
+                <strong>
+                  {isSupabaseConfigured ? "Disponíveis" : "Exemplo local"}
+                </strong>
+                <small>Campanhas e indicadores consolidados</small>
+              </div>
+            </div>
+            <div className="settings-summary-divider" />
+            <div className="settings-summary-item">
+              <div>
+                <strong>Verificação completa</strong>
+                <span>
+                  Abra o status para acompanhar a leitura detalhada do ambiente.
+                </span>
+              </div>
+              <Link className="settings-primary-button" href="/status">
+                Ver status
+                <Icon name="arrow" size={15} />
+              </Link>
+            </div>
           </section>
         )}
+
+        <ProfilePhotoModal
+          open={photoModalOpen}
+          avatar={profilePreferences.avatar}
+          initial={profileInitial}
+          onClose={() => setPhotoModalOpen(false)}
+          onRemove={() => {
+            setAvatar(null);
+            setPhotoModalOpen(false);
+          }}
+          onSelect={(avatar) => {
+            setAvatar(avatar);
+            setPhotoModalOpen(false);
+          }}
+          onUpload={handleAvatarUpload}
+        />
       </div>
     </DashboardShell>
   );
