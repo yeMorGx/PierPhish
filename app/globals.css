@@ -5141,14 +5141,14 @@ html[data-card-style="apple"] .surface-card,
   min-height: 352px;
 }
 
-.bento-dashboard > .bento-metrics-stack {
-  grid-column: span 3;
-  min-height: 272px;
+.bento-dashboard > .bento-signals-card {
+  grid-column: span 4;
+  min-height: 316px;
 }
 
 .bento-dashboard > .risk-overview {
-  grid-column: span 5;
-  min-height: 272px;
+  grid-column: span 8;
+  min-height: 316px;
 }
 
 .bento-dashboard > .campaign-overview-card {
@@ -5162,6 +5162,7 @@ html[data-card-style="apple"] .surface-card,
 .bento-dashboard .overview-hero-card,
 .bento-dashboard .campaign-openings-card,
 .bento-dashboard .metric-card,
+.bento-dashboard .bento-signals-card,
 .bento-dashboard .risk-overview,
 .bento-dashboard .campaign-overview-card {
   border-radius: 20px !important;
@@ -5437,39 +5438,56 @@ html[data-card-style="apple"] .surface-card,
   color: var(--accent);
 }
 
-.bento-dashboard .bento-metrics-stack {
-  display: grid;
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+.bento-dashboard .bento-signals-card {
+  padding: 24px !important;
 }
 
-.bento-dashboard .bento-metric-card {
-  border-radius: 20px !important;
-  padding: 22px !important;
+.bento-dashboard .bento-signals-card h3 {
+  color: var(--ink) !important;
 }
 
-.bento-dashboard .bento-metric-card > span:first-child {
-  color: var(--muted) !important;
-  font-weight: 500;
+.bento-dashboard .bento-signals-index {
+  font-family: var(--font-data);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.bento-dashboard .bento-metric-value {
+.bento-dashboard .bento-signal-row strong {
   color: var(--ink) !important;
   font-family: var(--font-data);
-  font-size: clamp(42px, 4vw, 58px);
-  font-weight: 400 !important;
 }
 
-.bento-dashboard .bento-metric-card.is-accent .bento-metric-value {
-  color: var(--accent) !important;
-}
-
-.bento-dashboard .bento-metric-card > span:last-child {
-  color: var(--muted-soft) !important;
+.bento-dashboard .bento-signals-footer {
+  border-top-color: var(--line-soft) !important;
+  color: var(--muted) !important;
 }
 
 .bento-dashboard .bento-risk-card {
   padding: 24px !important;
+}
+
+.bento-risk-layout {
+  display: grid;
+  height: 100%;
+  min-height: 266px;
+  grid-template-columns: minmax(210px, 0.78fr) minmax(0, 1.22fr);
+  gap: 32px;
+}
+
+.bento-risk-summary,
+.bento-risk-breakdown {
+  min-width: 0;
+}
+
+.bento-risk-summary {
+  display: flex;
+  flex-direction: column;
+}
+
+.bento-risk-breakdown {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .bento-dashboard .bento-risk-card .bento-risk-total {
@@ -5572,7 +5590,7 @@ html[data-card-style="apple"] .surface-card,
     grid-column: span 7;
   }
 
-  .bento-dashboard > .bento-metrics-stack {
+  .bento-dashboard > .bento-signals-card {
     grid-column: span 5;
   }
 
@@ -5589,7 +5607,7 @@ html[data-card-style="apple"] .surface-card,
 
   .bento-dashboard > .overview-hero-card,
   .bento-dashboard > .campaign-openings-card,
-  .bento-dashboard > .bento-metrics-stack,
+  .bento-dashboard > .bento-signals-card,
   .bento-dashboard > .risk-overview,
   .bento-dashboard > .campaign-overview-card {
     width: 100%;
@@ -5601,6 +5619,16 @@ html[data-card-style="apple"] .surface-card,
 
   .bento-hero-insight {
     min-height: 250px;
+  }
+
+  .bento-risk-layout {
+    min-height: 0;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .bento-risk-breakdown {
+    display: block;
   }
 
   .bento-journey {
