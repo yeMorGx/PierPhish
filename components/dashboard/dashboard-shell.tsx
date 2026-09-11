@@ -67,7 +67,7 @@ export function DashboardShell({
   }, [profileOpen]);
 
   return (
-    <main className="theme-canvas grid min-h-screen grid-cols-[var(--sidebar-width)_minmax(0,1fr)] gap-[var(--shell-gap)] overflow-visible p-[var(--shell-padding)] transition-all duration-200 max-[1120px]:p-7 max-[720px]:grid-cols-1 max-[720px]:gap-2.5 max-[720px]:p-[14px]">
+    <main className="theme-canvas bento-shell grid min-h-screen grid-cols-[var(--sidebar-width)_minmax(0,1fr)] gap-[var(--shell-gap)] overflow-visible p-[var(--shell-padding)] transition-all duration-200 max-[1120px]:p-7 max-[720px]:grid-cols-1 max-[720px]:gap-2.5 max-[720px]:p-[14px]">
       <aside
         className="sticky top-[24px] z-40 flex h-[calc(100vh-48px)] min-h-0 flex-col gap-[var(--shell-gap)] max-[1120px]:top-7 max-[1120px]:h-[calc(100vh-56px)] max-[720px]:static max-[720px]:h-[67px] max-[720px]:flex-row max-[720px]:gap-2"
         aria-label="Navegação principal"
@@ -160,7 +160,7 @@ export function DashboardShell({
           )}
         </div>
 
-        <div className="surface-card flex min-h-0 flex-1 flex-col items-center justify-between rounded-[var(--radius-shell)] p-4 px-3 max-[1120px]:rounded-[45px] max-[720px]:flex-row max-[720px]:rounded-[23px] max-[720px]:p-[9px_12px]">
+        <div className="bento-sidebar-rail surface-card flex min-h-0 flex-1 flex-col items-center justify-between rounded-[var(--radius-shell)] p-4 px-3 max-[1120px]:rounded-[45px] max-[720px]:flex-row max-[720px]:rounded-[23px] max-[720px]:p-[9px_12px]">
           <nav className="mt-[18px] flex flex-col items-center gap-3 max-[720px]:mt-0 max-[720px]:ml-2 max-[720px]:flex-row max-[720px]:gap-[3px]">
             <Link
               href="/"
@@ -191,7 +191,7 @@ export function DashboardShell({
       </aside>
 
       <section className="flex min-w-0 flex-col">
-        <header className="surface-card flex h-[var(--header-height)] flex-none items-center justify-between gap-5 rounded-[var(--radius-shell)] px-8 py-3 max-[1120px]:rounded-[45px] max-[720px]:mb-2.5 max-[720px]:h-[118px] max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-[22px] max-[720px]:py-5">
+        <header className="bento-header surface-card flex h-[var(--header-height)] flex-none items-center justify-between gap-5 rounded-[var(--radius-shell)] px-8 py-3 max-[1120px]:rounded-[45px] max-[720px]:mb-2.5 max-[720px]:h-[118px] max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-[22px] max-[720px]:py-5">
           <h1 className="m-0 text-[clamp(18px,3vw,24px)] leading-[0.95] font-[680] tracking-[-0.065em]">
             {title}
           </h1>

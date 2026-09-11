@@ -16,117 +16,90 @@ export function OverviewHero({
   latestSync,
   totals,
 }: OverviewHeroProps) {
+  const openingRate = pct(totals.opened, totals.people);
   const journey = [
-    ["Base total", totals.people, 100],
-    ["Entregues", totals.delivered, pct(totals.delivered, totals.people)],
-    ["Aberturas", totals.opened, pct(totals.opened, totals.people)],
-    ["Cliques", totals.clicked, pct(totals.clicked, totals.people)],
+    ["Base total", totals.people, "100%"],
+    ["Entregues", totals.delivered, `${pct(totals.delivered, totals.people)}%`],
+    ["Aberturas", totals.opened, `${openingRate}%`],
+    ["Cliques", totals.clicked, `${pct(totals.clicked, totals.people)}%`],
   ] as const;
-  const highlights = [
-    ["Campanhas", totals.campaigns],
-    ["Pessoas", totals.people],
-    ["Reportes", totals.reported],
-    ["Dados enviados", totals.submitted],
-  ] as const;
+  const circumference = 2 * Math.PI * 48;
+  const dashOffset = circumference - (openingRate / 100) * circumference;
 
   return (
-    <article className="surface-card overview-hero-card relative col-span-full min-w-0 overflow-hidden rounded-[var(--radius-card)] p-8 max-[1120px]:rounded-[45px] max-[900px]:p-7 max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
-      <div className="grid h-full min-h-[266px] grid-cols-[minmax(0,1.2fr)_minmax(330px,0.8fr)] gap-8 max-[900px]:grid-cols-1">
-        <div className="flex min-w-0 flex-col justify-between">
+    <article className="surface-card overview-hero-card bento-hero-card relative col-span-full min-w-0 overflow-hidden rounded-[var(--radius-card)] max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px]">
+      <div className="bento-hero-grid">
+        <div className="bento-hero-copy">
           <div>
-            <h2 className="m-0 max-w-[700px] text-[clamp(31px,3.7vw,54px)] leading-[0.94] font-[660] tracking-[-0.07em]">
+            <p className="bento-eyebrow">PierPhish / visão operacional</p>
+            <h2 className="bento-hero-title">
               {totals.campaigns || "Todas as"} campanhas.
               <br />
-              <em className="text-[#7c8795] not-italic">Um único panorama.</em>
+              <span>Clareza para agir.</span>
             </h2>
-            <p className="mt-4 max-w-[560px] text-[12px] leading-[1.55] text-[#7b838d]">
-              Alcance, entregas e sinais de exposição somados em toda a
-              operação, sem privilegiar uma campanha específica.
+            <p className="bento-hero-description">
+              Alcance, entregas e sinais de exposição em uma leitura única da
+              operação.
             </p>
           </div>
 
-          <div className="mt-7">
-            <div className="mb-2 flex items-center justify-between gap-3 text-[9px] font-bold tracking-[0.12em] text-[#9299a2] uppercase">
-              <span>Jornada consolidada</span>
-              <span className="font-medium tracking-normal normal-case">
+          <div>
+            <div className="bento-hero-meta">
+              <span className="bento-hero-status">
+                <i />
+                {activeCampaigns} campanhas em andamento
+              </span>
+              <span className="bento-hero-updated">
                 Atualizado {formatDate(latestSync)}
               </span>
             </div>
-            <div className="grid grid-cols-4 overflow-hidden rounded-[18px] border border-[#e9edef] bg-[#fafbfb] max-[620px]:grid-cols-2">
-              {journey.map(([label, value, rate], index) => (
-                <div
-                  className={`relative px-4 py-3.5 ${index < 3 ? "border-r border-[#e9edef] max-[620px]:border-r-0" : ""} ${index < 2 ? "max-[620px]:border-b" : ""} ${index % 2 === 0 ? "max-[620px]:border-r" : ""}`}
-                  key={label}
-                >
-                  <span className="block text-[9px] text-[#8d969e]">
-                    {label}
-                  </span>
-                  <div className="mt-1 flex items-baseline justify-between gap-2">
-                    <strong className="text-[20px] leading-none tracking-[-0.06em] text-[#18202b]">
-                      {value}
-                    </strong>
-                    <span className="text-[9px] font-bold text-[#718895]">
-                      {rate}%
-                    </span>
-                  </div>
+
+            <div className="bento-journey" aria-label="Jornada consolidada">
+              {journey.map(([label, value, rate]) => (
+                <div className="bento-journey-cell" key={label}>
+                  <span>{label}</span>
+                  <strong>{value}</strong>
+                  <small>{rate} da base</small>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="relative flex min-w-0 flex-col justify-between overflow-hidden rounded-[24px] bg-[#f3f6f7] p-6 before:absolute before:-top-16 before:-right-12 before:size-44 before:rounded-full before:border before:border-[rgba(112,139,153,0.13)] before:shadow-[0_0_0_28px_rgba(112,139,153,0.035),0_0_0_56px_rgba(112,139,153,0.02)] before:content-[''] max-[720px]:rounded-[19px] max-[720px]:p-5">
-          <div className="relative z-[1] flex items-start justify-between gap-4">
-            <div>
-              <span className="block text-[9px] font-extrabold tracking-[0.14em] text-[#7d8992] uppercase">
-                Taxa geral
-              </span>
-              <strong className="mt-1 block text-[13px] text-[#34434d]">
-                Abertura consolidada
-              </strong>
-            </div>
-            <span className="rounded-full bg-white px-3 py-1.5 text-[9px] font-bold text-[#687b86] shadow-[0_4px_14px_rgba(26,42,52,0.05)]">
+        <div className="bento-hero-insight">
+          <div className="bento-hero-insight-top">
+            <span className="bento-hero-insight-label">Abertura consolidada</span>
+            <span className="bento-hero-insight-badge">
               {activeCampaigns} em andamento
             </span>
           </div>
 
-          <div className="relative z-[1] my-4 flex items-center gap-5 max-[420px]:flex-col">
-            <div
-              className="grid size-[132px] flex-none rotate-[-34deg] place-items-center rounded-full [background:conic-gradient(#7892a0_var(--score),rgba(120,146,160,0.12)_0)]"
-              style={
-                {
-                  "--score": `${pct(totals.opened, totals.people)}%`,
-                } as React.CSSProperties
-              }
+          <div>
+            <svg
+              className="bento-ring"
+              viewBox="0 0 120 120"
+              role="img"
+              aria-label={`${openingRate}% de abertura`}
             >
-              <div className="flex size-[104px] rotate-[34deg] flex-col items-center justify-center rounded-full bg-[#f3f6f7]">
-                <strong className="text-[31px] leading-none tracking-[-0.08em]">
-                  {pct(totals.opened, totals.people)}%
-                </strong>
-                <span className="mt-1 text-[9px] text-[#87919a]">abertura</span>
-              </div>
-            </div>
-            <div className="grid flex-1 grid-cols-2 gap-2">
-              {highlights.map(([label, value]) => (
-                <div
-                  className="theme-inset-panel rounded-[13px] border border-[rgba(120,146,160,0.12)] bg-[rgba(255,255,255,0.58)] px-3 py-2.5"
-                  key={label}
-                >
-                  <span className="block text-[8px] leading-tight text-[#84909a]">
-                    {label}
-                  </span>
-                  <strong className="mt-1 block text-[17px] leading-none tracking-[-0.05em] text-[#26343e]">
-                    {value}
-                  </strong>
-                </div>
-              ))}
+              <circle className="bento-ring-track" cx="60" cy="60" r="48" />
+              <circle
+                className="bento-ring-value"
+                cx="60"
+                cy="60"
+                r="48"
+                strokeDasharray={circumference}
+                strokeDashoffset={dashOffset}
+              />
+            </svg>
+            <div className="bento-ring-label">
+              <strong>{openingRate}%</strong>
+              <span>abertura</span>
             </div>
           </div>
 
-          <div className="relative z-[1] flex items-center gap-2 border-t border-[rgba(115,139,151,0.13)] pt-3 text-[9px] text-[#788791]">
-            <span className="size-1.5 rounded-full bg-[#9fc52d]" />
-            Dados de todas as campanhas sincronizadas
-          </div>
+          <p className="bento-hero-insight-footer">
+            {totals.opened} de {totals.people} pessoas abriram a mensagem.
+          </p>
         </div>
       </div>
     </article>

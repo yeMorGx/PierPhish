@@ -2,25 +2,25 @@
 @source "./**/*.{ts,tsx}";
 
 :root {
-  --canvas-custom: #f4f4f4;
+  --canvas-custom: #f0f0ef;
   --canvas: var(--canvas-custom);
   --canvas-image: none;
   --surface: #ffffff;
-  --surface-soft: #fafbfb;
-  --surface-muted: #f1f4f7;
-  --ink: #18202b;
-  --ink-strong: #34404a;
-  --muted: #7c8795;
-  --muted-soft: #9299a2;
-  --line: #e5e7e8;
-  --line-soft: #edf0f1;
-  --soft: #f1f4f7;
-  --accent: #7892a0;
-  --accent-soft: #edf2f3;
-  --success: #9fc52d;
-  --signal: #c9834f;
-  --signal-soft: #fff0e8;
-  --aqua: #4e9ba0;
+  --surface-soft: #f7f7f6;
+  --surface-muted: #ececea;
+  --ink: #202831;
+  --ink-strong: #3b454d;
+  --muted: #747c84;
+  --muted-soft: #969da2;
+  --line: #dedfdd;
+  --line-soft: #ebedeb;
+  --soft: #ececea;
+  --accent: #e26759;
+  --accent-soft: #faece9;
+  --success: var(--accent);
+  --signal: var(--accent);
+  --signal-soft: var(--accent-soft);
+  --aqua: #6e777e;
   --font-display:
     "Avenir Next", "Segoe UI Variable", "Century Gothic", "Trebuchet MS",
     sans-serif;
@@ -28,41 +28,41 @@
     "Avenir Next", "Segoe UI Variable", "Century Gothic", "Trebuchet MS",
     sans-serif;
   --font-data: "Bahnschrift", "Arial Narrow", "Segoe UI", sans-serif;
-  --card-border: rgba(24, 32, 43, 0.035);
-  --card-shadow: 0 10px 30px rgba(25, 34, 45, 0.04);
+  --card-border: rgba(32, 40, 49, 0.1);
+  --card-shadow: none;
 
   /* Ajuste estas medidas para alterar a escala geral da interface. */
   --shell-padding: 24px;
   --shell-gap: 16px;
-  --cards-gap: 10px;
-  --sidebar-width: 82px;
-  --header-height: 82px;
-  --avatar-size: 69px;
-  --radius-shell: 63px;
-  --radius-card: 30px;
-  --radius-control: 12px;
+  --cards-gap: 16px;
+  --sidebar-width: 76px;
+  --header-height: 74px;
+  --avatar-size: 60px;
+  --radius-shell: 20px;
+  --radius-card: 20px;
+  --radius-control: 14px;
 }
 
 html[data-theme="dark"] {
-  --canvas: #090f13;
-  --surface: #111d23;
-  --surface-soft: #17272f;
-  --surface-muted: #1d3038;
-  --ink: #edf5f7;
-  --ink-strong: #d4e3e7;
-  --muted: #94aab3;
-  --muted-soft: #7f969f;
-  --line: #2a4049;
-  --line-soft: #22353d;
-  --soft: #1d3038;
-  --accent: #9fc3cf;
-  --accent-soft: #24404a;
-  --success: #b9df64;
-  --signal: #f3b36c;
-  --signal-soft: #3c2b21;
-  --aqua: #78d5d0;
-  --card-border: rgba(164, 199, 209, 0.07);
-  --card-shadow: 0 14px 32px rgba(0, 0, 0, 0.13);
+  --canvas: #10161a;
+  --surface: #172126;
+  --surface-soft: #1d292f;
+  --surface-muted: #243238;
+  --ink: #f1f4f3;
+  --ink-strong: #d5dddc;
+  --muted: #9ba7a8;
+  --muted-soft: #7f8d8f;
+  --line: #2f3b40;
+  --line-soft: #263338;
+  --soft: #243238;
+  --accent: #ee8172;
+  --accent-soft: #422b2a;
+  --success: var(--accent);
+  --signal: var(--accent);
+  --signal-soft: var(--accent-soft);
+  --aqua: #a7b0b0;
+  --card-border: rgba(221, 231, 229, 0.14);
+  --card-shadow: none;
 }
 
 * {
@@ -5036,4 +5036,625 @@ html[data-card-style="apple"] .surface-card,
 .overview-hero-card::before,
 .profile-hero-orbit-large {
   box-shadow: none !important;
+}
+
+/*
+ * PierPhish bento direction
+ * The dashboard uses a compact mosaic: one dark reading block, quiet white
+ * modules, and a single coral accent reserved for the most important signal.
+ */
+.bento-shell {
+  background: var(--canvas) !important;
+}
+
+.bento-shell .surface-card {
+  border-color: var(--line) !important;
+  border-radius: 20px !important;
+  background: var(--surface) !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.bento-shell > aside {
+  gap: 16px;
+}
+
+.bento-shell .sidebar-profile-button {
+  border: 1px solid #d9dddb !important;
+  border-radius: 999px !important;
+  background: #202831 !important;
+  box-shadow: none !important;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.bento-shell .sidebar-profile-button:hover,
+.bento-shell .sidebar-profile-button:focus-visible {
+  border-width: 1px !important;
+  border-color: var(--accent) !important;
+  background: #202831 !important;
+}
+
+.bento-shell .sidebar-nav-link {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  color: var(--muted-soft);
+}
+
+.bento-shell .sidebar-nav-link:hover,
+.bento-shell .sidebar-nav-link:focus-visible,
+.bento-shell .sidebar-nav-link[aria-current="page"],
+.bento-shell .sidebar-nav-link.is-active {
+  color: var(--ink);
+  background: var(--surface-muted);
+  transform: none;
+}
+
+.bento-shell header {
+  border-radius: 20px !important;
+  background: var(--surface) !important;
+}
+
+.bento-shell header h1 {
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+}
+
+.bento-shell .header-sync-button {
+  border: 0 !important;
+  border-radius: 16px !important;
+  color: #ffffff !important;
+  background: #202831 !important;
+  box-shadow: none !important;
+  font-weight: 500 !important;
+}
+
+.bento-shell .header-sync-button:hover:not(:disabled),
+.bento-shell .header-sync-button:focus-visible {
+  background: #303a42 !important;
+}
+
+.bento-shell .profile-menu-avatar {
+  background: #202831 !important;
+}
+
+.bento-shell .surface-card.profile-menu-avatar {
+  background: #202831 !important;
+}
+
+.bento-dashboard {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.bento-dashboard > .overview-hero-card {
+  grid-column: span 8;
+  min-height: 352px;
+}
+
+.bento-dashboard > .campaign-openings-card {
+  grid-column: span 4;
+  min-height: 352px;
+}
+
+.bento-dashboard > .bento-metrics-stack {
+  grid-column: span 3;
+  min-height: 272px;
+}
+
+.bento-dashboard > .risk-overview {
+  grid-column: span 5;
+  min-height: 272px;
+}
+
+.bento-dashboard > .campaign-overview-card {
+  grid-column: 1 / -1;
+}
+
+.bento-dashboard .surface-card {
+  border-color: var(--line) !important;
+}
+
+.bento-dashboard .overview-hero-card,
+.bento-dashboard .campaign-openings-card,
+.bento-dashboard .metric-card,
+.bento-dashboard .risk-overview,
+.bento-dashboard .campaign-overview-card {
+  border-radius: 20px !important;
+}
+
+.bento-dashboard .overview-hero-card {
+  padding: 30px !important;
+}
+
+.bento-hero-grid {
+  display: grid;
+  height: 100%;
+  min-height: 290px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.65fr);
+  gap: 24px;
+}
+
+.bento-hero-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.bento-eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.bento-hero-title {
+  max-width: 620px;
+  margin: 22px 0 0;
+  color: var(--ink) !important;
+  font-size: clamp(36px, 4.2vw, 64px);
+  font-weight: 480 !important;
+  letter-spacing: -0.075em;
+  line-height: 0.96;
+}
+
+.bento-hero-title span {
+  color: var(--muted) !important;
+}
+
+.bento-hero-description {
+  max-width: 470px;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.bento-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.bento-hero-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.bento-hero-status i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.bento-hero-updated {
+  color: var(--muted-soft);
+  font-size: 10px;
+}
+
+.bento-journey {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 26px;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.bento-journey-cell {
+  min-width: 0;
+  padding: 15px 14px 13px 0;
+}
+
+.bento-journey-cell + .bento-journey-cell {
+  border-left: 1px solid var(--line-soft);
+  padding-left: 14px;
+}
+
+.bento-journey-cell span,
+.bento-journey-cell strong {
+  display: block;
+}
+
+.bento-journey-cell span {
+  color: var(--muted-soft);
+  font-size: 9px;
+}
+
+.bento-journey-cell strong {
+  margin-top: 8px;
+  color: var(--ink) !important;
+  font-family: var(--font-data);
+  font-size: 23px;
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+}
+
+.bento-journey-cell small {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted-soft);
+  font-size: 9px;
+}
+
+.bento-hero-insight {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 18px;
+  padding: 23px;
+  color: #f4f5f3;
+  background: #202831;
+}
+
+.bento-hero-insight-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bento-hero-insight-label {
+  color: #aeb6b9;
+  font-family: var(--font-data);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.bento-hero-insight-badge {
+  border-radius: 999px;
+  padding: 6px 8px;
+  color: #202831;
+  background: #f5f6f4;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.bento-ring {
+  width: 148px;
+  height: 148px;
+  margin: 18px auto 0;
+  transform: rotate(-90deg);
+}
+
+.bento-ring-track,
+.bento-ring-value {
+  fill: none;
+  stroke-width: 7;
+}
+
+.bento-ring-track {
+  stroke: #3c464c;
+}
+
+.bento-ring-value {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 400ms ease;
+}
+
+.bento-ring-label {
+  display: flex;
+  margin-top: -92px;
+  min-height: 90px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.bento-ring-label strong {
+  color: #f4f5f3 !important;
+  font-family: var(--font-data);
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: -0.09em;
+  line-height: 0.9;
+}
+
+.bento-ring-label span {
+  margin-top: 8px;
+  color: #aeb6b9;
+  font-size: 10px;
+}
+
+.bento-hero-insight-footer {
+  margin: 22px 0 0;
+  border-top: 1px solid #3a444a;
+  padding-top: 13px;
+  color: #aeb6b9;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.bento-dashboard .campaign-openings-card {
+  padding: 24px !important;
+}
+
+.bento-dashboard .campaign-openings-card h3,
+.bento-dashboard .risk-overview h3,
+.bento-dashboard .campaign-overview-card h3 {
+  color: var(--ink) !important;
+  font-weight: 500;
+}
+
+.bento-dashboard .campaign-openings-card > div:nth-of-type(2) {
+  margin-top: 24px;
+}
+
+.bento-dashboard .campaign-openings-card > div:nth-of-type(2) > div {
+  gap: 14px;
+  padding-right: 4px;
+  padding-left: 4px;
+}
+
+.bento-dashboard .campaign-openings-card > div:nth-of-type(2) > div > div {
+  min-width: 42px;
+}
+
+.bento-dashboard .campaign-openings-card > div:nth-of-type(2) > div > div > div:nth-child(2) {
+  width: min(34px, 100%);
+  border-radius: 8px 8px 0 0;
+  background: #e5e6e4;
+}
+
+.bento-dashboard .campaign-openings-card > div:nth-of-type(2) > div > div > div:nth-child(2) > div {
+  border-radius: 8px 8px 0 0;
+  background: #cfd4d2 !important;
+}
+
+.bento-dashboard .campaign-openings-card > div:nth-of-type(2) > div > div:first-child > div:nth-child(2) > div {
+  background: var(--accent) !important;
+}
+
+.bento-dashboard .campaign-openings-card > div:nth-of-type(2) > div > div > div:first-child {
+  color: var(--ink) !important;
+  font-weight: 500;
+}
+
+.bento-dashboard .campaign-openings-card a {
+  color: var(--muted);
+}
+
+.bento-dashboard .campaign-openings-card a:hover {
+  color: var(--accent);
+}
+
+.bento-dashboard .bento-metrics-stack {
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.bento-dashboard .bento-metric-card {
+  border-radius: 20px !important;
+  padding: 22px !important;
+}
+
+.bento-dashboard .bento-metric-card > span:first-child {
+  color: var(--muted) !important;
+  font-weight: 500;
+}
+
+.bento-dashboard .bento-metric-value {
+  color: var(--ink) !important;
+  font-family: var(--font-data);
+  font-size: clamp(42px, 4vw, 58px);
+  font-weight: 400 !important;
+}
+
+.bento-dashboard .bento-metric-card.is-accent .bento-metric-value {
+  color: var(--accent) !important;
+}
+
+.bento-dashboard .bento-metric-card > span:last-child {
+  color: var(--muted-soft) !important;
+}
+
+.bento-dashboard .bento-risk-card {
+  padding: 24px !important;
+}
+
+.bento-dashboard .bento-risk-card .bento-risk-total {
+  color: var(--ink) !important;
+  font-family: var(--font-data);
+  font-weight: 400;
+}
+
+.bento-dashboard .bento-risk-card .bento-risk-label,
+.bento-dashboard .bento-risk-card .bento-risk-value {
+  color: var(--muted) !important;
+}
+
+.bento-dashboard .bento-risk-card .bento-risk-track {
+  background: var(--surface-muted) !important;
+}
+
+.bento-dashboard .bento-risk-card .bento-risk-fill {
+  background: var(--accent) !important;
+}
+
+.bento-dashboard .bento-risk-card .bento-risk-footer {
+  border-top-color: var(--line-soft) !important;
+  color: var(--muted) !important;
+}
+
+.bento-dashboard .bento-risk-card .bento-risk-footer > span {
+  color: var(--accent) !important;
+  background: var(--accent-soft) !important;
+}
+
+.bento-dashboard .campaign-overview-card {
+  padding: 24px !important;
+}
+
+.bento-dashboard .campaign-overview-metric {
+  border: 1px solid var(--line-soft);
+  background: var(--surface-soft) !important;
+}
+
+.bento-dashboard .campaign-overview-metric strong {
+  color: var(--ink) !important;
+  font-family: var(--font-data);
+  font-weight: 400;
+}
+
+.bento-dashboard .campaign-overview-table-wrap {
+  border-color: var(--line) !important;
+}
+
+.bento-dashboard .campaign-overview-table-head {
+  color: var(--muted) !important;
+  background: var(--surface-soft) !important;
+}
+
+.bento-dashboard .campaign-overview-table-row {
+  color: var(--muted) !important;
+  background: var(--surface) !important;
+}
+
+.bento-dashboard .campaign-overview-table-row:hover {
+  background: var(--surface-soft) !important;
+}
+
+.bento-dashboard .campaign-name,
+.bento-dashboard .campaign-overview-table-row td strong {
+  color: var(--ink) !important;
+  font-weight: 500;
+}
+
+.bento-dashboard .campaign-id,
+.bento-dashboard .campaign-overview-table-row td {
+  color: var(--muted) !important;
+}
+
+.bento-dashboard .campaign-open-rate {
+  color: var(--accent) !important;
+}
+
+.bento-dashboard .campaign-status-progress,
+.bento-dashboard .campaign-status-completed,
+.bento-dashboard .campaign-status-neutral {
+  border: 1px solid var(--line);
+  color: var(--muted) !important;
+  background: var(--surface-soft) !important;
+}
+
+.bento-dashboard .campaign-status-progress {
+  color: var(--accent) !important;
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--line));
+  background: var(--accent-soft) !important;
+}
+
+@media (max-width: 1120px) {
+  .bento-dashboard > .overview-hero-card {
+    grid-column: 1 / -1;
+  }
+
+  .bento-dashboard > .campaign-openings-card {
+    grid-column: span 7;
+  }
+
+  .bento-dashboard > .bento-metrics-stack {
+    grid-column: span 5;
+  }
+
+  .bento-dashboard > .risk-overview {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 780px) {
+  .bento-dashboard {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bento-dashboard > .overview-hero-card,
+  .bento-dashboard > .campaign-openings-card,
+  .bento-dashboard > .bento-metrics-stack,
+  .bento-dashboard > .risk-overview,
+  .bento-dashboard > .campaign-overview-card {
+    width: 100%;
+  }
+
+  .bento-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bento-hero-insight {
+    min-height: 250px;
+  }
+
+  .bento-journey {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bento-journey-cell:nth-child(3) {
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .bento-journey-cell:nth-child(3),
+  .bento-journey-cell:nth-child(4) {
+    padding-top: 13px;
+  }
+
+  .bento-journey-cell:nth-child(3) {
+    border-left: 0;
+  }
+
+  .bento-journey-cell:nth-child(4) {
+    border-top: 1px solid var(--line-soft);
+  }
+}
+
+html[data-theme="dark"] .bento-shell .surface-card {
+  border-color: var(--line) !important;
+  background: var(--surface) !important;
+}
+
+html[data-theme="dark"] .bento-shell .sidebar-profile-button {
+  border-color: #3b474c !important;
+  background: #202831 !important;
+}
+
+html[data-theme="dark"] .bento-shell .header-sync-button {
+  background: #202831 !important;
+}
+
+html[data-theme="dark"] .bento-hero-insight {
+  color: #f4f5f3;
+  background: #0e1418;
+}
+
+html[data-theme="dark"] .bento-hero-insight-badge {
+  color: #202831;
+  background: #f4f5f3;
+}
+
+html[data-theme="dark"] .bento-ring-track {
+  stroke: #2f3b40;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bento-ring-value {
+    transition: none;
+  }
 }
