@@ -7,12 +7,7 @@ import { useProfile } from "@/components/profile/profile-provider";
 import { Icon } from "@/components/ui/icon";
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
 
-type ActiveSection =
-  | "overview"
-  | "profile"
-  | "risk"
-  | "settings"
-  | "presentation";
+type ActiveSection = "overview" | "risk" | "settings" | "presentation";
 
 type DashboardShellProps = {
   activeSection: ActiveSection;
@@ -105,7 +100,7 @@ export function DashboardShell({
               role="menu"
             >
               <Link
-                href="/perfil"
+                href="/configuracoes"
                 className="flex items-center gap-3 rounded-[16px] bg-[#f5f7f7] p-3 transition-colors hover:bg-[#edf2f3]"
                 role="menuitem"
                 onClick={() => setProfileOpen(false)}
