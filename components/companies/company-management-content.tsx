@@ -187,6 +187,7 @@ export function CompanyManagementContent() {
   );
   const [companyDraft, setCompanyDraft] = useState<CompanyDraft>(emptyCompany);
   const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [localMode, setLocalMode] = useState(!isSupabaseConfigured);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -223,6 +224,26 @@ export function CompanyManagementContent() {
   }, []);
 
   useEffect(() => {
+    if (!localMode) return;
+
+    const syncLocalData = () => {
+      const localWorkspaces = readLocalWorkspaces();
+      setWorkspaces(localWorkspaces);
+      setCompanies(readLocalCompanies());
+      setSelectedWorkspaceId((current) => {
+        const active = readActiveWorkspaceId();
+        return localWorkspaces.some((workspace) => workspace.id === active)
+          ? active
+          : current || localWorkspaces[0]?.id || "";
+      });
+    };
+
+    window.addEventListener("pierphish:workspaces-changed", syncLocalData);
+    return () =>
+      window.removeEventListener("pierphish:workspaces-changed", syncLocalData);
+  }, [localMode]);
+
+  useEffect(() => {
     if (isSupabaseConfigured && adminAccess && ready) void loadData();
     // A sessão precisa estar pronta antes de consultar a rota protegida.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -254,11 +275,28 @@ export function CompanyManagementContent() {
       error?: string;
     };
     if (!response.ok) {
-      setError(body.error ?? "Não foi possível carregar as empresas.");
+      if (response.status === 503) {
+        const localWorkspaces = readLocalWorkspaces();
+        setWorkspaces(localWorkspaces);
+        setCompanies(readLocalCompanies());
+        setLocalMode(true);
+        setSelectedWorkspaceId((current) => {
+          const active = readActiveWorkspaceId();
+          return localWorkspaces.some((workspace) => workspace.id === active)
+            ? active
+            : current || localWorkspaces[0]?.id || "";
+        });
+        setNotice(
+          "O servidor ainda não foi configurado. Os dados desta sessão ficam neste navegador.",
+        );
+      } else {
+        setError(body.error ?? "Não foi possível carregar as empresas.");
+      }
     } else {
       const nextWorkspaces = body.workspaces ?? [];
       setWorkspaces(nextWorkspaces);
       setCompanies(body.companies ?? []);
+      setLocalMode(false);
       setSelectedWorkspaceId((current) => {
         const active = readActiveWorkspaceId();
         return nextWorkspaces.some((workspace) => workspace.id === active)
@@ -338,7 +376,7 @@ export function CompanyManagementContent() {
       return;
     }
 
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured || localMode) {
       const nextCompany: CompanyRecord = {
         id: editingCompany?.id ?? `company-${Date.now()}`,
         workspaceId: companyDraft.workspaceId,

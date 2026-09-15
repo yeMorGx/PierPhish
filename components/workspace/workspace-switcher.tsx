@@ -87,6 +87,32 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
     setWorkspaceDraft(emptyWorkspace);
   }
 
+  function createLocalWorkspace(name: string) {
+    const localWorkspace = {
+      id: `workspace-${Date.now()}`,
+      name,
+      environment: workspaceDraft.environment,
+      description: workspaceDraft.description.trim(),
+      logoUrl: null,
+      createdAt: new Date().toISOString(),
+    };
+    const storedWorkspaces = [...readLocalWorkspaces(), localWorkspace];
+    setWorkspaces(
+      storedWorkspaces.map((item) => ({
+        id: item.id,
+        name: item.name,
+        environment: item.environment,
+        description: item.description,
+        initial: item.name.slice(0, 1).toUpperCase(),
+      })),
+    );
+    writeLocalWorkspaces(storedWorkspaces);
+    writeActiveWorkspaceId(localWorkspace.id);
+    setActiveWorkspaceId(localWorkspace.id);
+    closeCreate(true);
+    setCreating(false);
+  }
+
   async function submitWorkspace(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setCreating(true);
@@ -99,29 +125,7 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
     }
 
     if (!isSupabaseConfigured) {
-      const localWorkspace = {
-        id: `workspace-${Date.now()}`,
-        name,
-        environment: workspaceDraft.environment,
-        description: workspaceDraft.description.trim(),
-        logoUrl: null,
-        createdAt: new Date().toISOString(),
-      };
-      const storedWorkspaces = [...readLocalWorkspaces(), localWorkspace];
-      setWorkspaces(
-        storedWorkspaces.map((item) => ({
-          id: item.id,
-          name: item.name,
-          environment: item.environment,
-          description: item.description,
-          initial: item.name.slice(0, 1).toUpperCase(),
-        })),
-      );
-      writeLocalWorkspaces(storedWorkspaces);
-      writeActiveWorkspaceId(localWorkspace.id);
-      setActiveWorkspaceId(localWorkspace.id);
-      closeCreate(true);
-      setCreating(false);
+      createLocalWorkspace(name);
       return;
     }
 
@@ -154,6 +158,10 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
       workspace?: WorkspaceSummary;
       error?: string;
     };
+    if (response.status === 503) {
+      createLocalWorkspace(name);
+      return;
+    }
     if (!response.ok || !body.workspace) {
       setCreateError(body.error ?? "Não foi possível criar o workspace.");
       setCreating(false);
