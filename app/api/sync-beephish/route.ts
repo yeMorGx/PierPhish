@@ -31,7 +31,17 @@ function errorResponse(message: string, status: number) {
 }
 
 function jsonError(error: unknown) {
-  return error instanceof Error ? error.message : "Erro desconhecido.";
+  if (error instanceof Error) return error.message;
+  if (isRecord(error)) {
+    const message = error.message ?? error.error_description ?? error.error;
+    if (message) return String(message);
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return "Erro desconhecido.";
+    }
+  }
+  return "Erro desconhecido.";
 }
 
 function getClient(key: string, token?: string) {
@@ -236,121 +246,133 @@ async function syncCompany(
 
   const synced: Array<{ campaignId: number; results: number; events: number }> =
     [];
+  const failures: Array<{ campaignId: number | null; error: string }> = [];
   for (const campaign of selectedCampaigns) {
     const campaignId = numberOrNull(campaign.id);
-    if (campaignId === null) throw new Error("Campanha sem ID.");
+    try {
+      if (campaignId === null) throw new Error("Campanha sem ID.");
 
-    const { error: campaignError } = await client
-      .from("beephish_campaigns")
-      .upsert({
-        id: campaignId,
-        workspace_id: workspaceId,
-        company_id: company?.id ?? null,
-        name: String(campaign.name ?? `Campanha ${campaignId}`),
-        status: nullableText(campaign.status),
-        created_date: dateOrNull(campaign.created_date),
-        launch_date: dateOrNull(campaign.launch_date),
-        completed_date: dateOrNull(campaign.completed_date),
-        creator_id: numberOrNull(campaign.creator?.id),
-        creator_name: nullableText(campaign.creator?.name),
-        group_names: Array.isArray(campaign.groups)
-          ? campaign.groups
-              .map((group: any) => nullableText(group?.name))
-              .filter(Boolean)
-          : [],
-        stats: isRecord(campaign.stats) ? campaign.stats : {},
-        synced_at: new Date().toISOString(),
-      });
-    if (campaignError) throw campaignError;
+      const { error: campaignError } = await client
+        .from("beephish_campaigns")
+        .upsert({
+          id: campaignId,
+          workspace_id: workspaceId,
+          company_id: company?.id ?? null,
+          name: String(campaign.name ?? `Campanha ${campaignId}`),
+          status: nullableText(campaign.status),
+          created_date: dateOrNull(campaign.created_date),
+          launch_date: dateOrNull(campaign.launch_date),
+          completed_date: dateOrNull(campaign.completed_date),
+          creator_id: numberOrNull(campaign.creator?.id),
+          creator_name: nullableText(campaign.creator?.name),
+          group_names: Array.isArray(campaign.groups)
+            ? campaign.groups
+                .map((group: any) => nullableText(group?.name))
+                .filter(Boolean)
+            : [],
+          stats: isRecord(campaign.stats) ? campaign.stats : {},
+          synced_at: new Date().toISOString(),
+        });
+      if (campaignError) throw campaignError;
 
-    const resultsPayload = await beephishGet(
-      `/v1/phishing/campaigns/${campaignId}/results`,
-      authorization,
-    );
-    const resultRows = extractItems(resultsPayload)
-      .filter((item) => isRecord(item) && item.id !== undefined)
-      .map((item: JsonRecord) => ({
-        campaign_id: campaignId,
-        workspace_id: workspaceId,
-        company_id: company?.id ?? null,
-        beephish_id: String(item.id),
-        status: nullableText(item.status),
-        reported: item.reported === true,
-        email: nullableText(item.email),
-        first_name: nullableText(item.first_name),
-        last_name: nullableText(item.last_name),
-        position: nullableText(item.position),
-        department: nullableText(item.department),
-        ip: nullableText(item.ip),
-        latitude: numberOrNull(item.latitude),
-        longitude: numberOrNull(item.longitude),
-        send_date: dateOrNull(item.send_date),
-        modified_date: dateOrNull(item.modified_date),
-        target_id: numberOrNull(item.target_id),
-        template_id: numberOrNull(item.template_id),
-        template_name: nullableText(item.template_name),
-        non_delivery_reason: nullableText(item.non_delivery_reason),
-        non_delivery_detail: nullableText(item.non_delivery_detail),
-        non_delivery_code: nullableText(item.non_delivery_code),
-        raw: item,
-      }));
-    if (resultRows.length) {
-      const { error } = await client
-        .from("beephish_results")
-        .upsert(resultRows, { onConflict: "campaign_id,beephish_id" });
-      if (error) throw error;
-    }
-
-    let eventCount = 0;
-    if (!isOlderThan(campaign.completed_date, eventsRetentionDays)) {
-      const eventsPayload = await beephishGet(
-        `/v1/phishing/campaigns/${campaignId}/events`,
+      const resultsPayload = await beephishGet(
+        `/v1/phishing/campaigns/${campaignId}/results`,
         authorization,
       );
-      const eventRows = [];
-      for (const rawEvent of extractItems(eventsPayload)) {
-        const event = isRecord(rawEvent) ? rawEvent : { value: rawEvent };
-        const explicitId =
-          event.id ?? event.event_id ?? event.eventId ?? event.key;
-        const eventId =
-          explicitId === undefined
-            ? await hashEvent(event)
-            : String(explicitId);
-        eventRows.push({
+      const resultRows = extractItems(resultsPayload)
+        .filter((item) => isRecord(item) && item.id !== undefined)
+        .map((item: JsonRecord) => ({
           campaign_id: campaignId,
           workspace_id: workspaceId,
           company_id: company?.id ?? null,
-          beephish_event_id: eventId,
-          event_type: eventTypeFrom(event),
-          email: nullableText(
-            event.email ?? event.user?.email ?? event.target?.email,
-          ),
-          occurred_at: dateOrNull(
-            event.occurred_at ??
-              event.occurredAt ??
-              event.created_at ??
-              event.createdAt ??
-              event.timestamp ??
-              event.time ??
-              event.date ??
-              event.modified_date,
-          ),
-          ip: nullableText(event.ip),
-          payload: event,
-        });
-      }
-      if (eventRows.length) {
+          beephish_id: String(item.id),
+          status: nullableText(item.status),
+          reported: item.reported === true,
+          email: nullableText(item.email),
+          first_name: nullableText(item.first_name),
+          last_name: nullableText(item.last_name),
+          position: nullableText(item.position),
+          department: nullableText(item.department),
+          ip: nullableText(item.ip),
+          latitude: numberOrNull(item.latitude),
+          longitude: numberOrNull(item.longitude),
+          send_date: dateOrNull(item.send_date),
+          modified_date: dateOrNull(item.modified_date),
+          target_id: numberOrNull(item.target_id),
+          template_id: numberOrNull(item.template_id),
+          template_name: nullableText(item.template_name),
+          non_delivery_reason: nullableText(item.non_delivery_reason),
+          non_delivery_detail: nullableText(item.non_delivery_detail),
+          non_delivery_code: nullableText(item.non_delivery_code),
+          raw: item,
+        }));
+      if (resultRows.length) {
         const { error } = await client
-          .from("beephish_events")
-          .upsert(eventRows, { onConflict: "campaign_id,beephish_event_id" });
+          .from("beephish_results")
+          .upsert(resultRows, { onConflict: "campaign_id,beephish_id" });
         if (error) throw error;
-        eventCount = eventRows.length;
       }
-    }
 
-    synced.push({ campaignId, results: resultRows.length, events: eventCount });
+      let eventCount = 0;
+      if (!isOlderThan(campaign.completed_date, eventsRetentionDays)) {
+        const eventsPayload = await beephishGet(
+          `/v1/phishing/campaigns/${campaignId}/events`,
+          authorization,
+        );
+        const eventRows = [];
+        for (const rawEvent of extractItems(eventsPayload)) {
+          const event = isRecord(rawEvent) ? rawEvent : { value: rawEvent };
+          const explicitId =
+            event.id ?? event.event_id ?? event.eventId ?? event.key;
+          const eventId =
+            explicitId === undefined
+              ? await hashEvent(event)
+              : String(explicitId);
+          eventRows.push({
+            campaign_id: campaignId,
+            workspace_id: workspaceId,
+            company_id: company?.id ?? null,
+            beephish_event_id: eventId,
+            event_type: eventTypeFrom(event),
+            email: nullableText(
+              event.email ?? event.user?.email ?? event.target?.email,
+            ),
+            occurred_at: dateOrNull(
+              event.occurred_at ??
+                event.occurredAt ??
+                event.created_at ??
+                event.createdAt ??
+                event.timestamp ??
+                event.time ??
+                event.date ??
+                event.modified_date,
+            ),
+            ip: nullableText(event.ip),
+            payload: event,
+          });
+        }
+        if (eventRows.length) {
+          const { error } = await client
+            .from("beephish_events")
+            .upsert(eventRows, { onConflict: "campaign_id,beephish_event_id" });
+          if (error) throw error;
+          eventCount = eventRows.length;
+        }
+      }
+
+      synced.push({
+        campaignId,
+        results: resultRows.length,
+        events: eventCount,
+      });
+    } catch (error) {
+      failures.push({ campaignId, error: jsonError(error) });
+    }
   }
-  return synced;
+  if (!synced.length) {
+    throw new Error(failures[0]?.error ?? "Não foi possível sincronizar.");
+  }
+  return { synced, failures };
 }
 
 export async function POST(request: NextRequest) {
@@ -413,11 +435,12 @@ export async function POST(request: NextRequest) {
     companyId: string | null;
     companyName: string;
     campaigns: unknown[];
+    failures?: Array<{ campaignId: number | null; error: string }>;
     error?: string;
   }> = [];
   for (const company of targets) {
     try {
-      const campaigns = await syncCompany(
+      const sync = await syncCompany(
         auth.client,
         company,
         company?.workspace_id ?? workspaceId,
@@ -426,7 +449,11 @@ export async function POST(request: NextRequest) {
       results.push({
         companyId: company?.id ?? null,
         companyName: company?.name ?? "Conexão global",
-        campaigns,
+        campaigns: sync.synced,
+        failures: sync.failures,
+        error: sync.failures.length
+          ? `${sync.failures.length} campanha(s) não puderam ser atualizadas.`
+          : undefined,
       });
     } catch (error) {
       results.push({
@@ -438,7 +465,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const successful = results.filter((result) => !result.error);
+  const successful = results.filter((result) => result.campaigns.length > 0);
   if (!successful.length) {
     return errorResponse(
       results[0]?.error ?? "Não foi possível sincronizar.",
