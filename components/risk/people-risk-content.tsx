@@ -19,6 +19,7 @@ import {
 } from "@/lib/person-avatars";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import {
+  databaseWorkspaceId,
   hasBeephishData,
   useActiveWorkspaceId,
 } from "@/lib/use-active-workspace";
@@ -446,7 +447,7 @@ function PeopleRiskPage() {
       setCampaignTotal(demoCampaigns.length);
       setUpdatedAt("2026-09-02T15:14:59Z");
     }
-  }, [workspaceHasBeephishData]);
+  }, [activeWorkspaceId, workspaceHasBeephishData]);
 
   useEffect(() => {
     const avatars = readPersonAvatars();
@@ -471,17 +472,20 @@ function PeopleRiskPage() {
       supabase
         .from("beephish_campaigns")
         .select("id,name,synced_at")
+        .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
         .order("launch_date", { ascending: false }),
       supabase
         .from("beephish_results")
         .select(
           "campaign_id,beephish_id,status,reported,email,first_name,last_name,position,department,modified_date,send_date",
         )
+        .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
         .order("modified_date", { ascending: false })
         .limit(5000),
       supabase
         .from("beephish_events")
         .select("campaign_id,beephish_event_id,event_type,email,occurred_at")
+        .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
         .order("occurred_at", { ascending: false })
         .limit(5000),
     ]);
@@ -514,7 +518,7 @@ function PeopleRiskPage() {
   useEffect(() => {
     if (workspaceHasBeephishData && supabase) void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceHasBeephishData]);
+  }, [activeWorkspaceId, workspaceHasBeephishData]);
 
   function handleAvatarChange(personId: string, avatar: string) {
     const nextAvatars = { ...personAvatars, [personId]: avatar };

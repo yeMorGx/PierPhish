@@ -26,8 +26,11 @@ export function useActiveWorkspaceId() {
 }
 
 export function hasBeephishData(workspaceId: string) {
-  return (
-    workspaceId === primaryWorkspaceId ||
-    workspaceId === persistedPrimaryWorkspaceId
-  );
+  return Boolean(workspaceId);
+}
+
+export function databaseWorkspaceId(workspaceId: string) {
+  return workspaceId === primaryWorkspaceId
+    ? persistedPrimaryWorkspaceId
+    : workspaceId;
 }

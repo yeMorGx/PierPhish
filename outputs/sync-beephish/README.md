@@ -1,4 +1,10 @@
-# Edge Function `sync-beephish`
+# Edge Function legada `sync-beephish`
+
+A aplicação web agora usa a rota server-side `/api/sync-beephish`, que seleciona
+as conexões do workspace e usa o Client ID/Client Secret de cada cliente. Esta
+Edge Function permanece para compatibilidade com instalações antigas que ainda
+precisem dispará-la diretamente; ela continua usando a credencial global abaixo
+e não é o caminho usado pelo dashboard atual para múltiplos clientes.
 
 No Supabase Dashboard:
 

@@ -18,6 +18,7 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import type { Campaign } from "@/components/dashboard/types";
 import { readActiveWorkspaceId } from "@/lib/company-data";
 import {
+  databaseWorkspaceId,
   hasBeephishData,
   useActiveWorkspaceId,
 } from "@/lib/use-active-workspace";
@@ -142,6 +143,7 @@ export function PresentationContent() {
     const { data: nextCampaigns, error: queryError } = await supabase
       .from("beephish_campaigns")
       .select("id,name,status,launch_date,synced_at,stats")
+      .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
       .order("launch_date", { ascending: false });
 
     if (!hasBeephishData(readActiveWorkspaceId())) return;
@@ -153,7 +155,7 @@ export function PresentationContent() {
 
     setCampaigns((nextCampaigns ?? []) as Campaign[]);
     setLoading(false);
-  }, [workspaceHasBeephishData]);
+  }, [activeWorkspaceId, workspaceHasBeephishData]);
 
   const syncNow = useCallback(async () => {
     if (!supabase || !workspaceHasBeephishData) return;
@@ -161,16 +163,31 @@ export function PresentationContent() {
     setSyncing(true);
     setError(null);
     try {
-      const { error: syncError } = await supabase.functions.invoke(
-        "sync-beephish",
-        { body: {} },
-      );
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        setError("Sua sessão expirou. Entre novamente para sincronizar.");
+        return;
+      }
+      const response = await fetch("/api/sync-beephish", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          workspaceId: databaseWorkspaceId(activeWorkspaceId),
+        }),
+      });
+      const body = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
       await loadCampaigns();
-      if (syncError) setError(syncError.message);
+      if (!response.ok) setError(body.error ?? "Não foi possível sincronizar.");
     } finally {
       setSyncing(false);
     }
-  }, [loadCampaigns, workspaceHasBeephishData]);
+  }, [activeWorkspaceId, loadCampaigns, workspaceHasBeephishData]);
 
   useEffect(() => {
     setPreferences(readPreferences());

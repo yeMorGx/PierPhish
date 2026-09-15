@@ -21,6 +21,7 @@ import {
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { readActiveWorkspaceId } from "@/lib/company-data";
 import {
+  databaseWorkspaceId,
   hasBeephishData,
   useActiveWorkspaceId,
 } from "@/lib/use-active-workspace";
@@ -344,7 +345,12 @@ export default function CampaignPeoplePage() {
       setEvents(campaignId === 5345 ? demoEvents : []);
       setLoading(false);
     }
-  }, [campaignId, demoCampaignForId, workspaceHasBeephishData]);
+  }, [
+    activeWorkspaceId,
+    campaignId,
+    demoCampaignForId,
+    workspaceHasBeephishData,
+  ]);
 
   useEffect(() => {
     setPersonAvatars(readPersonAvatars());
@@ -383,7 +389,12 @@ export default function CampaignPeoplePage() {
       listener.subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId, invalidCampaignId, workspaceHasBeephishData]);
+  }, [
+    activeWorkspaceId,
+    campaignId,
+    invalidCampaignId,
+    workspaceHasBeephishData,
+  ]);
 
   async function loadData() {
     if (!supabase || invalidCampaignId || !workspaceHasBeephishData) {
@@ -402,6 +413,7 @@ export default function CampaignPeoplePage() {
         .from("beephish_campaigns")
         .select("id,name,status,synced_at,stats")
         .eq("id", campaignId)
+        .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
         .maybeSingle(),
       supabase
         .from("beephish_results")
@@ -409,12 +421,14 @@ export default function CampaignPeoplePage() {
           "beephish_id,status,reported,email,first_name,last_name,position,department,modified_date,send_date",
         )
         .eq("campaign_id", campaignId)
+        .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
         .order("modified_date", { ascending: false })
         .limit(500),
       supabase
         .from("beephish_events")
         .select("beephish_event_id,event_type,email,occurred_at")
         .eq("campaign_id", campaignId)
+        .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
         .order("occurred_at", { ascending: false })
         .limit(500),
     ]);

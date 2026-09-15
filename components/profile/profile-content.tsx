@@ -13,6 +13,10 @@ import { demoCampaigns } from "@/lib/demo-data";
 import { formatDateTime } from "@/lib/format";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { useProfile } from "@/components/profile/profile-provider";
+import {
+  databaseWorkspaceId,
+  useActiveWorkspaceId,
+} from "@/lib/use-active-workspace";
 
 type ProfileTotals = {
   campaigns: number;
@@ -56,6 +60,7 @@ function latestSyncFromCampaigns(campaigns: Campaign[]) {
 export function ProfileContent() {
   const { user } = useAuth();
   const { preferences: profilePreferences } = useProfile();
+  const activeWorkspaceId = useActiveWorkspaceId();
   const [campaigns, setCampaigns] = useState<Campaign[]>(
     isSupabaseConfigured ? [] : demoCampaigns,
   );
@@ -80,6 +85,7 @@ export function ProfileContent() {
       const { data, error: queryError } = await client
         .from("beephish_campaigns")
         .select("id,name,status,launch_date,synced_at,stats")
+        .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
         .order("synced_at", { ascending: false });
 
       if (!mounted) return;
@@ -97,7 +103,7 @@ export function ProfileContent() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [activeWorkspaceId]);
 
   const totals = useMemo(() => totalsFromCampaigns(campaigns), [campaigns]);
   const latestCampaigns = useMemo(

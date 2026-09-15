@@ -18,6 +18,7 @@ import { demoCampaigns } from "@/lib/demo-data";
 import { readPersonAvatars, type PersonAvatarMap } from "@/lib/person-avatars";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import {
+  databaseWorkspaceId,
   hasBeephishData,
   useActiveWorkspaceId,
 } from "@/lib/use-active-workspace";
@@ -202,7 +203,7 @@ export default function Home() {
       setCampaigns(demoCampaigns);
       setParticipantsByCampaign(demoParticipantsByCampaign);
     }
-  }, [workspaceHasBeephishData]);
+  }, [activeWorkspaceId, workspaceHasBeephishData]);
 
   useEffect(() => {
     if (!ready) return;
@@ -212,7 +213,7 @@ export default function Home() {
     }
     if (workspaceHasBeephishData && user) startInitialSync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, router, user, workspaceHasBeephishData]);
+  }, [activeWorkspaceId, ready, router, user, workspaceHasBeephishData]);
 
   async function loadCampaigns() {
     if (!supabase || !workspaceHasBeephishData) return;
@@ -221,6 +222,7 @@ export default function Home() {
     const { data, error: queryError } = await supabase
       .from("beephish_campaigns")
       .select("id,name,status,launch_date,synced_at,stats")
+      .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
       .order("launch_date", { ascending: false });
 
     if (!hasBeephishData(readActiveWorkspaceId())) return;
@@ -240,6 +242,7 @@ export default function Home() {
         .select(
           "campaign_id,beephish_id,first_name,last_name,email,modified_date",
         )
+        .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
         .in(
           "campaign_id",
           nextCampaigns.map((campaign) => campaign.id),
@@ -287,13 +290,27 @@ export default function Home() {
     setSyncing(true);
     setError(null);
     try {
-      const { error: syncError } = await supabase.functions.invoke(
-        "sync-beephish",
-        { body: {} },
-      );
-      const syncMessage = syncError?.message ?? null;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        setError("Sua sessão expirou. Entre novamente para sincronizar.");
+        return;
+      }
+      const response = await fetch("/api/sync-beephish", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          workspaceId: databaseWorkspaceId(activeWorkspaceId),
+        }),
+      });
+      const body = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
       await loadCampaigns();
-      if (syncMessage) setError(syncMessage);
+      if (!response.ok) setError(body.error ?? "Não foi possível sincronizar.");
     } finally {
       setSyncing(false);
     }

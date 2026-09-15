@@ -11,6 +11,7 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Icon } from "@/components/ui/icon";
 import { readActiveWorkspaceId } from "@/lib/company-data";
 import {
+  databaseWorkspaceId,
   hasBeephishData,
   useActiveWorkspaceId,
 } from "@/lib/use-active-workspace";
@@ -129,6 +130,7 @@ export function StatusContent() {
     const { data, error: queryError } = await client
       .from("beephish_campaigns")
       .select("id,name,status,launch_date,synced_at,stats")
+      .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
       .order("synced_at", { ascending: false });
 
     if (!hasBeephishData(readActiveWorkspaceId())) return;
@@ -146,7 +148,7 @@ export function StatusContent() {
     void loadStatus();
     // O cliente e a configuração são constantes durante a sessão.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceHasBeephishData]);
+  }, [activeWorkspaceId, workspaceHasBeephishData]);
 
   const totals = useMemo(() => totalsFromCampaigns(campaigns), [campaigns]);
   const latestSync = useMemo(
