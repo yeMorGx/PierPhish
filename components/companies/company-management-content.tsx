@@ -20,6 +20,7 @@ import {
   writeLocalWorkspaces,
 } from "@/lib/company-data";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { useActiveWorkspaceId } from "@/lib/use-active-workspace";
 
 const superAdminEmail = "admin@teste.com";
 const maxLogoSize = 2.5 * 1024 * 1024;
@@ -172,6 +173,7 @@ function LogoUpload({
 
 export function CompanyManagementContent() {
   const { ready, user } = useAuth();
+  const activeWorkspaceId = useActiveWorkspaceId();
   const [workspaces, setWorkspaces] = useState<WorkspaceRecord[]>(
     isSupabaseConfigured ? [] : demoWorkspaces,
   );
@@ -209,6 +211,12 @@ export function CompanyManagementContent() {
   ).length;
 
   useEffect(() => {
+    if (!workspaces.some((workspace) => workspace.id === activeWorkspaceId))
+      return;
+    setSelectedWorkspaceId(activeWorkspaceId);
+  }, [activeWorkspaceId, workspaces]);
+
+  useEffect(() => {
     if (!isSupabaseConfigured) {
       const localWorkspaces = readLocalWorkspaces();
       setWorkspaces(localWorkspaces);
@@ -239,8 +247,11 @@ export function CompanyManagementContent() {
     };
 
     window.addEventListener("pierphish:workspaces-changed", syncLocalData);
-    return () =>
+    window.addEventListener("pierphish:workspace-selected", syncLocalData);
+    return () => {
       window.removeEventListener("pierphish:workspaces-changed", syncLocalData);
+      window.removeEventListener("pierphish:workspace-selected", syncLocalData);
+    };
   }, [localMode]);
 
   useEffect(() => {
