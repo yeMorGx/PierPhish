@@ -16,6 +16,11 @@ import { Icon } from "@/components/ui/icon";
 import { demoCampaigns } from "@/lib/demo-data";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import type { Campaign } from "@/components/dashboard/types";
+import { readActiveWorkspaceId } from "@/lib/company-data";
+import {
+  hasBeephishData,
+  useActiveWorkspaceId,
+} from "@/lib/use-active-workspace";
 
 gsap.registerPlugin(useGSAP);
 
@@ -92,6 +97,8 @@ function formatPresentationDate(value: string | null) {
 
 export function PresentationContent() {
   const router = useRouter();
+  const activeWorkspaceId = useActiveWorkspaceId();
+  const workspaceHasBeephishData = hasBeephishData(activeWorkspaceId);
   const animationScopeRef = useRef<HTMLDivElement>(null);
   const setupRef = useRef<HTMLDivElement>(null);
   const presentationRef = useRef<HTMLDivElement>(null);
@@ -119,7 +126,14 @@ export function PresentationContent() {
   const data = useMemo(() => buildPresentationData(campaigns), [campaigns]);
 
   const loadCampaigns = useCallback(async () => {
+    if (!workspaceHasBeephishData) {
+      setCampaigns([]);
+      setLoading(false);
+      return;
+    }
+
     if (!supabase) {
+      setCampaigns(demoCampaigns);
       setLoading(false);
       return;
     }
@@ -130,6 +144,7 @@ export function PresentationContent() {
       .select("id,name,status,launch_date,synced_at,stats")
       .order("launch_date", { ascending: false });
 
+    if (!hasBeephishData(readActiveWorkspaceId())) return;
     if (queryError) {
       setError(queryError.message);
       setLoading(false);
@@ -138,10 +153,10 @@ export function PresentationContent() {
 
     setCampaigns((nextCampaigns ?? []) as Campaign[]);
     setLoading(false);
-  }, []);
+  }, [workspaceHasBeephishData]);
 
   const syncNow = useCallback(async () => {
-    if (!supabase) return;
+    if (!supabase || !workspaceHasBeephishData) return;
 
     setSyncing(true);
     setError(null);
@@ -155,7 +170,7 @@ export function PresentationContent() {
     } finally {
       setSyncing(false);
     }
-  }, [loadCampaigns]);
+  }, [loadCampaigns, workspaceHasBeephishData]);
 
   useEffect(() => {
     setPreferences(readPreferences());
@@ -186,7 +201,13 @@ export function PresentationContent() {
   ]);
 
   useEffect(() => {
-    if (!presentationActive || !preferences.autoSync || !supabase) return;
+    if (
+      !presentationActive ||
+      !preferences.autoSync ||
+      !supabase ||
+      !workspaceHasBeephishData
+    )
+      return;
     const timer = window.setInterval(
       () => void syncNow(),
       preferences.syncInterval * 1000,
@@ -197,6 +218,7 @@ export function PresentationContent() {
     preferences.autoSync,
     preferences.syncInterval,
     syncNow,
+    workspaceHasBeephishData,
   ]);
 
   useEffect(() => {

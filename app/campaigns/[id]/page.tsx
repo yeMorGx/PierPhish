@@ -19,6 +19,11 @@ import {
   writePersonAvatars,
 } from "@/lib/person-avatars";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { readActiveWorkspaceId } from "@/lib/company-data";
+import {
+  hasBeephishData,
+  useActiveWorkspaceId,
+} from "@/lib/use-active-workspace";
 
 type Stats = {
   total?: number;
@@ -303,6 +308,8 @@ export default function CampaignPeoplePage() {
   const campaignId = Number(params.id);
   const invalidCampaignId = !Number.isFinite(campaignId) || campaignId <= 0;
   const demoCampaignForId = demoCampaignsById[campaignId] ?? null;
+  const activeWorkspaceId = useActiveWorkspaceId();
+  const workspaceHasBeephishData = hasBeephishData(activeWorkspaceId);
   const [campaign, setCampaign] = useState<Campaign | null>(
     isSupabaseConfigured ? null : demoCampaignForId,
   );
@@ -322,12 +329,37 @@ export default function CampaignPeoplePage() {
   const [personAvatars, setPersonAvatars] = useState<PersonAvatarMap>({});
 
   useEffect(() => {
+    setSelectedPerson(null);
+    setError(null);
+    if (!workspaceHasBeephishData) {
+      setCampaign(null);
+      setResults([]);
+      setEvents([]);
+      setLoading(false);
+      return;
+    }
+    if (!isSupabaseConfigured) {
+      setCampaign(demoCampaignForId);
+      setResults(campaignId === 5345 ? demoResults : []);
+      setEvents(campaignId === 5345 ? demoEvents : []);
+      setLoading(false);
+    }
+  }, [campaignId, demoCampaignForId, workspaceHasBeephishData]);
+
+  useEffect(() => {
     setPersonAvatars(readPersonAvatars());
   }, []);
 
   useEffect(() => {
     if (!supabase) return;
     let mounted = true;
+
+    if (!workspaceHasBeephishData) {
+      setLoading(false);
+      return () => {
+        mounted = false;
+      };
+    }
 
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return;
@@ -351,10 +383,10 @@ export default function CampaignPeoplePage() {
       listener.subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId, invalidCampaignId]);
+  }, [campaignId, invalidCampaignId, workspaceHasBeephishData]);
 
   async function loadData() {
-    if (!supabase || invalidCampaignId) {
+    if (!supabase || invalidCampaignId || !workspaceHasBeephishData) {
       setLoading(false);
       return;
     }
@@ -388,6 +420,7 @@ export default function CampaignPeoplePage() {
     ]);
 
     const queryError = campaignError ?? resultError ?? eventError;
+    if (!hasBeephishData(readActiveWorkspaceId())) return;
     if (queryError) {
       setError(queryError.message);
       setLoading(false);

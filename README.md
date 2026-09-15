@@ -26,4 +26,6 @@ Para persistir essa área no Supabase:
 
 Quando o Supabase não está configurado, a tela usa dados de demonstração no navegador para permitir validar o fluxo. Mesmo nesse modo, o Client Secret fica somente no estado da tela e não é persistido no localStorage.
 
+Cada workspace criado localmente começa sem dados BeePhish. As telas de visão geral, risco, apresentação, status e detalhe de campanha só exibem os dados consolidados do workspace principal enquanto a conexão própria do novo ambiente ainda não foi cadastrada.
+
 O conector atual de sincronização ainda usa a credencial global configurada em `outputs/sync-beephish`. O armazenamento de Client ID/Client Secret por cliente já está preparado, mas a chamada BeePhish com credenciais individuais depende do contrato de autenticação e endpoint de troca da API BeePhish, que não foi informado.

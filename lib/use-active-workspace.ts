@@ -1,0 +1,28 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
+import { readActiveWorkspaceId } from "@/lib/company-data";
+
+const primaryWorkspaceId = "primary";
+
+function subscribe(onStoreChange: () => void) {
+  window.addEventListener("pierphish:workspace-selected", onStoreChange);
+  return () =>
+    window.removeEventListener("pierphish:workspace-selected", onStoreChange);
+}
+
+function getSnapshot() {
+  return readActiveWorkspaceId();
+}
+
+function getServerSnapshot() {
+  return primaryWorkspaceId;
+}
+
+export function useActiveWorkspaceId() {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+export function hasBeephishData(workspaceId: string) {
+  return workspaceId === primaryWorkspaceId;
+}

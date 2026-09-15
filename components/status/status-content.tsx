@@ -9,6 +9,11 @@ import { demoCampaigns } from "@/lib/demo-data";
 import { formatDateTime } from "@/lib/format";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Icon } from "@/components/ui/icon";
+import { readActiveWorkspaceId } from "@/lib/company-data";
+import {
+  hasBeephishData,
+  useActiveWorkspaceId,
+} from "@/lib/use-active-workspace";
 
 type StatusTone = "healthy" | "pending" | "attention" | "neutral";
 
@@ -97,6 +102,8 @@ function StatusCheck({
 export function StatusContent() {
   const { user } = useAuth();
   const client = supabase;
+  const activeWorkspaceId = useActiveWorkspaceId();
+  const workspaceHasBeephishData = hasBeephishData(activeWorkspaceId);
   const [campaigns, setCampaigns] = useState<Campaign[]>(
     isSupabaseConfigured ? [] : demoCampaigns,
   );
@@ -104,7 +111,15 @@ export function StatusContent() {
   const [error, setError] = useState<string | null>(null);
 
   async function loadStatus() {
+    if (!workspaceHasBeephishData) {
+      setCampaigns([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     if (!client) {
+      setCampaigns(demoCampaigns);
       setLoading(false);
       return;
     }
@@ -116,6 +131,7 @@ export function StatusContent() {
       .select("id,name,status,launch_date,synced_at,stats")
       .order("synced_at", { ascending: false });
 
+    if (!hasBeephishData(readActiveWorkspaceId())) return;
     if (queryError) {
       setError("Não foi possível validar os dados agora.");
       setLoading(false);
@@ -130,28 +146,31 @@ export function StatusContent() {
     void loadStatus();
     // O cliente e a configuração são constantes durante a sessão.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [workspaceHasBeephishData]);
 
   const totals = useMemo(() => totalsFromCampaigns(campaigns), [campaigns]);
   const latestSync = useMemo(
     () => formatDateTime(latestSyncFromCampaigns(campaigns)),
     [campaigns],
   );
-  const isDemo = !isSupabaseConfigured;
+  const isWorkspaceUnconnected = !workspaceHasBeephishData;
+  const isDemo = !isSupabaseConfigured && !isWorkspaceUnconnected;
   const stateTone: StatusTone = loading
     ? "pending"
     : error
       ? "attention"
-      : isDemo
+      : isWorkspaceUnconnected || isDemo
         ? "neutral"
         : "healthy";
   const stateLabel = loading
     ? "Verificando conexão"
     : error
       ? "Atenção necessária"
-      : isDemo
-        ? "Modo demonstração"
-        : "Conexão ativa";
+      : isWorkspaceUnconnected
+        ? "Sem conexão BeePhish"
+        : isDemo
+          ? "Modo demonstração"
+          : "Conexão ativa";
   const deliveredRate = totals.people
     ? Math.round((totals.delivered / totals.people) * 100)
     : 0;
@@ -180,9 +199,11 @@ export function StatusContent() {
                   ? "Consultando a base de campanhas"
                   : error
                     ? "Revise a conexão e tente novamente"
-                    : isDemo
-                      ? "Dados locais para visualização"
-                      : "Conta autenticada e dados disponíveis"}
+                    : isWorkspaceUnconnected
+                      ? "Adicione uma conexão em Empresas"
+                      : isDemo
+                        ? "Dados locais para visualização"
+                        : "Conta autenticada e dados disponíveis"}
               </small>
             </span>
           </div>

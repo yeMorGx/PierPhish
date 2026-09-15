@@ -18,6 +18,11 @@ import {
   writePersonAvatars,
 } from "@/lib/person-avatars";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import {
+  hasBeephishData,
+  useActiveWorkspaceId,
+} from "@/lib/use-active-workspace";
+import { readActiveWorkspaceId } from "@/lib/company-data";
 
 type RiskLevel = "high" | "attention" | "low";
 type RiskFilter = "all" | RiskLevel;
@@ -400,6 +405,8 @@ function RiskBadge({ level }: { level: RiskLevel }) {
 
 function PeopleRiskPage() {
   const { preferences: themePreferences } = useTheme();
+  const activeWorkspaceId = useActiveWorkspaceId();
+  const workspaceHasBeephishData = hasBeephishData(activeWorkspaceId);
   const [people, setPeople] = useState<RiskPerson[]>(
     isSupabaseConfigured ? [] : demoRiskPeople,
   );
@@ -420,6 +427,28 @@ function PeopleRiskPage() {
   const [personAvatars, setPersonAvatars] = useState<PersonAvatarMap>({});
 
   useEffect(() => {
+    setSelectedPerson(null);
+    setError(null);
+    if (!workspaceHasBeephishData) {
+      setPeople([]);
+      setCampaignTotal(0);
+      setUpdatedAt(null);
+      setLoading(false);
+      return;
+    }
+    if (!isSupabaseConfigured) {
+      setPeople(
+        demoRiskPeople.map((person) => ({
+          ...person,
+          avatar: personAvatars[person.id] ?? person.avatar ?? null,
+        })),
+      );
+      setCampaignTotal(demoCampaigns.length);
+      setUpdatedAt("2026-09-02T15:14:59Z");
+    }
+  }, [workspaceHasBeephishData]);
+
+  useEffect(() => {
     const avatars = readPersonAvatars();
     setPersonAvatars(avatars);
     setPeople((current) =>
@@ -431,7 +460,10 @@ function PeopleRiskPage() {
   }, []);
 
   async function loadData() {
-    if (!supabase) return;
+    if (!supabase || !workspaceHasBeephishData) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -456,6 +488,7 @@ function PeopleRiskPage() {
 
     const queryError =
       campaignResult.error ?? resultResult.error ?? eventResult.error;
+    if (!hasBeephishData(readActiveWorkspaceId())) return;
     if (queryError) {
       setError(queryError.message);
       setLoading(false);
@@ -479,9 +512,9 @@ function PeopleRiskPage() {
   }
 
   useEffect(() => {
-    if (supabase) void loadData();
+    if (workspaceHasBeephishData && supabase) void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [workspaceHasBeephishData]);
 
   function handleAvatarChange(personId: string, avatar: string) {
     const nextAvatars = { ...personAvatars, [personId]: avatar };

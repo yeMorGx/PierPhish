@@ -17,6 +17,11 @@ import type {
 import { demoCampaigns } from "@/lib/demo-data";
 import { readPersonAvatars, type PersonAvatarMap } from "@/lib/person-avatars";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import {
+  hasBeephishData,
+  useActiveWorkspaceId,
+} from "@/lib/use-active-workspace";
+import { readActiveWorkspaceId } from "@/lib/company-data";
 
 type RawParticipant = {
   campaign_id: number;
@@ -55,6 +60,8 @@ export default function Home() {
   const router = useRouter();
   const { ready, user } = useAuth();
   const { preferences: themePreferences } = useTheme();
+  const activeWorkspaceId = useActiveWorkspaceId();
+  const workspaceHasBeephishData = hasBeephishData(activeWorkspaceId);
   const [campaigns, setCampaigns] = useState<Campaign[]>(
     isSupabaseConfigured ? [] : demoCampaigns,
   );
@@ -182,17 +189,33 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    initialSyncStartedRef.current = false;
+    setSelectedId(0);
+    setSyncing(false);
+    setError(null);
+    if (!workspaceHasBeephishData) {
+      setCampaigns([]);
+      setParticipantsByCampaign({});
+      return;
+    }
+    if (!isSupabaseConfigured) {
+      setCampaigns(demoCampaigns);
+      setParticipantsByCampaign(demoParticipantsByCampaign);
+    }
+  }, [workspaceHasBeephishData]);
+
+  useEffect(() => {
     if (!ready) return;
     if (isSupabaseConfigured && !user) {
       router.replace("/login");
       return;
     }
-    if (user) startInitialSync();
+    if (workspaceHasBeephishData && user) startInitialSync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, router, user]);
+  }, [ready, router, user, workspaceHasBeephishData]);
 
   async function loadCampaigns() {
-    if (!supabase) return;
+    if (!supabase || !workspaceHasBeephishData) return;
     setError(null);
 
     const { data, error: queryError } = await supabase
@@ -200,6 +223,7 @@ export default function Home() {
       .select("id,name,status,launch_date,synced_at,stats")
       .order("launch_date", { ascending: false });
 
+    if (!hasBeephishData(readActiveWorkspaceId())) return;
     if (queryError) {
       setError(queryError.message);
       return;
@@ -240,6 +264,7 @@ export default function Home() {
         }
       }
     }
+    if (!hasBeephishData(readActiveWorkspaceId())) return;
     setParticipantsByCampaign(nextParticipants);
     if (
       nextCampaigns.length &&
@@ -258,7 +283,7 @@ export default function Home() {
   }
 
   async function syncAllCampaigns() {
-    if (!supabase) return;
+    if (!supabase || !workspaceHasBeephishData) return;
     setSyncing(true);
     setError(null);
     try {
@@ -290,10 +315,21 @@ export default function Home() {
       title="Visão geral"
       headerAction={
         <button
-          aria-label={syncing ? "Sincronizando dados" : "Sincronizar tudo"}
+          aria-label={
+            !workspaceHasBeephishData
+              ? "Workspace sem conexão BeePhish"
+              : syncing
+                ? "Sincronizando dados"
+                : "Sincronizar tudo"
+          }
           className="header-sync-button inline-flex min-h-[38px] items-center gap-[9px] rounded-[12px] border-0 px-[15px] text-[12px] font-bold shadow-[0_5px_15px_rgba(24,32,43,0.14)] transition-colors max-[720px]:px-[11px]"
           onClick={() => void syncAllCampaigns()}
-          disabled={syncing}
+          disabled={syncing || !workspaceHasBeephishData}
+          title={
+            workspaceHasBeephishData
+              ? undefined
+              : "Adicione uma conexão BeePhish em Empresas para carregar dados."
+          }
           type="button"
         >
           <Icon name="refresh" size={16} />
