@@ -191,6 +191,12 @@ export function UserManagementContent() {
   );
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
   const [selectedRole, setSelectedRole] = useState<WorkspaceRole>("viewer");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteWorkspaceId, setInviteWorkspaceId] = useState("");
+  const [inviteRole, setInviteRole] = useState<WorkspaceRole>("viewer");
+  const [inviting, setInviting] = useState(false);
+  const [inviteNotice, setInviteNotice] = useState<string | null>(null);
+  const [inviteError, setInviteError] = useState<string | null>(null);
   const [loadingWorkspaces, setLoadingWorkspaces] =
     useState(isSupabaseConfigured);
   const [notice, setNotice] = useState<string | null>(null);
@@ -226,6 +232,15 @@ export function UserManagementContent() {
     }));
     setWorkspaceOptions(localWorkspaces);
     setSelectedWorkspaceId((current) => {
+      if (localWorkspaces.some((workspace) => workspace.id === current)) {
+        return current;
+      }
+      const active = readActiveWorkspaceId();
+      return localWorkspaces.some((workspace) => workspace.id === active)
+        ? active
+        : (localWorkspaces[0]?.id ?? "");
+    });
+    setInviteWorkspaceId((current) => {
       if (localWorkspaces.some((workspace) => workspace.id === current)) {
         return current;
       }
@@ -324,6 +339,15 @@ export function UserManagementContent() {
     const nextWorkspaces = body.workspaces ?? [];
     setWorkspaceOptions(nextWorkspaces);
     setSelectedWorkspaceId((current) => {
+      if (nextWorkspaces.some((workspace) => workspace.id === current)) {
+        return current;
+      }
+      const active = readActiveWorkspaceId();
+      return nextWorkspaces.some((workspace) => workspace.id === active)
+        ? active
+        : (nextWorkspaces[0]?.id ?? "");
+    });
+    setInviteWorkspaceId((current) => {
       if (nextWorkspaces.some((workspace) => workspace.id === current)) {
         return current;
       }
@@ -432,6 +456,111 @@ export function UserManagementContent() {
     setPassword("");
     setNotice("Usuário criado. Compartilhe a senha inicial com segurança.");
     setSubmitting(false);
+  }
+
+  async function handleInviteSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setInviting(true);
+    setInviteError(null);
+    setInviteNotice(null);
+
+    const normalizedEmail = inviteEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setInviteError("Informe um e-mail válido para enviar o convite.");
+      setInviting(false);
+      return;
+    }
+    if (!inviteWorkspaceId) {
+      setInviteError("Escolha o workspace que receberá o usuário.");
+      setInviting(false);
+      return;
+    }
+
+    if (!isSupabaseConfigured) {
+      const invitedUser = users.find(
+        (managedUser) => managedUser.email.toLowerCase() === normalizedEmail,
+      );
+      const workspace = workspaceOptions.find(
+        (option) => option.id === inviteWorkspaceId,
+      );
+      if (!invitedUser || !workspace) {
+        setInviteError(
+          invitedUser
+            ? "Escolha um workspace válido."
+            : "Não existe uma conta com este e-mail.",
+        );
+        setInviting(false);
+        return;
+      }
+      const existingMembership = invitedUser.workspaceMemberships.find(
+        (membership) => membership.workspaceId === inviteWorkspaceId,
+      );
+      if (existingMembership) {
+        setInviteError("Este usuário já faz parte deste workspace.");
+        setInviting(false);
+        return;
+      }
+      const updatedUser: ManagedUser = {
+        ...invitedUser,
+        workspaceMemberships: [
+          ...invitedUser.workspaceMemberships,
+          {
+            workspaceId: workspace.id,
+            workspaceName: workspace.name,
+            environment: workspace.environment,
+            role: inviteRole,
+          },
+        ],
+      };
+      persistDemoUsers(
+        users.map((managedUser) =>
+          managedUser.id === updatedUser.id ? updatedUser : managedUser,
+        ),
+      );
+      setInviteEmail("");
+      setInviteNotice("Acesso liberado no modo demonstração local.");
+      setInviting(false);
+      return;
+    }
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      setInviteError(
+        "Sua sessão expirou. Entre novamente para convidar usuários.",
+      );
+      setInviting(false);
+      return;
+    }
+
+    const response = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        mode: "invite",
+        email: normalizedEmail,
+        workspaceId: inviteWorkspaceId,
+        role: inviteRole,
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as {
+      invitation?: { name?: string; workspaceName?: string };
+      error?: string;
+    };
+    if (!response.ok || !body.invitation) {
+      setInviteError(body.error ?? "Não foi possível liberar o acesso.");
+      setInviting(false);
+      return;
+    }
+
+    setInviteEmail("");
+    setInviteNotice(
+      `Acesso liberado${body.invitation.name ? ` para ${body.invitation.name}` : ""}. Uma notificação foi enviada.`,
+    );
+    await loadUsers();
+    setInviting(false);
   }
 
   return (
@@ -661,6 +790,110 @@ export function UserManagementContent() {
                   enviada automaticamente por este painel.
                 </div>
               </aside>
+            </section>
+
+            <section className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]">
+              <div className="flex items-start justify-between gap-6 max-[620px]:flex-col">
+                <div>
+                  <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                    CONVITE DE WORKSPACE
+                  </p>
+                  <h2 className="m-0 text-[22px] font-bold tracking-[-0.05em]">
+                    Chamar usuário para este ambiente
+                  </h2>
+                  <p className="mt-2 mb-0 max-w-[650px] text-[11px] leading-relaxed text-[#87919a]">
+                    Libere uma conta já cadastrada em um workspace e envie uma
+                    notificação para ela. Nenhum e-mail externo é enviado por
+                    este painel.
+                  </p>
+                </div>
+                <span className="grid size-11 flex-none place-items-center rounded-[14px] bg-[#fff1eb] text-[var(--accent)]">
+                  <Icon name="bell" size={19} />
+                </span>
+              </div>
+
+              <form
+                className="mt-6 grid grid-cols-[minmax(0,1.4fr)_minmax(190px,0.8fr)_minmax(170px,0.7fr)_auto] items-end gap-3 max-[980px]:grid-cols-2 max-[560px]:grid-cols-1"
+                onSubmit={handleInviteSubmit}
+              >
+                <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+                  E-mail da conta existente
+                  <input
+                    className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[#90a7af]"
+                    value={inviteEmail}
+                    onChange={(event) => setInviteEmail(event.target.value)}
+                    placeholder="pessoa@empresa.com"
+                    type="email"
+                    autoComplete="email"
+                    required
+                  />
+                </label>
+                <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+                  Workspace
+                  <select
+                    className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors outline-none focus:border-[#90a7af] disabled:cursor-not-allowed disabled:opacity-60"
+                    value={inviteWorkspaceId}
+                    onChange={(event) =>
+                      setInviteWorkspaceId(event.target.value)
+                    }
+                    disabled={
+                      loadingWorkspaces || workspaceOptions.length === 0
+                    }
+                    required
+                  >
+                    <option value="">
+                      {loadingWorkspaces
+                        ? "Carregando…"
+                        : "Escolha um workspace"}
+                    </option>
+                    {workspaceOptions.map((workspace) => (
+                      <option key={workspace.id} value={workspace.id}>
+                        {workspace.name} ·{" "}
+                        {workspace.environment === "production"
+                          ? "Produção"
+                          : "Teste"}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+                  Nível de acesso
+                  <select
+                    className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors outline-none focus:border-[#90a7af]"
+                    value={inviteRole}
+                    onChange={(event) =>
+                      setInviteRole(event.target.value as WorkspaceRole)
+                    }
+                  >
+                    {availableRoleOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] bg-[var(--ink)] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#3b4650] disabled:cursor-not-allowed disabled:opacity-60 max-[980px]:col-span-2 max-[560px]:col-span-1"
+                  type="submit"
+                  disabled={
+                    inviting ||
+                    loadingWorkspaces ||
+                    workspaceOptions.length === 0
+                  }
+                >
+                  {inviting ? "Liberando…" : "Liberar acesso"}
+                  <Icon name="arrow" size={15} />
+                </button>
+              </form>
+
+              {(inviteError || inviteNotice) && (
+                <p
+                  className={`mt-4 rounded-[12px] px-3.5 py-3 text-[11px] ${inviteError ? "bg-[#fff0ed] text-[#984f3f]" : "bg-[#edf4e8] text-[#527044]"}`}
+                  role={inviteError ? "alert" : "status"}
+                >
+                  {inviteError ?? inviteNotice}
+                </p>
+              )}
             </section>
 
             <section className="grid grid-cols-3 gap-[var(--cards-gap)] max-[700px]:grid-cols-1">

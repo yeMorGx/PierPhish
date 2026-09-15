@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
+import {
+  NotificationCenter,
+  useNotifications,
+} from "@/components/notifications/notification-center";
 import { useProfile } from "@/components/profile/profile-provider";
 import { Icon } from "@/components/ui/icon";
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
@@ -32,6 +36,7 @@ export function DashboardShell({
   title,
 }: DashboardShellProps) {
   const { user, signOut } = useAuth();
+  const { hasUnread, notifications, openPanel } = useNotifications();
   const { preferences: profilePreferences } = useProfile();
   const [profileOpen, setProfileOpen] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
@@ -98,6 +103,14 @@ export function DashboardShell({
               profileInitial
             )}
           </button>
+          {hasUnread && (
+            <span
+              aria-label={`${notifications.filter((notification) => !notification.read_at).length} notificação(ões) não lida(s)`}
+              className="profile-notification-indicator"
+            >
+              <Icon name="bell" size={13} />
+            </span>
+          )}
 
           {profileOpen && (
             <div
@@ -132,6 +145,29 @@ export function DashboardShell({
                 </span>
                 <Icon name="arrow" size={15} />
               </Link>
+              <div className="my-2 h-px bg-[#edf0f1]" />
+              <button
+                className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#fff5f1] hover:text-[#a5553b] focus-visible:bg-[#fff5f1] focus-visible:text-[#a5553b]"
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setProfileOpen(false);
+                  openPanel();
+                }}
+              >
+                <Icon name="bell" size={16} />
+                Notificações
+                {hasUnread && (
+                  <span className="profile-menu-unread-count">
+                    {
+                      notifications.filter(
+                        (notification) => !notification.read_at,
+                      ).length
+                    }
+                  </span>
+                )}
+                <span className="ml-auto text-[14px] leading-none">›</span>
+              </button>
               <div className="my-2 h-px bg-[#edf0f1]" />
               <button
                 className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#edf4f5] hover:text-[#3e6573] focus-visible:bg-[#edf4f5] focus-visible:text-[#3e6573]"
@@ -217,6 +253,7 @@ export function DashboardShell({
         onClose={() => setWorkspaceOpen(false)}
         open={workspaceOpen}
       />
+      <NotificationCenter />
     </main>
   );
 }

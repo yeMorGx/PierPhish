@@ -12,6 +12,7 @@ type AdminMetadata = {
 };
 
 type CreateUserPayload = {
+  mode?: unknown;
   name?: unknown;
   email?: unknown;
   password?: unknown;
@@ -30,6 +31,26 @@ const workspaceRoles = new Set<WorkspaceRole>([
 
 function responseError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
+}
+
+function userDisplayName(user: User) {
+  const metadata = user.user_metadata as
+    | { display_name?: unknown; name?: unknown }
+    | undefined;
+  return typeof metadata?.display_name === "string"
+    ? metadata.display_name
+    : typeof metadata?.name === "string"
+      ? metadata.name
+      : "";
+}
+
+function roleLabel(role: WorkspaceRole) {
+  return {
+    owner: "Proprietário",
+    admin: "Administrador",
+    analyst: "Analista",
+    viewer: "Visualizador",
+  }[role];
 }
 
 function getAdminClient() {
@@ -113,7 +134,7 @@ async function requireAdmin(request: NextRequest) {
     }
   }
 
-  return { client, error: null, managedWorkspaceIds };
+  return { client, error: null, managedWorkspaceIds, adminUser: data.user };
 }
 
 function safeUser(
@@ -125,15 +146,7 @@ function safeUser(
     role: WorkspaceRole;
   }> = [],
 ) {
-  const metadata = user.user_metadata as
-    | { display_name?: unknown; name?: unknown }
-    | undefined;
-  const displayName =
-    typeof metadata?.display_name === "string"
-      ? metadata.display_name
-      : typeof metadata?.name === "string"
-        ? metadata.name
-        : "";
+  const displayName = userDisplayName(user);
 
   return {
     id: user.id,
@@ -253,7 +266,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { client, error, managedWorkspaceIds } = await requireAdmin(request);
+  const { client, error, managedWorkspaceIds, adminUser } =
+    await requireAdmin(request);
   if (error || !client) return error;
 
   let payload: CreateUserPayload;
@@ -263,6 +277,7 @@ export async function POST(request: NextRequest) {
     return responseError("Envie os dados do usuário em JSON válido.", 400);
   }
 
+  const mode = payload.mode === "invite" ? "invite" : "create";
   const name = typeof payload.name === "string" ? payload.name.trim() : "";
   const email = typeof payload.email === "string" ? payload.email.trim() : "";
   const password = typeof payload.password === "string" ? payload.password : "";
@@ -270,15 +285,17 @@ export async function POST(request: NextRequest) {
     typeof payload.workspaceId === "string" ? payload.workspaceId.trim() : "";
   const role = typeof payload.role === "string" ? payload.role : "";
 
-  if (name.length < 2 || name.length > 80) {
+  if (mode === "create" && (name.length < 2 || name.length > 80)) {
     return responseError("Informe um nome entre 2 e 80 caracteres.", 400);
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return responseError("Informe um e-mail válido.", 400);
   }
 
-  const passwordError = validatePassword(password, email);
-  if (passwordError) return responseError(passwordError, 400);
+  if (mode === "create") {
+    const passwordError = validatePassword(password, email);
+    if (passwordError) return responseError(passwordError, 400);
+  }
   if (!workspaceId) return responseError("Escolha um workspace.", 400);
   if (!workspaceRoles.has(role as WorkspaceRole)) {
     return responseError("Escolha um nível de acesso válido.", 400);
@@ -303,11 +320,115 @@ export async function POST(request: NextRequest) {
   }
   const { data: workspace, error: workspaceError } = await client
     .from("pierphish_workspaces")
-    .select("id")
+    .select("id,name,environment")
     .eq("id", databaseWorkspaceId)
     .maybeSingle();
   if (workspaceError || !workspace) {
     return responseError("O workspace escolhido não existe mais.", 400);
+  }
+
+  if (mode === "invite") {
+    const { data: existingUsers, error: existingUsersError } =
+      await client.auth.admin.listUsers({ page: 1, perPage: 100 });
+    if (existingUsersError) {
+      return responseError("Não foi possível localizar o usuário.", 502);
+    }
+
+    const invitedUser = (existingUsers.users ?? []).find(
+      (candidate) => candidate.email?.toLowerCase() === email.toLowerCase(),
+    );
+    if (!invitedUser) {
+      return responseError(
+        "Não existe uma conta com este e-mail. Crie o usuário primeiro ou use outro e-mail.",
+        404,
+      );
+    }
+
+    const { data: previousMembership, error: previousMembershipError } =
+      await client
+        .from("pierphish_workspace_members")
+        .select("id,role,status")
+        .eq("workspace_id", workspace.id)
+        .eq("user_id", invitedUser.id)
+        .maybeSingle();
+    if (previousMembershipError) {
+      return responseError(
+        "Não foi possível verificar o acesso existente.",
+        502,
+      );
+    }
+    if (previousMembership?.status === "active") {
+      return responseError("Este usuário já faz parte deste workspace.", 409);
+    }
+
+    const { error: membershipError } = await client
+      .from("pierphish_workspace_members")
+      .upsert(
+        {
+          workspace_id: workspace.id,
+          user_id: invitedUser.id,
+          role,
+          status: "active",
+        },
+        { onConflict: "workspace_id,user_id" },
+      );
+    if (membershipError) {
+      return responseError(
+        "Não foi possível liberar o acesso ao workspace.",
+        400,
+      );
+    }
+
+    const inviterName =
+      userDisplayName(adminUser) || adminUser.email || "Um administrador";
+    const { error: notificationError } = await client
+      .from("pierphish_notifications")
+      .insert({
+        recipient_user_id: invitedUser.id,
+        workspace_id: workspace.id,
+        type: "workspace_invite",
+        title: `Acesso liberado em ${workspace.name}`,
+        message: `${inviterName} adicionou você a este workspace como ${roleLabel(role as WorkspaceRole)}.`,
+        action_path: "/",
+        metadata: {
+          workspace_name: workspace.name,
+          role,
+          invited_by: adminUser.id,
+        },
+      });
+    if (notificationError) {
+      if (previousMembership) {
+        await client
+          .from("pierphish_workspace_members")
+          .update({
+            role: previousMembership.role,
+            status: previousMembership.status,
+          })
+          .eq("id", previousMembership.id);
+      } else {
+        await client
+          .from("pierphish_workspace_members")
+          .delete()
+          .eq("workspace_id", workspace.id)
+          .eq("user_id", invitedUser.id);
+      }
+      return responseError(
+        "O acesso não foi liberado porque o aviso não pôde ser criado.",
+        502,
+      );
+    }
+
+    return NextResponse.json(
+      {
+        invitation: {
+          email,
+          name: userDisplayName(invitedUser),
+          workspaceName: workspace.name,
+          role,
+        },
+      },
+      { status: 201 },
+    );
   }
 
   const { data, error: createError } = await client.auth.admin.createUser({

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { NotificationProvider } from "@/components/notifications/notification-center";
 import { ProfileProvider } from "@/components/profile/profile-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { PageTransition } from "@/components/ui/page-transition";
@@ -18,9 +19,11 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           <AuthProvider>
-            <ProfileProvider>
-              <PageTransition>{children}</PageTransition>
-            </ProfileProvider>
+            <NotificationProvider>
+              <ProfileProvider>
+                <PageTransition>{children}</PageTransition>
+              </ProfileProvider>
+            </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

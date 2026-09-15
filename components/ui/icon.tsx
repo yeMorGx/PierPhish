@@ -14,7 +14,8 @@ export type IconName =
   | "tune"
   | "check"
   | "close"
-  | "plus";
+  | "plus"
+  | "bell";
 
 export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const common = {
@@ -132,6 +133,12 @@ export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
       <>
         <path d="m6 6 12 12" />
         <path d="m18 6-12 12" />
+      </>
+    ),
+    bell: (
+      <>
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+        <path d="M10 21h4" />
       </>
     ),
   };
