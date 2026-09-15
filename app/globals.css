@@ -4511,6 +4511,31 @@ html[data-theme="dark"] .campaign-logo-error {
   padding: 27px 29px 23px;
 }
 
+.workspace-modal-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 18px;
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.workspace-modal-back svg {
+  transform: rotate(180deg);
+}
+
+.workspace-modal-back:hover,
+.workspace-modal-back:focus-visible {
+  color: var(--ink);
+  outline: 0;
+}
+
 .workspace-modal-eyebrow {
   margin: 0;
   color: var(--muted-soft);
@@ -4565,6 +4590,119 @@ html[data-theme="dark"] .campaign-logo-error {
   border-top: 1px solid var(--line-soft);
   border-bottom: 1px solid var(--line-soft);
   padding: 18px 20px;
+}
+
+.workspace-create-form {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.workspace-create-form .workspace-modal-body {
+  gap: 18px;
+}
+
+.workspace-field,
+.workspace-fieldset {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  color: var(--ink-strong);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.workspace-field > span,
+.workspace-fieldset legend {
+  padding: 0;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.workspace-field > span small {
+  color: var(--muted-soft);
+  font-size: inherit;
+  font-weight: 500;
+}
+
+.workspace-field input,
+.workspace-field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 12px;
+  color: var(--ink);
+  background: var(--surface-soft);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  outline: 0;
+  resize: vertical;
+}
+
+.workspace-field input:focus,
+.workspace-field textarea:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.workspace-environment-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.workspace-environment-options label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 11px;
+  color: var(--ink);
+  background: var(--surface-soft);
+  cursor: pointer;
+}
+
+.workspace-environment-options label.is-selected,
+.workspace-environment-options label:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: color-mix(in srgb, var(--accent-soft) 60%, var(--surface));
+}
+
+.workspace-environment-options input {
+  accent-color: var(--accent);
+  margin: 2px 0 0;
+}
+
+.workspace-environment-options label span {
+  display: grid;
+  gap: 4px;
+}
+
+.workspace-environment-options strong {
+  font-size: 11px;
+}
+
+.workspace-environment-options small {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.workspace-create-error {
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  border-radius: 11px;
+  padding: 10px 12px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 70%, var(--surface));
+  font-size: 10px;
+  line-height: 1.4;
 }
 
 .workspace-option {
@@ -4690,6 +4828,63 @@ html[data-theme="dark"] .campaign-logo-error {
   line-height: 1.45;
 }
 
+.workspace-create-button {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 12px;
+  color: var(--ink);
+  text-align: left;
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.workspace-create-button:hover,
+.workspace-create-button:focus-visible {
+  border-color: var(--accent);
+  outline: 0;
+  background: var(--surface-soft);
+  transform: translateY(-1px);
+}
+
+.workspace-create-button > span:first-child {
+  display: grid;
+  grid-row: 1 / -1;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.workspace-create-button > strong {
+  align-self: end;
+  font-size: 11px;
+}
+
+.workspace-create-button > small {
+  align-self: start;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.workspace-create-button > svg {
+  grid-column: 3;
+  grid-row: 1 / -1;
+  color: var(--muted);
+}
+
 .workspace-modal-footer {
   align-items: center;
   padding: 16px 20px 18px 29px;
@@ -4717,6 +4912,39 @@ html[data-theme="dark"] .campaign-logo-error {
 .workspace-modal-footer button:focus-visible {
   outline: 0;
   background: var(--accent-soft);
+}
+
+.workspace-modal-footer .workspace-modal-secondary,
+.workspace-modal-footer .workspace-modal-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 35px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 9px 13px;
+}
+
+.workspace-modal-footer .workspace-modal-secondary {
+  color: var(--muted);
+  background: transparent;
+}
+
+.workspace-modal-footer .workspace-modal-primary {
+  border-color: var(--ink);
+  color: #ffffff;
+  background: var(--ink);
+}
+
+.workspace-modal-footer .workspace-modal-primary:hover,
+.workspace-modal-footer .workspace-modal-primary:focus-visible {
+  color: #ffffff;
+  background: color-mix(in srgb, var(--ink) 88%, var(--accent));
+}
+
+.workspace-modal-footer .workspace-modal-primary:disabled {
+  cursor: wait;
+  opacity: 0.58;
 }
 
 @keyframes workspace-modal-fade-in {

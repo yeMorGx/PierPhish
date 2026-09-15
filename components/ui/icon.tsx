@@ -13,7 +13,8 @@ export type IconName =
   | "settings"
   | "tune"
   | "check"
-  | "close";
+  | "close"
+  | "plus";
 
 export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const common = {
@@ -121,6 +122,12 @@ export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
       </>
     ),
     check: <path d="m5 12 4 4L19 6" />,
+    plus: (
+      <>
+        <path d="M12 5v14" />
+        <path d="M5 12h14" />
+      </>
+    ),
     close: (
       <>
         <path d="m6 6 12 12" />

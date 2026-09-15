@@ -25,14 +25,7 @@ const superAdminEmail = "admin@teste.com";
 const maxLogoSize = 2.5 * 1024 * 1024;
 const acceptedLogoTypes = ["image/png", "image/jpeg", "image/webp"];
 
-type Modal = "workspace" | "company" | null;
-
-type WorkspaceDraft = {
-  name: string;
-  environment: WorkspaceEnvironment;
-  description: string;
-  logoUrl: string | null;
-};
+type Modal = "company" | null;
 
 type CompanyDraft = {
   workspaceId: string;
@@ -42,13 +35,6 @@ type CompanyDraft = {
   clientSecret: string;
   logoUrl: string | null;
   status: "active" | "inactive";
-};
-
-const emptyWorkspace: WorkspaceDraft = {
-  name: "",
-  environment: "test",
-  description: "",
-  logoUrl: null,
 };
 
 const emptyCompany: CompanyDraft = {
@@ -199,8 +185,6 @@ export function CompanyManagementContent() {
   const [editingCompany, setEditingCompany] = useState<CompanyRecord | null>(
     null,
   );
-  const [workspaceDraft, setWorkspaceDraft] =
-    useState<WorkspaceDraft>(emptyWorkspace);
   const [companyDraft, setCompanyDraft] = useState<CompanyDraft>(emptyCompany);
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const [submitting, setSubmitting] = useState(false);
@@ -294,13 +278,6 @@ export function CompanyManagementContent() {
     setError(null);
   }
 
-  function openWorkspaceModal() {
-    setNotice(null);
-    setError(null);
-    setWorkspaceDraft(emptyWorkspace);
-    setModal("workspace");
-  }
-
   function openCompanyModal(company?: CompanyRecord) {
     setNotice(null);
     setError(null);
@@ -330,69 +307,6 @@ export function CompanyManagementContent() {
     setCompanies(nextCompanies);
     writeLocalWorkspaces(nextWorkspaces);
     writeLocalCompanies(nextCompanies);
-  }
-
-  async function submitWorkspace(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSubmitting(true);
-    setError(null);
-    setNotice(null);
-    const name = workspaceDraft.name.trim();
-    if (name.length < 2) {
-      setError("Informe um nome de workspace com pelo menos 2 caracteres.");
-      setSubmitting(false);
-      return;
-    }
-
-    if (!isSupabaseConfigured) {
-      const workspace: WorkspaceRecord = {
-        id: `workspace-${Date.now()}`,
-        name,
-        environment: workspaceDraft.environment,
-        description: workspaceDraft.description.trim(),
-        logoUrl: workspaceDraft.logoUrl,
-        createdAt: new Date().toISOString(),
-      };
-      persistDemo([...workspaces, workspace], companies);
-      setSelectedWorkspaceId(workspace.id);
-      writeActiveWorkspaceId(workspace.id);
-      setModal(null);
-      setWorkspaceDraft(emptyWorkspace);
-      setNotice("Workspace criado localmente.");
-      setSubmitting(false);
-      return;
-    }
-
-    const accessToken = await getAccessToken();
-    if (!accessToken) {
-      setError("Sua sessão expirou. Entre novamente para criar o workspace.");
-      setSubmitting(false);
-      return;
-    }
-    const response = await fetch("/api/admin/companies", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ type: "workspace", ...workspaceDraft, name }),
-    });
-    const body = (await response.json().catch(() => ({}))) as {
-      workspace?: WorkspaceRecord;
-      error?: string;
-    };
-    if (!response.ok || !body.workspace) {
-      setError(body.error ?? "Não foi possível criar o workspace.");
-      setSubmitting(false);
-      return;
-    }
-    setWorkspaces((current) => [...current, body.workspace as WorkspaceRecord]);
-    setSelectedWorkspaceId(body.workspace.id);
-    writeActiveWorkspaceId(body.workspace.id);
-    setModal(null);
-    setWorkspaceDraft(emptyWorkspace);
-    setNotice("Workspace criado.");
-    setSubmitting(false);
   }
 
   async function submitCompany(event: FormEvent<HTMLFormElement>) {
@@ -518,27 +432,16 @@ export function CompanyManagementContent() {
         <header className="surface-card companies-header">
           <div>
             <span className="companies-overline">
-              PIERPHISH / ADMINISTRAÇÃO
+              PIERPHISH / CLIENTES BEEPHISH
             </span>
-            <h1>Empresas por workspace.</h1>
-            <p>
-              Organize conexões BeePhish de teste e produção em ambientes
-              separados.
-            </p>
+            <h1>Empresas para campanhas.</h1>
+            <p>Gerencie as conexões BeePhish deste workspace.</p>
           </div>
           <div className="companies-header-actions">
             <span className="companies-security-note">
               <Icon name="shield" size={15} />
               Credenciais protegidas
             </span>
-            <button
-              className="companies-primary-button"
-              type="button"
-              onClick={openWorkspaceModal}
-            >
-              <Icon name="grid" size={16} />
-              Novo workspace
-            </button>
           </div>
         </header>
 
@@ -607,9 +510,9 @@ export function CompanyManagementContent() {
               {!workspaces.length && (
                 <div className="surface-card companies-no-workspace">
                   <Icon name="grid" size={20} />
-                  <strong>Comece criando um workspace</strong>
+                  <strong>Nenhum workspace disponível</strong>
                   <span>
-                    Você pode separar teste e produção sem usar a API.
+                    Crie um ambiente pelo menu do workspace no seu perfil.
                   </span>
                 </div>
               )}
@@ -748,163 +651,14 @@ export function CompanyManagementContent() {
                 </span>
                 <strong>Nenhum workspace cadastrado.</strong>
                 <span>
-                  Crie um ambiente de teste ou produção para organizar seus
-                  clientes.
+                  Crie um ambiente pelo menu do workspace no seu perfil para
+                  começar a adicionar clientes.
                 </span>
-                <button
-                  className="companies-primary-button"
-                  type="button"
-                  onClick={openWorkspaceModal}
-                >
-                  Criar workspace <Icon name="arrow" size={15} />
-                </button>
               </section>
             )}
           </>
         )}
       </div>
-
-      {modal === "workspace" && (
-        <div
-          className="companies-modal-backdrop"
-          role="presentation"
-          onKeyDown={handleModalKeyDown}
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) closeModal();
-          }}
-        >
-          <form
-            className="companies-modal companies-workspace-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="workspace-modal-heading"
-            onSubmit={(event) => void submitWorkspace(event)}
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <div className="companies-modal-head">
-              <div>
-                <span className="companies-overline">NOVO AMBIENTE</span>
-                <h2 id="workspace-modal-heading">Criar workspace.</h2>
-                <p>
-                  O ambiente é local ao PierPhish e não cria nada na API do
-                  BeePhish.
-                </p>
-              </div>
-              <button
-                className="companies-modal-close"
-                type="button"
-                onClick={closeModal}
-                aria-label="Fechar"
-              >
-                <Icon name="close" size={17} />
-              </button>
-            </div>
-            <div className="companies-modal-fields">
-              <label>
-                Nome do workspace
-                <input
-                  value={workspaceDraft.name}
-                  onChange={(event) =>
-                    setWorkspaceDraft((current) => ({
-                      ...current,
-                      name: event.target.value,
-                    }))
-                  }
-                  placeholder="Ex.: Laboratório"
-                  maxLength={80}
-                  required
-                  autoFocus
-                />
-              </label>
-              <fieldset>
-                <legend>Ambiente</legend>
-                <div className="companies-environment-options">
-                  {(["test", "production"] as WorkspaceEnvironment[]).map(
-                    (environment) => (
-                      <label
-                        className={
-                          workspaceDraft.environment === environment
-                            ? "is-selected"
-                            : ""
-                        }
-                        key={environment}
-                      >
-                        <input
-                          type="radio"
-                          name="environment"
-                          value={environment}
-                          checked={workspaceDraft.environment === environment}
-                          onChange={() =>
-                            setWorkspaceDraft((current) => ({
-                              ...current,
-                              environment,
-                            }))
-                          }
-                        />
-                        <span>
-                          <strong>{environmentLabel(environment)}</strong>
-                          <small>
-                            {environment === "production"
-                              ? "Dados oficiais"
-                              : "Testes e validações"}
-                          </small>
-                        </span>
-                      </label>
-                    ),
-                  )}
-                </div>
-              </fieldset>
-              <label>
-                Informações
-                <textarea
-                  value={workspaceDraft.description}
-                  onChange={(event) =>
-                    setWorkspaceDraft((current) => ({
-                      ...current,
-                      description: event.target.value,
-                    }))
-                  }
-                  placeholder="Descreva o uso deste ambiente"
-                  maxLength={240}
-                  rows={3}
-                />
-              </label>
-              <LogoUpload
-                logoUrl={workspaceDraft.logoUrl}
-                fallback={getInitial(workspaceDraft.name)}
-                onChange={(logoUrl) =>
-                  setWorkspaceDraft((current) => ({ ...current, logoUrl }))
-                }
-              />
-            </div>
-            {(error || notice) && (
-              <p
-                className={`companies-modal-feedback ${error ? "is-error" : "is-success"}`}
-                role={error ? "alert" : "status"}
-              >
-                {error ?? notice}
-              </p>
-            )}
-            <div className="companies-modal-footer">
-              <button
-                className="companies-cancel-button"
-                type="button"
-                onClick={closeModal}
-              >
-                Cancelar
-              </button>
-              <button
-                className="companies-primary-button"
-                type="submit"
-                disabled={submitting}
-              >
-                {submitting ? "Criando…" : "Criar workspace"}{" "}
-                <Icon name="arrow" size={15} />
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
       {modal === "company" && (
         <div

@@ -16,7 +16,7 @@ Sem `.env.local`, a aplicação abre em modo demonstração para validar o layou
 
 ## Empresas e workspaces
 
-A página `/empresas` permite criar workspaces internos de teste ou produção e cadastrar várias conexões BeePhish dentro de cada um. O cadastro também permite editar nome, logo, informações, Client ID e status do cliente. Logos são escolhidos como arquivo local; não existe campo para link externo.
+A página `/empresas` administra as conexões BeePhish do workspace ativo. O cadastro permite editar nome, logo, informações, Client ID e status do cliente. Workspaces são criados e trocados pelo modal do workspace no menu do perfil, com ambientes internos de teste ou produção. Logos são escolhidos como arquivo local; não existe campo para link externo.
 
 Para persistir essa área no Supabase:
 
