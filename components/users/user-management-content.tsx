@@ -18,6 +18,7 @@ type ManagedUser = {
 };
 
 const demoStorageKey = "pierphish-admin-users";
+const superAdminEmail = "admin@teste.com";
 
 const demoUsers: ManagedUser[] = [
   {
@@ -86,13 +87,15 @@ function generatePassword() {
 
 function isAdminUser(user: ReturnType<typeof useAuth>["user"]) {
   if (!isSupabaseConfigured) return true;
+  if (user?.email?.toLowerCase() === superAdminEmail) return true;
   const metadata = user?.app_metadata as
     | { role?: unknown; is_admin?: unknown }
     | undefined;
   return (
     metadata?.is_admin === true ||
     metadata?.role === "admin" ||
-    metadata?.role === "owner"
+    metadata?.role === "owner" ||
+    metadata?.role === "super_admin"
   );
 }
 

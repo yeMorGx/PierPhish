@@ -7,7 +7,12 @@ import { useProfile } from "@/components/profile/profile-provider";
 import { Icon } from "@/components/ui/icon";
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
 
-type ActiveSection = "overview" | "risk" | "settings" | "presentation";
+type ActiveSection =
+  | "overview"
+  | "risk"
+  | "companies"
+  | "settings"
+  | "presentation";
 
 type DashboardShellProps = {
   activeSection: ActiveSection;
@@ -172,6 +177,14 @@ export function DashboardShell({
               aria-current={activeSection === "risk" ? "page" : undefined}
             >
               <Icon name="users" />
+            </Link>
+            <Link
+              href="/empresas"
+              className={`${navClass(activeSection === "companies")} max-[720px]:hidden`}
+              aria-label="Empresas"
+              aria-current={activeSection === "companies" ? "page" : undefined}
+            >
+              <Icon name="grid" />
             </Link>
           </nav>
           <Link

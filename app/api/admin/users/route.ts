@@ -3,6 +3,7 @@ import { createClient, type User } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const superAdminEmail = "admin@teste.com";
 
 type AdminMetadata = {
   role?: unknown;
@@ -62,7 +63,11 @@ async function requireAdmin(request: NextRequest) {
   const metadata = (data.user.app_metadata ?? {}) as AdminMetadata;
   const role = typeof metadata.role === "string" ? metadata.role : "";
   const isAdmin =
-    metadata.is_admin === true || role === "admin" || role === "owner";
+    data.user.email?.toLowerCase() === superAdminEmail ||
+    metadata.is_admin === true ||
+    role === "admin" ||
+    role === "owner" ||
+    role === "super_admin";
 
   if (!isAdmin) {
     return {
