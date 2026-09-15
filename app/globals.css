@@ -10227,6 +10227,35 @@ html[data-theme="dark"] .settings-page {
   white-space: nowrap;
 }
 
+.companies-workspace-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 17px;
+}
+
+.companies-workspace-actions .companies-primary-button,
+.companies-workspace-actions .companies-secondary-button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 11px;
+}
+
+.companies-workspace-actions .companies-primary-button {
+  text-decoration: none;
+}
+
+.companies-workspace-modal {
+  width: min(660px, 100%);
+}
+
+.companies-workspace-modal-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 24px;
+  padding: 25px 27px 0;
+}
+
 .companies-workspace-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -10831,6 +10860,15 @@ html[data-theme="dark"] .settings-page {
 
   .companies-secondary-button {
     width: 100%;
+  }
+
+  .companies-workspace-modal-layout {
+    grid-template-columns: 1fr;
+    padding: 21px 21px 0;
+  }
+
+  .companies-workspace-modal-layout > .companies-logo-upload {
+    order: -1;
   }
 
   .companies-modal-backdrop {

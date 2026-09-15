@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Icon } from "@/components/ui/icon";
@@ -179,6 +180,8 @@ function isGlobalAdminUser(user: ReturnType<typeof useAuth>["user"]) {
 
 export function UserManagementContent() {
   const { ready, user } = useAuth();
+  const searchParams = useSearchParams();
+  const requestedWorkspaceId = searchParams.get("workspace") ?? "";
   const [users, setUsers] = useState<ManagedUser[]>(demoUsers);
   const [loadingUsers, setLoadingUsers] = useState(isSupabaseConfigured);
   const [submitting, setSubmitting] = useState(false);
@@ -232,6 +235,12 @@ export function UserManagementContent() {
     }));
     setWorkspaceOptions(localWorkspaces);
     setSelectedWorkspaceId((current) => {
+      if (
+        requestedWorkspaceId &&
+        localWorkspaces.some((workspace) => workspace.id === requestedWorkspaceId)
+      ) {
+        return requestedWorkspaceId;
+      }
       if (localWorkspaces.some((workspace) => workspace.id === current)) {
         return current;
       }
@@ -241,6 +250,12 @@ export function UserManagementContent() {
         : (localWorkspaces[0]?.id ?? "");
     });
     setInviteWorkspaceId((current) => {
+      if (
+        requestedWorkspaceId &&
+        localWorkspaces.some((workspace) => workspace.id === requestedWorkspaceId)
+      ) {
+        return requestedWorkspaceId;
+      }
       if (localWorkspaces.some((workspace) => workspace.id === current)) {
         return current;
       }
@@ -268,7 +283,7 @@ export function UserManagementContent() {
     } catch {
       window.localStorage.removeItem(demoStorageKey);
     }
-  }, []);
+  }, [requestedWorkspaceId]);
 
   useEffect(() => {
     if (!isSupabaseConfigured || !ready) return;
@@ -339,6 +354,12 @@ export function UserManagementContent() {
     const nextWorkspaces = body.workspaces ?? [];
     setWorkspaceOptions(nextWorkspaces);
     setSelectedWorkspaceId((current) => {
+      if (
+        requestedWorkspaceId &&
+        nextWorkspaces.some((workspace) => workspace.id === requestedWorkspaceId)
+      ) {
+        return requestedWorkspaceId;
+      }
       if (nextWorkspaces.some((workspace) => workspace.id === current)) {
         return current;
       }
@@ -348,6 +369,12 @@ export function UserManagementContent() {
         : (nextWorkspaces[0]?.id ?? "");
     });
     setInviteWorkspaceId((current) => {
+      if (
+        requestedWorkspaceId &&
+        nextWorkspaces.some((workspace) => workspace.id === requestedWorkspaceId)
+      ) {
+        return requestedWorkspaceId;
+      }
       if (nextWorkspaces.some((workspace) => workspace.id === current)) {
         return current;
       }
@@ -358,6 +385,17 @@ export function UserManagementContent() {
     });
     setLoadingWorkspaces(false);
   }
+
+  useEffect(() => {
+    if (!requestedWorkspaceId || window.location.hash !== "#convites") return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById("workspace-invite")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [requestedWorkspaceId, loadingWorkspaces]);
 
   function persistDemoUsers(nextUsers: ManagedUser[]) {
     setUsers(nextUsers);
@@ -792,7 +830,10 @@ export function UserManagementContent() {
               </aside>
             </section>
 
-            <section className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]">
+            <section
+              className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]"
+              id="workspace-invite"
+            >
               <div className="flex items-start justify-between gap-6 max-[620px]:flex-col">
                 <div>
                   <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">

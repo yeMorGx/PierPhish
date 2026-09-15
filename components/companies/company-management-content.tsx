@@ -2,6 +2,7 @@
 
 import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
@@ -25,7 +26,7 @@ const superAdminEmail = "admin@teste.com";
 const maxLogoSize = 2.5 * 1024 * 1024;
 const acceptedLogoTypes = ["image/png", "image/jpeg", "image/webp"];
 
-type Modal = "company" | null;
+type Modal = "company" | "workspace" | null;
 
 type CompanyDraft = {
   workspaceId: string;
@@ -45,6 +46,20 @@ const emptyCompany: CompanyDraft = {
   clientSecret: "",
   logoUrl: null,
   status: "active",
+};
+
+type WorkspaceDraft = {
+  name: string;
+  environment: WorkspaceEnvironment;
+  description: string;
+  logoUrl: string | null;
+};
+
+const emptyWorkspace: WorkspaceDraft = {
+  name: "",
+  environment: "test",
+  description: "",
+  logoUrl: null,
 };
 
 function getInitial(name: string) {
@@ -187,6 +202,8 @@ export function CompanyManagementContent() {
     null,
   );
   const [companyDraft, setCompanyDraft] = useState<CompanyDraft>(emptyCompany);
+  const [workspaceDraft, setWorkspaceDraft] =
+    useState<WorkspaceDraft>(emptyWorkspace);
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const [localMode, setLocalMode] = useState(!isSupabaseConfigured);
   const [submitting, setSubmitting] = useState(false);
@@ -323,7 +340,21 @@ export function CompanyManagementContent() {
     if (submitting) return;
     setModal(null);
     setEditingCompany(null);
+    setWorkspaceDraft(emptyWorkspace);
     setError(null);
+  }
+
+  function openWorkspaceModal() {
+    if (!selectedWorkspace) return;
+    setNotice(null);
+    setError(null);
+    setWorkspaceDraft({
+      name: selectedWorkspace.name,
+      environment: selectedWorkspace.environment,
+      description: selectedWorkspace.description,
+      logoUrl: selectedWorkspace.logoUrl,
+    });
+    setModal("workspace");
   }
 
   function openCompanyModal(company?: CompanyRecord) {
@@ -470,6 +501,86 @@ export function CompanyManagementContent() {
     setSubmitting(false);
   }
 
+  async function submitWorkspace(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedWorkspace) return;
+    setSubmitting(true);
+    setError(null);
+    setNotice(null);
+
+    const name = workspaceDraft.name.trim();
+    if (name.length < 2 || name.length > 80) {
+      setError("Informe um nome entre 2 e 80 caracteres.");
+      setSubmitting(false);
+      return;
+    }
+
+    const nextWorkspace: WorkspaceRecord = {
+      ...selectedWorkspace,
+      name,
+      environment: workspaceDraft.environment,
+      description: workspaceDraft.description.trim(),
+      logoUrl: workspaceDraft.logoUrl,
+    };
+
+    if (!isSupabaseConfigured || localMode) {
+      persistDemo(
+        workspaces.map((workspace) =>
+          workspace.id === selectedWorkspace.id ? nextWorkspace : workspace,
+        ),
+        companies,
+      );
+      setModal(null);
+      setWorkspaceDraft(emptyWorkspace);
+      setNotice("Workspace personalizado localmente.");
+      setSubmitting(false);
+      return;
+    }
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      setError("Sua sessão expirou. Entre novamente para salvar o workspace.");
+      setSubmitting(false);
+      return;
+    }
+
+    const response = await fetch("/api/admin/companies", {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type: "workspace",
+        id: selectedWorkspace.id,
+        name,
+        environment: workspaceDraft.environment,
+        description: workspaceDraft.description,
+        logoUrl: workspaceDraft.logoUrl,
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as {
+      workspace?: WorkspaceRecord;
+      error?: string;
+    };
+    if (!response.ok || !body.workspace) {
+      setError(body.error ?? "Não foi possível atualizar o workspace.");
+      setSubmitting(false);
+      return;
+    }
+
+    setWorkspaces((current) =>
+      current.map((workspace) =>
+        workspace.id === body.workspace?.id ? body.workspace : workspace,
+      ),
+    );
+    window.dispatchEvent(new Event("pierphish:workspaces-changed"));
+    setModal(null);
+    setWorkspaceDraft(emptyWorkspace);
+    setNotice("Workspace atualizado.");
+    setSubmitting(false);
+  }
+
   function handleModalKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") closeModal();
   }
@@ -543,6 +654,23 @@ export function CompanyManagementContent() {
                         {selectedWorkspace.description ||
                           "Sem descrição adicionada."}
                       </p>
+                      <div className="companies-workspace-actions">
+                        <button
+                          className="companies-secondary-button"
+                          type="button"
+                          onClick={openWorkspaceModal}
+                        >
+                          <Icon name="settings" size={15} />
+                          Personalizar
+                        </button>
+                        <Link
+                          className="companies-primary-button"
+                          href={`/usuarios?workspace=${encodeURIComponent(selectedWorkspace.id)}#convites`}
+                        >
+                          <Icon name="users" size={15} />
+                          Convidar pessoas
+                        </Link>
+                      </div>
                     </div>
                   </div>
                   <div className="companies-workspace-stats">
@@ -664,6 +792,123 @@ export function CompanyManagementContent() {
           </>
         )}
       </div>
+
+      {modal === "workspace" && selectedWorkspace && (
+        <div
+          className="companies-modal-backdrop"
+          role="presentation"
+          onKeyDown={handleModalKeyDown}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeModal();
+          }}
+        >
+          <form
+            className="companies-modal companies-workspace-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="workspace-customize-heading"
+            onSubmit={(event) => void submitWorkspace(event)}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="companies-modal-head">
+              <div>
+                <span className="companies-overline">WORKSPACE</span>
+                <h2 id="workspace-customize-heading">Personalizar ambiente.</h2>
+                <p>Defina como este workspace aparece para o seu time.</p>
+              </div>
+              <button
+                className="companies-modal-close"
+                type="button"
+                onClick={closeModal}
+                aria-label="Fechar"
+              >
+                <Icon name="close" size={17} />
+              </button>
+            </div>
+            <div className="companies-workspace-modal-layout">
+              <div className="companies-modal-fields">
+                <label>
+                  Nome do workspace
+                  <input
+                    value={workspaceDraft.name}
+                    onChange={(event) =>
+                      setWorkspaceDraft((current) => ({
+                        ...current,
+                        name: event.target.value,
+                      }))
+                    }
+                    maxLength={80}
+                    required
+                    autoFocus
+                  />
+                </label>
+                <label>
+                  Ambiente
+                  <select
+                    value={workspaceDraft.environment}
+                    onChange={(event) =>
+                      setWorkspaceDraft((current) => ({
+                        ...current,
+                        environment: event.target.value as WorkspaceEnvironment,
+                      }))
+                    }
+                  >
+                    <option value="test">Teste</option>
+                    <option value="production">Produção</option>
+                  </select>
+                </label>
+                <label>
+                  Descrição
+                  <textarea
+                    value={workspaceDraft.description}
+                    onChange={(event) =>
+                      setWorkspaceDraft((current) => ({
+                        ...current,
+                        description: event.target.value,
+                      }))
+                    }
+                    placeholder="Ex.: ambiente de produção do time"
+                    maxLength={240}
+                    rows={4}
+                  />
+                </label>
+              </div>
+              <LogoUpload
+                logoUrl={workspaceDraft.logoUrl}
+                fallback={getInitial(workspaceDraft.name)}
+                onChange={(logoUrl) =>
+                  setWorkspaceDraft((current) => ({ ...current, logoUrl }))
+                }
+              />
+            </div>
+            {(error || notice) && (
+              <p
+                className={`companies-modal-feedback ${error ? "is-error" : "is-success"}`}
+                role={error ? "alert" : "status"}
+              >
+                {error ?? notice}
+              </p>
+            )}
+            <div className="companies-modal-footer">
+              <button
+                className="companies-cancel-button"
+                type="button"
+                onClick={closeModal}
+              >
+                Cancelar
+              </button>
+              <button
+                className="companies-primary-button"
+                type="submit"
+                disabled={submitting}
+              >
+                {submitting ? "Salvando…" : "Salvar alterações"}
+                <Icon name="arrow" size={15} />
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {modal === "company" && (
         <div

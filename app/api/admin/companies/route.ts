@@ -298,9 +298,41 @@ export async function PATCH(request: NextRequest) {
 
   const id = text(payload.id);
   const name = text(payload.name);
-  if (!id) return responseError("Cliente não informado.", 400);
+  const type = text(payload.type);
+  if (!id) {
+    return responseError(
+      type === "workspace" ? "Workspace não informado." : "Cliente não informado.",
+      400,
+    );
+  }
   if (name.length < 2 || name.length > 80) {
     return responseError("Informe um nome entre 2 e 80 caracteres.", 400);
+  }
+
+  if (type === "workspace") {
+    const databaseId = id === "primary" ? persistedPrimaryWorkspaceId : id;
+    const environment =
+      payload.environment === "production" ? "production" : "test";
+    const logoUrl = isLocalImage(payload.logoUrl) ? payload.logoUrl : null;
+    const { data, error: updateError } = await client
+      .from("pierphish_workspaces")
+      .update({
+        name,
+        environment,
+        description: text(payload.description).slice(0, 240),
+        logo_url: payload.logoUrl === null ? null : logoUrl,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", databaseId)
+      .select("id,name,environment,description,logo_url,created_at")
+      .single();
+
+    if (updateError || !data) {
+      return responseError("Não foi possível atualizar o workspace.", 400);
+    }
+    return NextResponse.json({
+      workspace: safeWorkspace(data as Record<string, unknown>),
+    });
   }
 
   const update: Record<string, unknown> = {
