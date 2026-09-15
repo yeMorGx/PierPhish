@@ -1,5 +1,7 @@
 export type WorkspaceEnvironment = "test" | "production";
 
+export type WorkspaceRole = "owner" | "admin" | "analyst" | "viewer";
+
 export type WorkspaceRecord = {
   id: string;
   name: string;
@@ -7,6 +9,7 @@ export type WorkspaceRecord = {
   description: string;
   logoUrl: string | null;
   createdAt: string;
+  role?: WorkspaceRole;
 };
 
 export type CompanyRecord = {

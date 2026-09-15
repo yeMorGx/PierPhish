@@ -8,6 +8,7 @@ import {
   readActiveWorkspaceId,
   readLocalWorkspaces,
   type WorkspaceEnvironment,
+  type WorkspaceRole,
   writeActiveWorkspaceId,
   writeLocalWorkspaces,
 } from "@/lib/company-data";
@@ -19,6 +20,7 @@ export type WorkspaceSummary = {
   id: string;
   initial: string;
   name: string;
+  role?: WorkspaceRole;
 };
 
 export const connectedWorkspace: WorkspaceSummary = {
@@ -27,6 +29,7 @@ export const connectedWorkspace: WorkspaceSummary = {
   name: "Workspace principal",
   description: "Dados atuais do PierPhish",
   environment: "production",
+  role: "owner",
 };
 
 type WorkspaceSwitcherProps = {
@@ -64,6 +67,13 @@ function environmentLabel(environment: WorkspaceEnvironment) {
   return environment === "production" ? "Produção" : "Teste";
 }
 
+function roleLabel(role?: WorkspaceRole) {
+  if (role === "owner") return "Proprietário";
+  if (role === "admin") return "Administrador";
+  if (role === "analyst") return "Analista";
+  return "Visualizador";
+}
+
 export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
   const { ready, user } = useAuth();
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([
@@ -95,6 +105,7 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
       description: workspaceDraft.description.trim(),
       logoUrl: null,
       createdAt: new Date().toISOString(),
+      role: "owner" as const,
     };
     const storedWorkspaces = [...readLocalWorkspaces(), localWorkspace];
     setWorkspaces(
@@ -179,13 +190,15 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
   }
 
   useEffect(() => {
-    const mapWorkspaces = (items: WorkspaceSummary[]) => {
-      setWorkspaces(items.length ? items : [connectedWorkspace]);
+    const mapWorkspaces = (items: WorkspaceSummary[], useFallback = false) => {
+      setWorkspaces(
+        items.length || !useFallback ? items : [connectedWorkspace],
+      );
       setActiveWorkspaceId((current) => {
         const stored = readActiveWorkspaceId();
         if (items.some((workspace) => workspace.id === stored)) return stored;
         if (items.some((workspace) => workspace.id === current)) return current;
-        return items[0]?.id ?? connectedWorkspace.id;
+        return items[0]?.id ?? (useFallback ? connectedWorkspace.id : "");
       });
     };
 
@@ -197,24 +210,27 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
         initial: workspace.name.slice(0, 1).toUpperCase(),
         name: workspace.name,
       }));
-      mapWorkspaces(local);
-
-      if (!isSupabaseConfigured || !ready || !user || !supabase) return;
+      if (!isSupabaseConfigured) {
+        mapWorkspaces(local, true);
+        return;
+      }
+      if (!ready || !user || !supabase) return;
       const { data } = await supabase.auth.getSession();
       const accessToken = data.session?.access_token;
       if (!accessToken) return;
-      const response = await fetch("/api/admin/companies", {
+      const response = await fetch("/api/workspaces", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      if (!response.ok) return;
       const body = (await response.json().catch(() => ({}))) as {
         workspaces?: Array<{
           description?: string;
           environment?: WorkspaceEnvironment;
           id: string;
           name: string;
+          role?: WorkspaceRole;
         }>;
       };
+      if (!response.ok) return;
       mapWorkspaces(
         (body.workspaces ?? []).map((workspace) => ({
           description: workspace.description ?? "",
@@ -223,6 +239,7 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
           id: workspace.id,
           initial: workspace.name.slice(0, 1).toUpperCase(),
           name: workspace.name,
+          role: workspace.role,
         })),
       );
     };
@@ -453,6 +470,8 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
                         (workspace.environment === "production"
                           ? "Ambiente de produção"
                           : "Ambiente de teste")}
+                      {" · "}
+                      {roleLabel(workspace.role)}
                     </small>
                   </span>
                   <span className="workspace-option-status">
@@ -466,6 +485,21 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
                   )}
                 </button>
               ))}
+
+              {workspaces.length === 0 && !canCreateWorkspace && (
+                <div className="workspace-empty-state">
+                  <span className="workspace-empty-icon">
+                    <Icon name="grid" size={19} />
+                  </span>
+                  <div>
+                    <strong>Nenhum workspace atribuído</strong>
+                    <p>
+                      Peça a um administrador para adicionar seu usuário a um
+                      workspace.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {workspaces.length === 1 && (
                 <div className="workspace-empty-state">
