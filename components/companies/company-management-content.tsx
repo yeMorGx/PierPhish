@@ -15,7 +15,6 @@ import {
   type CompanyRecord,
   type WorkspaceEnvironment,
   type WorkspaceRecord,
-  writeActiveWorkspaceId,
   writeLocalCompanies,
   writeLocalWorkspaces,
 } from "@/lib/company-data";
@@ -524,49 +523,6 @@ export function CompanyManagementContent() {
           </section>
         ) : (
           <>
-            <section
-              className="companies-workspace-list"
-              aria-label="Workspaces"
-            >
-              {workspaces.map((workspace) => (
-                <button
-                  className={`surface-card companies-workspace-tab ${workspace.id === selectedWorkspaceId ? "is-selected" : ""}`}
-                  type="button"
-                  key={workspace.id}
-                  onClick={() => {
-                    setSelectedWorkspaceId(workspace.id);
-                    writeActiveWorkspaceId(workspace.id);
-                  }}
-                  aria-pressed={workspace.id === selectedWorkspaceId}
-                >
-                  <LogoPreview
-                    logoUrl={workspace.logoUrl}
-                    fallback={getInitial(workspace.name)}
-                  />
-                  <span>
-                    <strong>{workspace.name}</strong>
-                    <small>{environmentLabel(workspace.environment)}</small>
-                  </span>
-                  <em>
-                    {
-                      companies.filter(
-                        (company) => company.workspaceId === workspace.id,
-                      ).length
-                    }
-                  </em>
-                </button>
-              ))}
-              {!workspaces.length && (
-                <div className="surface-card companies-no-workspace">
-                  <Icon name="grid" size={20} />
-                  <strong>Nenhum workspace disponível</strong>
-                  <span>
-                    Crie um ambiente pelo menu do workspace no seu perfil.
-                  </span>
-                </div>
-              )}
-            </section>
-
             {selectedWorkspace ? (
               <>
                 <section className="surface-card companies-workspace-hero">
