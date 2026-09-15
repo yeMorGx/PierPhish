@@ -21,8 +21,9 @@ A página `/empresas` administra as conexões BeePhish do workspace ativo. O cad
 Para persistir essa área no Supabase:
 
 1. Aplique `supabase/migrations/20260915000000_add_workspaces_and_companies.sql` no projeto.
-2. Mantenha `SUPABASE_SERVICE_ROLE_KEY` apenas no ambiente do servidor.
-3. Defina `PIERPHISH_CREDENTIAL_KEY` com uma chave longa e estável. Ela protege os Client Secrets com criptografia server-side; o segredo em texto puro não é salvo no navegador, não é retornado pela API e não aparece depois de salvo.
+2. Aplique `supabase/migrations/20260915010000_persist_primary_and_allow_admin_fallback.sql` no projeto.
+3. Defina `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` no ambiente da aplicação. A rota administrativa valida a sessão com a chave publishable e as políticas RLS; `SUPABASE_SERVICE_ROLE_KEY` é opcional para workspaces e clientes, mas continua necessária para operações administrativas do Supabase Auth.
+4. Defina `PIERPHISH_CREDENTIAL_KEY` com uma chave longa e estável. Ela protege os Client Secrets com criptografia server-side; o segredo em texto puro não é salvo no navegador, não é retornado pela API e não aparece depois de salvo.
 
 Quando o Supabase não está configurado, a tela usa dados de demonstração no navegador para permitir validar o fluxo. Mesmo nesse modo, o Client Secret fica somente no estado da tela e não é persistido no localStorage.
 

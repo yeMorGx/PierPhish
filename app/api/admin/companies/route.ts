@@ -1,9 +1,11 @@
 import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const credentialKey = process.env.PIERPHISH_CREDENTIAL_KEY;
 const superAdminEmail = "admin@teste.com";
 
@@ -29,29 +31,21 @@ function responseError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
-function getAdminClient() {
-  if (!supabaseUrl || !serviceRoleKey) return null;
+function getAdminClient(key: string | undefined, accessToken?: string) {
+  if (!supabaseUrl || !key) return null;
 
-  return createClient(supabaseUrl, serviceRoleKey, {
+  return createClient(supabaseUrl, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
     },
+    ...(accessToken
+      ? { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
+      : {}),
   });
 }
 
 async function requireAdmin(request: NextRequest) {
-  const client = getAdminClient();
-  if (!client) {
-    return {
-      client: null,
-      error: responseError(
-        "A administração de empresas ainda não foi configurada no servidor.",
-        503,
-      ),
-    };
-  }
-
   const authorization = request.headers.get("authorization");
   const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
   if (!token) {
@@ -61,7 +55,18 @@ async function requireAdmin(request: NextRequest) {
     };
   }
 
-  const { data, error } = await client.auth.getUser(token);
+  const authClient = getAdminClient(publishableKey ?? serviceRoleKey, token);
+  if (!authClient) {
+    return {
+      client: null,
+      error: responseError(
+        "O Supabase não foi configurado no servidor. Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+        503,
+      ),
+    };
+  }
+
+  const { data, error } = await authClient.auth.getUser(token);
   if (error || !data.user) {
     return {
       client: null,
@@ -87,6 +92,10 @@ async function requireAdmin(request: NextRequest) {
       ),
     };
   }
+
+  const client = serviceRoleKey
+    ? (getAdminClient(serviceRoleKey) ?? authClient)
+    : authClient;
 
   return { client, error: null };
 }
@@ -121,8 +130,9 @@ function encryptSecret(secret: string) {
 }
 
 function safeWorkspace(row: Record<string, unknown>) {
+  const databaseId = String(row.id);
   return {
-    id: String(row.id),
+    id: databaseId === persistedPrimaryWorkspaceId ? "primary" : databaseId,
     name: String(row.name ?? "Workspace sem nome"),
     environment: row.environment === "production" ? "production" : "test",
     description: String(row.description ?? ""),
@@ -133,9 +143,13 @@ function safeWorkspace(row: Record<string, unknown>) {
 
 function safeCompany(row: Record<string, unknown>) {
   const last4 = String(row.client_secret_last4 ?? "");
+  const databaseWorkspaceId = String(row.workspace_id);
   return {
     id: String(row.id),
-    workspaceId: String(row.workspace_id),
+    workspaceId:
+      databaseWorkspaceId === persistedPrimaryWorkspaceId
+        ? "primary"
+        : databaseWorkspaceId,
     name: String(row.name ?? "Cliente sem nome"),
     description: String(row.description ?? ""),
     clientId: String(row.client_id ?? ""),
@@ -226,6 +240,8 @@ export async function POST(request: NextRequest) {
   }
 
   const workspaceId = text(payload.workspaceId);
+  const databaseWorkspaceId =
+    workspaceId === "primary" ? persistedPrimaryWorkspaceId : workspaceId;
   const clientId = text(payload.clientId);
   const clientSecret = text(payload.clientSecret);
   if (!workspaceId) return responseError("Escolha um workspace.", 400);
@@ -247,7 +263,7 @@ export async function POST(request: NextRequest) {
   const { data, error: insertError } = await client
     .from("pierphish_companies")
     .insert({
-      workspace_id: workspaceId,
+      workspace_id: databaseWorkspaceId,
       name,
       description,
       client_id: clientId,

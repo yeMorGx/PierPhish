@@ -25,10 +25,13 @@ export type CompanyRecord = {
 export const localWorkspacesKey = "pierphish-workspaces";
 export const localCompaniesKey = "pierphish-companies";
 export const activeWorkspaceKey = "pierphish-active-workspace";
+export const primaryWorkspaceId = "primary";
+export const persistedPrimaryWorkspaceId =
+  "00000000-0000-0000-0000-000000000001";
 
 export const demoWorkspaces: WorkspaceRecord[] = [
   {
-    id: "primary",
+    id: primaryWorkspaceId,
     name: "Workspace principal",
     environment: "production",
     description: "Operação oficial do PierPhish",

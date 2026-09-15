@@ -1,9 +1,11 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { readActiveWorkspaceId } from "@/lib/company-data";
-
-const primaryWorkspaceId = "primary";
+import {
+  persistedPrimaryWorkspaceId,
+  primaryWorkspaceId,
+  readActiveWorkspaceId,
+} from "@/lib/company-data";
 
 function subscribe(onStoreChange: () => void) {
   window.addEventListener("pierphish:workspace-selected", onStoreChange);
@@ -24,5 +26,8 @@ export function useActiveWorkspaceId() {
 }
 
 export function hasBeephishData(workspaceId: string) {
-  return workspaceId === primaryWorkspaceId;
+  return (
+    workspaceId === primaryWorkspaceId ||
+    workspaceId === persistedPrimaryWorkspaceId
+  );
 }
