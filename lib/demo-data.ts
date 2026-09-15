@@ -4,6 +4,7 @@ export const demoCampaigns: Campaign[] = [
   {
     id: 5345,
     name: "Amazon — Cupom de desconto",
+    company_id: "demo-piersec",
     status: "In progress",
     launch_date: "2026-08-07T11:01:00Z",
     synced_at: "2026-09-02T15:14:59Z",
@@ -21,6 +22,7 @@ export const demoCampaigns: Campaign[] = [
   {
     id: 5349,
     name: "Caju",
+    company_id: "demo-piersec",
     status: "In progress",
     launch_date: "2026-08-07T11:00:00Z",
     synced_at: "2026-09-02T15:14:20Z",
@@ -38,6 +40,7 @@ export const demoCampaigns: Campaign[] = [
   {
     id: 5052,
     name: "Teste anexo",
+    company_id: "demo-piersec",
     status: "Completed",
     launch_date: "2026-07-18T10:00:00Z",
     synced_at: "2026-09-01T10:20:00Z",
@@ -55,6 +58,7 @@ export const demoCampaigns: Campaign[] = [
   {
     id: 2581,
     name: "Facebook",
+    company_id: "demo-piersec",
     status: "Completed",
     launch_date: "2025-11-04T18:55:00Z",
     synced_at: "2026-08-30T09:14:00Z",

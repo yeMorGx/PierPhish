@@ -12,6 +12,7 @@ export type Stats = {
 export type Campaign = {
   id: number;
   name: string;
+  company_id?: string | null;
   status: string | null;
   launch_date: string | null;
   synced_at: string | null;
@@ -42,6 +43,7 @@ export type CampaignSummary = Campaign & {
   reportedPeople: number;
   errorPeople: number;
   openRate: number;
+  clickRate: number;
 };
 
 export type CampaignBar = Campaign & { rate: number };
@@ -63,4 +65,5 @@ export type OverviewTotals = {
   submitted: number;
   reported: number;
   errors: number;
+  clickRate: number;
 };

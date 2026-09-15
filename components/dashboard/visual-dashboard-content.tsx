@@ -10,6 +10,7 @@ import {
   type AnimatedTooltipItem,
 } from "@/components/ui/animated-tooltip";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { AnimatedNumber } from "@/components/dashboard/animated-number";
 import type {
   CampaignBar,
   CampaignParticipants,
@@ -118,7 +119,9 @@ function Ring({ value }: { value: number }) {
           strokeDashoffset={dashOffset}
         />
       </svg>
-      <strong>{value}%</strong>
+      <strong>
+        <AnimatedNumber value={value} suffix="%" />
+      </strong>
     </div>
   );
 }
@@ -140,12 +143,18 @@ export function VisualDashboardContent({
   const metrics: Array<{
     icon: IconName;
     label: string;
-    value: string | number;
+    value: number;
+    suffix?: string;
   }> = [
     { icon: "grid", label: "campanhas", value: totals.campaigns },
     { icon: "users", label: "pessoas", value: totals.people },
-    { icon: "chart", label: "entregues", value: `${totals.delivered}` },
-    { icon: "shield", label: "sinais", value: signals },
+    { icon: "chart", label: "entregues", value: totals.delivered },
+    {
+      icon: "chart",
+      label: "taxa de cliques",
+      value: totals.clickRate,
+      suffix: "%",
+    },
   ];
 
   const riskItems = [
@@ -222,7 +231,9 @@ export function VisualDashboardContent({
             <span className="visual-dashboard-metric-icon">
               <Icon name={metric.icon} size={15} />
             </span>
-            <strong>{metric.value}</strong>
+            <strong>
+              <AnimatedNumber value={metric.value} suffix={metric.suffix} />
+            </strong>
             <span>{metric.label}</span>
           </article>
         ))}
@@ -263,7 +274,9 @@ export function VisualDashboardContent({
         <div className="visual-dashboard-card-head">
           <div>
             <span className="visual-dashboard-overline">Risco humano</span>
-            <strong>{signals}</strong>
+            <strong>
+              <AnimatedNumber value={signals} />
+            </strong>
           </div>
           <span className="visual-dashboard-risk-icon">
             <Icon name="shield" size={17} />
@@ -273,7 +286,9 @@ export function VisualDashboardContent({
           {riskItems.map((item) => (
             <div className="visual-dashboard-risk-row" key={item.label}>
               <span>{item.label}</span>
-              <strong>{item.value}</strong>
+              <strong>
+                <AnimatedNumber value={item.value} />
+              </strong>
               <i>
                 <b style={{ width: `${Math.min(item.width, 100)}%` }} />
               </i>
@@ -310,7 +325,9 @@ export function VisualDashboardContent({
                   fallback={campaign.name.charAt(0).toUpperCase()}
                   src={logos[String(campaign.id)]}
                 />
-                <strong>{campaign.openRate}%</strong>
+                <strong>
+                  <AnimatedNumber value={campaign.openRate} suffix="%" />
+                </strong>
               </div>
               <span>{campaign.name.split(" ").slice(0, 3).join(" ")}</span>
               <i>

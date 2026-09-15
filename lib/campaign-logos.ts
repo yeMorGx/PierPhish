@@ -29,6 +29,7 @@ export function writeCampaignLogos(logos: CampaignLogoMap) {
 
   try {
     window.localStorage.setItem(storageKey, JSON.stringify(logos));
+    window.dispatchEvent(new Event("pierphish-campaign-logos-change"));
   } catch {
     // O painel continua funcionando mesmo quando o armazenamento do navegador
     // está cheio ou indisponível.

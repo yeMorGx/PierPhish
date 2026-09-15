@@ -8,6 +8,10 @@ import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { VisualDashboardContent } from "@/components/dashboard/visual-dashboard-content";
 import { useTheme } from "@/components/theme/theme-provider";
 import { Icon } from "@/components/ui/icon";
+import {
+  DashboardCompanyFilter,
+  type DashboardCompanyFilterOption,
+} from "@/components/dashboard/dashboard-company-filter";
 import type {
   Campaign,
   CampaignBar,
@@ -15,6 +19,8 @@ import type {
   CampaignSummary,
 } from "@/components/dashboard/types";
 import { demoCampaigns } from "@/lib/demo-data";
+import { demoCompanies, readLocalCompanies } from "@/lib/company-data";
+import { useCampaignLogos } from "@/components/campaigns/campaign-logo";
 import { readPersonAvatars, type PersonAvatarMap } from "@/lib/person-avatars";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import {
@@ -30,6 +36,16 @@ type RawParticipant = {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
+};
+
+type AdminCompaniesResponse = {
+  companies?: Array<{
+    id: string;
+    workspaceId: string;
+    name: string;
+    logoUrl: string | null;
+    status: "active" | "inactive";
+  }>;
 };
 
 const demoParticipantsByCampaign: CampaignParticipants = {
@@ -63,6 +79,7 @@ export default function Home() {
   const { preferences: themePreferences } = useTheme();
   const activeWorkspaceId = useActiveWorkspaceId();
   const workspaceHasBeephishData = hasBeephishData(activeWorkspaceId);
+  const { logos: campaignLogos } = useCampaignLogos();
   const [campaigns, setCampaigns] = useState<Campaign[]>(
     isSupabaseConfigured ? [] : demoCampaigns,
   );
@@ -74,11 +91,51 @@ export default function Home() {
   const [selectedId, setSelectedId] = useState(5345);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<
+    AdminCompaniesResponse["companies"]
+  >(
+    isSupabaseConfigured
+      ? []
+      : demoCompanies.map((company) => ({
+          id: company.id,
+          workspaceId: company.workspaceId,
+          name: company.name,
+          logoUrl: company.logoUrl,
+          status: company.status,
+        })),
+  );
+  const [selectedCompanyId, setSelectedCompanyId] = useState("all");
   const initialSyncStartedRef = useRef(false);
+
+  const filteredCampaigns = useMemo(
+    () =>
+      selectedCompanyId === "all"
+        ? campaigns
+        : campaigns.filter(
+            (campaign) => campaign.company_id === selectedCompanyId,
+          ),
+    [campaigns, selectedCompanyId],
+  );
+
+  const companyFilters = useMemo<DashboardCompanyFilterOption[]>(
+    () =>
+      (companies ?? [])
+        .filter((company) => company.status === "active")
+        .filter((company) => company.workspaceId === activeWorkspaceId)
+        .map((company) => ({
+          id: company.id,
+          name: company.name,
+          logoUrl: company.logoUrl,
+          campaignCount: campaigns.filter(
+            (campaign) => campaign.company_id === company.id,
+          ).length,
+        })),
+    [activeWorkspaceId, campaigns, companies],
+  );
 
   const campaignBars = useMemo<CampaignBar[]>(
     () =>
-      [...campaigns]
+      [...filteredCampaigns]
         .sort(
           (first, second) =>
             Number(second.stats.total ?? 0) - Number(first.stats.total ?? 0),
@@ -90,12 +147,12 @@ export default function Home() {
             Number(campaign.stats.total ?? 0),
           ),
         })),
-    [campaigns],
+    [filteredCampaigns],
   );
 
   const campaignSummary = useMemo<CampaignSummary[]>(
     () =>
-      [...campaigns]
+      [...filteredCampaigns]
         .map((campaign) => {
           const campaignStats = campaign.stats ?? {};
           const people = Number(campaignStats.total ?? 0);
@@ -118,6 +175,7 @@ export default function Home() {
             reportedPeople,
             errorPeople,
             openRate: pct(openedPeople, people),
+            clickRate: pct(clickedPeople, deliveredPeople || people),
           };
         })
         .sort(
@@ -125,36 +183,54 @@ export default function Home() {
             second.people - first.people ||
             second.deliveredPeople - first.deliveredPeople,
         ),
-    [campaigns],
+    [filteredCampaigns],
   );
 
   const totals = useMemo(
     () =>
-      campaignSummary.reduce(
-        (current, campaign) => ({
-          campaigns: current.campaigns + 1,
-          people: current.people + campaign.people,
-          sent: current.sent + campaign.sentPeople,
-          delivered: current.delivered + campaign.deliveredPeople,
-          opened: current.opened + campaign.openedPeople,
-          clicked: current.clicked + campaign.clickedPeople,
-          submitted: current.submitted + campaign.submittedPeople,
-          reported: current.reported + campaign.reportedPeople,
-          errors: current.errors + campaign.errorPeople,
-        }),
-        {
-          campaigns: 0,
-          people: 0,
-          sent: 0,
-          delivered: 0,
-          opened: 0,
-          clicked: 0,
-          submitted: 0,
-          reported: 0,
-          errors: 0,
-        },
-      ),
+      (() => {
+        const summary = campaignSummary.reduce(
+          (current, campaign) => ({
+            campaigns: current.campaigns + 1,
+            people: current.people + campaign.people,
+            sent: current.sent + campaign.sentPeople,
+            delivered: current.delivered + campaign.deliveredPeople,
+            opened: current.opened + campaign.openedPeople,
+            clicked: current.clicked + campaign.clickedPeople,
+            submitted: current.submitted + campaign.submittedPeople,
+            reported: current.reported + campaign.reportedPeople,
+            errors: current.errors + campaign.errorPeople,
+          }),
+          {
+            campaigns: 0,
+            people: 0,
+            sent: 0,
+            delivered: 0,
+            opened: 0,
+            clicked: 0,
+            submitted: 0,
+            reported: 0,
+            errors: 0,
+          },
+        );
+        return {
+          ...summary,
+          clickRate: pct(summary.clicked, summary.delivered || summary.people),
+        };
+      })(),
     [campaignSummary],
+  );
+
+  const attachedImages = useMemo(
+    () =>
+      filteredCampaigns
+        .filter((campaign) => campaignLogos[String(campaign.id)])
+        .map((campaign) => ({
+          id: campaign.id,
+          name: `Imagem de ${campaign.name}`,
+          src: campaignLogos[String(campaign.id)],
+        })),
+    [campaignLogos, filteredCampaigns],
   );
 
   const latestSync = useMemo(
@@ -192,6 +268,7 @@ export default function Home() {
   useEffect(() => {
     initialSyncStartedRef.current = false;
     setSelectedId(0);
+    setSelectedCompanyId("all");
     setSyncing(false);
     setError(null);
     if (!workspaceHasBeephishData) {
@@ -202,8 +279,25 @@ export default function Home() {
     if (!isSupabaseConfigured) {
       setCampaigns(demoCampaigns);
       setParticipantsByCampaign(demoParticipantsByCampaign);
+      setCompanies(
+        readLocalCompanies()
+          .filter((company) => company.workspaceId === activeWorkspaceId)
+          .map((company) => ({
+            id: company.id,
+            workspaceId: company.workspaceId,
+            name: company.name,
+            logoUrl: company.logoUrl,
+            status: company.status,
+          })),
+      );
     }
   }, [activeWorkspaceId, workspaceHasBeephishData]);
+
+  useEffect(() => {
+    if (!ready || !isSupabaseConfigured) return;
+    void loadCompanies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeWorkspaceId, ready, user?.id]);
 
   useEffect(() => {
     if (!ready) return;
@@ -221,7 +315,7 @@ export default function Home() {
 
     const { data, error: queryError } = await supabase
       .from("beephish_campaigns")
-      .select("id,name,status,launch_date,synced_at,stats")
+      .select("id,name,status,launch_date,synced_at,stats,company_id")
       .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
       .order("launch_date", { ascending: false });
 
@@ -274,6 +368,28 @@ export default function Home() {
       !nextCampaigns.some((campaign) => campaign.id === selectedId)
     )
       setSelectedId(nextCampaigns[0].id);
+  }
+
+  async function loadCompanies() {
+    if (!supabase) return;
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) return;
+
+    const response = await fetch("/api/admin/companies", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) return;
+    const body = (await response
+      .json()
+      .catch(() => ({}))) as AdminCompaniesResponse;
+    setCompanies(
+      (body.companies ?? []).filter(
+        (company) =>
+          company.workspaceId === activeWorkspaceId &&
+          company.status === "active",
+      ),
+    );
   }
 
   function startInitialSync() {
@@ -372,6 +488,13 @@ export default function Home() {
           </button>
         </div>
       )}
+      <DashboardCompanyFilter
+        companies={companyFilters}
+        selectedCompanyId={selectedCompanyId}
+        onChange={setSelectedCompanyId}
+        clickRate={totals.clickRate}
+        attachedImages={attachedImages}
+      />
       {themePreferences.dashboardMode === "visual" ? (
         <VisualDashboardContent
           campaignBars={campaignBars}
@@ -383,7 +506,7 @@ export default function Home() {
       ) : (
         <DashboardContent
           campaignBars={campaignBars}
-          campaigns={campaigns}
+          campaigns={filteredCampaigns}
           campaignSummary={campaignSummary}
           personAvatars={personAvatars}
           participantsByCampaign={participantsByCampaign}

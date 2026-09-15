@@ -1,4 +1,5 @@
 import { Icon } from "@/components/ui/icon";
+import { AnimatedNumber } from "@/components/dashboard/animated-number";
 
 type RiskCardProps = {
   clicked: number;
@@ -22,9 +23,24 @@ export function RiskCard({
   total,
 }: RiskCardProps) {
   const metrics = [
-    ["Entregues", `${delivered}/${total}`, pct(delivered, total)],
-    ["Abertura", `${opened}/${total}`, pct(opened, total)],
-    ["Dados enviados", `${submitted}`, pct(submitted, total)],
+    {
+      label: "Entregues",
+      value: delivered,
+      denominator: total,
+      width: pct(delivered, total),
+    },
+    {
+      label: "Abertura",
+      value: opened,
+      denominator: total,
+      width: pct(opened, total),
+    },
+    {
+      label: "Dados enviados",
+      value: submitted,
+      denominator: null,
+      width: pct(submitted, total),
+    },
   ] as const;
 
   return (
@@ -49,7 +65,7 @@ export function RiskCard({
           </div>
           <div className="my-[25px] flex items-baseline gap-2.5">
             <strong className="bento-risk-total text-[58px] leading-[0.8] font-[620] tracking-[-0.1em]">
-              {clicked + reported}
+              <AnimatedNumber value={clicked + reported} />
             </strong>
             <span className="max-w-[110px] text-[11px] leading-[1.25] text-[#7d8b80]">
               eventos para revisar
@@ -63,11 +79,16 @@ export function RiskCard({
 
         <div className="bento-risk-breakdown">
           <div className="flex flex-col gap-[18px] text-[10px] text-[#748177]">
-            {metrics.map(([label, value, width]) => (
+            {metrics.map(({ label, value, denominator, width }) => (
               <div className="grid grid-cols-[1fr_auto] gap-[7px]" key={label}>
                 <span className="bento-risk-label">{label}</span>
                 <strong className="bento-risk-value text-[10px] text-[#4e5d53]">
-                  {value}
+                  <AnimatedNumber value={value} />
+                  {denominator !== null && (
+                    <>
+                      /<AnimatedNumber value={denominator} />
+                    </>
+                  )}
                 </strong>
                 <div className="bento-risk-track col-span-full h-[5px] overflow-hidden rounded-md bg-[rgba(98,125,107,0.14)]">
                   <i

@@ -45,7 +45,14 @@ export function useCampaignLogos() {
   const [logos, setLogos] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    setLogos(readCampaignLogos());
+    const refresh = () => setLogos(readCampaignLogos());
+    refresh();
+    window.addEventListener("storage", refresh);
+    window.addEventListener("pierphish-campaign-logos-change", refresh);
+    return () => {
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("pierphish-campaign-logos-change", refresh);
+    };
   }, []);
 
   function setLogo(campaignId: number, logo: string | null) {
@@ -132,7 +139,9 @@ export function CampaignLogoPicker({
           type="file"
           accept="image/png,image/jpeg,image/webp,image/svg+xml"
           onChange={(event) => void handleFile(event)}
-          aria-label={logo ? "Trocar logo da campanha" : "Adicionar logo à campanha"}
+          aria-label={
+            logo ? "Trocar logo da campanha" : "Adicionar logo à campanha"
+          }
         />
       </label>
       {logo && (

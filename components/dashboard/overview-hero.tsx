@@ -1,4 +1,5 @@
 import { formatDate } from "@/lib/format";
+import { AnimatedNumber } from "@/components/dashboard/animated-number";
 import type { OverviewTotals } from "@/components/dashboard/types";
 
 type OverviewHeroProps = {
@@ -18,10 +19,14 @@ export function OverviewHero({
 }: OverviewHeroProps) {
   const openingRate = pct(totals.opened, totals.people);
   const journey = [
-    ["Base total", totals.people, "100%"],
-    ["Entregues", totals.delivered, `${pct(totals.delivered, totals.people)}%`],
-    ["Aberturas", totals.opened, `${openingRate}%`],
-    ["Cliques", totals.clicked, `${pct(totals.clicked, totals.people)}%`],
+    { label: "Base total", value: totals.people, rate: 100 },
+    {
+      label: "Entregues",
+      value: totals.delivered,
+      rate: pct(totals.delivered, totals.people),
+    },
+    { label: "Aberturas", value: totals.opened, rate: openingRate },
+    { label: "Cliques", value: totals.clicked, rate: totals.clickRate },
   ] as const;
   const circumference = 2 * Math.PI * 48;
   const dashOffset = circumference - (openingRate / 100) * circumference;
@@ -55,11 +60,15 @@ export function OverviewHero({
             </div>
 
             <div className="bento-journey" aria-label="Jornada consolidada">
-              {journey.map(([label, value, rate]) => (
+              {journey.map(({ label, value, rate }) => (
                 <div className="bento-journey-cell" key={label}>
                   <span>{label}</span>
-                  <strong>{value}</strong>
-                  <small>{rate} da base</small>
+                  <strong>
+                    <AnimatedNumber value={value} />
+                  </strong>
+                  <small>
+                    <AnimatedNumber value={rate} suffix="%" /> da base
+                  </small>
                 </div>
               ))}
             </div>
@@ -68,7 +77,9 @@ export function OverviewHero({
 
         <div className="bento-hero-insight">
           <div className="bento-hero-insight-top">
-            <span className="bento-hero-insight-label">Abertura consolidada</span>
+            <span className="bento-hero-insight-label">
+              Abertura consolidada
+            </span>
             <span className="bento-hero-insight-badge">
               {activeCampaigns} em andamento
             </span>
@@ -92,13 +103,16 @@ export function OverviewHero({
               />
             </svg>
             <div className="bento-ring-label">
-              <strong>{openingRate}%</strong>
+              <strong>
+                <AnimatedNumber value={openingRate} suffix="%" />
+              </strong>
               <span>abertura</span>
             </div>
           </div>
 
           <p className="bento-hero-insight-footer">
-            {totals.opened} de {totals.people} pessoas abriram a mensagem.
+            <AnimatedNumber value={totals.opened} /> de {totals.people} pessoas
+            abriram a mensagem.
           </p>
         </div>
       </div>

@@ -3,6 +3,7 @@ import {
   CampaignLogo,
   useCampaignLogos,
 } from "@/components/campaigns/campaign-logo";
+import { AnimatedNumber } from "@/components/dashboard/animated-number";
 import {
   AnimatedTooltip,
   type AnimatedTooltipItem,
@@ -106,16 +107,19 @@ export function CampaignOverviewCard({
   totals,
 }: CampaignOverviewCardProps) {
   const { logos } = useCampaignLogos();
-  const metrics = [
-    ["Campanhas", totals.campaigns],
-    ["Pessoas", totals.people],
-    ["Entregues", totals.delivered],
-    [
-      "Abertura",
-      `${totals.people ? Math.round((totals.opened / totals.people) * 100) : 0}%`,
-    ],
-    ["Cliques", totals.clicked],
-    ["Reportes", totals.reported],
+  const metrics: Array<{ label: string; value: number; suffix?: string }> = [
+    { label: "Campanhas", value: totals.campaigns },
+    { label: "Pessoas", value: totals.people },
+    { label: "Entregues", value: totals.delivered },
+    {
+      label: "Abertura",
+      value: totals.people
+        ? Math.round((totals.opened / totals.people) * 100)
+        : 0,
+      suffix: "%",
+    },
+    { label: "Taxa de cliques", value: totals.clickRate, suffix: "%" },
+    { label: "Reportes", value: totals.reported },
   ] as const;
 
   return (
@@ -148,14 +152,14 @@ export function CampaignOverviewCard({
       </div>
 
       <div className="mt-5 grid grid-cols-6 gap-2 max-[1120px]:grid-cols-3 max-[720px]:grid-cols-2">
-        {metrics.map(([label, value]) => (
+        {metrics.map(({ label, value, suffix }) => (
           <div
             className="campaign-overview-metric rounded-[16px] bg-[#f7f8f8] px-4 py-3"
             key={label}
           >
             <span className="block text-[10px] text-[#8b949d]">{label}</span>
             <strong className="mt-1 block text-[21px] leading-none tracking-[-0.06em] text-[#18202b]">
-              {value}
+              <AnimatedNumber value={value} suffix={suffix} />
             </strong>
           </div>
         ))}
@@ -224,13 +228,23 @@ export function CampaignOverviewCard({
                   </div>
                 </td>
                 <td className="px-4 py-3.5">
-                  {campaign.deliveredPeople}/{campaign.people}
+                  <AnimatedNumber value={campaign.deliveredPeople} />/
+                  <AnimatedNumber value={campaign.people} />
                 </td>
                 <td className="campaign-open-rate px-4 py-3.5 font-bold text-[#5d7161]">
-                  {campaign.openRate}%
+                  <AnimatedNumber value={campaign.openRate} suffix="%" />
                 </td>
-                <td className="px-4 py-3.5">{campaign.clickedPeople}</td>
-                <td className="px-4 py-3.5">{campaign.reportedPeople}</td>
+                <td className="px-4 py-3.5">
+                  <span className="block">
+                    <AnimatedNumber value={campaign.clickedPeople} />
+                  </span>
+                  <small className="campaign-click-rate">
+                    <AnimatedNumber value={campaign.clickRate} suffix="%" />
+                  </small>
+                </td>
+                <td className="px-4 py-3.5">
+                  <AnimatedNumber value={campaign.reportedPeople} />
+                </td>
                 <td className="px-4 py-3.5">
                   <span
                     className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${statusClass(campaign.status)}`}

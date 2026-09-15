@@ -49,6 +49,7 @@ export function buildPresentationData(campaigns: Campaign[]): PresentationData {
         reportedPeople,
         errorPeople,
         openRate: pct(openedPeople, people),
+        clickRate: pct(clickedPeople, deliveredPeople || people),
       };
     })
     .sort(
@@ -68,6 +69,7 @@ export function buildPresentationData(campaigns: Campaign[]): PresentationData {
       submitted: current.submitted + campaign.submittedPeople,
       reported: current.reported + campaign.reportedPeople,
       errors: current.errors + campaign.errorPeople,
+      clickRate: 0,
     }),
     {
       campaigns: 0,
@@ -79,8 +81,11 @@ export function buildPresentationData(campaigns: Campaign[]): PresentationData {
       submitted: 0,
       reported: 0,
       errors: 0,
+      clickRate: 0,
     },
   );
+
+  totals.clickRate = pct(totals.clicked, totals.delivered || totals.people);
 
   const latestSync = campaigns.reduce<string | null>((latest, campaign) => {
     if (!campaign.synced_at) return latest;

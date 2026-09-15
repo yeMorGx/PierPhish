@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
+import { AnimatedNumber } from "@/components/dashboard/animated-number";
 import type { CampaignBar } from "@/components/dashboard/types";
 
 type CampaignOpeningsCardProps = {
@@ -43,7 +44,7 @@ export function CampaignOpeningsCard({
               key={campaign.id}
             >
               <div className="-mb-1 text-[11px] font-extrabold text-[#637887]">
-                {campaign.rate}%
+                <AnimatedNumber value={campaign.rate} suffix="%" />
               </div>
               <div className="flex h-[66%] w-[min(44px,100%)] items-end overflow-hidden rounded-[9px_9px_0_0] bg-[#eef0f1]">
                 <div

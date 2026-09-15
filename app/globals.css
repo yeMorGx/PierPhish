@@ -11265,3 +11265,221 @@ html[data-theme="dark"] .settings-page {
     transition: none;
   }
 }
+
+/* Report controls: compact enough to sit directly under the header. */
+.dashboard-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  padding: 0 4px 14px;
+}
+
+.dashboard-company-filters {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-toolbar-label {
+  flex: none;
+  color: var(--muted-soft);
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.dashboard-company-filter-list {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.dashboard-company-filter-list::-webkit-scrollbar {
+  display: none;
+}
+
+.dashboard-company-filter {
+  display: inline-flex;
+  height: 32px;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 11px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 10px;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.dashboard-company-filter:hover,
+.dashboard-company-filter:focus-visible {
+  border-color: var(--ink);
+  color: var(--ink);
+  outline: none;
+}
+
+.dashboard-company-filter.is-selected {
+  border-color: var(--ink);
+  color: var(--surface);
+  background: var(--ink);
+}
+
+.dashboard-company-filter small {
+  color: inherit;
+  opacity: 0.62;
+  font-family: var(--font-data);
+  font-size: 9px;
+}
+
+.dashboard-company-filter-logo {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--surface-muted);
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.dashboard-company-filter.is-selected .dashboard-company-filter-logo {
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.dashboard-company-filter-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dashboard-report-facts {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 18px;
+}
+
+.dashboard-report-fact {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  column-gap: 7px;
+  white-space: nowrap;
+}
+
+.dashboard-report-fact > span {
+  color: var(--muted-soft);
+  font-size: 9px;
+}
+
+.dashboard-report-fact > strong {
+  color: var(--ink);
+  font-family: var(--font-data);
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -0.07em;
+}
+
+.dashboard-report-fact > small {
+  grid-column: 1 / -1;
+  margin-top: 3px;
+  color: var(--muted-soft);
+  font-size: 8px;
+  text-align: right;
+}
+
+.dashboard-report-images {
+  grid-template-columns: auto auto auto;
+}
+
+.dashboard-report-images > small {
+  grid-column: auto;
+}
+
+.dashboard-report-thumbnails {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+}
+
+.dashboard-report-thumbnails img,
+.dashboard-report-thumbnails > svg {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  place-items: center;
+  border: 2px solid var(--canvas);
+  border-radius: 50%;
+  color: var(--muted);
+  background: var(--surface-muted);
+  object-fit: cover;
+}
+
+.dashboard-report-thumbnails img + img {
+  margin-left: -6px;
+}
+
+.campaign-click-rate {
+  color: var(--muted-soft);
+  font-family: var(--font-data);
+  font-size: 9px;
+}
+
+@media (max-width: 860px) {
+  .dashboard-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  .dashboard-company-filters {
+    width: 100%;
+  }
+
+  .dashboard-report-facts {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-company-filters {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .dashboard-company-filter-list {
+    width: 100%;
+  }
+
+  .dashboard-report-facts {
+    justify-content: space-between;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-company-filter {
+    transition: none;
+  }
+}

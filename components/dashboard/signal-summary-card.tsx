@@ -21,7 +21,7 @@ export function SignalSummaryCard({
     {
       label: "Cliques",
       value: clicked,
-      rate: pct(clicked, people),
+      rate: pct(clicked, delivered || people),
       helper: "interagiram com a mensagem",
       priority: false,
     },
@@ -71,7 +71,7 @@ export function SignalSummaryCard({
                 {signal.label}
               </span>
               <strong className="text-[16px] font-[var(--font-data)] font-normal tracking-[-0.05em] text-[#202831]">
-                {signal.value}
+                <AnimatedNumber value={signal.value} />
               </strong>
             </div>
             <div className="mt-2 h-1 overflow-hidden rounded-full bg-[#ececea]">
@@ -81,7 +81,8 @@ export function SignalSummaryCard({
               />
             </div>
             <span className="mt-1.5 block text-[9px] text-[#969da2]">
-              {signal.rate}% da base · {signal.helper}
+              <AnimatedNumber value={signal.rate} suffix="%" /> da base ·{" "}
+              {signal.helper}
             </span>
           </div>
         ))}
@@ -93,3 +94,4 @@ export function SignalSummaryCard({
     </article>
   );
 }
+import { AnimatedNumber } from "@/components/dashboard/animated-number";
