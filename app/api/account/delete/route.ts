@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireMfa } from "@/lib/server-auth";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -33,9 +34,7 @@ export async function POST(request: NextRequest) {
   }
 
   const currentPassword =
-    typeof payload.currentPassword === "string"
-      ? payload.currentPassword
-      : "";
+    typeof payload.currentPassword === "string" ? payload.currentPassword : "";
   const confirmation =
     typeof payload.confirmation === "string" ? payload.confirmation.trim() : "";
   if (confirmation !== "EXCLUIR") {
@@ -51,6 +50,9 @@ export async function POST(request: NextRequest) {
   const adminClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+  const mfaError = await requireMfa(adminClient, token);
+  if (mfaError) return mfaError;
+
   const { data, error } = await adminClient.auth.getUser(token);
   if (error || !data.user?.email) {
     return responseError("Sua sessão não é válida.", 401);

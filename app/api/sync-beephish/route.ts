@@ -2,6 +2,7 @@ import { createDecipheriv, createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
+import { requireMfa } from "@/lib/server-auth";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -65,6 +66,9 @@ async function requireSyncAccess(request: NextRequest, workspaceId: string) {
   const authClient = getClient(publishableKey ?? serviceRoleKey!, token);
   if (!authClient)
     return { error: errorResponse("Supabase não configurado.", 503) };
+
+  const mfaError = await requireMfa(authClient, token);
+  if (mfaError) return { error: mfaError };
 
   const { data, error } = await authClient.auth.getUser(token);
   if (error || !data.user) {

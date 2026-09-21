@@ -10,12 +10,12 @@ import {
 import { useProfile } from "@/components/profile/profile-provider";
 import { CommandPalette } from "@/components/ui/command-palette";
 import { Icon } from "@/components/ui/icon";
-import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
 
 type ActiveSection =
   | "overview"
   | "risk"
   | "companies"
+  | "workspaces"
   | "settings"
   | "presentation";
 
@@ -40,7 +40,6 @@ export function DashboardShell({
   const { hasUnread, notifications, openPanel } = useNotifications();
   const { preferences: profilePreferences } = useProfile();
   const [profileOpen, setProfileOpen] = useState(false);
-  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const sessionEmail = user?.email ?? null;
   const profileName = profilePreferences.displayName.trim();
@@ -144,7 +143,6 @@ export function DashboardShell({
                     {sessionEmail ?? "Dados locais de demonstração"}
                   </span>
                 </span>
-                <Icon name="arrow" size={15} />
               </Link>
               <div className="my-2 h-px bg-[#edf0f1]" />
               <button
@@ -167,22 +165,17 @@ export function DashboardShell({
                     }
                   </span>
                 )}
-                <span className="ml-auto text-[14px] leading-none">›</span>
               </button>
               <div className="my-2 h-px bg-[#edf0f1]" />
-              <button
+              <Link
                 className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#edf4f5] hover:text-[#3e6573] focus-visible:bg-[#edf4f5] focus-visible:text-[#3e6573]"
-                type="button"
                 role="menuitem"
-                onClick={() => {
-                  setProfileOpen(false);
-                  setWorkspaceOpen(true);
-                }}
+                href="/workspaces"
+                onClick={() => setProfileOpen(false)}
               >
-                <Icon name="grid" size={16} />
-                Trocar workspace
-                <span className="ml-auto text-[14px] leading-none">›</span>
-              </button>
+                <Icon name="layers" size={16} />
+                Workspaces
+              </Link>
               <div className="my-2 h-px bg-[#edf0f1]" />
               <button
                 className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#fff1ed] hover:text-[#a5553b] focus-visible:bg-[#fff1ed] focus-visible:text-[#a5553b]"
@@ -191,7 +184,7 @@ export function DashboardShell({
                 onClick={() => void signOut()}
               >
                 <Icon name="logout" size={16} />
-                Sair<span className="ml-auto text-[14px] leading-none">↗</span>
+                Sair
               </button>
             </div>
           )}
@@ -223,6 +216,14 @@ export function DashboardShell({
             >
               <Icon name="grid" />
             </Link>
+            <Link
+              href="/workspaces"
+              className={`${navClass(activeSection === "workspaces")} max-[720px]:hidden`}
+              aria-label="Workspaces"
+              aria-current={activeSection === "workspaces" ? "page" : undefined}
+            >
+              <Icon name="layers" />
+            </Link>
           </nav>
           <Link
             href="/configuracoes"
@@ -249,10 +250,6 @@ export function DashboardShell({
           {children}
         </div>
       </section>
-      <WorkspaceSwitcher
-        onClose={() => setWorkspaceOpen(false)}
-        open={workspaceOpen}
-      />
       <NotificationCenter />
     </main>
   );

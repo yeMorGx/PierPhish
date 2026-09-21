@@ -105,18 +105,20 @@ function workspaceCanBeManaged(
   );
 }
 
-function WorkspaceManagePanel({
+export function WorkspaceManagePanel({
   workspace,
   globalAdmin,
   onBack,
   onClose,
   onUpdated,
+  variant = "modal",
 }: {
   workspace: WorkspaceSummary;
   globalAdmin: boolean;
   onBack: () => void;
   onClose: () => void;
   onUpdated: (workspace: WorkspaceSummary) => void;
+  variant?: "modal" | "page";
 }) {
   const { user } = useAuth();
   const [tab, setTab] = useState<WorkspaceManageTab>("workspace");
@@ -277,7 +279,9 @@ function WorkspaceManagePanel({
       return;
     }
     if (!isSupabaseConfigured) {
-      setNotice("No modo local, convites ficam disponíveis após configurar o servidor.");
+      setNotice(
+        "No modo local, convites ficam disponíveis após configurar o servidor.",
+      );
       setInviting(false);
       return;
     }
@@ -310,16 +314,24 @@ function WorkspaceManagePanel({
       return;
     }
     setInviteEmail("");
-    setNotice(`${body.invitation?.name || email} agora pode acessar este workspace.`);
+    setNotice(
+      `${body.invitation?.name || email} agora pode acessar este workspace.`,
+    );
     setInviting(false);
     await loadPeople();
   }
 
   return (
     <>
-      <header className="workspace-modal-header">
+      <header
+        className={`workspace-modal-header ${variant === "page" ? "workspace-page-manage-header" : ""}`}
+      >
         <div>
-          <button className="workspace-modal-back" onClick={onBack} type="button">
+          <button
+            className="workspace-modal-back"
+            onClick={onBack}
+            type="button"
+          >
             <Icon name="arrow" size={15} />
             Workspaces
           </button>
@@ -327,17 +339,23 @@ function WorkspaceManagePanel({
           <h2 id="workspace-modal-title">{workspace.name}</h2>
           <p>Personalize o ambiente e controle quem participa dele.</p>
         </div>
-        <button
-          aria-label="Fechar gerenciamento de workspace"
-          className="workspace-modal-close"
-          onClick={onClose}
-          type="button"
-        >
-          <Icon name="close" size={17} />
-        </button>
+        {variant === "modal" && (
+          <button
+            aria-label="Fechar gerenciamento de workspace"
+            className="workspace-modal-close"
+            onClick={onClose}
+            type="button"
+          >
+            <Icon name="close" size={17} />
+          </button>
+        )}
       </header>
 
-      <div className="workspace-manage-tabs" role="tablist" aria-label="Gerenciamento do workspace">
+      <div
+        className="workspace-manage-tabs"
+        role="tablist"
+        aria-label="Gerenciamento do workspace"
+      >
         <button
           className={tab === "workspace" ? "is-active" : ""}
           onClick={() => setTab("workspace")}
@@ -359,50 +377,91 @@ function WorkspaceManagePanel({
       </div>
 
       {tab === "workspace" ? (
-        <form className="workspace-manage-body" onSubmit={(event) => void saveWorkspace(event)}>
+        <form
+          className="workspace-manage-body"
+          onSubmit={(event) => void saveWorkspace(event)}
+        >
           <label className="workspace-field">
             <span>Nome do workspace</span>
             <input
               autoFocus
               maxLength={80}
-              onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  name: event.target.value,
+                }))
+              }
               value={draft.name}
             />
           </label>
           <fieldset className="workspace-fieldset">
             <legend>Ambiente</legend>
             <div className="workspace-environment-options">
-              {(["test", "production"] as WorkspaceEnvironment[]).map((environment) => (
-                <label className={draft.environment === environment ? "is-selected" : ""} key={environment}>
-                  <input
-                    checked={draft.environment === environment}
-                    name="manage-workspace-environment"
-                    onChange={() => setDraft((current) => ({ ...current, environment }))}
-                    type="radio"
-                    value={environment}
-                  />
-                  <span>
-                    <strong>{environmentLabel(environment)}</strong>
-                    <small>{environment === "production" ? "Dados oficiais" : "Testes e validações"}</small>
-                  </span>
-                </label>
-              ))}
+              {(["test", "production"] as WorkspaceEnvironment[]).map(
+                (environment) => (
+                  <label
+                    className={
+                      draft.environment === environment ? "is-selected" : ""
+                    }
+                    key={environment}
+                  >
+                    <input
+                      checked={draft.environment === environment}
+                      name="manage-workspace-environment"
+                      onChange={() =>
+                        setDraft((current) => ({ ...current, environment }))
+                      }
+                      type="radio"
+                      value={environment}
+                    />
+                    <span>
+                      <strong>{environmentLabel(environment)}</strong>
+                      <small>
+                        {environment === "production"
+                          ? "Dados oficiais"
+                          : "Testes e validações"}
+                      </small>
+                    </span>
+                  </label>
+                ),
+              )}
             </div>
           </fieldset>
           <label className="workspace-field">
             <span>Descrição</span>
             <textarea
               maxLength={240}
-              onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  description: event.target.value,
+                }))
+              }
               placeholder="Descreva o uso deste ambiente"
               rows={3}
               value={draft.description}
             />
           </label>
-          {(error || notice) && <p className="workspace-manage-feedback" role={error ? "alert" : "status"}>{error ?? notice}</p>}
+          {(error || notice) && (
+            <p
+              className="workspace-manage-feedback"
+              role={error ? "alert" : "status"}
+            >
+              {error ?? notice}
+            </p>
+          )}
           <footer className="workspace-modal-footer">
-            <span>{canManage ? "As alterações valem para todo o time." : "Você pode consultar este workspace."}</span>
-            <button className="workspace-modal-primary" disabled={saving || !canManage} type="submit">
+            <span>
+              {canManage
+                ? "As alterações valem para todo o time."
+                : "Você pode consultar este workspace."}
+            </span>
+            <button
+              className="workspace-modal-primary"
+              disabled={saving || !canManage}
+              type="submit"
+            >
               {saving ? "Salvando…" : "Salvar alterações"}
               <Icon name="arrow" size={15} />
             </button>
@@ -413,14 +472,22 @@ function WorkspaceManagePanel({
           <div className="workspace-people-summary">
             <div>
               <p className="workspace-modal-eyebrow">ACESSO DO TIME</p>
-              <strong>{people.length} {people.length === 1 ? "pessoa" : "pessoas"}</strong>
+              <strong>
+                {people.length} {people.length === 1 ? "pessoa" : "pessoas"}
+              </strong>
               <span>com acesso ativo a este workspace</span>
             </div>
-            <Link href={`/usuarios?workspace=${encodeURIComponent(workspace.id)}`} onClick={onClose}>
+            <Link
+              href={`/usuarios?workspace=${encodeURIComponent(workspace.id)}`}
+              onClick={onClose}
+            >
               Gestão completa <Icon name="arrow" size={14} />
             </Link>
           </div>
-          <form className="workspace-invite-form" onSubmit={(event) => void invitePerson(event)}>
+          <form
+            className="workspace-invite-form"
+            onSubmit={(event) => void invitePerson(event)}
+          >
             <label className="workspace-field">
               <span>Convidar pessoa já cadastrada</span>
               <input
@@ -432,32 +499,67 @@ function WorkspaceManagePanel({
             </label>
             <label className="workspace-field">
               <span>Nível de acesso</span>
-              <select value={inviteRole} onChange={(event) => setInviteRole(event.target.value as WorkspaceRole)}>
+              <select
+                value={inviteRole}
+                onChange={(event) =>
+                  setInviteRole(event.target.value as WorkspaceRole)
+                }
+              >
                 {manageRoleOptions.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
               </select>
             </label>
-            <button className="workspace-modal-primary" disabled={inviting || !canManage} type="submit">
+            <button
+              className="workspace-modal-primary"
+              disabled={inviting || !canManage}
+              type="submit"
+            >
               {inviting ? "Convidando…" : "Convidar"}
               <Icon name="arrow" size={15} />
             </button>
           </form>
-          {loadingPeople ? <p className="workspace-people-loading">Carregando pessoas…</p> : people.length ? (
+          {loadingPeople ? (
+            <p className="workspace-people-loading">Carregando pessoas…</p>
+          ) : people.length ? (
             <div className="workspace-people-list">
               {people.map((person) => {
-                const membership = person.workspaceMemberships.find((item) => item.workspaceId === workspace.id);
+                const membership = person.workspaceMemberships.find(
+                  (item) => item.workspaceId === workspace.id,
+                );
                 return (
                   <div className="workspace-person-row" key={person.id}>
-                    <span className="workspace-person-avatar">{(person.name || person.email).slice(0, 1).toUpperCase()}</span>
-                    <span className="workspace-person-copy"><strong>{person.name || "Sem nome"}</strong><small>{person.email}</small></span>
-                    <span className="workspace-person-role">{roleLabel(membership?.role)}</span>
+                    <span className="workspace-person-avatar">
+                      {(person.name || person.email).slice(0, 1).toUpperCase()}
+                    </span>
+                    <span className="workspace-person-copy">
+                      <strong>{person.name || "Sem nome"}</strong>
+                      <small>{person.email}</small>
+                    </span>
+                    <span className="workspace-person-role">
+                      {roleLabel(membership?.role)}
+                    </span>
                   </div>
                 );
               })}
             </div>
-          ) : <div className="workspace-people-empty"><Icon name="users" size={18} /><strong>Nenhuma pessoa vinculada</strong><span>Adicione uma conta já criada para liberar o acesso.</span></div>}
-          {(error || notice) && <p className="workspace-manage-feedback" role={error ? "alert" : "status"}>{error ?? notice}</p>}
+          ) : (
+            <div className="workspace-people-empty">
+              <Icon name="users" size={18} />
+              <strong>Nenhuma pessoa vinculada</strong>
+              <span>Adicione uma conta já criada para liberar o acesso.</span>
+            </div>
+          )}
+          {(error || notice) && (
+            <p
+              className="workspace-manage-feedback"
+              role={error ? "alert" : "status"}
+            >
+              {error ?? notice}
+            </p>
+          )}
         </div>
       )}
     </>

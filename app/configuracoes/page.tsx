@@ -396,7 +396,10 @@ function SettingsContent() {
               className={`settings-tab ${activeTab === tab.id ? "is-active" : ""}`}
               type="button"
               key={tab.id}
+              role="tab"
+              aria-selected={activeTab === tab.id}
               aria-current={activeTab === tab.id ? "page" : undefined}
+              data-state={activeTab === tab.id ? "active" : "inactive"}
               onClick={() => handleTab(tab.id)}
             >
               {tab.label}

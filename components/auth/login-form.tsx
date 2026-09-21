@@ -20,7 +20,7 @@ export function LoginForm() {
       router.replace(
         user.app_metadata?.password_rotation_required === true
           ? "/alterar-senha"
-          : "/",
+          : "/mfa",
       );
     }
   }, [ready, router, user]);

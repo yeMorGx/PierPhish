@@ -203,7 +203,7 @@ export function AnimatedTooltip({
               src={item.image}
               alt={item.name}
               unoptimized
-              className="relative z-10 m-0 h-8 w-8 rounded-full border-2 border-white object-cover object-top transition duration-300 group-hover:z-30 group-hover:scale-110"
+              className="relative z-10 m-0 h-8 w-8 rounded-full border-2 border-[var(--avatar-ring)] object-cover object-top transition duration-300 group-hover:z-30 group-hover:scale-110"
             />
           </div>
         ))}
@@ -220,7 +220,7 @@ export function AnimatedTooltip({
             tabIndex={0}
           >
             <span
-              className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#202831] text-center text-[10px] font-medium text-white transition duration-300 group-hover:z-30 group-hover:scale-110"
+              className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 border-[var(--avatar-ring)] bg-[#202831] text-center text-[10px] font-medium text-white transition duration-300 group-hover:z-30 group-hover:scale-110"
               aria-label={`Mais ${numPeople} participantes`}
             >
               +{numPeople}

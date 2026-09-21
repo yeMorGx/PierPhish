@@ -22,7 +22,7 @@ export function PasswordSetupForm() {
     if (!isSupabaseConfigured || !user) {
       router.replace(isSupabaseConfigured ? "/login" : "/");
     } else if (!mustChangePassword) {
-      router.replace("/");
+      router.replace("/mfa");
     }
   }, [mustChangePassword, ready, router, user]);
 
@@ -85,7 +85,7 @@ export function PasswordSetupForm() {
       return;
     }
 
-    router.replace("/");
+    router.replace("/mfa");
   }
 
   return (

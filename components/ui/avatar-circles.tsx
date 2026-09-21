@@ -23,7 +23,7 @@ const AvatarCircles = ({
       {avatarUrls.map((url, index) => (
         <img
           key={`${url}-${index}`}
-          className="h-8 w-8 rounded-full border-2 border-white object-cover"
+          className="h-8 w-8 rounded-full border-2 border-[var(--avatar-ring)] object-cover"
           src={url}
           width={32}
           height={32}
@@ -33,7 +33,7 @@ const AvatarCircles = ({
       ))}
       {numPeople && numPeople > 0 ? (
         <span
-          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#202831] text-center text-[10px] font-medium text-white"
+          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[var(--avatar-ring)] bg-[#202831] text-center text-[10px] font-medium text-white"
           aria-label={`Mais ${numPeople} participantes`}
         >
           +{numPeople}

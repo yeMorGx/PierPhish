@@ -2,6 +2,7 @@ import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
+import { requireMfa } from "@/lib/server-auth";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -81,6 +82,11 @@ async function requireWorkspaceManager(
     };
   }
 
+  const mfaError = await requireMfa(authClient, token);
+  if (mfaError) {
+    return { client: null, error: mfaError };
+  }
+
   const { data, error } = await authClient.auth.getUser(token);
   if (error || !data.user) {
     return {
@@ -149,6 +155,11 @@ async function requireAdmin(request: NextRequest) {
     };
   }
 
+  const mfaError = await requireMfa(authClient, token);
+  if (mfaError) {
+    return { client: null, error: mfaError };
+  }
+
   const { data, error } = await authClient.auth.getUser(token);
   if (error || !data.user) {
     return {
@@ -193,6 +204,15 @@ async function requireCompaniesAccess(request: NextRequest) {
     return {
       client: null,
       error: responseError("O Supabase não foi configurado no servidor.", 503),
+      managedWorkspaceIds: null as string[] | null,
+    };
+  }
+
+  const mfaError = await requireMfa(authClient, token);
+  if (mfaError) {
+    return {
+      client: null,
+      error: mfaError,
       managedWorkspaceIds: null as string[] | null,
     };
   }
@@ -479,7 +499,9 @@ export async function PATCH(request: NextRequest) {
   const type = text(payload.type);
   if (!id) {
     return responseError(
-      type === "workspace" ? "Workspace não informado." : "Cliente não informado.",
+      type === "workspace"
+        ? "Workspace não informado."
+        : "Cliente não informado.",
       400,
     );
   }

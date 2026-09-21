@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
+import { requireMfa } from "@/lib/server-auth";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -63,6 +64,9 @@ export async function GET(request: NextRequest) {
   if (!client) {
     return responseError("O Supabase não foi configurado no servidor.", 503);
   }
+
+  const mfaError = await requireMfa(client, token);
+  if (mfaError) return mfaError;
 
   const { data: userData, error: userError } = await client.auth.getUser(token);
   if (userError || !userData.user) {

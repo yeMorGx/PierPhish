@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, type User } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
+import { requireMfa } from "@/lib/server-auth";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -91,6 +92,11 @@ async function requireAdmin(request: NextRequest) {
     };
   }
 
+  const mfaError = await requireMfa(client, token);
+  if (mfaError) {
+    return { client: null, error: mfaError };
+  }
+
   const { data, error } = await client.auth.getUser(token);
   if (error || !data.user) {
     return {
@@ -162,7 +168,10 @@ async function canOwnerManageUser(
   if (requesterId === targetId) {
     return {
       allowed: false,
-      error: responseError("Você não pode executar esta ação na própria conta.", 400),
+      error: responseError(
+        "Você não pode executar esta ação na própria conta.",
+        400,
+      ),
     };
   }
   if (ownerWorkspaceIds === null) return { allowed: true, error: null };

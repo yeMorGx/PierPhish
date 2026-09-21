@@ -16,7 +16,7 @@ Sem `.env.local`, a aplicação abre em modo demonstração para validar o layou
 
 ## Empresas e workspaces
 
-A página `/empresas` administra as conexões BeePhish do workspace ativo. O cadastro permite editar nome, logo, informações, Client ID e status do cliente. Workspaces são criados e trocados pelo modal do workspace no menu do perfil, com ambientes internos de teste ou produção. Logos são escolhidos como arquivo local; não existe campo para link externo.
+A página `/empresas` administra as conexões BeePhish do workspace ativo. O cadastro permite editar nome, logo, informações, Client ID e status do cliente. Workspaces são criados, trocados e administrados na página `/workspaces`, com ambientes internos de teste ou produção. A mesma página permite personalizar o ambiente e gerenciar as pessoas vinculadas a ele. Logos são escolhidos como arquivo local; não existe campo para link externo.
 
 Para persistir essa área no Supabase:
 
@@ -35,4 +35,18 @@ Cada workspace começa isolado. As telas de visão geral, risco, apresentação,
 
 Na área `/usuarios`, um administrador pode criar o acesso já vinculado a um workspace. Os níveis são Proprietário, Administrador, Analista e Visualizador. Proprietários e administradores só conseguem gerenciar usuários dos workspaces que administram; os demais níveis ficam em modo de consulta.
 
+## MFA obrigatório
+
+Todo acesso autenticado precisa concluir MFA com um aplicativo TOTP. Usuários novos entram no fluxo `/mfa` depois de trocar a senha inicial; usuários existentes sem um fator verificado são encaminhados para o mesmo fluxo antes de acessar o painel. Sessões sem `aal2` também são rejeitadas pelas rotas API protegidas.
+
+No Supabase Dashboard, habilite o fator **TOTP** em Authentication → Multi-Factor. Para aplicar a regra a outros clientes além deste site, configure também o nível global de garantia como **AAL2 obrigatório**. O usuário pode usar Google Authenticator, Microsoft Authenticator, 1Password ou outro aplicativo compatível.
+
 A sincronização web usa `/api/sync-beephish`: ela lê as conexões ativas do workspace, descriptografa o Client Secret somente no servidor e chama a API Beephish com autenticação Basic (`Client ID:Client Secret`), conforme o esquema exibido no Swagger. `BEEPHISH_BASE_URL` pode ser definido no servidor; se omitido, usa `https://portal.beephish.com/api`. A credencial global `BEEPHISH_AUTHORIZATION` permanece apenas como fallback legado.
+
+## Exemplos reais de e-mail
+
+Na página `/campaigns/[id]`, usuários autorizados no workspace podem anexar um `.eml` ou `.msg` exportado do Gmail ou Outlook. O binário fica no bucket privado `campaign-email-samples`; a tabela guarda os metadados e a representação sanitizada usada na prévia. O conteúdo nunca é buscado na API Beephish.
+
+Defina `MAX_EMAIL_SAMPLE_SIZE_MB` (padrão `10`) e `MAX_EMAIL_SAMPLE_STORAGE_MB` (padrão `100`) no servidor. A migration `supabase/migrations/20260921120000_add_campaign_email_samples.sql` cria a tabela, logs, bucket privado, índices e políticas RLS/Storage. A rota administrativa `POST /api/admin/email-samples/cleanup` remove arquivos órfãos do bucket.
+
+Depois de configurar as variáveis do Supabase, aplique a migration no projeto remoto com `supabase db push` ou executando o arquivo no SQL Editor do Supabase. Sem essa etapa, a interface aparece, mas o upload não encontra a tabela/bucket.

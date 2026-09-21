@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CampaignLogoPicker } from "@/components/campaigns/campaign-logo";
+import { EmailSampleCard } from "@/components/campaigns/email-sample-card";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import {
   PersonDetailsModal,
@@ -642,6 +643,8 @@ export default function CampaignPeoplePage() {
             </button>
           </div>
         )}
+
+        {campaign && <EmailSampleCard campaignId={campaign.id} />}
 
         {themePreferences.dashboardMode === "visual" ? (
           <VisualCampaignContent

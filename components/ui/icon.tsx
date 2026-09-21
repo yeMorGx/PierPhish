@@ -7,6 +7,7 @@ import {
   Grid2X2,
   Image as ImageIcon,
   LogOut,
+  Layers2,
   Palette,
   Plus,
   RefreshCw,
@@ -36,7 +37,8 @@ export type IconName =
   | "check"
   | "plus"
   | "close"
-  | "bell";
+  | "bell"
+  | "layers";
 
 const iconComponents: Record<IconName, LucideIcon> = {
   grid: Grid2X2,
@@ -46,6 +48,7 @@ const iconComponents: Record<IconName, LucideIcon> = {
   refresh: RefreshCw,
   arrow: ArrowRight,
   logout: LogOut,
+  layers: Layers2,
   chevron: ChevronDown,
   search: Search,
   palette: Palette,
