@@ -859,12 +859,20 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
       setWorkspaces(
         items.length || !useFallback ? items : [connectedWorkspace],
       );
-      setActiveWorkspaceId((current) => {
-        const stored = readActiveWorkspaceId();
-        if (items.some((workspace) => workspace.id === stored)) return stored;
-        if (items.some((workspace) => workspace.id === current)) return current;
-        return items[0]?.id ?? (useFallback ? connectedWorkspace.id : "");
-      });
+      const visibleItems =
+        items.length || !useFallback ? items : [connectedWorkspace];
+      const stored = readActiveWorkspaceId();
+      const nextActiveWorkspaceId =
+        visibleItems.find((workspace) => workspace.id === stored)?.id ??
+        visibleItems[0]?.id ??
+        "";
+      setActiveWorkspaceId(nextActiveWorkspaceId);
+      if (nextActiveWorkspaceId && nextActiveWorkspaceId !== stored) {
+        // New users often have no workspace in localStorage yet. Persist the
+        // first workspace returned by the server so every page starts from a
+        // workspace the user can actually access.
+        writeActiveWorkspaceId(nextActiveWorkspaceId);
+      }
     };
 
     const syncWorkspaces = async () => {

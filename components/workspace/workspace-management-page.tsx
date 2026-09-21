@@ -208,12 +208,15 @@ function WorkspacePageContent() {
   function mapWorkspaces(items: WorkspaceSummary[], useFallback = false) {
     const next = items.length || !useFallback ? items : [connectedWorkspace];
     setWorkspaces(next);
-    setActiveWorkspaceId((current) => {
-      const stored = readActiveWorkspaceId();
-      if (next.some((workspace) => workspace.id === stored)) return stored;
-      if (next.some((workspace) => workspace.id === current)) return current;
-      return next[0]?.id ?? "";
-    });
+    const stored = readActiveWorkspaceId();
+    const nextActiveWorkspaceId =
+      next.find((workspace) => workspace.id === stored)?.id ??
+      next[0]?.id ??
+      "";
+    setActiveWorkspaceId(nextActiveWorkspaceId);
+    if (nextActiveWorkspaceId && nextActiveWorkspaceId !== stored) {
+      writeActiveWorkspaceId(nextActiveWorkspaceId);
+    }
     setSelectedWorkspaceId((current) =>
       current && next.some((workspace) => workspace.id === current)
         ? current
@@ -278,7 +281,6 @@ function WorkspacePageContent() {
     setActiveWorkspaceId(workspaceId);
     setSelectedWorkspaceId(workspaceId);
     writeActiveWorkspaceId(workspaceId);
-    window.dispatchEvent(new Event("pierphish:workspace-selected"));
   }
 
   function createLocalWorkspace(name: string) {
