@@ -4757,19 +4757,6 @@ html[data-theme="dark"] .campaign-logo-error {
   gap: 10px;
 }
 
-.presentation-brand-mark {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-  border-radius: 11px;
-  color: var(--ink);
-  background: color-mix(in srgb, var(--surface) 65%, transparent);
-  font-size: 13px;
-  font-weight: 850;
-}
-
 .presentation-topbar-brand strong,
 .presentation-topbar-brand small {
   display: block;
@@ -6292,19 +6279,6 @@ html[data-theme="dark"] .workspace-modal-backdrop {
   text-decoration: none;
 }
 
-.login-brand-mark {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--canvas);
-  background: var(--ink);
-  font-size: 13px;
-  font-weight: 850;
-  letter-spacing: -0.04em;
-}
-
 .login-copy {
   margin-top: clamp(46px, 7vh, 82px);
 }
@@ -6660,11 +6634,6 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 
 .mfa-card .login-brand {
   color: #fff;
-}
-
-.mfa-card .login-brand-mark {
-  color: #12202a;
-  background: #fff;
 }
 
 .mfa-card .mfa-required-heading {
@@ -9238,18 +9207,6 @@ html[data-theme="dark"] .settings-page {
   padding: 7px 9px;
 }
 
-.settings-preview-brand-mark {
-  display: grid;
-  width: 15px;
-  height: 15px;
-  place-items: center;
-  border-radius: 4px;
-  color: var(--surface);
-  background: var(--ink);
-  font-size: 8px;
-  font-weight: 800;
-}
-
 .settings-preview-status-dot {
   width: 5px;
   height: 5px;
@@ -9564,19 +9521,6 @@ html[data-theme="dark"] .settings-page {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.visual-dashboard-mark {
-  display: grid;
-  width: 24px;
-  height: 24px;
-  place-items: center;
-  border-radius: 7px;
-  color: var(--surface);
-  background: var(--ink);
-  font-family: var(--font-data);
-  font-size: 11px;
-  font-weight: 800;
 }
 
 .visual-dashboard-live {

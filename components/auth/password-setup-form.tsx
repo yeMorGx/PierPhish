@@ -93,7 +93,6 @@ export function PasswordSetupForm() {
       <section className="login-panel">
         <div className="login-panel-inner">
           <a className="login-brand" href="/" aria-label="PierPhish">
-            <span className="login-brand-mark">P</span>
             <span>PierPhish</span>
           </a>
           <div className="login-copy">

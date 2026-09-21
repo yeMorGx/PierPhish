@@ -740,7 +740,6 @@ function SettingsContent() {
                 aria-label="Prévia visual do dashboard com métricas, gráfico, progresso e avatares"
               >
                 <div className="settings-preview-window-top">
-                  <span className="settings-preview-brand-mark">P</span>
                   <span className="settings-preview-status-dot" />
                   <span className="settings-preview-top-line" />
                 </div>

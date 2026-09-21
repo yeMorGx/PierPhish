@@ -443,7 +443,6 @@ export function PresentationContent() {
         <div className="presentation-mode theme-canvas" ref={presentationRef}>
           <div className="presentation-topbar">
             <div className="presentation-topbar-brand">
-              <span className="presentation-brand-mark">P</span>
               <span>
                 <strong>PierPhish</strong>
                 <small>Modo apresentação</small>

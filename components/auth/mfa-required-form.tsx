@@ -335,7 +335,6 @@ export function MfaRequiredForm() {
 function MfaBrand() {
   return (
     <div className="login-brand" aria-label="PierPhish">
-      <span className="login-brand-mark">P</span>
       <span>PierPhish</span>
     </div>
   );

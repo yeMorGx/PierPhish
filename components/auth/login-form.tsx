@@ -297,7 +297,6 @@ export function LoginForm() {
 function LoginBrand() {
   return (
     <Link className="login-brand" href="/" aria-label="PierPhish">
-      <span className="login-brand-mark">P</span>
       <span>PierPhish</span>
     </Link>
   );

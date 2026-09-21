@@ -253,7 +253,6 @@ export function VisualDashboardContent({
       >
         <div className="visual-dashboard-hero-main">
           <div className="visual-dashboard-topline">
-            <span className="visual-dashboard-mark">P</span>
             <span className="visual-dashboard-live" />
             <span className="visual-dashboard-overline">PierPhish</span>
           </div>
