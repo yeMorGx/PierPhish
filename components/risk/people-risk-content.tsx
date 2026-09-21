@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import {
@@ -57,6 +62,14 @@ type CampaignRow = {
   name: string;
   synced_at: string | null;
 };
+
+const riskColumn = createColumnHelper<RiskPerson>();
+const riskTableColumns = [
+  riskColumn.accessor("name", { header: "Pessoa" }),
+  riskColumn.accessor("department", { header: "Área" }),
+  riskColumn.accessor("status", { header: "Status" }),
+  riskColumn.accessor("lastActivity", { header: "Última atividade" }),
+];
 
 const demoRiskPeople: RiskPerson[] = [
   {
@@ -575,6 +588,12 @@ function PeopleRiskPage() {
     });
   }, [department, filter, people, search]);
 
+  const riskTable = useReactTable({
+    data: visiblePeople,
+    columns: riskTableColumns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
   return (
     <DashboardShell
       activeSection="risk"
@@ -776,86 +795,91 @@ function PeopleRiskPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {visiblePeople.map((person) => (
-                        <tr key={person.id}>
-                          <td>
-                            <div className="risk-person-cell">
-                              <button
-                                aria-label={`Abrir detalhes de ${person.name}`}
-                                className="risk-person-trigger risk-person-trigger-with-avatar"
-                                onClick={() => setSelectedPerson(person)}
-                                type="button"
-                              >
-                                <PersonAvatar
-                                  avatar={person.avatar}
-                                  name={person.name}
-                                  size="sm"
-                                />
-                                <span className="min-w-0">
-                                  <strong>{person.name}</strong>
-                                  <small>{person.email}</small>
-                                  <em>
-                                    {person.department} · {person.position}
-                                  </em>
-                                </span>
-                              </button>
-                            </div>
-                          </td>
-                          <td>
-                            <div className="risk-campaign-list">
-                              {person.campaigns.slice(0, 2).map((campaign) => (
-                                <a
-                                  href={`/campaigns/${campaign.id}`}
-                                  key={campaign.id}
+                      {riskTable.getRowModel().rows.map((row) => {
+                        const person = row.original;
+                        return (
+                          <tr key={person.id}>
+                            <td>
+                              <div className="risk-person-cell">
+                                <button
+                                  aria-label={`Abrir detalhes de ${person.name}`}
+                                  className="risk-person-trigger risk-person-trigger-with-avatar"
+                                  onClick={() => setSelectedPerson(person)}
+                                  type="button"
                                 >
-                                  {campaign.name}
-                                </a>
-                              ))}
-                              {person.campaigns.length > 2 && (
-                                <span>
-                                  +{person.campaigns.length - 2} outras
-                                </span>
-                              )}
-                              {!person.campaigns.length && (
-                                <span>Sem campanha</span>
-                              )}
-                            </div>
-                          </td>
-                          <td>
-                            <div className="flex flex-wrap gap-1.5">
-                              <Signal
-                                active={person.submitted}
-                                label="dados"
-                                tone="red"
-                              />
-                              <Signal
-                                active={person.clicked}
-                                label="clicou"
-                                tone="orange"
-                              />
-                              <Signal
-                                active={person.opened}
-                                label="abriu"
-                                tone="blue"
-                              />
-                              <Signal
-                                active={person.reported}
-                                label="reportou"
-                                tone="green"
-                              />
-                            </div>
-                          </td>
-                          <td>
-                            <div className="risk-cell">
-                              <RiskBadge level={person.risk} />
-                              <small>{riskDescriptions[person.risk]}</small>
-                            </div>
-                          </td>
-                          <td className="risk-last-activity">
-                            {formatDateTime(person.lastActivity)}
-                          </td>
-                        </tr>
-                      ))}
+                                  <PersonAvatar
+                                    avatar={person.avatar}
+                                    name={person.name}
+                                    size="sm"
+                                  />
+                                  <span className="min-w-0">
+                                    <strong>{person.name}</strong>
+                                    <small>{person.email}</small>
+                                    <em>
+                                      {person.department} · {person.position}
+                                    </em>
+                                  </span>
+                                </button>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="risk-campaign-list">
+                                {person.campaigns
+                                  .slice(0, 2)
+                                  .map((campaign) => (
+                                    <a
+                                      href={`/campaigns/${campaign.id}`}
+                                      key={campaign.id}
+                                    >
+                                      {campaign.name}
+                                    </a>
+                                  ))}
+                                {person.campaigns.length > 2 && (
+                                  <span>
+                                    +{person.campaigns.length - 2} outras
+                                  </span>
+                                )}
+                                {!person.campaigns.length && (
+                                  <span>Sem campanha</span>
+                                )}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="flex flex-wrap gap-1.5">
+                                <Signal
+                                  active={person.submitted}
+                                  label="dados"
+                                  tone="red"
+                                />
+                                <Signal
+                                  active={person.clicked}
+                                  label="clicou"
+                                  tone="orange"
+                                />
+                                <Signal
+                                  active={person.opened}
+                                  label="abriu"
+                                  tone="blue"
+                                />
+                                <Signal
+                                  active={person.reported}
+                                  label="reportou"
+                                  tone="green"
+                                />
+                              </div>
+                            </td>
+                            <td>
+                              <div className="risk-cell">
+                                <RiskBadge level={person.risk} />
+                                <small>{riskDescriptions[person.risk]}</small>
+                              </div>
+                            </td>
+                            <td className="risk-last-activity">
+                              {formatDateTime(person.lastActivity)}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                   {!visiblePeople.length && (

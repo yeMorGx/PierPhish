@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { DashboardWidgetOrderEditor } from "@/components/dashboard/dashboard-widget-order-editor";
 import { useProfile } from "@/components/profile/profile-provider";
 import { useTheme } from "@/components/theme/theme-provider";
 import { Icon } from "@/components/ui/icon";
@@ -820,6 +821,7 @@ function SettingsContent() {
               </div>
               <p>Uma leitura visual, com menos palavras e mais sinais.</p>
             </aside>
+            <DashboardWidgetOrderEditor />
             <div className="settings-footer">
               <p>As preferências visuais ficam salvas neste navegador.</p>
               <button type="button" onClick={restoreDefaults}>
@@ -939,7 +941,9 @@ function SettingsContent() {
                 <input
                   className="h-12 rounded-[14px] border border-[#efc6bc] bg-[#fffafa] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] uppercase outline-none focus:border-[#c77968]"
                   value={dangerConfirmation}
-                  onChange={(event) => setDangerConfirmation(event.target.value)}
+                  onChange={(event) =>
+                    setDangerConfirmation(event.target.value)
+                  }
                   placeholder="Digite EXCLUIR"
                   autoComplete="off"
                 />

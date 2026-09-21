@@ -1,3 +1,5 @@
+@import "react-grid-layout/css/styles.css";
+@import "react-resizable/css/styles.css";
 @import "tailwindcss";
 @source "./**/*.{ts,tsx}";
 
@@ -261,17 +263,13 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
     0 18px 44px rgba(0, 0, 0, 0.18);
 }
 
-/* Keep the Font Awesome vocabulary, but give every product icon a lighter,
-   linear reading so controls stay quiet beside the data. */
+/* Keep product icons quiet beside the data without adding visual weight. */
 .icon-minimal {
   opacity: 0.78;
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 0.62px currentColor;
 }
 
 .sidebar-nav-link .icon-minimal {
   opacity: 0.72;
-  -webkit-text-stroke-width: 0.58px;
 }
 
 .sidebar-nav-link {
@@ -11814,5 +11812,397 @@ html[data-theme="dark"] .settings-page {
 @media (prefers-reduced-motion: reduce) {
   .dashboard-company-filter {
     transition: none;
+  }
+}
+
+/* Command palette: a compact command surface shared by every dashboard view. */
+.command-palette-trigger {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0 10px 0 11px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 650;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.command-palette-trigger:hover,
+.command-palette-trigger:focus-visible {
+  border-color: var(--ink-strong);
+  color: var(--ink);
+  background: var(--surface);
+  outline: none;
+}
+
+.command-palette-trigger kbd {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 5px;
+  color: var(--muted-soft);
+  background: var(--surface);
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+[cmdk-overlay] {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  background: color-mix(in srgb, var(--ink) 20%, transparent);
+  backdrop-filter: blur(4px);
+  animation: command-palette-fade 140ms ease both;
+}
+
+[cmdk-dialog] {
+  position: fixed;
+  z-index: 1110;
+  top: 16vh;
+  left: 50%;
+  width: min(560px, calc(100vw - 32px));
+  overflow: hidden;
+  transform: translateX(-50%);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: 0 22px 64px color-mix(in srgb, var(--ink) 18%, transparent);
+  animation: command-palette-rise 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.command-palette-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding: 12px 14px 12px 17px;
+  color: var(--muted);
+}
+
+.command-palette-heading [cmdk-input] {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+}
+
+.command-palette-heading [cmdk-input]::placeholder {
+  color: var(--muted-soft);
+}
+
+.command-palette-escape {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 4px 6px;
+  color: var(--muted-soft);
+  background: var(--surface-soft);
+  font-family: var(--font-data);
+  font-size: 9px;
+}
+
+[cmdk-list] {
+  max-height: min(380px, 52vh);
+  overflow-y: auto;
+  padding: 8px;
+}
+
+[cmdk-group-heading] {
+  padding: 9px 10px 6px;
+  color: var(--muted-soft);
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+[cmdk-item] {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 10px;
+  border-radius: 11px;
+  padding: 0 10px;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12px;
+  outline: none;
+}
+
+[cmdk-item][data-selected="true"] {
+  color: var(--ink);
+  background: var(--surface-soft);
+}
+
+[cmdk-item] small {
+  margin-left: auto;
+  color: var(--muted-soft);
+  font-size: 10px;
+}
+
+[cmdk-item] small svg {
+  color: var(--muted);
+}
+
+.command-palette-footer {
+  display: flex;
+  gap: 14px;
+  border-top: 1px solid var(--line);
+  padding: 10px 17px;
+  color: var(--muted-soft);
+  font-family: var(--font-data);
+  font-size: 9px;
+}
+
+.pierphish-sonner-toast {
+  border: 1px solid var(--line) !important;
+  border-radius: 14px !important;
+  color: var(--ink) !important;
+  background: var(--surface) !important;
+  font-family: var(--font-body) !important;
+}
+
+.pierphish-sonner-description {
+  color: var(--muted) !important;
+}
+
+@keyframes command-palette-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes command-palette-rise {
+  from { opacity: 0; transform: translate(-50%, 10px) scale(0.98); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+/* Bento editor: the grid owns placement, while cards keep their own visual language. */
+.visual-dashboard-editor {
+  min-width: 0;
+}
+
+.visual-dashboard-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 2px 10px;
+  color: var(--muted-soft);
+  font-family: var(--font-data);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.visual-dashboard-editor-toolbar > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.visual-dashboard-editor-toggle,
+.visual-dashboard-editor-reset {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 10px;
+  color: var(--muted);
+  background: var(--surface);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.visual-dashboard-editor-toggle:hover,
+.visual-dashboard-editor-toggle:focus-visible,
+.visual-dashboard-editor-toggle.is-active {
+  border-color: var(--ink-strong);
+  color: var(--ink);
+  outline: none;
+}
+
+.visual-dashboard-editor-reset {
+  border-color: transparent;
+  background: transparent;
+  font-weight: 600;
+}
+
+.visual-dashboard.react-grid-layout {
+  display: block;
+  min-height: 660px;
+}
+
+.visual-dashboard.react-grid-layout > .react-grid-item {
+  min-width: 0;
+}
+
+.visual-dashboard-grid-item,
+.visual-dashboard-grid-item > .surface-card,
+.visual-dashboard-grid-item > .visual-dashboard-metric-grid {
+  height: 100%;
+  min-height: 0;
+}
+
+.visual-dashboard-grid-item > .visual-dashboard-metric-grid {
+  align-content: stretch;
+}
+
+.visual-dashboard.react-grid-layout .react-grid-placeholder {
+  border: 1px dashed color-mix(in srgb, var(--accent) 60%, var(--line));
+  border-radius: var(--radius-card);
+  background: var(--accent-soft);
+}
+
+.visual-dashboard.react-grid-layout .react-resizable-handle {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.visual-dashboard.react-grid-layout .react-grid-item:hover .react-resizable-handle,
+.visual-dashboard.react-grid-layout .react-grid-item:focus-within .react-resizable-handle {
+  opacity: 0.7;
+}
+
+.visual-dashboard-recharts {
+  height: calc(100% - 40px);
+  min-height: 150px;
+  padding: 4px 0 0;
+}
+
+.visual-dashboard-progress {
+  display: block;
+  width: 100%;
+  min-height: 6px;
+  margin-top: auto;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-muted);
+}
+
+.visual-dashboard-progress > div {
+  min-height: 6px;
+  border-radius: inherit;
+}
+
+.visual-dashboard-progress [class*="bg-orange"] {
+  background: var(--accent) !important;
+}
+
+.settings-widget-order-card {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1.3fr);
+  align-items: start;
+  gap: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 22px;
+  background: var(--surface);
+}
+
+.settings-widget-order-card h3 {
+  margin: 9px 0 5px;
+  color: var(--ink);
+  font-size: 19px;
+  letter-spacing: -0.04em;
+}
+
+.settings-widget-order-card p {
+  max-width: 280px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.settings-widget-order-list {
+  display: grid;
+  gap: 7px;
+}
+
+.settings-widget-order-item {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  padding: 5px 10px 5px 5px;
+  background: var(--surface-soft);
+}
+
+.settings-widget-order-handle {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  color: var(--muted-soft);
+  background: transparent;
+  cursor: grab;
+}
+
+.settings-widget-order-handle:active {
+  cursor: grabbing;
+}
+
+.settings-widget-order-handle:hover,
+.settings-widget-order-handle:focus-visible {
+  color: var(--ink);
+  background: var(--surface);
+  outline: none;
+}
+
+.settings-widget-order-item > span {
+  display: grid;
+  gap: 2px;
+}
+
+.settings-widget-order-item strong {
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.settings-widget-order-item small {
+  color: var(--muted-soft);
+  font-size: 9px;
+}
+
+@media (max-width: 720px) {
+  .visual-dashboard-editor-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .visual-dashboard-editor-toolbar > div {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .visual-dashboard.react-grid-layout {
+    min-height: 0;
+  }
+
+  .settings-widget-order-card {
+    grid-template-columns: 1fr;
   }
 }

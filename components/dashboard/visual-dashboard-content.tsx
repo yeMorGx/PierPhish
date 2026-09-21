@@ -1,6 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { ProgressBar } from "@tremor/react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   CampaignLogo,
   useCampaignLogos,
@@ -11,6 +21,7 @@ import {
 } from "@/components/ui/animated-tooltip";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { AnimatedNumber } from "@/components/dashboard/animated-number";
+import { BentoDashboardGrid } from "@/components/dashboard/bento-dashboard-grid";
 import type {
   CampaignBar,
   CampaignParticipants,
@@ -126,6 +137,63 @@ function Ring({ value }: { value: number }) {
   );
 }
 
+function CampaignOpeningsChart({ campaigns }: { campaigns: CampaignBar[] }) {
+  const data = campaigns.slice(0, 8).map((campaign) => ({
+    name: campaign.name.split(" ").slice(0, 2).join(" "),
+    rate: campaign.rate,
+  }));
+
+  return (
+    <div
+      className="visual-dashboard-recharts"
+      aria-label="Abertura por campanha"
+    >
+      <ResponsiveContainer height="100%" width="100%">
+        <BarChart
+          data={data}
+          margin={{ bottom: 0, left: -18, right: 8, top: 8 }}
+        >
+          <CartesianGrid
+            vertical={false}
+            stroke="var(--line-soft)"
+            strokeDasharray="2 4"
+          />
+          <XAxis
+            axisLine={false}
+            dataKey="name"
+            tick={{ fill: "var(--muted-soft)", fontSize: 9 }}
+            tickLine={false}
+          />
+          <YAxis
+            axisLine={false}
+            domain={[0, 100]}
+            tick={{ fill: "var(--muted-soft)", fontSize: 9 }}
+            tickLine={false}
+            unit="%"
+          />
+          <Tooltip
+            contentStyle={{
+              border: "1px solid var(--line)",
+              borderRadius: 10,
+              color: "var(--ink)",
+              background: "var(--surface)",
+              fontSize: 11,
+            }}
+            cursor={{ fill: "var(--surface-soft)" }}
+            formatter={(value) => [`${value}%`, "Abertura"]}
+          />
+          <Bar
+            dataKey="rate"
+            fill="var(--accent)"
+            maxBarSize={36}
+            radius={[8, 8, 0, 0]}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 export function VisualDashboardContent({
   campaignBars,
   campaignSummary,
@@ -179,8 +247,11 @@ export function VisualDashboardContent({
   const { logos } = useCampaignLogos();
 
   return (
-    <div className="visual-dashboard">
-      <section className="surface-card visual-dashboard-hero">
+    <BentoDashboardGrid>
+      <section
+        className="surface-card visual-dashboard-hero"
+        data-widget-id="hero"
+      >
         <div className="visual-dashboard-hero-main">
           <div className="visual-dashboard-topline">
             <span className="visual-dashboard-mark">P</span>
@@ -194,9 +265,12 @@ export function VisualDashboardContent({
             </strong>
             <span>abertura</span>
           </div>
-          <div className="visual-dashboard-progress" aria-hidden="true">
-            <i style={{ width: `${openingRate}%` }} />
-          </div>
+          <ProgressBar
+            className="visual-dashboard-progress"
+            color="orange"
+            showAnimation={false}
+            value={openingRate}
+          />
           <div className="visual-dashboard-hero-meta">
             <span>
               {totals.opened}/{totals.people}
@@ -222,6 +296,7 @@ export function VisualDashboardContent({
       <section
         className="visual-dashboard-metric-grid"
         aria-label="Resumo do dashboard"
+        data-widget-id="metrics"
       >
         {metrics.map((metric) => (
           <article
@@ -239,7 +314,10 @@ export function VisualDashboardContent({
         ))}
       </section>
 
-      <section className="surface-card visual-dashboard-chart-card">
+      <section
+        className="surface-card visual-dashboard-chart-card"
+        data-widget-id="chart"
+      >
         <div className="visual-dashboard-card-head">
           <div>
             <span className="visual-dashboard-overline">Campanhas</span>
@@ -247,30 +325,13 @@ export function VisualDashboardContent({
           </div>
           <Icon name="chart" size={18} />
         </div>
-        <div
-          className="visual-dashboard-chart"
-          aria-label="Abertura por campanha"
-        >
-          {campaignBars.slice(0, 8).map((campaign, index) => (
-            <Link
-              className="visual-dashboard-chart-column"
-              href={`/campaigns/${campaign.id}`}
-              key={campaign.id}
-              title={`${campaign.name}: ${campaign.rate}%`}
-              aria-label={`${campaign.name}, ${campaign.rate}% de abertura`}
-            >
-              <span>{campaign.rate}%</span>
-              <i
-                style={{ height: `${Math.max(campaign.rate, 7)}%` }}
-                className={index === 0 ? "is-featured" : ""}
-              />
-              <small>{campaign.name.split(" ").slice(0, 2).join(" ")}</small>
-            </Link>
-          ))}
-        </div>
+        <CampaignOpeningsChart campaigns={campaignBars} />
       </section>
 
-      <section className="surface-card visual-dashboard-risk-card">
+      <section
+        className="surface-card visual-dashboard-risk-card"
+        data-widget-id="risk"
+      >
         <div className="visual-dashboard-card-head">
           <div>
             <span className="visual-dashboard-overline">Risco humano</span>
@@ -300,6 +361,7 @@ export function VisualDashboardContent({
       <section
         className="surface-card visual-dashboard-campaigns-card"
         id="campaign-overview"
+        data-widget-id="campaigns"
       >
         <div className="visual-dashboard-card-head visual-dashboard-campaigns-head">
           <div>
@@ -346,6 +408,6 @@ export function VisualDashboardContent({
           )}
         </div>
       </section>
-    </div>
+    </BentoDashboardGrid>
   );
 }

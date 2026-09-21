@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { useTheme as useNextTheme } from "next-themes";
 
 export type ThemePreferences = {
   canvas: string;
@@ -31,6 +32,7 @@ const defaultPreferences: ThemePreferences = {
   showContrastNotice: true,
 };
 const storageKey = "pierphish-theme-preferences";
+const nextThemeStorageKey = "pierphish-theme-mode";
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function isValidCanvas(value: unknown): value is string {
@@ -55,41 +57,57 @@ function cssImage(value: string | null) {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [preferences, setPreferences] =
     useState<ThemePreferences>(defaultPreferences);
+  const [hydrated, setHydrated] = useState(false);
+  const { setTheme } = useNextTheme();
 
   useEffect(() => {
     const stored = window.localStorage.getItem(storageKey);
-    if (!stored) return;
-    try {
-      const parsed = JSON.parse(stored) as Partial<ThemePreferences>;
-      setPreferences({
-        canvas: isValidCanvas(parsed.canvas)
-          ? parsed.canvas
-          : defaultPreferences.canvas,
-        backgroundImage: isValidBackgroundImage(parsed.backgroundImage)
-          ? parsed.backgroundImage
-          : null,
-        mode: parsed.mode === "dark" ? "dark" : defaultPreferences.mode,
-        cardStyle:
-          parsed.cardStyle === "translucent" ||
-          parsed.cardStyle === "liquid" ||
-          parsed.cardStyle === "apple"
-            ? parsed.cardStyle
-            : defaultPreferences.cardStyle,
-        dashboardMode:
-          parsed.dashboardMode === "visual"
-            ? "visual"
-            : defaultPreferences.dashboardMode,
-        showContrastNotice:
-          typeof parsed.showContrastNotice === "boolean"
-            ? parsed.showContrastNotice
-            : defaultPreferences.showContrastNotice,
-      });
-    } catch {
-      window.localStorage.removeItem(storageKey);
+    const persistedMode = window.localStorage.getItem(nextThemeStorageKey);
+
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as Partial<ThemePreferences>;
+        setPreferences({
+          canvas: isValidCanvas(parsed.canvas)
+            ? parsed.canvas
+            : defaultPreferences.canvas,
+          backgroundImage: isValidBackgroundImage(parsed.backgroundImage)
+            ? parsed.backgroundImage
+            : null,
+          mode:
+            persistedMode === "dark" || persistedMode === "light"
+              ? persistedMode
+              : parsed.mode === "dark"
+                ? "dark"
+                : defaultPreferences.mode,
+          cardStyle:
+            parsed.cardStyle === "translucent" ||
+            parsed.cardStyle === "liquid" ||
+            parsed.cardStyle === "apple"
+              ? parsed.cardStyle
+              : defaultPreferences.cardStyle,
+          dashboardMode:
+            parsed.dashboardMode === "visual"
+              ? "visual"
+              : defaultPreferences.dashboardMode,
+          showContrastNotice:
+            typeof parsed.showContrastNotice === "boolean"
+              ? parsed.showContrastNotice
+              : defaultPreferences.showContrastNotice,
+        });
+      } catch {
+        window.localStorage.removeItem(storageKey);
+      }
+    } else if (persistedMode === "dark" || persistedMode === "light") {
+      setPreferences((current) => ({ ...current, mode: persistedMode }));
     }
+
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
+
     document.documentElement.style.setProperty(
       "--canvas-custom",
       preferences.canvas,
@@ -102,7 +120,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.dataset.cardStyle = preferences.cardStyle;
     document.documentElement.style.colorScheme = preferences.mode;
     window.localStorage.setItem(storageKey, JSON.stringify(preferences));
-  }, [preferences]);
+    window.localStorage.setItem(nextThemeStorageKey, preferences.mode);
+    setTheme(preferences.mode);
+  }, [hydrated, preferences, setTheme]);
 
   const value: ThemeContextValue = {
     preferences,

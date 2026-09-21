@@ -8,6 +8,7 @@ import {
   useNotifications,
 } from "@/components/notifications/notification-center";
 import { useProfile } from "@/components/profile/profile-provider";
+import { CommandPalette } from "@/components/ui/command-palette";
 import { Icon } from "@/components/ui/icon";
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
 
@@ -239,11 +240,10 @@ export function DashboardShell({
           <h1 className="m-0 text-[clamp(18px,3vw,24px)] leading-[0.95] font-[680] tracking-[-0.065em]">
             {title}
           </h1>
-          {headerAction && (
-            <div className="flex items-center gap-2.5 max-[720px]:w-full max-[720px]:justify-between">
-              {headerAction}
-            </div>
-          )}
+          <div className="flex items-center gap-2.5 max-[720px]:w-full max-[720px]:justify-between">
+            <CommandPalette />
+            {headerAction}
+          </div>
         </header>
         <div className="min-w-0 overflow-x-clip py-[14px] pr-2 pb-8 max-[720px]:p-0">
           {children}

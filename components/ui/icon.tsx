@@ -1,3 +1,24 @@
+import {
+  ArrowRight,
+  Bell,
+  ChartNoAxesCombined,
+  Check,
+  ChevronDown,
+  Grid2X2,
+  Image as ImageIcon,
+  LogOut,
+  Palette,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings,
+  ShieldCheck,
+  SlidersHorizontal,
+  UsersRound,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+
 export type IconName =
   | "grid"
   | "chart"
@@ -17,32 +38,45 @@ export type IconName =
   | "close"
   | "bell";
 
-const iconClasses: Record<IconName, string> = {
-  grid: "fa-table-cells",
-  chart: "fa-chart-line",
-  users: "fa-users",
-  shield: "fa-shield-halved",
-  refresh: "fa-arrows-rotate",
-  arrow: "fa-arrow-right",
-  logout: "fa-arrow-right-from-bracket",
-  chevron: "fa-chevron-down",
-  search: "fa-magnifying-glass",
-  palette: "fa-palette",
-  image: "fa-image",
-  settings: "fa-gear",
-  tune: "fa-sliders",
-  check: "fa-check",
-  plus: "fa-plus",
-  close: "fa-xmark",
-  bell: "fa-bell",
+const iconComponents: Record<IconName, LucideIcon> = {
+  grid: Grid2X2,
+  chart: ChartNoAxesCombined,
+  users: UsersRound,
+  shield: ShieldCheck,
+  refresh: RefreshCw,
+  arrow: ArrowRight,
+  logout: LogOut,
+  chevron: ChevronDown,
+  search: Search,
+  palette: Palette,
+  image: ImageIcon,
+  settings: Settings,
+  tune: SlidersHorizontal,
+  check: Check,
+  plus: Plus,
+  close: X,
+  bell: Bell,
 };
 
-export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
+export function Icon({
+  name,
+  size = 20,
+  className,
+  strokeWidth = 1.7,
+}: {
+  name: IconName;
+  size?: number;
+  className?: string;
+  strokeWidth?: number;
+}) {
+  const IconComponent = iconComponents[name];
+
   return (
-    <i
+    <IconComponent
       aria-hidden="true"
-      className={`icon-minimal fa-solid ${iconClasses[name]} shrink-0`}
-      style={{ fontSize: `${size}px`, lineHeight: 1 }}
+      className={`icon-minimal shrink-0 ${className ?? ""}`}
+      size={size}
+      strokeWidth={strokeWidth}
     />
   );
 }

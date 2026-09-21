@@ -2,6 +2,11 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Icon } from "@/components/ui/icon";
@@ -38,6 +43,14 @@ type WorkspaceOption = {
   environment: WorkspaceEnvironment;
   role?: WorkspaceRole;
 };
+
+const managedUserColumn = createColumnHelper<ManagedUser>();
+const managedUserColumns = [
+  managedUserColumn.accessor("name", { header: "Pessoa" }),
+  managedUserColumn.accessor("email", { header: "E-mail" }),
+  managedUserColumn.accessor("createdAt", { header: "Criado em" }),
+  managedUserColumn.accessor("lastSignInAt", { header: "Último acesso" }),
+];
 
 const roleOptions: Array<{
   value: WorkspaceRole;
@@ -165,7 +178,8 @@ function generatePassword() {
 }
 
 function validatePassword(password: string, email: string) {
-  if (password.length < 12) return "A senha precisa ter pelo menos 12 caracteres.";
+  if (password.length < 12)
+    return "A senha precisa ter pelo menos 12 caracteres.";
   const groups = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z\d]/].filter((pattern) =>
     pattern.test(password),
   ).length;
@@ -178,7 +192,8 @@ function validatePassword(password: string, email: string) {
     ["password", "senha", "pierphish", "be phish"].some((value) =>
       normalizedPassword.includes(value),
     ) ||
-    (normalizedEmail.length >= 4 && normalizedPassword.includes(normalizedEmail))
+    (normalizedEmail.length >= 4 &&
+      normalizedPassword.includes(normalizedEmail))
   ) {
     return "Evite senhas previsíveis ou relacionadas ao usuário.";
   }
@@ -204,6 +219,11 @@ export function UserManagementContent() {
   const searchParams = useSearchParams();
   const requestedWorkspaceId = searchParams.get("workspace") ?? "";
   const [users, setUsers] = useState<ManagedUser[]>(demoUsers);
+  const usersTable = useReactTable({
+    data: users,
+    columns: managedUserColumns,
+    getCoreRowModel: getCoreRowModel(),
+  });
   const [loadingUsers, setLoadingUsers] = useState(isSupabaseConfigured);
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState("");
@@ -235,7 +255,7 @@ export function UserManagementContent() {
   const adminAccess =
     !isSupabaseConfigured ||
     globalAdminAccess ||
-      workspaceOptions.some(
+    workspaceOptions.some(
       (workspace) => workspace.role === "owner" || workspace.role === "admin",
     );
   const ownerAccess =
@@ -267,7 +287,9 @@ export function UserManagementContent() {
     setSelectedWorkspaceId((current) => {
       if (
         requestedWorkspaceId &&
-        localWorkspaces.some((workspace) => workspace.id === requestedWorkspaceId)
+        localWorkspaces.some(
+          (workspace) => workspace.id === requestedWorkspaceId,
+        )
       ) {
         return requestedWorkspaceId;
       }
@@ -282,7 +304,9 @@ export function UserManagementContent() {
     setInviteWorkspaceId((current) => {
       if (
         requestedWorkspaceId &&
-        localWorkspaces.some((workspace) => workspace.id === requestedWorkspaceId)
+        localWorkspaces.some(
+          (workspace) => workspace.id === requestedWorkspaceId,
+        )
       ) {
         return requestedWorkspaceId;
       }
@@ -386,7 +410,9 @@ export function UserManagementContent() {
     setSelectedWorkspaceId((current) => {
       if (
         requestedWorkspaceId &&
-        nextWorkspaces.some((workspace) => workspace.id === requestedWorkspaceId)
+        nextWorkspaces.some(
+          (workspace) => workspace.id === requestedWorkspaceId,
+        )
       ) {
         return requestedWorkspaceId;
       }
@@ -401,7 +427,9 @@ export function UserManagementContent() {
     setInviteWorkspaceId((current) => {
       if (
         requestedWorkspaceId &&
-        nextWorkspaces.some((workspace) => workspace.id === requestedWorkspaceId)
+        nextWorkspaces.some(
+          (workspace) => workspace.id === requestedWorkspaceId,
+        )
       ) {
         return requestedWorkspaceId;
       }
@@ -682,7 +710,9 @@ export function UserManagementContent() {
             : managedUser,
         ),
       );
-      setNotice(`A senha de ${resetTarget.name || resetTarget.email} foi redefinida.`);
+      setNotice(
+        `A senha de ${resetTarget.name || resetTarget.email} foi redefinida.`,
+      );
       setResetTarget(null);
       setActionLoading(false);
       return;
@@ -738,7 +768,9 @@ export function UserManagementContent() {
       persistDemoUsers(
         users.filter((managedUser) => managedUser.id !== deleteTarget.id),
       );
-      setNotice(`A conta de ${deleteTarget.name || deleteTarget.email} foi removida.`);
+      setNotice(
+        `A conta de ${deleteTarget.name || deleteTarget.email} foi removida.`,
+      );
       setDeleteTarget(null);
       setDeleteConfirmation("");
       setActionLoading(false);
@@ -770,7 +802,9 @@ export function UserManagementContent() {
     setUsers((current) =>
       current.filter((managedUser) => managedUser.id !== deleteTarget.id),
     );
-    setNotice(`A conta de ${deleteTarget.name || deleteTarget.email} foi excluída.`);
+    setNotice(
+      `A conta de ${deleteTarget.name || deleteTarget.email} foi excluída.`,
+    );
     setDeleteTarget(null);
     setDeleteConfirmation("");
     setActionLoading(false);
@@ -1181,117 +1215,124 @@ export function UserManagementContent() {
                       </tr>
                     </thead>
                     <tbody>
-                      {users.map((managedUser) => (
-                        <tr
-                          className="border-b border-[var(--line-soft)] last:border-b-0"
-                          key={managedUser.id}
-                        >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <span className="grid size-9 flex-none place-items-center rounded-full bg-[var(--surface-soft)] text-[10px] font-bold text-[var(--ink)]">
-                                {getInitials(
-                                  managedUser.name,
-                                  managedUser.email,
+                      {usersTable.getRowModel().rows.map((row) => {
+                        const managedUser = row.original;
+                        return (
+                          <tr
+                            className="border-b border-[var(--line-soft)] last:border-b-0"
+                            key={managedUser.id}
+                          >
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <span className="grid size-9 flex-none place-items-center rounded-full bg-[var(--surface-soft)] text-[10px] font-bold text-[var(--ink)]">
+                                  {getInitials(
+                                    managedUser.name,
+                                    managedUser.email,
+                                  )}
+                                </span>
+                                <span className="min-w-0">
+                                  <strong className="block truncate text-[12px] font-bold text-[var(--ink)]">
+                                    {managedUser.name || "Sem nome"}
+                                  </strong>
+                                  <span className="block truncate text-[10px] text-[#8b969c]">
+                                    {managedUser.email}
+                                  </span>
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="grid gap-1">
+                                {managedUser.workspaceMemberships.length ? (
+                                  managedUser.workspaceMemberships.map(
+                                    (membership) => (
+                                      <span
+                                        className="block max-w-[190px] truncate text-[11px] text-[var(--ink)]"
+                                        key={`${managedUser.id}-${membership.workspaceId}`}
+                                      >
+                                        {membership.workspaceName}
+                                      </span>
+                                    ),
+                                  )
+                                ) : (
+                                  <span className="text-[11px] text-[#a0a8ad]">
+                                    Sem workspace
+                                  </span>
                                 )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="grid gap-1.5">
+                                {managedUser.workspaceMemberships.length ? (
+                                  managedUser.workspaceMemberships.map(
+                                    (membership) => (
+                                      <span
+                                        className="inline-flex w-fit rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[9px] font-bold text-[#687780]"
+                                        key={`${managedUser.id}-${membership.workspaceId}-role`}
+                                      >
+                                        {roleLabel(membership.role)}
+                                      </span>
+                                    ),
+                                  )
+                                ) : (
+                                  <span className="text-[11px] text-[#a0a8ad]">
+                                    —
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <span
+                                className={`inline-flex rounded-full px-2.5 py-1 text-[9px] font-bold ${managedUser.passwordRotationRequired ? "bg-[#fff1e8] text-[#9a603f]" : "bg-[#edf4e8] text-[#5c784b]"}`}
+                              >
+                                {managedUser.passwordRotationRequired
+                                  ? "Troca pendente"
+                                  : "Ativo"}
                               </span>
-                              <span className="min-w-0">
-                                <strong className="block truncate text-[12px] font-bold text-[var(--ink)]">
-                                  {managedUser.name || "Sem nome"}
-                                </strong>
-                                <span className="block truncate text-[10px] text-[#8b969c]">
-                                  {managedUser.email}
-                                </span>
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <div className="grid gap-1">
-                              {managedUser.workspaceMemberships.length ? (
-                                managedUser.workspaceMemberships.map(
-                                  (membership) => (
-                                    <span
-                                      className="block max-w-[190px] truncate text-[11px] text-[var(--ink)]"
-                                      key={`${managedUser.id}-${membership.workspaceId}`}
-                                    >
-                                      {membership.workspaceName}
-                                    </span>
-                                  ),
-                                )
+                            </td>
+                            <td className="px-4 py-4 text-[10px] text-[#87939a]">
+                              {formatDate(managedUser.createdAt)}
+                            </td>
+                            <td className="px-6 py-4 text-right text-[10px] text-[#87939a]">
+                              {formatDate(managedUser.lastSignInAt)}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              {canManageTarget(managedUser) ? (
+                                <div className="flex justify-end gap-2">
+                                  <button
+                                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#e1e5e6] px-2.5 py-2 text-[10px] font-bold text-[#687780] transition-colors hover:border-[#9eafb5] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="button"
+                                    onClick={() =>
+                                      openResetPassword(managedUser)
+                                    }
+                                    disabled={actionLoading}
+                                  >
+                                    <Icon name="settings" size={12} />
+                                    Senha
+                                  </button>
+                                  <button
+                                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#efc6bc] px-2.5 py-2 text-[10px] font-bold text-[#a14e3d] transition-colors hover:bg-[#fff2ef] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="button"
+                                    onClick={() => {
+                                      setDeleteTarget(managedUser);
+                                      setDeleteConfirmation("");
+                                      setError(null);
+                                      setNotice(null);
+                                    }}
+                                    disabled={actionLoading}
+                                  >
+                                    <Icon name="close" size={12} />
+                                    Excluir
+                                  </button>
+                                </div>
                               ) : (
-                                <span className="text-[11px] text-[#a0a8ad]">
-                                  Sem workspace
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <div className="grid gap-1.5">
-                              {managedUser.workspaceMemberships.length ? (
-                                managedUser.workspaceMemberships.map(
-                                  (membership) => (
-                                    <span
-                                      className="inline-flex w-fit rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[9px] font-bold text-[#687780]"
-                                      key={`${managedUser.id}-${membership.workspaceId}-role`}
-                                    >
-                                      {roleLabel(membership.role)}
-                                    </span>
-                                  ),
-                                )
-                              ) : (
-                                <span className="text-[11px] text-[#a0a8ad]">
+                                <span className="text-[10px] text-[#b0b7ba]">
                                   —
                                 </span>
                               )}
-                            </div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <span
-                              className={`inline-flex rounded-full px-2.5 py-1 text-[9px] font-bold ${managedUser.passwordRotationRequired ? "bg-[#fff1e8] text-[#9a603f]" : "bg-[#edf4e8] text-[#5c784b]"}`}
-                            >
-                              {managedUser.passwordRotationRequired
-                                ? "Troca pendente"
-                                : "Ativo"}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 text-[10px] text-[#87939a]">
-                            {formatDate(managedUser.createdAt)}
-                          </td>
-                          <td className="px-6 py-4 text-right text-[10px] text-[#87939a]">
-                            {formatDate(managedUser.lastSignInAt)}
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            {canManageTarget(managedUser) ? (
-                              <div className="flex justify-end gap-2">
-                                <button
-                                  className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#e1e5e6] px-2.5 py-2 text-[10px] font-bold text-[#687780] transition-colors hover:border-[#9eafb5] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
-                                  type="button"
-                                  onClick={() => openResetPassword(managedUser)}
-                                  disabled={actionLoading}
-                                >
-                                  <Icon name="settings" size={12} />
-                                  Senha
-                                </button>
-                                <button
-                                  className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#efc6bc] px-2.5 py-2 text-[10px] font-bold text-[#a14e3d] transition-colors hover:bg-[#fff2ef] disabled:cursor-not-allowed disabled:opacity-50"
-                                  type="button"
-                                  onClick={() => {
-                                    setDeleteTarget(managedUser);
-                                    setDeleteConfirmation("");
-                                    setError(null);
-                                    setNotice(null);
-                                  }}
-                                  disabled={actionLoading}
-                                >
-                                  <Icon name="close" size={12} />
-                                  Excluir
-                                </button>
-                              </div>
-                            ) : (
-                              <span className="text-[10px] text-[#b0b7ba]">—</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1361,7 +1402,10 @@ export function UserManagementContent() {
               </span>
             </label>
             {error && (
-              <p className="mt-4 rounded-[12px] bg-[#fff0ed] px-3.5 py-3 text-[11px] text-[#984f3f]" role="alert">
+              <p
+                className="mt-4 rounded-[12px] bg-[#fff0ed] px-3.5 py-3 text-[11px] text-[#984f3f]"
+                role="alert"
+              >
                 {error}
               </p>
             )}
@@ -1445,7 +1489,10 @@ export function UserManagementContent() {
               />
             </label>
             {error && (
-              <p className="mt-4 rounded-[12px] bg-[#fff0ed] px-3.5 py-3 text-[11px] text-[#984f3f]" role="alert">
+              <p
+                className="mt-4 rounded-[12px] bg-[#fff0ed] px-3.5 py-3 text-[11px] text-[#984f3f]"
+                role="alert"
+              >
                 {error}
               </p>
             )}
@@ -1462,7 +1509,9 @@ export function UserManagementContent() {
                 className="inline-flex h-11 items-center gap-2 rounded-[13px] bg-[#b45d4b] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#994c3d] disabled:cursor-not-allowed disabled:opacity-50"
                 type="button"
                 onClick={() => void handleDeleteUser()}
-                disabled={actionLoading || deleteConfirmation.trim() !== "EXCLUIR"}
+                disabled={
+                  actionLoading || deleteConfirmation.trim() !== "EXCLUIR"
+                }
               >
                 {actionLoading ? "Excluindo…" : "Excluir usuário"}
                 <Icon name="close" size={14} />

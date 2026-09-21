@@ -1,6 +1,6 @@
 "use client";
 
-import { animate } from "framer-motion";
+import { animate } from "motion";
 import { useEffect, useRef, useState } from "react";
 
 type AnimatedNumberProps = {

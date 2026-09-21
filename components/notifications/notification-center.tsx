@@ -5,9 +5,12 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast as sonnerToast } from "sonner";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -26,14 +29,12 @@ export type NotificationRecord = {
 
 type NotificationContextValue = {
   closePanel: () => void;
-  dismissToast: () => void;
   hasUnread: boolean;
   markAllAsRead: () => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   notifications: NotificationRecord[];
   notificationPanelOpen: boolean;
   openPanel: () => void;
-  toast: NotificationRecord | null;
 };
 
 const NotificationContext = createContext<NotificationContextValue | null>(
@@ -90,79 +91,48 @@ export function NotificationProvider({
   children: React.ReactNode;
 }) {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
-  const [toast, setToast] = useState<NotificationRecord | null>(null);
+  const queryClient = useQueryClient();
   const knownIdsRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
-  const toastTimerRef = useRef<number | null>(null);
-
-  const dismissToast = useCallback(() => {
-    if (toastTimerRef.current !== null) {
-      window.clearTimeout(toastTimerRef.current);
-      toastTimerRef.current = null;
-    }
-    setToast(null);
-  }, []);
-
-  const showToast = useCallback((notification: NotificationRecord) => {
-    if (toastTimerRef.current !== null) {
-      window.clearTimeout(toastTimerRef.current);
-    }
-    setToast(notification);
-    toastTimerRef.current = window.setTimeout(() => {
-      setToast(null);
-      toastTimerRef.current = null;
-    }, 5000);
-  }, []);
+  const notificationQueryKey = useMemo(
+    () => ["notifications", user?.id ?? "anonymous"] as const,
+    [user?.id],
+  );
+  const notificationsQuery = useQuery({
+    queryKey: notificationQueryKey,
+    enabled: Boolean(isSupabaseConfigured && supabase && user),
+    refetchInterval: 15_000,
+    queryFn: async () => {
+      if (!supabase || !user) return [];
+      const { data, error } = await supabase
+        .from("pierphish_notifications")
+        .select(
+          "id,recipient_user_id,workspace_id,type,title,message,action_path,metadata,read_at,created_at",
+        )
+        .eq("recipient_user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? [])
+        .map(normalizeNotification)
+        .filter((item): item is NotificationRecord => item !== null);
+    },
+  });
+  const notifications = notificationsQuery.data ?? [];
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase || !user) {
       knownIdsRef.current = new Set();
       initializedRef.current = false;
-      setNotifications([]);
       setNotificationPanelOpen(false);
-      dismissToast();
       return;
     }
 
-    let disposed = false;
     const client = supabase;
     const userId = user.id;
     knownIdsRef.current = new Set();
     initializedRef.current = false;
-
-    async function loadNotifications(announceNew = false) {
-      const { data, error } = await client
-        .from("pierphish_notifications")
-        .select(
-          "id,recipient_user_id,workspace_id,type,title,message,action_path,metadata,read_at,created_at",
-        )
-        .eq("recipient_user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (disposed || error) return;
-
-      const next = (data ?? [])
-        .map(normalizeNotification)
-        .filter((item): item is NotificationRecord => item !== null);
-      const newItems = next.filter(
-        (notification) => !knownIdsRef.current.has(notification.id),
-      );
-      knownIdsRef.current = new Set(
-        next.map((notification) => notification.id),
-      );
-      setNotifications(next);
-      if (announceNew && initializedRef.current && newItems[0]) {
-        showToast(newItems[0]);
-      }
-      initializedRef.current = true;
-    }
-
-    void loadNotifications();
-    const interval = window.setInterval(() => {
-      void loadNotifications(true);
-    }, 15000);
     const channel = client
       .channel(`pierphish-notifications-${userId}`)
       .on(
@@ -176,74 +146,84 @@ export function NotificationProvider({
         (payload) => {
           const notification = normalizeNotification(payload.new);
           if (!notification || knownIdsRef.current.has(notification.id)) return;
-          knownIdsRef.current.add(notification.id);
-          setNotifications((current) => [
-            notification,
-            ...current.filter((item) => item.id !== notification.id),
-          ]);
-          showToast(notification);
+          queryClient.setQueryData<NotificationRecord[]>(
+            notificationQueryKey,
+            (current = []) => [
+              notification,
+              ...current.filter((item) => item.id !== notification.id),
+            ],
+          );
         },
       )
       .subscribe();
 
-    return () => {
-      disposed = true;
-      window.clearInterval(interval);
-      void client.removeChannel(channel);
-    };
-  }, [dismissToast, showToast, user]);
+    return () => void client.removeChannel(channel);
+  }, [notificationQueryKey, queryClient, user]);
 
   useEffect(() => {
-    return () => {
-      if (toastTimerRef.current !== null) {
-        window.clearTimeout(toastTimerRef.current);
-      }
-    };
-  }, []);
+    if (!notificationsQuery.data) return;
+    const newItems = notificationsQuery.data.filter(
+      (notification) => !knownIdsRef.current.has(notification.id),
+    );
+    knownIdsRef.current = new Set(
+      notificationsQuery.data.map((notification) => notification.id),
+    );
+    if (initializedRef.current && newItems[0]) {
+      sonnerToast(newItems[0].title, {
+        description: newItems[0].message,
+        duration: 5000,
+      });
+    }
+    initializedRef.current = true;
+  }, [notificationsQuery.data]);
 
   const markAsRead = useCallback(
     async (id: string) => {
       if (!supabase || !user) return;
       const readAt = new Date().toISOString();
-      setNotifications((current) =>
-        current.map((notification) =>
-          notification.id === id
-            ? { ...notification, read_at: readAt }
-            : notification,
-        ),
+      queryClient.setQueryData<NotificationRecord[]>(
+        notificationQueryKey,
+        (current = []) =>
+          current.map((notification) =>
+            notification.id === id
+              ? { ...notification, read_at: readAt }
+              : notification,
+          ),
       );
-      await supabase
+      const { error } = await supabase
         .from("pierphish_notifications")
         .update({ read_at: readAt })
         .eq("id", id)
         .eq("recipient_user_id", user.id);
+      if (error) void notificationsQuery.refetch();
     },
-    [user],
+    [notificationQueryKey, notificationsQuery, queryClient, user],
   );
 
   const markAllAsRead = useCallback(async () => {
     if (!supabase || !user) return;
     const readAt = new Date().toISOString();
-    setNotifications((current) =>
-      current.map((notification) => ({ ...notification, read_at: readAt })),
+    queryClient.setQueryData<NotificationRecord[]>(
+      notificationQueryKey,
+      (current = []) =>
+        current.map((notification) => ({ ...notification, read_at: readAt })),
     );
-    await supabase
+    const { error } = await supabase
       .from("pierphish_notifications")
       .update({ read_at: readAt })
       .eq("recipient_user_id", user.id)
       .is("read_at", null);
-  }, [user]);
+    if (error) void notificationsQuery.refetch();
+  }, [notificationQueryKey, notificationsQuery, queryClient, user]);
 
   const value: NotificationContextValue = {
     closePanel: () => setNotificationPanelOpen(false),
-    dismissToast,
     hasUnread: notifications.some((notification) => !notification.read_at),
     markAllAsRead,
     markAsRead,
     notifications,
     notificationPanelOpen,
     openPanel: () => setNotificationPanelOpen(true),
-    toast,
   };
 
   return (
@@ -266,12 +246,10 @@ export function useNotifications() {
 export function NotificationCenter() {
   const {
     closePanel,
-    dismissToast,
     markAllAsRead,
     markAsRead,
     notifications,
     notificationPanelOpen,
-    toast,
   } = useNotifications();
 
   useEffect(() => {
@@ -359,27 +337,6 @@ export function NotificationCenter() {
             </div>
           </aside>
         </>
-      )}
-
-      {toast && (
-        <aside aria-live="polite" className="notification-toast" role="status">
-          <span className="notification-toast-mark">
-            <Icon name="bell" size={17} />
-          </span>
-          <span className="notification-toast-copy">
-            <span>Nova notificação</span>
-            <strong>{toast.title}</strong>
-            <p>{toast.message}</p>
-          </span>
-          <button
-            aria-label="Fechar aviso"
-            className="notification-toast-close"
-            onClick={dismissToast}
-            type="button"
-          >
-            <Icon name="close" size={14} />
-          </button>
-        </aside>
       )}
     </>
   );
