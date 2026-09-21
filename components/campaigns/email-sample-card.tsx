@@ -174,7 +174,10 @@ export function EmailSampleCard({ campaignId }: { campaignId: number }) {
             // The status below still provides a useful fallback message.
           }
           if (request.status < 200 || request.status >= 300) {
-            toast.error(body.error ?? "Não foi possível anexar o arquivo.");
+            toast.error(
+              body.error ??
+                `Não foi possível anexar o arquivo (HTTP ${request.status}).`,
+            );
           } else {
             setSample(body.sample ?? null);
             setStorage(body.storage ?? null);
@@ -188,7 +191,9 @@ export function EmailSampleCard({ campaignId }: { campaignId: number }) {
         })();
       };
       request.onerror = () => {
-        toast.error("Não foi possível enviar o arquivo.");
+        toast.error(
+          "Não foi possível enviar o arquivo. Verifique sua conexão e tente novamente.",
+        );
         resolve();
       };
       request.send(formData);

@@ -126,6 +126,33 @@ function jsonError(error: unknown) {
     : "Erro inesperado ao processar o arquivo.";
 }
 
+function uploadErrorMessage(error: unknown) {
+  const message = jsonError(error);
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("bucket not found") ||
+    normalized.includes("campaign-email-samples")
+  ) {
+    return "O armazenamento de exemplos ainda não foi configurado. Aplique a migration 20260921120000_add_campaign_email_samples.sql no Supabase.";
+  }
+  if (
+    normalized.includes("relation") &&
+    normalized.includes("campaign_email_sample")
+  ) {
+    return "A estrutura de exemplos ainda não foi aplicada ao Supabase. Aplique a migration 20260921120000_add_campaign_email_samples.sql.";
+  }
+  if (
+    normalized.includes("row-level security") ||
+    normalized.includes("permission denied") ||
+    normalized.includes("new row violates")
+  ) {
+    return "O Supabase bloqueou o armazenamento deste exemplo. Verifique as políticas RLS e o acesso do usuário ao workspace.";
+  }
+
+  return `Não foi possível anexar o arquivo: ${message}`;
+}
+
 function samplePayload(sample: SampleRow | null) {
   if (!sample) return null;
   return {
@@ -293,7 +320,7 @@ async function getStorageUsage(client: SupabaseClient, workspaceId: string) {
   );
 }
 
-async function uploadSample(request: NextRequest, campaignId: number) {
+async function uploadSampleInternal(request: NextRequest, campaignId: number) {
   const access = await requireCampaignAccess(request, campaignId, true);
   if (access.error) {
     return access.error;
@@ -486,6 +513,14 @@ async function uploadSample(request: NextRequest, campaignId: number) {
     sample: samplePayload(saved),
     storage: await getStorageUsage(client, context.workspaceId),
   });
+}
+
+async function uploadSample(request: NextRequest, campaignId: number) {
+  try {
+    return await uploadSampleInternal(request, campaignId);
+  } catch (error) {
+    return errorResponse(uploadErrorMessage(error), 503);
+  }
 }
 
 export async function GET(
