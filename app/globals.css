@@ -261,6 +261,19 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
     0 18px 44px rgba(0, 0, 0, 0.18);
 }
 
+/* Keep the Font Awesome vocabulary, but give every product icon a lighter,
+   linear reading so controls stay quiet beside the data. */
+.icon-minimal {
+  opacity: 0.78;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.62px currentColor;
+}
+
+.sidebar-nav-link .icon-minimal {
+  opacity: 0.72;
+  -webkit-text-stroke-width: 0.58px;
+}
+
 .sidebar-nav-link {
   display: grid;
   width: 48px;

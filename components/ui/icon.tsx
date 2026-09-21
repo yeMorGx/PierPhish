@@ -41,7 +41,7 @@ export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   return (
     <i
       aria-hidden="true"
-      className={`fa-solid ${iconClasses[name]} shrink-0`}
+      className={`icon-minimal fa-solid ${iconClasses[name]} shrink-0`}
       style={{ fontSize: `${size}px`, lineHeight: 1 }}
     />
   );
