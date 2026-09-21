@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { NotificationProvider } from "@/components/notifications/notification-center";
@@ -17,6 +18,11 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body>
+        <Script
+          src="https://kit.fontawesome.com/a66dd62cc8.js"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         <ThemeProvider>
           <AuthProvider>
             <NotificationProvider>
