@@ -6265,6 +6265,8 @@ html[data-theme="dark"] .workspace-modal-backdrop {
   display: flex;
   min-width: 0;
   overflow-y: auto;
+  position: relative;
+  z-index: 2;
   background: var(--surface);
 }
 
@@ -6592,11 +6594,161 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 
 .login-artwork {
   position: relative;
+  z-index: 3;
   min-width: 0;
   min-height: 100dvh;
   overflow: hidden;
   isolation: isolate;
   background: #2783a4;
+}
+
+/* Fullscreen MFA stage */
+.mfa-stage {
+  position: relative;
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  background: #071c2a;
+}
+
+.mfa-stage-video {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.mfa-stage::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(3, 17, 28, 0.28), rgba(3, 17, 28, 0.72)),
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(18, 45, 60, 0.04),
+      rgba(3, 17, 28, 0.58)
+    );
+  content: "";
+  pointer-events: none;
+}
+
+.mfa-card {
+  width: min(calc(100% - 40px), 560px);
+  margin: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 28px;
+  padding: clamp(26px, 4vw, 42px);
+  color: #fff;
+  background: rgba(8, 24, 36, 0.84);
+  box-shadow:
+    0 30px 90px rgba(1, 10, 17, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(18px);
+}
+
+.mfa-card .login-brand {
+  color: #fff;
+}
+
+.mfa-card .login-brand-mark {
+  color: #12202a;
+  background: #fff;
+}
+
+.mfa-card .mfa-required-heading {
+  margin-top: 34px;
+}
+
+.mfa-card .mfa-required-heading h1 {
+  color: #fff;
+  font-size: clamp(30px, 4vw, 46px);
+}
+
+.mfa-card .mfa-required-heading p,
+.mfa-card .login-footer,
+.mfa-card .mfa-sign-out {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.mfa-card .login-loading {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.mfa-card .login-eyebrow {
+  color: #ff8a79;
+}
+
+.mfa-card .mfa-setup-card {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mfa-card .mfa-setup-copy strong,
+.mfa-card .mfa-setup-copy summary {
+  color: #fff;
+}
+
+.mfa-card .mfa-setup-copy code {
+  color: #172530;
+}
+
+.mfa-code-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.mfa-code-input {
+  width: 100%;
+  height: 58px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 13px;
+  outline: 0;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  font-family: var(--font-data);
+  font-size: 25px;
+  font-weight: 800;
+  text-align: center;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.mfa-code-input:focus {
+  border-color: #ff8a79;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 0 0 4px rgba(255, 138, 121, 0.2);
+}
+
+.mfa-card .mfa-required-form {
+  margin-top: 28px;
+}
+
+.mfa-card .mfa-required-form label {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.mfa-card .login-form button {
+  color: #172530;
+  background: #fff;
+}
+
+.mfa-card .login-form button:hover:not(:disabled) {
+  background: #e9f4f4;
+}
+
+.mfa-card .login-error {
+  color: #ffd0be;
+  background: rgba(143, 69, 43, 0.36);
 }
 
 .login-artwork::after {

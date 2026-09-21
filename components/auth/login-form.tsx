@@ -1,24 +1,24 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "motion/react";
+import { useReducedMotion } from "motion/react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type LoginPhase = "idle" | "authenticating" | "error" | "success";
 
-const loginMotionTransition = {
-  duration: 0.64,
-  ease: [0.22, 1, 0.36, 1] as const,
-};
+gsap.registerPlugin(useGSAP);
 
 export function LoginForm() {
   const router = useRouter();
   const { ready, user } = useAuth();
   const reducedMotion = useReducedMotion();
+  const stageRef = useRef<HTMLElement | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,18 +32,16 @@ export function LoginForm() {
       user.app_metadata?.password_rotation_required === true
         ? "/alterar-senha"
         : "/mfa";
-    const shouldShowSuccess =
-      loginPhase === "authenticating" || loginPhase === "success";
-
-    if (!shouldShowSuccess) {
+    if (loginPhase === "idle") {
       router.replace(destination);
       return;
     }
 
-    if (loginPhase === "authenticating") setLoginPhase("success");
+    if (loginPhase !== "success") return;
+
     const timeout = window.setTimeout(
       () => router.replace(destination),
-      reducedMotion ? 0 : 720,
+      reducedMotion ? 0 : 1060,
     );
     return () => window.clearTimeout(timeout);
   }, [loginPhase, ready, reducedMotion, router, user]);
@@ -76,13 +74,142 @@ export function LoginForm() {
 
   const isVideoFocused =
     loginPhase === "authenticating" || loginPhase === "success";
-  const mainGrid = isVideoFocused
-    ? "0fr minmax(0, 1fr)"
-    : "minmax(0, 1fr) minmax(0, 1fr)";
+  const animationState =
+    loginPhase === "error" ? "error" : isVideoFocused ? "focused" : "idle";
+  const animatedStageMounted = ready && (!user || loginPhase !== "idle");
+
+  useGSAP(
+    () => {
+      const stage = stageRef.current;
+      const panel = stage?.querySelector<HTMLElement>(".login-panel");
+      const artwork = stage?.querySelector<HTMLElement>(".login-artwork");
+      const video = artwork?.querySelector<HTMLVideoElement>("video");
+      if (!stage || !panel || !artwork || !video) return;
+
+      const media = gsap.matchMedia();
+      media.add(
+        {
+          desktop: "(min-width: 861px)",
+          reduceMotion: "(prefers-reduced-motion: reduce)",
+        },
+        (context) => {
+          const conditions = context.conditions as {
+            desktop?: boolean;
+            reduceMotion?: boolean;
+          };
+          const desktop = Boolean(conditions.desktop);
+          const noMotion = Boolean(conditions.reduceMotion);
+          const focused = animationState === "focused";
+          const errorState = animationState === "error";
+
+          gsap.set(panel, { xPercent: 0, autoAlpha: 1 });
+          gsap.set(artwork, { width: "100%", xPercent: 0, autoAlpha: 1 });
+          gsap.set(video, { scale: 1 });
+
+          if (!desktop) {
+            if (focused) {
+              gsap.to(panel, {
+                xPercent: -100,
+                autoAlpha: 0,
+                duration: noMotion ? 0 : 0.58,
+                ease: "power3.inOut",
+              });
+            }
+            if (errorState) {
+              gsap.fromTo(
+                panel,
+                { x: -16 },
+                { x: 0, duration: noMotion ? 0 : 0.36, ease: "power2.out" },
+              );
+            }
+            return;
+          }
+
+          if (noMotion) {
+            if (focused) {
+              gsap.set(panel, { xPercent: -100, autoAlpha: 0 });
+              gsap.set(artwork, { width: "200%", xPercent: -50 });
+            }
+            return;
+          }
+
+          const timeline = gsap.timeline({ defaults: { overwrite: "auto" } });
+
+          if (focused) {
+            timeline
+              .to(
+                panel,
+                {
+                  xPercent: -100,
+                  autoAlpha: 0,
+                  duration: 0.62,
+                  ease: "power3.inOut",
+                },
+                0,
+              )
+              .to(
+                artwork,
+                {
+                  width: "200%",
+                  xPercent: -50,
+                  duration: 0.94,
+                  ease: "power4.inOut",
+                },
+                0,
+              )
+              .to(
+                video,
+                { scale: 1.045, duration: 0.94, ease: "power2.out" },
+                0,
+              );
+          } else if (errorState) {
+            gsap.set(panel, { xPercent: -100, autoAlpha: 0 });
+            gsap.set(artwork, { width: "200%", xPercent: -50 });
+            timeline
+              .to(
+                artwork,
+                {
+                  width: "100%",
+                  xPercent: 0,
+                  duration: 0.76,
+                  ease: "power4.inOut",
+                },
+                0,
+              )
+              .to(
+                panel,
+                {
+                  xPercent: 0,
+                  autoAlpha: 1,
+                  duration: 0.62,
+                  ease: "back.out(1.2)",
+                },
+                0.12,
+              )
+              .fromTo(
+                panel,
+                { x: -18 },
+                { x: 0, duration: 0.28, ease: "power2.out" },
+                0.7,
+              );
+          }
+
+          return () => timeline.kill();
+        },
+      );
+
+      return () => media.revert();
+    },
+    {
+      dependencies: [animationState, animatedStageMounted],
+      scope: stageRef,
+      revertOnUpdate: true,
+    },
+  );
 
   if (!ready || (user && loginPhase === "idle")) {
     return (
-      <main className="login-page theme-canvas">
+      <main ref={stageRef} className="login-page theme-canvas">
         <section className="login-panel">
           <div className="login-panel-inner">
             <LoginBrand />
@@ -95,30 +222,13 @@ export function LoginForm() {
   }
 
   return (
-    <motion.main
+    <main
+      ref={stageRef}
       className="login-page theme-canvas"
-      animate={{ gridTemplateColumns: mainGrid }}
-      transition={reducedMotion ? { duration: 0 } : loginMotionTransition}
+      aria-busy={loading}
+      data-login-phase={loginPhase}
     >
-      <motion.section
-        className="login-panel"
-        animate={{
-          opacity: isVideoFocused ? 0 : 1,
-          x:
-            loginPhase === "error"
-              ? [0, -12, 12, -7, 0]
-              : isVideoFocused
-                ? "-12%"
-                : 0,
-        }}
-        transition={
-          reducedMotion
-            ? { duration: 0 }
-            : loginPhase === "error"
-              ? { duration: 0.42, ease: "easeOut" }
-              : loginMotionTransition
-        }
-      >
+      <section className="login-panel">
         <div className="login-panel-inner">
           <LoginBrand />
 
@@ -176,16 +286,11 @@ export function LoginForm() {
             Acesso interno protegido pelo Supabase Auth.
           </p>
         </div>
-      </motion.section>
-      <motion.aside
-        className="login-artwork"
-        aria-label="Ilustração do PierPhish"
-        animate={{ scale: isVideoFocused ? 1.018 : 1 }}
-        transition={reducedMotion ? { duration: 0 } : loginMotionTransition}
-      >
+      </section>
+      <aside className="login-artwork" aria-label="Ilustração do PierPhish">
         <LoginArtworkContent />
-      </motion.aside>
-    </motion.main>
+      </aside>
+    </main>
   );
 }
 

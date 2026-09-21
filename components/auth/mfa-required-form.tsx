@@ -1,7 +1,16 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import {
+  FormEvent,
+  type ClipboardEvent,
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -32,6 +41,8 @@ export function MfaRequiredForm() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const codeInputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const reducedMotion = useReducedMotion();
 
   const mustChangePassword =
     user?.app_metadata?.password_rotation_required === true;
@@ -117,6 +128,48 @@ export function MfaRequiredForm() {
     void loadMfaFlow();
   }, [loadMfaFlow, mustChangePassword, ready, router, user]);
 
+  function updateCodeDigit(index: number, value: string) {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    setCode((current) => {
+      const next = current.padEnd(6, " ").split("");
+      next[index] = digit;
+      return next.join("");
+    });
+    if (digit && index < 5) codeInputRefs.current[index + 1]?.focus();
+  }
+
+  function handleCodeKeyDown(
+    index: number,
+    event: KeyboardEvent<HTMLInputElement>,
+  ) {
+    if (
+      event.key === "Backspace" &&
+      !/\d/.test(code[index] ?? "") &&
+      index > 0
+    ) {
+      codeInputRefs.current[index - 1]?.focus();
+    }
+    if (event.key === "ArrowLeft" && index > 0) {
+      event.preventDefault();
+      codeInputRefs.current[index - 1]?.focus();
+    }
+    if (event.key === "ArrowRight" && index < 5) {
+      event.preventDefault();
+      codeInputRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleCodePaste(event: ClipboardEvent<HTMLInputElement>) {
+    const pasted = event.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    if (!pasted) return;
+    event.preventDefault();
+    setCode(pasted);
+    codeInputRefs.current[Math.min(pasted.length, 5)]?.focus();
+  }
+
   async function verifyCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase || !factorId) return;
@@ -162,103 +215,120 @@ export function MfaRequiredForm() {
 
   if (!ready || !user || mustChangePassword || phase === "checking") {
     return (
-      <main className="login-page theme-canvas">
-        <section className="login-panel">
-          <div className="login-panel-inner">
-            <MfaBrand />
-            <div className="login-loading">Preparando sua proteção…</div>
-          </div>
-        </section>
-        <MfaArtwork />
-      </main>
+      <MfaStage>
+        <MfaCard reducedMotion={reducedMotion}>
+          <MfaBrand />
+          <div className="login-loading">Preparando sua proteção…</div>
+        </MfaCard>
+      </MfaStage>
     );
   }
 
   const isEnrollment = phase === "enroll";
 
   return (
-    <main className="login-page theme-canvas">
-      <section className="login-panel">
-        <div className="login-panel-inner">
-          <MfaBrand />
-          <div className="mfa-required-heading">
-            <span className="login-eyebrow">
-              <Icon name="shield" size={14} /> MFA obrigatório
-            </span>
-            <h1>
-              {isEnrollment
-                ? "Ative sua segunda etapa."
-                : "Confirme seu acesso."}
-            </h1>
-            <p>
-              {isEnrollment
-                ? "Use um aplicativo autenticador para proteger sua conta antes de entrar no PierPhish."
-                : `Abra ${factorName} e informe o código atual para continuar.`}
-            </p>
-          </div>
+    <MfaStage>
+      <MfaCard reducedMotion={reducedMotion}>
+        <MfaBrand />
+        <div className="mfa-required-heading">
+          <span className="login-eyebrow">
+            <Icon name="shield" size={14} /> MFA obrigatório
+          </span>
+          <h1>
+            {isEnrollment ? "Ative sua segunda etapa." : "Confirme seu acesso."}
+          </h1>
+          <p>
+            {isEnrollment
+              ? "Use um aplicativo autenticador para proteger sua conta antes de entrar no PierPhish."
+              : `Abra ${factorName} e informe o código atual para continuar.`}
+          </p>
+        </div>
 
-          {isEnrollment && qrCode && (
-            <div className="mfa-setup-card">
-              <img
-                className="mfa-qr-code"
-                src={qrImageSource(qrCode)}
-                alt="QR Code para configurar o autenticador"
-              />
-              <div className="mfa-setup-copy">
-                <strong>1. Escaneie o QR Code</strong>
-                <span>
-                  Abra Google Authenticator, Microsoft Authenticator ou outro
-                  app TOTP compatível.
-                </span>
-                {secret && (
-                  <details>
-                    <summary>Não consegue escanear?</summary>
-                    <code>{secret}</code>
-                  </details>
-                )}
-              </div>
+        {isEnrollment && qrCode && (
+          <div className="mfa-setup-card">
+            <img
+              className="mfa-qr-code"
+              src={qrImageSource(qrCode)}
+              alt="QR Code para configurar o autenticador"
+            />
+            <div className="mfa-setup-copy">
+              <strong>1. Escaneie o QR Code</strong>
+              <span>
+                Abra Google Authenticator, Microsoft Authenticator ou outro app
+                TOTP compatível.
+              </span>
+              {secret && (
+                <details>
+                  <summary>Não consegue escanear?</summary>
+                  <code>{secret}</code>
+                </details>
+              )}
             </div>
-          )}
+          </div>
+        )}
 
-          <form className="login-form mfa-required-form" onSubmit={verifyCode}>
-            <label>
+        <form className="login-form mfa-required-form" onSubmit={verifyCode}>
+          <label className="mfa-code-label">
+            <span>
               {isEnrollment
                 ? "2. Código de confirmação"
                 : "Código do autenticador"}
-              <input
-                value={code}
-                onChange={(event) =>
-                  setCode(event.target.value.replace(/\D/g, "").slice(0, 6))
-                }
-                inputMode="numeric"
-                pattern="[0-9]{6}"
-                autoComplete="one-time-code"
-                placeholder="000000"
-                maxLength={6}
-                required
-              />
-            </label>
-            {error && <p className="login-error">{error}</p>}
-            <button type="submit" disabled={loading || code.length !== 6}>
-              {loading ? "Verificando…" : "Continuar"}
-              <Icon name="arrow" size={17} />
-            </button>
-          </form>
-
+            </span>
+            <div
+              className="mfa-code-grid"
+              role="group"
+              aria-label="Código de 6 dígitos"
+            >
+              {Array.from({ length: 6 }, (_, index) => (
+                <input
+                  aria-label={`Dígito ${index + 1} de 6`}
+                  autoComplete={index === 0 ? "one-time-code" : "off"}
+                  autoFocus={index === 0}
+                  className="mfa-code-input"
+                  inputMode="numeric"
+                  key={index}
+                  maxLength={1}
+                  onChange={(event) =>
+                    updateCodeDigit(index, event.target.value)
+                  }
+                  onKeyDown={(event) => handleCodeKeyDown(index, event)}
+                  onPaste={handleCodePaste}
+                  pattern="[0-9]"
+                  ref={(element) => {
+                    codeInputRefs.current[index] = element;
+                  }}
+                  required
+                  value={/\d/.test(code[index] ?? "") ? code[index] : ""}
+                />
+              ))}
+            </div>
+          </label>
+          {error && (
+            <p className="login-error" role="alert">
+              {error}
+            </p>
+          )}
           <button
-            className="mfa-sign-out"
-            type="button"
-            onClick={() => void signOut()}
+            type="submit"
+            disabled={loading || code.replace(/\D/g, "").length !== 6}
           >
-            Sair desta conta
+            {loading ? "Verificando…" : "Continuar"}
+            <Icon name="arrow" size={17} />
           </button>
-          <p className="login-footer">
-            Acesso liberado somente após a confirmação da segunda etapa.
-          </p>
-        </div>
-      </section>
-      <MfaArtwork />
-    </main>
+        </form>
+
+        <button
+          className="mfa-sign-out"
+          type="button"
+          onClick={() => void signOut()}
+        >
+          Sair desta conta
+        </button>
+        <p className="login-footer">
+          Acesso liberado somente após a confirmação da segunda etapa.
+        </p>
+      </MfaCard>
+    </MfaStage>
   );
 }
 
@@ -271,14 +341,45 @@ function MfaBrand() {
   );
 }
 
-function MfaArtwork() {
+function MfaStage({ children }: { children: React.ReactNode }) {
   return (
-    <aside className="login-artwork" aria-label="Ilustração do PierPhish">
-      <img src="/pierphish-login.png" alt="Ilustração pixel art do PierPhish" />
-      <div className="login-artwork-caption">
-        <span>PIERPHISH</span>
-        <p>Uma visão mais clara sobre o comportamento humano.</p>
-      </div>
-    </aside>
+    <main className="mfa-stage theme-canvas">
+      <video
+        className="mfa-stage-video"
+        aria-hidden="true"
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="metadata"
+        poster="/pierphish-login.png"
+      >
+        <source src="/pierphish-login.mp4" type="video/mp4" />
+      </video>
+      {children}
+    </main>
+  );
+}
+
+function MfaCard({
+  children,
+  reducedMotion,
+}: {
+  children: React.ReactNode;
+  reducedMotion: boolean | null;
+}) {
+  return (
+    <motion.section
+      className="mfa-card"
+      initial={reducedMotion ? false : { opacity: 0, y: 20, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={
+        reducedMotion
+          ? { duration: 0 }
+          : { duration: 0.58, ease: [0.22, 1, 0.36, 1] }
+      }
+    >
+      {children}
+    </motion.section>
   );
 }
