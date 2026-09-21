@@ -10,6 +10,11 @@ import {
 import { useProfile } from "@/components/profile/profile-provider";
 import { CommandPalette } from "@/components/ui/command-palette";
 import { Icon } from "@/components/ui/icon";
+import {
+  readActiveWorkspaceId,
+  writeActiveWorkspaceId,
+} from "@/lib/company-data";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type ActiveSection =
   | "overview"
@@ -28,6 +33,48 @@ type DashboardShellProps = {
 
 function navClass(active: boolean) {
   return `sidebar-nav-link ${active ? "is-active" : ""}`;
+}
+
+function WorkspaceBootstrap() {
+  const { ready, user } = useAuth();
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !ready || !user || !supabase) return;
+
+    const storageKey = `pierphish-workspace-bootstrap:${user.id}`;
+    if (window.sessionStorage.getItem(storageKey) === "ready") return;
+
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      const accessToken = data.session?.access_token;
+      if (!accessToken) return;
+
+      const response = await fetch("/api/workspaces", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!response.ok || cancelled) return;
+
+      const body = (await response.json().catch(() => ({}))) as {
+        workspaces?: Array<{ id: string }>;
+      };
+      const workspaces = body.workspaces ?? [];
+      const storedWorkspaceId = readActiveWorkspaceId();
+      const hasStoredWorkspace = workspaces.some(
+        (workspace) => workspace.id === storedWorkspaceId,
+      );
+      if (!hasStoredWorkspace && workspaces[0]?.id) {
+        writeActiveWorkspaceId(workspaces[0].id);
+      }
+      window.sessionStorage.setItem(storageKey, "ready");
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, user?.id]);
+
+  return null;
 }
 
 export function DashboardShell({
@@ -73,6 +120,7 @@ export function DashboardShell({
 
   return (
     <main className="theme-canvas bento-shell grid min-h-screen grid-cols-[var(--sidebar-width)_minmax(0,1fr)] gap-[var(--shell-gap)] overflow-visible p-[var(--shell-padding)] transition-all duration-200 max-[1120px]:p-7 max-[720px]:grid-cols-1 max-[720px]:gap-2.5 max-[720px]:p-[14px]">
+      <WorkspaceBootstrap />
       <aside
         className="sticky top-[24px] z-40 flex h-[calc(100vh-48px)] min-h-0 flex-col gap-[var(--shell-gap)] max-[1120px]:top-7 max-[1120px]:h-[calc(100vh-56px)] max-[720px]:static max-[720px]:h-[67px] max-[720px]:flex-row max-[720px]:gap-2"
         aria-label="Navegação principal"
