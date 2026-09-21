@@ -62,6 +62,46 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
+const emailPreviewStyles = `
+  :root { color-scheme: light; }
+  html { background: #ffffff; }
+  body {
+    box-sizing: border-box;
+    min-width: 0;
+    margin: 0;
+    padding: 24px;
+    overflow-wrap: anywhere;
+    color: #273238;
+    background: #ffffff;
+    font: 14px/1.6 Arial, Helvetica, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  img { max-width: 100%; height: auto; }
+  table { max-width: 100%; }
+  td, th { overflow-wrap: anywhere; }
+  a { color: #356778; }
+  pre {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font: inherit;
+  }
+`;
+
+function buildEmailPreviewDocument(html: string) {
+  const styleTag = `<style data-pierphish-email-preview>${emailPreviewStyles}</style>`;
+
+  if (/<html[\s>]/i.test(html)) {
+    if (/<head[\s>]/i.test(html)) {
+      return html.replace(/(<head[^>]*>)/i, `$1${styleTag}`);
+    }
+
+    return html.replace(/(<html[^>]*>)/i, `$1<head>${styleTag}</head>`);
+  }
+
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${styleTag}</head><body>${html}</body></html>`;
+}
+
 async function accessToken() {
   if (!supabase) return null;
   const { data } = await supabase.auth.getSession();
@@ -495,7 +535,7 @@ function EmailSamplePreviewModal({
                 <iframe
                   className="email-sample-iframe"
                   sandbox=""
-                  srcDoc={sample.parsedHtml}
+                  srcDoc={buildEmailPreviewDocument(sample.parsedHtml)}
                   title="Conteúdo HTML sanitizado do e-mail"
                 />
               ) : (

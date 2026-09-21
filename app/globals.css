@@ -820,7 +820,8 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
 .email-sample-iframe {
   display: block;
   width: 100%;
-  min-height: 430px;
+  height: clamp(360px, 56vh, 680px);
+  min-height: 360px;
   margin-top: 10px;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -829,7 +830,7 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
 
 .email-sample-plain-preview pre,
 .email-sample-rendered-preview pre {
-  max-height: 430px;
+  max-height: clamp(360px, 56vh, 680px);
   margin: 10px 0 0;
   overflow: auto;
   color: var(--ink-strong);
@@ -896,6 +897,16 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
 
   .email-sample-preview-grid {
     grid-template-columns: 1fr;
+  }
+
+  .email-sample-iframe {
+    height: min(60vh, 560px);
+    min-height: 320px;
+  }
+
+  .email-sample-plain-preview pre,
+  .email-sample-rendered-preview pre {
+    max-height: min(60vh, 560px);
   }
 
   .email-sample-meta-grid {
