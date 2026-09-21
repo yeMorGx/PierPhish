@@ -164,6 +164,27 @@ function generatePassword() {
   return password.join("");
 }
 
+function validatePassword(password: string, email: string) {
+  if (password.length < 12) return "A senha precisa ter pelo menos 12 caracteres.";
+  const groups = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z\d]/].filter((pattern) =>
+    pattern.test(password),
+  ).length;
+  if (groups < 3) {
+    return "Use pelo menos 3 grupos: maiúsculas, minúsculas, números ou símbolos.";
+  }
+  const normalizedPassword = password.toLowerCase();
+  const normalizedEmail = email.toLowerCase().split("@")[0];
+  if (
+    ["password", "senha", "pierphish", "be phish"].some((value) =>
+      normalizedPassword.includes(value),
+    ) ||
+    (normalizedEmail.length >= 4 && normalizedPassword.includes(normalizedEmail))
+  ) {
+    return "Evite senhas previsíveis ou relacionadas ao usuário.";
+  }
+  return null;
+}
+
 function isGlobalAdminUser(user: ReturnType<typeof useAuth>["user"]) {
   if (!isSupabaseConfigured) return true;
   if (user?.email?.toLowerCase() === superAdminEmail) return true;
@@ -204,14 +225,23 @@ export function UserManagementContent() {
     useState(isSupabaseConfigured);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [resetTarget, setResetTarget] = useState<ManagedUser | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   const globalAdminAccess = isGlobalAdminUser(user);
   const adminAccess =
     !isSupabaseConfigured ||
     globalAdminAccess ||
-    workspaceOptions.some(
+      workspaceOptions.some(
       (workspace) => workspace.role === "owner" || workspace.role === "admin",
     );
+  const ownerAccess =
+    !isSupabaseConfigured ||
+    globalAdminAccess ||
+    workspaceOptions.some((workspace) => workspace.role === "owner");
   const availableRoleOptions = globalAdminAccess
     ? roleOptions
     : roleOptions.filter((option) => option.value !== "owner");
@@ -599,6 +629,151 @@ export function UserManagementContent() {
     );
     await loadUsers();
     setInviting(false);
+  }
+
+  function canManageTarget(managedUser: ManagedUser) {
+    if (!ownerAccess || managedUser.id === user?.id) return false;
+    if (globalAdminAccess || !isSupabaseConfigured) return true;
+    const ownedWorkspaceIds = new Set(
+      workspaceOptions
+        .filter((workspace) => workspace.role === "owner")
+        .map((workspace) => workspace.id),
+    );
+    return (
+      managedUser.workspaceMemberships.some(
+        (membership) =>
+          ownedWorkspaceIds.has(membership.workspaceId) &&
+          membership.role !== "owner",
+      ) &&
+      !managedUser.workspaceMemberships.some(
+        (membership) =>
+          ownedWorkspaceIds.has(membership.workspaceId) &&
+          membership.role === "owner",
+      )
+    );
+  }
+
+  function openResetPassword(managedUser: ManagedUser) {
+    setError(null);
+    setNotice(null);
+    setResetTarget(managedUser);
+    setResetPassword(generatePassword());
+  }
+
+  async function handleResetPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!resetTarget) return;
+    setActionLoading(true);
+    setError(null);
+    setNotice(null);
+    const nextPassword = resetPassword.trim();
+    const passwordError = validatePassword(nextPassword, resetTarget.email);
+    if (passwordError) {
+      setError(passwordError);
+      setActionLoading(false);
+      return;
+    }
+
+    if (!isSupabaseConfigured) {
+      setUsers((current) =>
+        current.map((managedUser) =>
+          managedUser.id === resetTarget.id
+            ? { ...managedUser, passwordRotationRequired: true }
+            : managedUser,
+        ),
+      );
+      setNotice(`A senha de ${resetTarget.name || resetTarget.email} foi redefinida.`);
+      setResetTarget(null);
+      setActionLoading(false);
+      return;
+    }
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      setError("Sua sessão expirou. Entre novamente para continuar.");
+      setActionLoading(false);
+      return;
+    }
+    const response = await fetch("/api/admin/users", {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "reset-password",
+        userId: resetTarget.id,
+        password: nextPassword,
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as {
+      error?: string;
+    };
+    if (!response.ok) {
+      setError(body.error ?? "Não foi possível redefinir a senha.");
+      setActionLoading(false);
+      return;
+    }
+    setUsers((current) =>
+      current.map((managedUser) =>
+        managedUser.id === resetTarget.id
+          ? { ...managedUser, passwordRotationRequired: true }
+          : managedUser,
+      ),
+    );
+    setNotice(
+      `A senha de ${resetTarget.name || resetTarget.email} foi redefinida. Compartilhe a nova senha com segurança.`,
+    );
+    setResetTarget(null);
+    setActionLoading(false);
+  }
+
+  async function handleDeleteUser() {
+    if (!deleteTarget || deleteConfirmation.trim() !== "EXCLUIR") return;
+    setActionLoading(true);
+    setError(null);
+    setNotice(null);
+
+    if (!isSupabaseConfigured) {
+      persistDemoUsers(
+        users.filter((managedUser) => managedUser.id !== deleteTarget.id),
+      );
+      setNotice(`A conta de ${deleteTarget.name || deleteTarget.email} foi removida.`);
+      setDeleteTarget(null);
+      setDeleteConfirmation("");
+      setActionLoading(false);
+      return;
+    }
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      setError("Sua sessão expirou. Entre novamente para continuar.");
+      setActionLoading(false);
+      return;
+    }
+    const response = await fetch("/api/admin/users", {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId: deleteTarget.id }),
+    });
+    const body = (await response.json().catch(() => ({}))) as {
+      error?: string;
+    };
+    if (!response.ok) {
+      setError(body.error ?? "Não foi possível excluir o usuário.");
+      setActionLoading(false);
+      return;
+    }
+    setUsers((current) =>
+      current.filter((managedUser) => managedUser.id !== deleteTarget.id),
+    );
+    setNotice(`A conta de ${deleteTarget.name || deleteTarget.email} foi excluída.`);
+    setDeleteTarget(null);
+    setDeleteConfirmation("");
+    setActionLoading(false);
   }
 
   return (
@@ -989,7 +1164,7 @@ export function UserManagementContent() {
                 </p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[980px] border-collapse text-left">
+                  <table className="w-full min-w-[1120px] border-collapse text-left">
                     <thead>
                       <tr className="border-b border-[var(--line-soft)] text-[9px] font-extrabold tracking-[0.14em] text-[#9aa3a8] uppercase">
                         <th className="px-6 py-3 font-extrabold">Pessoa</th>
@@ -999,6 +1174,9 @@ export function UserManagementContent() {
                         <th className="px-4 py-3 font-extrabold">Criado em</th>
                         <th className="px-6 py-3 text-right font-extrabold">
                           Último acesso
+                        </th>
+                        <th className="px-6 py-3 text-right font-extrabold">
+                          Ações
                         </th>
                       </tr>
                     </thead>
@@ -1081,6 +1259,37 @@ export function UserManagementContent() {
                           <td className="px-6 py-4 text-right text-[10px] text-[#87939a]">
                             {formatDate(managedUser.lastSignInAt)}
                           </td>
+                          <td className="px-6 py-4 text-right">
+                            {canManageTarget(managedUser) ? (
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#e1e5e6] px-2.5 py-2 text-[10px] font-bold text-[#687780] transition-colors hover:border-[#9eafb5] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
+                                  type="button"
+                                  onClick={() => openResetPassword(managedUser)}
+                                  disabled={actionLoading}
+                                >
+                                  <Icon name="settings" size={12} />
+                                  Senha
+                                </button>
+                                <button
+                                  className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#efc6bc] px-2.5 py-2 text-[10px] font-bold text-[#a14e3d] transition-colors hover:bg-[#fff2ef] disabled:cursor-not-allowed disabled:opacity-50"
+                                  type="button"
+                                  onClick={() => {
+                                    setDeleteTarget(managedUser);
+                                    setDeleteConfirmation("");
+                                    setError(null);
+                                    setNotice(null);
+                                  }}
+                                  disabled={actionLoading}
+                                >
+                                  <Icon name="close" size={12} />
+                                  Excluir
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-[#b0b7ba]">—</span>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1091,6 +1300,177 @@ export function UserManagementContent() {
           </>
         )}
       </div>
+
+      {resetTarget && (
+        <div
+          className="fixed inset-0 z-[100] grid place-items-center bg-[#18202b]/35 px-4 backdrop-blur-[2px]"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !actionLoading) {
+              setResetTarget(null);
+            }
+          }}
+        >
+          <form
+            className="w-full max-w-[460px] rounded-[24px] border border-[#dfe4e5] bg-white p-6 shadow-[0_24px_70px_rgba(24,32,43,0.18)]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reset-user-password-title"
+            onSubmit={(event) => void handleResetPassword(event)}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9a603f] uppercase">
+                  ZONA DE ACESSO
+                </p>
+                <h2
+                  className="m-0 text-[24px] font-bold tracking-[-0.05em] text-[var(--ink)]"
+                  id="reset-user-password-title"
+                >
+                  Redefinir senha
+                </h2>
+                <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[#7f8991]">
+                  A senha de {resetTarget.name || resetTarget.email} será
+                  substituída e a troca será exigida no próximo acesso.
+                </p>
+              </div>
+              <button
+                className="grid size-9 flex-none place-items-center rounded-[11px] border border-[#e1e5e6] text-[#7d8990] transition-colors hover:bg-[#f4f6f6]"
+                type="button"
+                aria-label="Fechar redefinição de senha"
+                onClick={() => setResetTarget(null)}
+                disabled={actionLoading}
+              >
+                <Icon name="close" size={15} />
+              </button>
+            </div>
+            <label className="mt-6 grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+              Nova senha temporária
+              <input
+                className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[#f7f8f8] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] outline-none focus:border-[#90a7af]"
+                value={resetPassword}
+                onChange={(event) => setResetPassword(event.target.value)}
+                type="text"
+                autoComplete="new-password"
+                minLength={12}
+                required
+              />
+              <span className="font-normal tracking-normal text-[#a0a8ad] normal-case">
+                Use letras maiúsculas, minúsculas, números e símbolos.
+              </span>
+            </label>
+            {error && (
+              <p className="mt-4 rounded-[12px] bg-[#fff0ed] px-3.5 py-3 text-[11px] text-[#984f3f]" role="alert">
+                {error}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                className="h-11 rounded-[13px] border border-[#e1e5e6] px-4 text-[12px] font-bold text-[#687780] transition-colors hover:bg-[#f5f7f7]"
+                type="button"
+                onClick={() => setResetTarget(null)}
+                disabled={actionLoading}
+              >
+                Cancelar
+              </button>
+              <button
+                className="inline-flex h-11 items-center gap-2 rounded-[13px] bg-[var(--ink)] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#3b4650] disabled:cursor-not-allowed disabled:opacity-60"
+                type="submit"
+                disabled={actionLoading}
+              >
+                {actionLoading ? "Salvando…" : "Redefinir senha"}
+                <Icon name="arrow" size={14} />
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-[100] grid place-items-center bg-[#18202b]/35 px-4 backdrop-blur-[2px]"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !actionLoading) {
+              setDeleteTarget(null);
+            }
+          }}
+        >
+          <div
+            className="w-full max-w-[460px] rounded-[24px] border border-[#efc6bc] bg-white p-6 shadow-[0_24px_70px_rgba(24,32,43,0.18)]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-user-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#a14e3d] uppercase">
+                  AÇÃO PERMANENTE
+                </p>
+                <h2
+                  className="m-0 text-[24px] font-bold tracking-[-0.05em] text-[var(--ink)]"
+                  id="delete-user-title"
+                >
+                  Excluir usuário
+                </h2>
+                <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[#7f8991]">
+                  A conta de {deleteTarget.name || deleteTarget.email} será
+                  removida do Auth e perderá o acesso a todos os workspaces.
+                </p>
+              </div>
+              <button
+                className="grid size-9 flex-none place-items-center rounded-[11px] border border-[#e1e5e6] text-[#7d8990] transition-colors hover:bg-[#f4f6f6]"
+                type="button"
+                aria-label="Fechar exclusão de usuário"
+                onClick={() => setDeleteTarget(null)}
+                disabled={actionLoading}
+              >
+                <Icon name="close" size={15} />
+              </button>
+            </div>
+            <div className="mt-5 rounded-[14px] bg-[#fff4f0] px-4 py-3 text-[11px] leading-relaxed text-[#8d4c3d]">
+              Esta ação não pode ser desfeita. Para continuar, digite
+              <strong className="mx-1 font-extrabold">EXCLUIR</strong> abaixo.
+            </div>
+            <label className="mt-5 grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+              Confirmação
+              <input
+                className="h-12 rounded-[14px] border border-[#efc6bc] bg-[#fffafa] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] uppercase outline-none focus:border-[#c77968]"
+                value={deleteConfirmation}
+                onChange={(event) => setDeleteConfirmation(event.target.value)}
+                placeholder="EXCLUIR"
+                autoComplete="off"
+              />
+            </label>
+            {error && (
+              <p className="mt-4 rounded-[12px] bg-[#fff0ed] px-3.5 py-3 text-[11px] text-[#984f3f]" role="alert">
+                {error}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                className="h-11 rounded-[13px] border border-[#e1e5e6] px-4 text-[12px] font-bold text-[#687780] transition-colors hover:bg-[#f5f7f7]"
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                disabled={actionLoading}
+              >
+                Cancelar
+              </button>
+              <button
+                className="inline-flex h-11 items-center gap-2 rounded-[13px] bg-[#b45d4b] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#994c3d] disabled:cursor-not-allowed disabled:opacity-50"
+                type="button"
+                onClick={() => void handleDeleteUser()}
+                disabled={actionLoading || deleteConfirmation.trim() !== "EXCLUIR"}
+              >
+                {actionLoading ? "Excluindo…" : "Excluir usuário"}
+                <Icon name="close" size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardShell>
   );
 }

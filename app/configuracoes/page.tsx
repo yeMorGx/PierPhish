@@ -2,13 +2,14 @@
 
 import { ChangeEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { useProfile } from "@/components/profile/profile-provider";
 import { useTheme } from "@/components/theme/theme-provider";
 import { Icon } from "@/components/ui/icon";
-import { isSupabaseConfigured } from "@/lib/supabase";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type SettingsTab = "account" | "users" | "style" | "status";
 type TextSize = "normal" | "large" | "larger";
@@ -182,7 +183,8 @@ function ProfilePhotoModal({
 }
 
 function SettingsContent() {
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
   const {
     preferences: themePreferences,
     reset: resetTheme,
@@ -211,6 +213,11 @@ function SettingsContent() {
   const [dateFormat, setDateFormat] = useState("dd/MM/yyyy HH:mm");
   const [functionName, setFunctionName] = useState("Segurança da informação");
   const [jobTitle, setJobTitle] = useState("Administrador interno");
+  const [dangerModalOpen, setDangerModalOpen] = useState(false);
+  const [dangerPassword, setDangerPassword] = useState("");
+  const [dangerConfirmation, setDangerConfirmation] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [dangerError, setDangerError] = useState<string | null>(null);
 
   const email = user?.email ?? "admin@teste.com";
   const profileName = profilePreferences.displayName.trim();
@@ -296,6 +303,57 @@ function SettingsContent() {
   function restoreDefaults() {
     resetTheme();
     setError(null);
+  }
+
+  async function handleDeleteAccount() {
+    if (
+      dangerConfirmation.trim() !== "EXCLUIR" ||
+      !dangerPassword ||
+      deletingAccount
+    ) {
+      return;
+    }
+
+    setDeletingAccount(true);
+    setDangerError(null);
+    if (!isSupabaseConfigured) {
+      setDangerError(
+        "A exclusão de conta só fica disponível quando o Supabase está conectado.",
+      );
+      setDeletingAccount(false);
+      return;
+    }
+
+    const session = await supabase?.auth.getSession();
+    const accessToken = session?.data.session?.access_token;
+    if (!accessToken) {
+      setDangerError("Sua sessão expirou. Entre novamente para continuar.");
+      setDeletingAccount(false);
+      return;
+    }
+
+    const response = await fetch("/api/account/delete", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        currentPassword: dangerPassword,
+        confirmation: dangerConfirmation,
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as {
+      error?: string;
+    };
+    if (!response.ok) {
+      setDangerError(body.error ?? "Não foi possível excluir sua conta.");
+      setDeletingAccount(false);
+      return;
+    }
+
+    await signOut();
+    router.replace("/login");
   }
 
   const accessibilityControl = (
@@ -496,6 +554,34 @@ function SettingsContent() {
                   Alterar senha
                   <Icon name="arrow" size={15} />
                 </Link>
+              </div>
+            </section>
+
+            <section className="settings-row settings-bento-card col-span-full border-[#efc6bc] bg-[#fffaf8]">
+              <div className="settings-row-copy">
+                <p className="settings-panel-label text-[#a14e3d]">
+                  ZONA DE RISCO
+                </p>
+                <h2>Excluir conta</h2>
+                <p>
+                  Essa ação remove seu acesso e não pode ser desfeita. Os
+                  workspaces e clientes de outras pessoas não serão apagados.
+                </p>
+              </div>
+              <div className="settings-row-main flex items-center justify-end">
+                <button
+                  className="settings-outline-button border-[#efc6bc] text-[#a14e3d] hover:border-[#c77968] hover:bg-[#fff1ed]"
+                  type="button"
+                  onClick={() => {
+                    setDangerError(null);
+                    setDangerPassword("");
+                    setDangerConfirmation("");
+                    setDangerModalOpen(true);
+                  }}
+                >
+                  Apagar minha conta
+                  <Icon name="close" size={14} />
+                </button>
               </div>
             </section>
           </div>
@@ -791,6 +877,106 @@ function SettingsContent() {
               </Link>
             </div>
           </section>
+        )}
+
+        {dangerModalOpen && (
+          <div
+            className="fixed inset-0 z-[100] grid place-items-center bg-[#18202b]/35 px-4 backdrop-blur-[2px]"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget && !deletingAccount) {
+                setDangerModalOpen(false);
+              }
+            }}
+          >
+            <div
+              className="w-full max-w-[480px] rounded-[24px] border border-[#efc6bc] bg-white p-6 shadow-[0_24px_70px_rgba(24,32,43,0.18)]"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="delete-account-title"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#a14e3d] uppercase">
+                    AÇÃO PERMANENTE
+                  </p>
+                  <h2
+                    className="m-0 text-[24px] font-bold tracking-[-0.05em] text-[var(--ink)]"
+                    id="delete-account-title"
+                  >
+                    Apagar minha conta
+                  </h2>
+                  <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[#7f8991]">
+                    Você perderá o acesso ao PierPhish e será removido dos
+                    workspaces. Esta ação não pode ser desfeita.
+                  </p>
+                </div>
+                <button
+                  className="grid size-9 flex-none place-items-center rounded-[11px] border border-[#e1e5e6] text-[#7d8990] transition-colors hover:bg-[#f4f6f6]"
+                  type="button"
+                  aria-label="Fechar exclusão da conta"
+                  onClick={() => setDangerModalOpen(false)}
+                  disabled={deletingAccount}
+                >
+                  <Icon name="close" size={15} />
+                </button>
+              </div>
+
+              <label className="mt-6 grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+                Senha atual
+                <input
+                  className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[#f7f8f8] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] outline-none focus:border-[#c77968]"
+                  value={dangerPassword}
+                  onChange={(event) => setDangerPassword(event.target.value)}
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Digite sua senha atual"
+                />
+              </label>
+              <label className="mt-4 grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+                Confirmação
+                <input
+                  className="h-12 rounded-[14px] border border-[#efc6bc] bg-[#fffafa] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] uppercase outline-none focus:border-[#c77968]"
+                  value={dangerConfirmation}
+                  onChange={(event) => setDangerConfirmation(event.target.value)}
+                  placeholder="Digite EXCLUIR"
+                  autoComplete="off"
+                />
+              </label>
+              {dangerError && (
+                <p
+                  className="mt-4 rounded-[12px] bg-[#fff0ed] px-3.5 py-3 text-[11px] text-[#984f3f]"
+                  role="alert"
+                >
+                  {dangerError}
+                </p>
+              )}
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  className="h-11 rounded-[13px] border border-[#e1e5e6] px-4 text-[12px] font-bold text-[#687780] transition-colors hover:bg-[#f5f7f7]"
+                  type="button"
+                  onClick={() => setDangerModalOpen(false)}
+                  disabled={deletingAccount}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="inline-flex h-11 items-center gap-2 rounded-[13px] bg-[#b45d4b] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#994c3d] disabled:cursor-not-allowed disabled:opacity-50"
+                  type="button"
+                  onClick={() => void handleDeleteAccount()}
+                  disabled={
+                    deletingAccount ||
+                    !dangerPassword ||
+                    dangerConfirmation.trim() !== "EXCLUIR"
+                  }
+                >
+                  {deletingAccount ? "Excluindo…" : "Excluir conta"}
+                  <Icon name="close" size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         <ProfilePhotoModal

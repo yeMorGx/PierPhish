@@ -20,6 +20,12 @@ type CreateUserPayload = {
   role?: unknown;
 };
 
+type UserActionPayload = {
+  action?: unknown;
+  userId?: unknown;
+  password?: unknown;
+};
+
 type WorkspaceRole = "owner" | "admin" | "analyst" | "viewer";
 
 const workspaceRoles = new Set<WorkspaceRole>([
@@ -103,11 +109,12 @@ async function requireAdmin(request: NextRequest) {
     role === "super_admin";
 
   let managedWorkspaceIds: string[] | null = null;
+  let ownerWorkspaceIds: string[] | null = null;
   if (!isGlobalAdmin) {
     const { data: managerMemberships, error: managerMembershipError } =
       await client
         .from("pierphish_workspace_members")
-        .select("workspace_id")
+        .select("workspace_id,role")
         .eq("user_id", data.user.id)
         .eq("status", "active")
         .in("role", ["owner", "admin"]);
@@ -123,6 +130,9 @@ async function requireAdmin(request: NextRequest) {
     managedWorkspaceIds = (managerMemberships ?? []).map((membership) =>
       String(membership.workspace_id),
     );
+    ownerWorkspaceIds = (managerMemberships ?? [])
+      .filter((membership) => membership.role === "owner")
+      .map((membership) => String(membership.workspace_id));
     if (managedWorkspaceIds.length === 0) {
       return {
         client: null,
@@ -134,7 +144,71 @@ async function requireAdmin(request: NextRequest) {
     }
   }
 
-  return { client, error: null, managedWorkspaceIds, adminUser: data.user };
+  return {
+    client,
+    error: null,
+    managedWorkspaceIds,
+    ownerWorkspaceIds,
+    adminUser: data.user,
+  };
+}
+
+async function canOwnerManageUser(
+  client: NonNullable<ReturnType<typeof getAdminClient>>,
+  requesterId: string,
+  targetId: string,
+  ownerWorkspaceIds: string[] | null,
+) {
+  if (requesterId === targetId) {
+    return {
+      allowed: false,
+      error: responseError("Você não pode executar esta ação na própria conta.", 400),
+    };
+  }
+  if (ownerWorkspaceIds === null) return { allowed: true, error: null };
+  if (!ownerWorkspaceIds.length) {
+    return {
+      allowed: false,
+      error: responseError(
+        "Somente o proprietário do workspace pode executar esta ação.",
+        403,
+      ),
+    };
+  }
+
+  const { data: memberships, error: membershipError } = await client
+    .from("pierphish_workspace_members")
+    .select("workspace_id,role")
+    .eq("user_id", targetId)
+    .eq("status", "active")
+    .in("workspace_id", ownerWorkspaceIds);
+  if (membershipError) {
+    return {
+      allowed: false,
+      error: responseError("Não foi possível verificar o usuário.", 503),
+    };
+  }
+
+  if (!memberships?.length) {
+    return {
+      allowed: false,
+      error: responseError(
+        "Você só pode administrar usuários do seu workspace.",
+        403,
+      ),
+    };
+  }
+  if (memberships.some((membership) => membership.role === "owner")) {
+    return {
+      allowed: false,
+      error: responseError(
+        "A conta de um proprietário não pode ser alterada por outro proprietário.",
+        403,
+      ),
+    };
+  }
+
+  return { allowed: true, error: null };
 }
 
 function safeUser(
@@ -495,4 +569,115 @@ export async function POST(request: NextRequest) {
     { user: safeUser(data.user, workspaceMemberships) },
     { status: 201 },
   );
+}
+
+export async function PATCH(request: NextRequest) {
+  const { client, error, ownerWorkspaceIds, adminUser } =
+    await requireAdmin(request);
+  if (error || !client) {
+    return error ?? responseError("Não foi possível validar a sessão.", 401);
+  }
+
+  let payload: UserActionPayload;
+  try {
+    payload = (await request.json()) as UserActionPayload;
+  } catch {
+    return responseError("Envie os dados da ação em JSON válido.", 400);
+  }
+
+  if (payload.action !== "reset-password") {
+    return responseError("Ação de usuário inválida.", 400);
+  }
+
+  const targetId = typeof payload.userId === "string" ? payload.userId : "";
+  const password = typeof payload.password === "string" ? payload.password : "";
+  if (!targetId) return responseError("Usuário não informado.", 400);
+
+  const permission = await canOwnerManageUser(
+    client,
+    adminUser.id,
+    targetId,
+    ownerWorkspaceIds,
+  );
+  if (permission.error || !permission.allowed) {
+    return (
+      permission.error ??
+      responseError("Você não tem permissão para executar esta ação.", 403)
+    );
+  }
+
+  const { data: targetData, error: targetError } =
+    await client.auth.admin.getUserById(targetId);
+  if (targetError || !targetData.user) {
+    return responseError("Usuário não encontrado.", 404);
+  }
+  const passwordError = validatePassword(
+    password,
+    targetData.user.email ?? "usuario",
+  );
+  if (passwordError) return responseError(passwordError, 400);
+
+  const targetMetadata = (targetData.user.app_metadata ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const { error: updateError } = await client.auth.admin.updateUserById(
+    targetId,
+    {
+      password,
+      app_metadata: {
+        ...targetMetadata,
+        password_rotation_required: true,
+      },
+    },
+  );
+  if (updateError) {
+    return responseError("Não foi possível redefinir a senha.", 502);
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(request: NextRequest) {
+  const { client, error, ownerWorkspaceIds, adminUser } =
+    await requireAdmin(request);
+  if (error || !client) {
+    return error ?? responseError("Não foi possível validar a sessão.", 401);
+  }
+
+  let payload: UserActionPayload;
+  try {
+    payload = (await request.json()) as UserActionPayload;
+  } catch {
+    return responseError("Envie os dados da exclusão em JSON válido.", 400);
+  }
+
+  const targetId = typeof payload.userId === "string" ? payload.userId : "";
+  if (!targetId) return responseError("Usuário não informado.", 400);
+
+  const permission = await canOwnerManageUser(
+    client,
+    adminUser.id,
+    targetId,
+    ownerWorkspaceIds,
+  );
+  if (permission.error || !permission.allowed) {
+    return (
+      permission.error ??
+      responseError("Você não tem permissão para executar esta ação.", 403)
+    );
+  }
+
+  const { data: targetData, error: targetError } =
+    await client.auth.admin.getUserById(targetId);
+  if (targetError || !targetData.user) {
+    return responseError("Usuário não encontrado.", 404);
+  }
+
+  const { error: deleteError } = await client.auth.admin.deleteUser(targetId);
+  if (deleteError) {
+    return responseError("Não foi possível excluir o usuário.", 502);
+  }
+
+  return NextResponse.json({ ok: true, email: targetData.user.email ?? "" });
 }
