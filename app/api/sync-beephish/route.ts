@@ -54,7 +54,7 @@ function getClient(key: string, token?: string) {
   });
 }
 
-async function requireAdmin(request: NextRequest) {
+async function requireSyncAccess(request: NextRequest, workspaceId: string) {
   const token = request.headers
     .get("authorization")
     ?.match(/^Bearer\s+(.+)$/i)?.[1];
@@ -71,12 +71,46 @@ async function requireAdmin(request: NextRequest) {
     return { error: errorResponse("Sua sessão não é válida.", 401) };
   }
 
-  let admin = data.user.email?.toLowerCase() === superAdminEmail;
+  const metadata = data.user.app_metadata as
+    | { role?: unknown; is_admin?: unknown }
+    | undefined;
+  const metadataRole =
+    typeof metadata?.role === "string" ? metadata.role.toLowerCase() : "";
+  let admin =
+    data.user.email?.toLowerCase() === superAdminEmail ||
+    metadata?.is_admin === true ||
+    ["admin", "owner", "super_admin"].includes(metadataRole);
   if (!admin) {
     const result = await authClient.rpc("is_internal_admin");
     admin = !result.error && result.data === true;
   }
-  if (!admin) return { error: errorResponse("Usuário não autorizado.", 403) };
+
+  if (!admin) {
+    const { data: membership, error: membershipError } = await authClient
+      .from("pierphish_workspace_members")
+      .select("role")
+      .eq("workspace_id", workspaceId)
+      .eq("user_id", data.user.id)
+      .eq("status", "active")
+      .in("role", ["owner", "admin", "analyst"])
+      .maybeSingle();
+    if (membershipError) {
+      return {
+        error: errorResponse(
+          "Não foi possível verificar o acesso ao workspace.",
+          503,
+        ),
+      };
+    }
+    if (!membership) {
+      return {
+        error: errorResponse(
+          "Este nível de acesso pode consultar os dados, mas não iniciar sincronizações.",
+          403,
+        ),
+      };
+    }
+  }
 
   const client = serviceRoleKey ? getClient(serviceRoleKey) : authClient;
   if (!client)
@@ -376,9 +410,6 @@ async function syncCompany(
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireAdmin(request);
-  if (auth.error || !auth.client) return auth.error;
-
   const body = (await request.json().catch(() => ({}))) as {
     workspaceId?: unknown;
     companyId?: unknown;
@@ -400,6 +431,9 @@ export async function POST(request: NextRequest) {
     requestedWorkspaceId === "primary"
       ? persistedPrimaryWorkspaceId
       : requestedWorkspaceId;
+  const auth = await requireSyncAccess(request, workspaceId);
+  if (auth.error || !auth.client) return auth.error;
+
   const requestedCompanyId =
     typeof body.companyId === "string" && body.companyId.trim()
       ? body.companyId.trim()

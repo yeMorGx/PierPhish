@@ -18,6 +18,7 @@ import type {
   CampaignParticipants,
   CampaignSummary,
 } from "@/components/dashboard/types";
+import type { WorkspaceRole } from "@/lib/company-data";
 import { demoCampaigns } from "@/lib/demo-data";
 import { demoCompanies, readLocalCompanies } from "@/lib/company-data";
 import { useCampaignLogos } from "@/components/campaigns/campaign-logo";
@@ -73,12 +74,28 @@ function pct(value: number, total: number) {
   return total ? Math.round((value / total) * 100) : 0;
 }
 
+function isGlobalAdmin(user: ReturnType<typeof useAuth>["user"]) {
+  if (!isSupabaseConfigured) return true;
+  if (user?.email?.toLowerCase() === "admin@teste.com") return true;
+  const metadata = user?.app_metadata as
+    | { role?: unknown; is_admin?: unknown }
+    | undefined;
+  return (
+    metadata?.is_admin === true ||
+    metadata?.role === "admin" ||
+    metadata?.role === "owner" ||
+    metadata?.role === "super_admin"
+  );
+}
+
 export default function Home() {
   const router = useRouter();
   const { ready, user } = useAuth();
   const { preferences: themePreferences } = useTheme();
   const activeWorkspaceId = useActiveWorkspaceId();
   const workspaceHasBeephishData = hasBeephishData(activeWorkspaceId);
+  const [activeWorkspaceRole, setActiveWorkspaceRole] =
+    useState<WorkspaceRole | null>(null);
   const { logos: campaignLogos } = useCampaignLogos();
   const [campaigns, setCampaigns] = useState<Campaign[]>(
     isSupabaseConfigured ? [] : demoCampaigns,
@@ -106,6 +123,11 @@ export default function Home() {
   );
   const [selectedCompanyId, setSelectedCompanyId] = useState("all");
   const initialSyncStartedRef = useRef(false);
+  const canSyncWorkspace =
+    isGlobalAdmin(user) ||
+    activeWorkspaceRole === "owner" ||
+    activeWorkspaceRole === "admin" ||
+    activeWorkspaceRole === "analyst";
 
   const filteredCampaigns = useMemo(
     () =>
@@ -294,6 +316,35 @@ export default function Home() {
   }, [activeWorkspaceId, workspaceHasBeephishData]);
 
   useEffect(() => {
+    if (!isSupabaseConfigured || !ready || !user || !supabase) {
+      setActiveWorkspaceRole(null);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) return;
+      const response = await fetch("/api/workspaces", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = (await response.json().catch(() => ({}))) as {
+        workspaces?: Array<{ id: string; role?: WorkspaceRole }>;
+      };
+      if (cancelled) return;
+      const activeWorkspace = (body.workspaces ?? []).find(
+        (workspace) => workspace.id === activeWorkspaceId,
+      );
+      setActiveWorkspaceRole(activeWorkspace?.role ?? null);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeWorkspaceId, ready, user?.id]);
+
+  useEffect(() => {
     if (!ready || !isSupabaseConfigured) return;
     void loadCompanies();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -307,7 +358,14 @@ export default function Home() {
     }
     if (workspaceHasBeephishData && user) startInitialSync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeWorkspaceId, ready, router, user, workspaceHasBeephishData]);
+  }, [
+    activeWorkspaceId,
+    canSyncWorkspace,
+    ready,
+    router,
+    user,
+    workspaceHasBeephishData,
+  ]);
 
   async function loadCampaigns() {
     if (!supabase || !workspaceHasBeephishData) return;
@@ -394,15 +452,16 @@ export default function Home() {
 
   function startInitialSync() {
     if (initialSyncStartedRef.current) return;
-    initialSyncStartedRef.current = true;
     void (async () => {
       await loadCampaigns();
+      if (!canSyncWorkspace || initialSyncStartedRef.current) return;
+      initialSyncStartedRef.current = true;
       await syncAllCampaigns();
     })();
   }
 
   async function syncAllCampaigns() {
-    if (!supabase || !workspaceHasBeephishData) return;
+    if (!supabase || !workspaceHasBeephishData || !canSyncWorkspace) return;
     setSyncing(true);
     setError(null);
     try {
@@ -451,13 +510,15 @@ export default function Home() {
           aria-label={
             !workspaceHasBeephishData
               ? "Workspace sem conexão BeePhish"
+              : !canSyncWorkspace
+                ? "Sincronização restrita ao administrador do workspace"
               : syncing
                 ? "Sincronizando dados"
                 : "Sincronizar tudo"
           }
           className="header-sync-button inline-flex min-h-[38px] items-center gap-[9px] rounded-[12px] border-0 px-[15px] text-[12px] font-bold shadow-[0_5px_15px_rgba(24,32,43,0.14)] transition-colors max-[720px]:px-[11px]"
           onClick={() => void syncAllCampaigns()}
-          disabled={syncing || !workspaceHasBeephishData}
+          disabled={syncing || !workspaceHasBeephishData || !canSyncWorkspace}
           title={
             workspaceHasBeephishData
               ? undefined

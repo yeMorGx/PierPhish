@@ -75,6 +75,16 @@ export function PasswordSetupForm() {
       return;
     }
 
+    // A flag password_rotation_required foi atualizada pelo backend usando
+    // service_role. Renove o JWT para o AuthProvider receber o app_metadata
+    // novo e não redirecionar o usuário de volta para esta tela.
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      setError("A senha mudou, mas a sessão precisa ser atualizada.");
+      setLoading(false);
+      return;
+    }
+
     router.replace("/");
   }
 
