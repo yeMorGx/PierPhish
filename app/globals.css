@@ -6609,13 +6609,12 @@ html[data-theme="dark"] .workspace-modal-backdrop {
   pointer-events: none;
 }
 
-.login-artwork img {
+.login-artwork video {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: 53% center;
-  image-rendering: auto;
   transform: scale(1.01);
 }
 

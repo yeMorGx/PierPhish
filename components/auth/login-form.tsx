@@ -126,7 +126,18 @@ function LoginBrand() {
 function LoginArtwork() {
   return (
     <aside className="login-artwork" aria-label="Ilustração do PierPhish">
-      <img src="/pierphish-login.png" alt="Ilustração pixel art do PierPhish" />
+      <video
+        aria-label="Animação pixel art do PierPhish"
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="metadata"
+        poster="/pierphish-login.png"
+      >
+        <source src="/pierphish-login.mp4" type="video/mp4" />
+        Seu navegador não suporta vídeo.
+      </video>
       <div className="login-artwork-caption">
         <span>PIERPHISH</span>
         <p>Uma visão mais clara sobre o comportamento humano.</p>
