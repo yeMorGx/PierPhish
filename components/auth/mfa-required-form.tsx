@@ -345,7 +345,7 @@ function MfaStage({ children }: { children: React.ReactNode }) {
   return (
     <main className="mfa-stage theme-canvas">
       <video
-        className="mfa-stage-video"
+        className="auth-stage-video mfa-stage-video"
         aria-hidden="true"
         autoPlay
         loop

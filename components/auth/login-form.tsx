@@ -307,6 +307,7 @@ function LoginArtworkContent() {
   return (
     <>
       <video
+        className="auth-stage-video"
         aria-label="Animação pixel art do PierPhish"
         autoPlay
         loop
