@@ -28,6 +28,10 @@ import {
   hasBeephishData,
   useActiveWorkspaceId,
 } from "@/lib/use-active-workspace";
+import {
+  loadWorkspaceExcludedEmails,
+  normalizeWorkspaceEmail,
+} from "@/lib/workspace-exclusions";
 import { readActiveWorkspaceId } from "@/lib/company-data";
 
 type RiskLevel = "high" | "attention" | "low";
@@ -513,11 +517,20 @@ function PeopleRiskPage() {
     }
 
     const campaignRows = (campaignResult.data ?? []) as CampaignRow[];
+    const excludedEmails = await loadWorkspaceExcludedEmails(
+      databaseWorkspaceId(activeWorkspaceId),
+    );
+    const visibleResults = ((resultResult.data ?? []) as RawResult[]).filter(
+      (result) => !excludedEmails.has(normalizeWorkspaceEmail(result.email)),
+    );
+    const visibleEvents = ((eventResult.data ?? []) as RawEvent[]).filter(
+      (event) => !excludedEmails.has(normalizeWorkspaceEmail(event.email)),
+    );
     setCampaignTotal(campaignRows.length);
     setPeople(
       buildPeople(
-        (resultResult.data ?? []) as RawResult[],
-        (eventResult.data ?? []) as RawEvent[],
+        visibleResults,
+        visibleEvents,
         campaignRows,
         readPersonAvatars(),
       ),

@@ -26,6 +26,10 @@ import {
   hasBeephishData,
   useActiveWorkspaceId,
 } from "@/lib/use-active-workspace";
+import {
+  loadWorkspaceExcludedEmails,
+  normalizeWorkspaceEmail,
+} from "@/lib/workspace-exclusions";
 
 type Stats = {
   total?: number;
@@ -329,6 +333,9 @@ export default function CampaignPeoplePage() {
   const [search, setSearch] = useState("");
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [personAvatars, setPersonAvatars] = useState<PersonAvatarMap>({});
+  const [excludedEmails, setExcludedEmails] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   useEffect(() => {
     setSelectedPerson(null);
@@ -337,6 +344,7 @@ export default function CampaignPeoplePage() {
       setCampaign(null);
       setResults([]);
       setEvents([]);
+      setExcludedEmails(new Set());
       setLoading(false);
       return;
     }
@@ -344,6 +352,7 @@ export default function CampaignPeoplePage() {
       setCampaign(demoCampaignForId);
       setResults(campaignId === 5345 ? demoResults : []);
       setEvents(campaignId === 5345 ? demoEvents : []);
+      setExcludedEmails(new Set());
       setLoading(false);
     }
   }, [
@@ -443,6 +452,9 @@ export default function CampaignPeoplePage() {
     }
 
     setCampaign((campaignData as Campaign | null) ?? null);
+    setExcludedEmails(
+      await loadWorkspaceExcludedEmails(databaseWorkspaceId(activeWorkspaceId)),
+    );
     setResults((resultData ?? []) as RawResult[]);
     setEvents((eventData ?? []) as RawEvent[]);
     setLoading(false);
@@ -456,65 +468,69 @@ export default function CampaignPeoplePage() {
       eventsByEmail.set(key, [...(eventsByEmail.get(key) ?? []), event]);
     }
 
-    return results.map((result) => {
-      const personKey = result.email?.toLowerCase() ?? result.beephish_id;
-      const relatedEvents = result.email
-        ? (eventsByEmail.get(result.email.toLowerCase()) ?? [])
-        : [];
-      const signals = [
-        result.status,
-        ...relatedEvents.map((event) => event.event_type),
-      ].join(" ");
-      const lastActivity =
-        [
-          result.modified_date,
-          ...relatedEvents.map((event) => event.occurred_at),
-        ]
-          .filter(Boolean)
-          .sort()
-          .at(-1) ?? null;
-      const opened = containsSignal(signals, ["open"]);
-      const clicked = containsSignal(signals, ["click", "link"]);
-      const reported =
-        Boolean(result.reported) || containsSignal(signals, ["report"]);
-      const submitted = containsSignal(signals, [
-        "submitted",
-        "submit",
-        "dados enviados",
-        "data sent",
-        "enviou dados",
-      ]);
-      return {
-        avatar: personAvatars[personKey] ?? null,
-        id: personKey,
-        name: fullName(result),
-        email: result.email ?? "E-mail não informado",
-        position: result.position ?? "—",
-        department: result.department ?? "—",
-        status: statusLabel(result.status),
-        campaigns: campaign ? [{ id: campaign.id, name: campaign.name }] : [],
-        opened,
-        clicked,
-        reported,
-        submitted,
-        lastActivity,
-        sentAt: result.send_date,
-        risk: riskFromSignals({ clicked, opened, submitted }),
-        score: scoreFromSignals({ clicked, opened, reported, submitted }),
-        events: relatedEvents
-          .map((event) => ({
-            id: event.beephish_event_id,
-            label: statusLabel(event.event_type),
-            occurredAt: event.occurred_at,
-          }))
-          .sort(
-            (first, second) =>
-              (Date.parse(second.occurredAt ?? "") || 0) -
-              (Date.parse(first.occurredAt ?? "") || 0),
-          ),
-      };
-    });
-  }, [campaign, events, personAvatars, results]);
+    return results
+      .filter(
+        (result) => !excludedEmails.has(normalizeWorkspaceEmail(result.email)),
+      )
+      .map((result) => {
+        const personKey = result.email?.toLowerCase() ?? result.beephish_id;
+        const relatedEvents = result.email
+          ? (eventsByEmail.get(result.email.toLowerCase()) ?? [])
+          : [];
+        const signals = [
+          result.status,
+          ...relatedEvents.map((event) => event.event_type),
+        ].join(" ");
+        const lastActivity =
+          [
+            result.modified_date,
+            ...relatedEvents.map((event) => event.occurred_at),
+          ]
+            .filter(Boolean)
+            .sort()
+            .at(-1) ?? null;
+        const opened = containsSignal(signals, ["open"]);
+        const clicked = containsSignal(signals, ["click", "link"]);
+        const reported =
+          Boolean(result.reported) || containsSignal(signals, ["report"]);
+        const submitted = containsSignal(signals, [
+          "submitted",
+          "submit",
+          "dados enviados",
+          "data sent",
+          "enviou dados",
+        ]);
+        return {
+          avatar: personAvatars[personKey] ?? null,
+          id: personKey,
+          name: fullName(result),
+          email: result.email ?? "E-mail não informado",
+          position: result.position ?? "—",
+          department: result.department ?? "—",
+          status: statusLabel(result.status),
+          campaigns: campaign ? [{ id: campaign.id, name: campaign.name }] : [],
+          opened,
+          clicked,
+          reported,
+          submitted,
+          lastActivity,
+          sentAt: result.send_date,
+          risk: riskFromSignals({ clicked, opened, submitted }),
+          score: scoreFromSignals({ clicked, opened, reported, submitted }),
+          events: relatedEvents
+            .map((event) => ({
+              id: event.beephish_event_id,
+              label: statusLabel(event.event_type),
+              occurredAt: event.occurred_at,
+            }))
+            .sort(
+              (first, second) =>
+                (Date.parse(second.occurredAt ?? "") || 0) -
+                (Date.parse(first.occurredAt ?? "") || 0),
+            ),
+        };
+      });
+  }, [campaign, events, excludedEmails, personAvatars, results]);
 
   const visiblePeople = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();

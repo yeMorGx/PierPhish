@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, type User } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
 import { requireMfa } from "@/lib/server-auth";
+import { recalculateWorkspaceCampaignStats } from "@/lib/server-statistics";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -19,12 +20,16 @@ type CreateUserPayload = {
   password?: unknown;
   workspaceId?: unknown;
   role?: unknown;
+  excludeFromStatistics?: unknown;
 };
 
 type UserActionPayload = {
   action?: unknown;
   userId?: unknown;
   password?: unknown;
+  workspaceId?: unknown;
+  role?: unknown;
+  excludeFromStatistics?: unknown;
 };
 
 type WorkspaceRole = "owner" | "admin" | "analyst" | "viewer";
@@ -220,6 +225,81 @@ async function canOwnerManageUser(
   return { allowed: true, error: null };
 }
 
+async function canManageWorkspaceMembership(
+  client: NonNullable<ReturnType<typeof getAdminClient>>,
+  requesterId: string,
+  targetId: string,
+  workspaceId: string,
+  requestedRole: WorkspaceRole,
+  ownerWorkspaceIds: string[] | null,
+) {
+  if (requesterId === targetId) {
+    return {
+      allowed: false,
+      error: responseError(
+        "Você não pode alterar o próprio acesso por esta tela.",
+        400,
+      ),
+    };
+  }
+
+  // A global administrator can manage every workspace membership.
+  if (ownerWorkspaceIds === null) return { allowed: true, error: null };
+
+  if (!ownerWorkspaceIds.includes(workspaceId)) {
+    return {
+      allowed: false,
+      error: responseError(
+        "Somente o proprietário do workspace pode editar este acesso.",
+        403,
+      ),
+    };
+  }
+
+  if (requestedRole === "owner") {
+    return {
+      allowed: false,
+      error: responseError(
+        "Somente o super administrador pode conceder o nível Proprietário.",
+        403,
+      ),
+    };
+  }
+
+  const { data: membership, error: membershipError } = await client
+    .from("pierphish_workspace_members")
+    .select("role,status")
+    .eq("workspace_id", workspaceId)
+    .eq("user_id", targetId)
+    .maybeSingle();
+  if (membershipError) {
+    return {
+      allowed: false,
+      error: responseError("Não foi possível verificar o usuário.", 503),
+    };
+  }
+  if (!membership || membership.status !== "active") {
+    return {
+      allowed: false,
+      error: responseError(
+        "Esta pessoa não possui um acesso ativo neste workspace.",
+        404,
+      ),
+    };
+  }
+  if (membership.role === "owner") {
+    return {
+      allowed: false,
+      error: responseError(
+        "O acesso de um proprietário não pode ser alterado por outro proprietário.",
+        403,
+      ),
+    };
+  }
+
+  return { allowed: true, error: null };
+}
+
 function safeUser(
   user: User,
   workspaceMemberships: Array<{
@@ -227,6 +307,7 @@ function safeUser(
     workspaceName: string;
     environment: "test" | "production";
     role: WorkspaceRole;
+    excludeFromStatistics: boolean;
   }> = [],
 ) {
   const displayName = userDisplayName(user);
@@ -282,7 +363,7 @@ export async function GET(request: NextRequest) {
 
   let membershipQuery = client
     .from("pierphish_workspace_members")
-    .select("user_id,workspace_id,role,status");
+    .select("user_id,workspace_id,role,status,exclude_from_statistics");
   if (managedWorkspaceIds) {
     membershipQuery = membershipQuery.in("workspace_id", managedWorkspaceIds);
   }
@@ -312,6 +393,7 @@ export async function GET(request: NextRequest) {
       workspaceName: string;
       environment: "test" | "production";
       role: WorkspaceRole;
+      excludeFromStatistics: boolean;
     }>
   >();
   for (const membership of membershipRows ?? []) {
@@ -331,6 +413,7 @@ export async function GET(request: NextRequest) {
       environment:
         workspace.environment === "production" ? "production" : "test",
       role,
+      excludeFromStatistics: Boolean(membership.exclude_from_statistics),
     });
     membershipsByUser.set(String(membership.user_id), current);
   }
@@ -367,6 +450,7 @@ export async function POST(request: NextRequest) {
   const workspaceId =
     typeof payload.workspaceId === "string" ? payload.workspaceId.trim() : "";
   const role = typeof payload.role === "string" ? payload.role : "";
+  const excludeFromStatistics = payload.excludeFromStatistics === true;
 
   if (mode === "create" && (name.length < 2 || name.length > 80)) {
     return responseError("Informe um nome entre 2 e 80 caracteres.", 400);
@@ -430,7 +514,7 @@ export async function POST(request: NextRequest) {
     const { data: previousMembership, error: previousMembershipError } =
       await client
         .from("pierphish_workspace_members")
-        .select("id,role,status")
+        .select("id,role,status,exclude_from_statistics")
         .eq("workspace_id", workspace.id)
         .eq("user_id", invitedUser.id)
         .maybeSingle();
@@ -452,6 +536,7 @@ export async function POST(request: NextRequest) {
           user_id: invitedUser.id,
           role,
           status: "active",
+          exclude_from_statistics: excludeFromStatistics,
         },
         { onConflict: "workspace_id,user_id" },
       );
@@ -486,6 +571,7 @@ export async function POST(request: NextRequest) {
           .update({
             role: previousMembership.role,
             status: previousMembership.status,
+            exclude_from_statistics: previousMembership.exclude_from_statistics,
           })
           .eq("id", previousMembership.id);
       } else {
@@ -497,6 +583,15 @@ export async function POST(request: NextRequest) {
       }
       return responseError(
         "O acesso não foi liberado porque o aviso não pôde ser criado.",
+        502,
+      );
+    }
+
+    try {
+      await recalculateWorkspaceCampaignStats(client, workspace.id);
+    } catch {
+      return responseError(
+        "O acesso foi liberado, mas não foi possível atualizar os indicadores deste workspace.",
         502,
       );
     }
@@ -539,6 +634,7 @@ export async function POST(request: NextRequest) {
       user_id: data.user.id,
       role,
       status: "active",
+      exclude_from_statistics: excludeFromStatistics,
     });
   if (membershipError) {
     await client.auth.admin.deleteUser(data.user.id);
@@ -553,12 +649,14 @@ export async function POST(request: NextRequest) {
     workspaceName: string;
     environment: "test" | "production";
     role: WorkspaceRole;
+    excludeFromStatistics: boolean;
   }> = [
     {
       workspaceId,
       workspaceName: "",
       environment: "test",
       role: role as WorkspaceRole,
+      excludeFromStatistics,
     },
   ];
   const { data: createdWorkspace } = await client
@@ -592,6 +690,90 @@ export async function PATCH(request: NextRequest) {
     payload = (await request.json()) as UserActionPayload;
   } catch {
     return responseError("Envie os dados da ação em JSON válido.", 400);
+  }
+
+  if (payload.action === "update-membership") {
+    const targetId = typeof payload.userId === "string" ? payload.userId : "";
+    const rawWorkspaceId =
+      typeof payload.workspaceId === "string" ? payload.workspaceId.trim() : "";
+    const role = typeof payload.role === "string" ? payload.role : "";
+    if (!targetId) return responseError("Usuário não informado.", 400);
+    if (!rawWorkspaceId) return responseError("Workspace não informado.", 400);
+    if (!workspaceRoles.has(role as WorkspaceRole)) {
+      return responseError("Escolha um nível de acesso válido.", 400);
+    }
+
+    const workspaceId =
+      rawWorkspaceId === "primary"
+        ? persistedPrimaryWorkspaceId
+        : rawWorkspaceId;
+    const permission = await canManageWorkspaceMembership(
+      client,
+      adminUser.id,
+      targetId,
+      workspaceId,
+      role as WorkspaceRole,
+      ownerWorkspaceIds,
+    );
+    if (permission.error || !permission.allowed) {
+      return (
+        permission.error ??
+        responseError("Você não tem permissão para editar este acesso.", 403)
+      );
+    }
+
+    const { data: membership, error: membershipError } = await client
+      .from("pierphish_workspace_members")
+      .select("id,workspace_id,user_id,role,status,exclude_from_statistics")
+      .eq("workspace_id", workspaceId)
+      .eq("user_id", targetId)
+      .maybeSingle();
+    if (membershipError) {
+      return responseError(
+        "Não foi possível carregar o acesso do usuário.",
+        503,
+      );
+    }
+    if (!membership || membership.status !== "active") {
+      return responseError(
+        "Acesso do usuário não encontrado neste workspace.",
+        404,
+      );
+    }
+
+    const excludeFromStatistics =
+      typeof payload.excludeFromStatistics === "boolean"
+        ? payload.excludeFromStatistics
+        : Boolean(membership.exclude_from_statistics);
+    const { error: updateError } = await client
+      .from("pierphish_workspace_members")
+      .update({
+        role,
+        exclude_from_statistics: excludeFromStatistics,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", membership.id);
+    if (updateError) {
+      return responseError("Não foi possível salvar o acesso do usuário.", 502);
+    }
+
+    try {
+      await recalculateWorkspaceCampaignStats(client, workspaceId);
+    } catch {
+      return responseError(
+        "O acesso foi salvo, mas não foi possível atualizar os indicadores deste workspace.",
+        502,
+      );
+    }
+
+    return NextResponse.json({
+      membership: {
+        workspaceId: rawWorkspaceId,
+        userId: targetId,
+        role,
+        excludeFromStatistics,
+      },
+    });
   }
 
   if (payload.action !== "reset-password") {

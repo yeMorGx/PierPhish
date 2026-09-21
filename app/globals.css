@@ -5863,6 +5863,41 @@ html[data-theme="dark"] .campaign-logo-error {
   outline: 0;
 }
 
+.workspace-inline-check {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.workspace-inline-check input,
+.workspace-person-exclusion input {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  accent-color: var(--accent);
+}
+
+.workspace-inline-check span {
+  display: grid;
+  gap: 2px;
+}
+
+.workspace-inline-check strong {
+  color: var(--ink-strong);
+  font-size: 10px;
+}
+
+.workspace-inline-check small {
+  color: var(--muted-soft);
+  font-size: 9px;
+}
+
 .workspace-people-list {
   display: grid;
   gap: 7px;
@@ -5923,6 +5958,45 @@ html[data-theme="dark"] .campaign-logo-error {
   background: var(--surface-soft);
   font-size: 9px;
   font-weight: 750;
+}
+
+.workspace-person-actions {
+  display: grid;
+  flex: none;
+  justify-items: end;
+  gap: 5px;
+}
+
+.workspace-person-role-select {
+  min-width: 128px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 26px 5px 8px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  font: inherit;
+  font-size: 9px;
+  font-weight: 750;
+  outline: 0;
+}
+
+.workspace-person-role-select:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.workspace-person-exclusion {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.workspace-person-excluded {
+  color: var(--accent);
+  font-size: 9px;
 }
 
 .workspace-people-loading,

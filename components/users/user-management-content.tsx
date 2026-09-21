@@ -24,6 +24,7 @@ type WorkspaceMembership = {
   workspaceName: string;
   environment: WorkspaceEnvironment;
   role: WorkspaceRole;
+  excludeFromStatistics: boolean;
 };
 
 type ManagedUser = {
@@ -103,6 +104,7 @@ const demoUsers: ManagedUser[] = [
         workspaceName: "Workspace principal",
         environment: "production",
         role: "owner",
+        excludeFromStatistics: false,
       },
     ],
   },
@@ -120,6 +122,7 @@ const demoUsers: ManagedUser[] = [
         workspaceName: "Workspace principal",
         environment: "production",
         role: "analyst",
+        excludeFromStatistics: false,
       },
     ],
   },
@@ -137,6 +140,7 @@ const demoUsers: ManagedUser[] = [
         workspaceName: "Workspace principal",
         environment: "production",
         role: "viewer",
+        excludeFromStatistics: false,
       },
     ],
   },
@@ -235,9 +239,13 @@ export function UserManagementContent() {
   );
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
   const [selectedRole, setSelectedRole] = useState<WorkspaceRole>("viewer");
+  const [selectedExcludeFromStatistics, setSelectedExcludeFromStatistics] =
+    useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteWorkspaceId, setInviteWorkspaceId] = useState("");
   const [inviteRole, setInviteRole] = useState<WorkspaceRole>("viewer");
+  const [inviteExcludeFromStatistics, setInviteExcludeFromStatistics] =
+    useState(false);
   const [inviting, setInviting] = useState(false);
   const [inviteNotice, setInviteNotice] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
@@ -504,12 +512,14 @@ export function UserManagementContent() {
                 (workspace) => workspace.id === selectedWorkspaceId,
               )?.environment ?? "production",
             role: selectedRole,
+            excludeFromStatistics: selectedExcludeFromStatistics,
           },
         ],
       };
       persistDemoUsers([nextUser, ...users]);
       setName("");
       setEmail("");
+      setSelectedExcludeFromStatistics(false);
       setNotice("Usuário adicionado à demonstração local.");
       setSubmitting(false);
       return;
@@ -534,6 +544,7 @@ export function UserManagementContent() {
         password,
         workspaceId: selectedWorkspaceId,
         role: selectedRole,
+        excludeFromStatistics: selectedExcludeFromStatistics,
       }),
     });
     const body = (await response.json().catch(() => ({}))) as {
@@ -550,6 +561,7 @@ export function UserManagementContent() {
     setName("");
     setEmail("");
     setPassword("");
+    setSelectedExcludeFromStatistics(false);
     setNotice("Usuário criado. Compartilhe a senha inicial com segurança.");
     setSubmitting(false);
   }
@@ -605,6 +617,7 @@ export function UserManagementContent() {
             workspaceName: workspace.name,
             environment: workspace.environment,
             role: inviteRole,
+            excludeFromStatistics: inviteExcludeFromStatistics,
           },
         ],
       };
@@ -614,6 +627,7 @@ export function UserManagementContent() {
         ),
       );
       setInviteEmail("");
+      setInviteExcludeFromStatistics(false);
       setInviteNotice("Acesso liberado no modo demonstração local.");
       setInviting(false);
       return;
@@ -639,6 +653,7 @@ export function UserManagementContent() {
         email: normalizedEmail,
         workspaceId: inviteWorkspaceId,
         role: inviteRole,
+        excludeFromStatistics: inviteExcludeFromStatistics,
       }),
     });
     const body = (await response.json().catch(() => ({}))) as {
@@ -652,6 +667,7 @@ export function UserManagementContent() {
     }
 
     setInviteEmail("");
+    setInviteExcludeFromStatistics(false);
     setInviteNotice(
       `Acesso liberado${body.invitation.name ? ` para ${body.invitation.name}` : ""}. Uma notificação foi enviada.`,
     );
@@ -954,6 +970,25 @@ export function UserManagementContent() {
                       )?.description
                     }
                   </p>
+                  <label className="flex items-start gap-3 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 py-3 text-[11px] text-[#687780]">
+                    <input
+                      className="mt-0.5 size-4 accent-[var(--accent)]"
+                      type="checkbox"
+                      checked={selectedExcludeFromStatistics}
+                      onChange={(event) =>
+                        setSelectedExcludeFromStatistics(event.target.checked)
+                      }
+                    />
+                    <span className="grid gap-1">
+                      <strong className="text-[12px] text-[var(--ink)]">
+                        Não contar nas estatísticas
+                      </strong>
+                      <span>
+                        Use para pessoas internas usadas em testes. Elas ficam
+                        cadastradas, mas não entram nos indicadores.
+                      </span>
+                    </span>
+                  </label>
                   <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
                     Senha inicial
                     <div className="flex gap-2">
@@ -1121,6 +1156,17 @@ export function UserManagementContent() {
                       </option>
                     ))}
                   </select>
+                  <span className="mt-1 flex items-start gap-2 text-[10px] font-normal tracking-normal text-[#687780] normal-case">
+                    <input
+                      className="mt-0.5 size-4 accent-[var(--accent)]"
+                      type="checkbox"
+                      checked={inviteExcludeFromStatistics}
+                      onChange={(event) =>
+                        setInviteExcludeFromStatistics(event.target.checked)
+                      }
+                    />
+                    <span>Não contar nos indicadores</span>
+                  </span>
                 </label>
                 <button
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] bg-[var(--ink)] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#3b4650] disabled:cursor-not-allowed disabled:opacity-60 max-[980px]:col-span-2 max-[560px]:col-span-1"
@@ -1266,10 +1312,17 @@ export function UserManagementContent() {
                                   managedUser.workspaceMemberships.map(
                                     (membership) => (
                                       <span
-                                        className="inline-flex w-fit rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[9px] font-bold text-[#687780]"
+                                        className="grid gap-1"
                                         key={`${managedUser.id}-${membership.workspaceId}-role`}
                                       >
-                                        {roleLabel(membership.role)}
+                                        <span className="inline-flex w-fit rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[9px] font-bold text-[#687780]">
+                                          {roleLabel(membership.role)}
+                                        </span>
+                                        {membership.excludeFromStatistics ? (
+                                          <span className="inline-flex w-fit rounded-full bg-[#fff1eb] px-2.5 py-1 text-[9px] font-bold text-[#a45e4b]">
+                                            Fora dos indicadores
+                                          </span>
+                                        ) : null}
                                       </span>
                                     ),
                                   )

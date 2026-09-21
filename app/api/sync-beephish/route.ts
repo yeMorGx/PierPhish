@@ -3,6 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
 import { requireMfa } from "@/lib/server-auth";
+import {
+  adjustCampaignStats,
+  loadExcludedWorkspaceEmails,
+} from "@/lib/server-statistics";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -282,6 +286,8 @@ async function syncCompany(
     );
   }
 
+  const excludedEmails = await loadExcludedWorkspaceEmails(client, workspaceId);
+
   const synced: Array<{ campaignId: number; results: number; events: number }> =
     [];
   const failures: Array<{ campaignId: number | null; error: string }> = [];
@@ -309,6 +315,7 @@ async function syncCompany(
                 .filter(Boolean)
             : [],
           stats: isRecord(campaign.stats) ? campaign.stats : {},
+          source_stats: isRecord(campaign.stats) ? campaign.stats : {},
           synced_at: new Date().toISOString(),
         });
       if (campaignError) throw campaignError;
@@ -350,6 +357,19 @@ async function syncCompany(
           .upsert(resultRows, { onConflict: "campaign_id,beephish_id" });
         if (error) throw error;
       }
+
+      const { error: statisticsError } = await client
+        .from("beephish_campaigns")
+        .update({
+          stats: adjustCampaignStats(
+            isRecord(campaign.stats) ? campaign.stats : {},
+            resultRows,
+            excludedEmails,
+          ),
+        })
+        .eq("id", campaignId)
+        .eq("workspace_id", workspaceId);
+      if (statisticsError) throw statisticsError;
 
       let eventCount = 0;
       if (!isOlderThan(campaign.completed_date, eventsRetentionDays)) {

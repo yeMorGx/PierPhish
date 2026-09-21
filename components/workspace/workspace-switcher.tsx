@@ -51,6 +51,7 @@ type ManagedWorkspaceUser = {
   workspaceMemberships: Array<{
     workspaceId: string;
     role: WorkspaceRole;
+    excludeFromStatistics: boolean;
   }>;
 };
 
@@ -96,6 +97,12 @@ const manageRoleOptions: Array<{
   { value: "viewer", label: "Visualizador" },
 ];
 
+function roleOptionsFor(globalAdmin: boolean) {
+  return globalAdmin
+    ? [{ value: "owner" as const, label: "Proprietário" }, ...manageRoleOptions]
+    : manageRoleOptions;
+}
+
 function workspaceCanBeManaged(
   workspace: WorkspaceSummary,
   globalAdmin: boolean,
@@ -133,10 +140,16 @@ export function WorkspaceManagePanel({
   const [inviting, setInviting] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<WorkspaceRole>("viewer");
+  const [inviteExcludeFromStatistics, setInviteExcludeFromStatistics] =
+    useState(false);
+  const [updatingMembership, setUpdatingMembership] = useState<string | null>(
+    null,
+  );
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const canManage = workspaceCanBeManaged(workspace, globalAdmin);
+  const canEditMemberships = globalAdmin || workspace.role === "owner";
 
   async function getAccessToken() {
     if (!supabase) return null;
@@ -183,7 +196,13 @@ export function WorkspaceManagePanel({
           id: "demo-admin",
           name: "Admin PierPhish",
           email: "admin@teste.com",
-          workspaceMemberships: [{ workspaceId: workspace.id, role: "owner" }],
+          workspaceMemberships: [
+            {
+              workspaceId: workspace.id,
+              role: "owner",
+              excludeFromStatistics: false,
+            },
+          ],
         },
       ]);
     }
@@ -302,6 +321,7 @@ export function WorkspaceManagePanel({
         email,
         workspaceId: workspace.id,
         role: inviteRole,
+        excludeFromStatistics: inviteExcludeFromStatistics,
       }),
     });
     const body = (await response.json().catch(() => ({}))) as {
@@ -314,11 +334,90 @@ export function WorkspaceManagePanel({
       return;
     }
     setInviteEmail("");
+    setInviteExcludeFromStatistics(false);
     setNotice(
       `${body.invitation?.name || email} agora pode acessar este workspace.`,
     );
     setInviting(false);
     await loadPeople();
+  }
+
+  async function updateMembership(
+    userId: string,
+    changes: { role: WorkspaceRole; excludeFromStatistics: boolean },
+  ) {
+    if (!canEditMemberships || updatingMembership) return;
+    setUpdatingMembership(userId);
+    setError(null);
+    setNotice(null);
+
+    if (!isSupabaseConfigured) {
+      setPeople((current) =>
+        current.map((person) =>
+          person.id === userId
+            ? {
+                ...person,
+                workspaceMemberships: person.workspaceMemberships.map(
+                  (membership) =>
+                    membership.workspaceId === workspace.id
+                      ? { ...membership, ...changes }
+                      : membership,
+                ),
+              }
+            : person,
+        ),
+      );
+      setNotice("Acesso atualizado neste navegador.");
+      setUpdatingMembership(null);
+      return;
+    }
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      setError("Sua sessão expirou. Entre novamente para atualizar o acesso.");
+      setUpdatingMembership(null);
+      return;
+    }
+    const response = await fetch("/api/admin/users", {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "update-membership",
+        userId,
+        workspaceId: workspace.id,
+        role: changes.role,
+        excludeFromStatistics: changes.excludeFromStatistics,
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as {
+      error?: string;
+    };
+    if (!response.ok) {
+      setError(body.error ?? "Não foi possível atualizar o acesso.");
+      setUpdatingMembership(null);
+      return;
+    }
+
+    setPeople((current) =>
+      current.map((person) =>
+        person.id === userId
+          ? {
+              ...person,
+              workspaceMemberships: person.workspaceMemberships.map(
+                (membership) =>
+                  membership.workspaceId === workspace.id
+                    ? { ...membership, ...changes }
+                    : membership,
+              ),
+            }
+          : person,
+      ),
+    );
+    setNotice("Acesso atualizado.");
+    setUpdatingMembership(null);
   }
 
   return (
@@ -505,12 +604,25 @@ export function WorkspaceManagePanel({
                   setInviteRole(event.target.value as WorkspaceRole)
                 }
               >
-                {manageRoleOptions.map((option) => (
+                {roleOptionsFor(globalAdmin).map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
               </select>
+            </label>
+            <label className="workspace-inline-check">
+              <input
+                type="checkbox"
+                checked={inviteExcludeFromStatistics}
+                onChange={(event) =>
+                  setInviteExcludeFromStatistics(event.target.checked)
+                }
+              />
+              <span>
+                <strong>Não contar nas estatísticas</strong>
+                <small>Use para pessoas internas usadas em testes.</small>
+              </span>
             </label>
             <button
               className="workspace-modal-primary"
@@ -529,6 +641,12 @@ export function WorkspaceManagePanel({
                 const membership = person.workspaceMemberships.find(
                   (item) => item.workspaceId === workspace.id,
                 );
+                const canEditPerson = Boolean(
+                  membership &&
+                    canEditMemberships &&
+                    person.id !== user?.id &&
+                    (globalAdmin || membership.role !== "owner"),
+                );
                 return (
                   <div className="workspace-person-row" key={person.id}>
                     <span className="workspace-person-avatar">
@@ -538,8 +656,55 @@ export function WorkspaceManagePanel({
                       <strong>{person.name || "Sem nome"}</strong>
                       <small>{person.email}</small>
                     </span>
-                    <span className="workspace-person-role">
-                      {roleLabel(membership?.role)}
+                    <span className="workspace-person-actions">
+                      {membership && canEditPerson ? (
+                        <>
+                          <select
+                            aria-label={`Nível de acesso de ${person.name || person.email}`}
+                            className="workspace-person-role-select"
+                            disabled={updatingMembership === person.id}
+                            value={membership.role}
+                            onChange={(event) =>
+                              void updateMembership(person.id, {
+                                role: event.target.value as WorkspaceRole,
+                                excludeFromStatistics:
+                                  membership.excludeFromStatistics,
+                              })
+                            }
+                          >
+                            {roleOptionsFor(globalAdmin).map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <label className="workspace-person-exclusion">
+                            <input
+                              type="checkbox"
+                              checked={membership.excludeFromStatistics}
+                              disabled={updatingMembership === person.id}
+                              onChange={(event) =>
+                                void updateMembership(person.id, {
+                                  role: membership.role,
+                                  excludeFromStatistics: event.target.checked,
+                                })
+                              }
+                            />
+                            <span>Excluir dos indicadores</span>
+                          </label>
+                        </>
+                      ) : (
+                        <>
+                          <span className="workspace-person-role">
+                            {roleLabel(membership?.role)}
+                          </span>
+                          {membership?.excludeFromStatistics ? (
+                            <small className="workspace-person-excluded">
+                              Fora dos indicadores
+                            </small>
+                          ) : null}
+                        </>
+                      )}
                     </span>
                   </div>
                 );

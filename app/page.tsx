@@ -30,6 +30,10 @@ import {
   useActiveWorkspaceId,
 } from "@/lib/use-active-workspace";
 import { readActiveWorkspaceId } from "@/lib/company-data";
+import {
+  loadWorkspaceExcludedEmails,
+  normalizeWorkspaceEmail,
+} from "@/lib/workspace-exclusions";
 
 type RawParticipant = {
   campaign_id: number;
@@ -387,6 +391,9 @@ export default function Home() {
     setCampaigns(nextCampaigns);
     const avatars = readPersonAvatars();
     setPersonAvatars(avatars);
+    const excludedEmails = await loadWorkspaceExcludedEmails(
+      databaseWorkspaceId(activeWorkspaceId),
+    );
     const nextParticipants: CampaignParticipants = {};
     if (nextCampaigns.length) {
       const { data: participantData } = await supabase
@@ -402,6 +409,9 @@ export default function Home() {
         .order("modified_date", { ascending: false })
         .limit(500);
       for (const participant of (participantData ?? []) as RawParticipant[]) {
+        if (excludedEmails.has(normalizeWorkspaceEmail(participant.email))) {
+          continue;
+        }
         const name =
           [participant.first_name, participant.last_name]
             .filter(Boolean)
@@ -512,9 +522,9 @@ export default function Home() {
               ? "Workspace sem conexão BeePhish"
               : !canSyncWorkspace
                 ? "Sincronização restrita ao administrador do workspace"
-              : syncing
-                ? "Sincronizando dados"
-                : "Sincronizar tudo"
+                : syncing
+                  ? "Sincronizando dados"
+                  : "Sincronizar tudo"
           }
           className="header-sync-button inline-flex min-h-[38px] items-center gap-[9px] rounded-[12px] border-0 px-[15px] text-[12px] font-bold shadow-[0_5px_15px_rgba(24,32,43,0.14)] transition-colors max-[720px]:px-[11px]"
           onClick={() => void syncAllCampaigns()}
