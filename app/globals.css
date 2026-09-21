@@ -8392,7 +8392,7 @@ html[data-theme="dark"] .settings-page {
   background: var(--surface-muted);
 }
 
-.visual-dashboard-progress i {
+.visual-dashboard-progress span {
   display: block;
   height: 100%;
   min-width: 7px;
@@ -12097,13 +12097,9 @@ html[data-theme="dark"] .settings-page {
   background: var(--surface-muted);
 }
 
-.visual-dashboard-progress > div {
+.visual-dashboard-progress > span {
   min-height: 6px;
   border-radius: inherit;
-}
-
-.visual-dashboard-progress [class*="bg-orange"] {
-  background: var(--accent) !important;
 }
 
 .settings-widget-order-card {

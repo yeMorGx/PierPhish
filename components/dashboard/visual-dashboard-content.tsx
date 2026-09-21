@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { ProgressBar } from "@tremor/react";
 import {
   Bar,
   BarChart,
@@ -265,12 +264,16 @@ export function VisualDashboardContent({
             </strong>
             <span>abertura</span>
           </div>
-          <ProgressBar
+          <div
+            aria-label="Taxa de abertura"
+            aria-valuemax={100}
+            aria-valuemin={0}
+            aria-valuenow={openingRate}
             className="visual-dashboard-progress"
-            color="orange"
-            showAnimation={false}
-            value={openingRate}
-          />
+            role="progressbar"
+          >
+            <span style={{ width: `${openingRate}%` }} />
+          </div>
           <div className="visual-dashboard-hero-meta">
             <span>
               {totals.opened}/{totals.people}
