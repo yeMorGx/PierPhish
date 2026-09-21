@@ -14,7 +14,7 @@ import {
   readActiveWorkspaceId,
   writeActiveWorkspaceId,
 } from "@/lib/company-data";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 type ActiveSection =
   | "overview"
@@ -36,22 +36,18 @@ function navClass(active: boolean) {
 }
 
 function WorkspaceBootstrap() {
-  const { ready, user } = useAuth();
+  const { ready, session, user } = useAuth();
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !ready || !user || !supabase) return;
+    if (!isSupabaseConfigured || !ready || !user || !session) return;
 
     const storageKey = `pierphish-workspace-bootstrap:${user.id}`;
     if (window.sessionStorage.getItem(storageKey) === "ready") return;
 
     let cancelled = false;
     void (async () => {
-      const { data } = await supabase.auth.getSession();
-      const accessToken = data.session?.access_token;
-      if (!accessToken) return;
-
       const response = await fetch("/api/workspaces", {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (!response.ok || cancelled) return;
 
@@ -72,7 +68,7 @@ function WorkspaceBootstrap() {
     return () => {
       cancelled = true;
     };
-  }, [ready, user?.id]);
+  }, [ready, session, user?.id]);
 
   return null;
 }

@@ -24,23 +24,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session ?? null);
-      setReady(true);
-    });
+    let subscription: { unsubscribe: () => void } | null = null;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!mounted) return;
-      setSession(nextSession);
-      setReady(true);
-    });
+    void (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!mounted) return;
+        setSession(data.session ?? null);
+        setReady(true);
+
+        const listener = supabase.auth.onAuthStateChange(
+          (_event, nextSession) => {
+            if (!mounted) return;
+            setSession(nextSession);
+            setReady(true);
+          },
+        );
+        subscription = listener.data.subscription;
+      } catch {
+        if (!mounted) return;
+        setSession(null);
+        setReady(true);
+      }
+    })();
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 
@@ -60,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth precisa estar dentro de AuthProvider.");
+  if (!context)
+    throw new Error("useAuth precisa estar dentro de AuthProvider.");
   return context;
 }

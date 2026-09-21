@@ -373,15 +373,18 @@ export default function Home() {
 
   async function loadCampaigns() {
     if (!supabase || !workspaceHasBeephishData) return;
+    const requestedWorkspaceId = activeWorkspaceId;
+    const requestedDatabaseWorkspaceId =
+      databaseWorkspaceId(requestedWorkspaceId);
     setError(null);
 
     const { data, error: queryError } = await supabase
       .from("beephish_campaigns")
       .select("id,name,status,launch_date,synced_at,stats,company_id")
-      .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
+      .eq("workspace_id", requestedDatabaseWorkspaceId)
       .order("launch_date", { ascending: false });
 
-    if (!hasBeephishData(readActiveWorkspaceId())) return;
+    if (readActiveWorkspaceId() !== requestedWorkspaceId) return;
     if (queryError) {
       setError(queryError.message);
       return;
@@ -392,8 +395,9 @@ export default function Home() {
     const avatars = readPersonAvatars();
     setPersonAvatars(avatars);
     const excludedEmails = await loadWorkspaceExcludedEmails(
-      databaseWorkspaceId(activeWorkspaceId),
+      requestedDatabaseWorkspaceId,
     );
+    if (readActiveWorkspaceId() !== requestedWorkspaceId) return;
     const nextParticipants: CampaignParticipants = {};
     if (nextCampaigns.length) {
       const { data: participantData } = await supabase
@@ -401,7 +405,7 @@ export default function Home() {
         .select(
           "campaign_id,beephish_id,first_name,last_name,email,modified_date",
         )
-        .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
+        .eq("workspace_id", requestedDatabaseWorkspaceId)
         .in(
           "campaign_id",
           nextCampaigns.map((campaign) => campaign.id),
@@ -429,7 +433,7 @@ export default function Home() {
         }
       }
     }
-    if (!hasBeephishData(readActiveWorkspaceId())) return;
+    if (readActiveWorkspaceId() !== requestedWorkspaceId) return;
     setParticipantsByCampaign(nextParticipants);
     if (
       nextCampaigns.length &&
