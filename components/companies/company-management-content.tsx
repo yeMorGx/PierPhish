@@ -14,6 +14,7 @@ import {
   readLocalWorkspaces,
   type CompanyRecord,
   type WorkspaceEnvironment,
+  type WorkspaceRole,
   type WorkspaceRecord,
   writeLocalCompanies,
   writeLocalWorkspaces,
@@ -188,12 +189,18 @@ export function CompanyManagementContent() {
   );
   const [companyDraft, setCompanyDraft] = useState<CompanyDraft>(emptyCompany);
   const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [accessLoading, setAccessLoading] = useState(isSupabaseConfigured);
+  const [activeWorkspaceRole, setActiveWorkspaceRole] =
+    useState<WorkspaceRole | null>(null);
   const [localMode, setLocalMode] = useState(!isSupabaseConfigured);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const adminAccess = isAdminUser(user);
+  const adminAccess =
+    isAdminUser(user) ||
+    activeWorkspaceRole === "owner" ||
+    activeWorkspaceRole === "admin";
   const selectedWorkspace = useMemo(
     () => workspaces.find((workspace) => workspace.id === selectedWorkspaceId),
     [selectedWorkspaceId, workspaces],
@@ -252,6 +259,50 @@ export function CompanyManagementContent() {
       window.removeEventListener("pierphish:workspace-selected", syncLocalData);
     };
   }, [localMode]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !ready || !user || !supabase) {
+      setActiveWorkspaceRole(null);
+      setAccessLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setAccessLoading(true);
+    void (async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        if (!cancelled) {
+          setActiveWorkspaceRole(null);
+          setAccessLoading(false);
+        }
+        return;
+      }
+
+      const response = await fetch("/api/workspaces", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = (await response.json().catch(() => ({}))) as {
+        workspaces?: Array<{ id: string; role?: WorkspaceRole }>;
+      };
+      if (cancelled) return;
+      const activeWorkspace = (body.workspaces ?? []).find(
+        (workspace) => workspace.id === activeWorkspaceId,
+      );
+      setActiveWorkspaceRole(activeWorkspace?.role ?? null);
+      setAccessLoading(false);
+    })().catch(() => {
+      if (!cancelled) {
+        setActiveWorkspaceRole(null);
+        setAccessLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeWorkspaceId, ready, user?.id]);
 
   useEffect(() => {
     if (isSupabaseConfigured && adminAccess && ready) void loadData();
@@ -510,7 +561,11 @@ export function CompanyManagementContent() {
           </div>
         )}
 
-        {!adminAccess ? (
+        {accessLoading ? (
+          <section className="surface-card companies-loading" role="status">
+            Verificando o acesso ao workspace…
+          </section>
+        ) : !adminAccess ? (
           <section
             className="surface-card companies-access-denied"
             role="alert"

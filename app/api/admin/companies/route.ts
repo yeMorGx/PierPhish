@@ -177,6 +177,90 @@ async function requireAdmin(request: NextRequest) {
   return { client, error: null };
 }
 
+async function requireCompaniesAccess(request: NextRequest) {
+  const authorization = request.headers.get("authorization");
+  const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!token) {
+    return {
+      client: null,
+      error: responseError("Sessão não encontrada.", 401),
+      managedWorkspaceIds: null as string[] | null,
+    };
+  }
+
+  const authClient = getAdminClient(publishableKey ?? serviceRoleKey, token);
+  if (!authClient) {
+    return {
+      client: null,
+      error: responseError("O Supabase não foi configurado no servidor.", 503),
+      managedWorkspaceIds: null as string[] | null,
+    };
+  }
+
+  const { data, error } = await authClient.auth.getUser(token);
+  if (error || !data.user) {
+    return {
+      client: null,
+      error: responseError("Sua sessão não é válida.", 401),
+      managedWorkspaceIds: null as string[] | null,
+    };
+  }
+
+  if (isGlobalAdminUser(data.user)) {
+    return {
+      client: serviceRoleKey
+        ? (getAdminClient(serviceRoleKey) ?? authClient)
+        : authClient,
+      error: null,
+      managedWorkspaceIds: null,
+    };
+  }
+
+  const { data: memberships, error: membershipError } = await authClient
+    .from("pierphish_workspace_members")
+    .select("workspace_id")
+    .eq("user_id", data.user.id)
+    .eq("status", "active")
+    .in("role", ["owner", "admin"]);
+
+  if (membershipError) {
+    return {
+      client: null,
+      error: responseError(
+        "Não foi possível verificar o acesso aos workspaces.",
+        503,
+      ),
+      managedWorkspaceIds: null as string[] | null,
+    };
+  }
+
+  const managedWorkspaceIds = Array.from(
+    new Set(
+      (memberships ?? [])
+        .map((membership) => membership.workspace_id)
+        .filter((workspaceId): workspaceId is string => Boolean(workspaceId)),
+    ),
+  );
+  if (!managedWorkspaceIds.length) {
+    return {
+      client: null,
+      error: responseError(
+        "Você não tem permissão para administrar empresas neste workspace.",
+        403,
+      ),
+      managedWorkspaceIds,
+    };
+  }
+
+  return {
+    client: serviceRoleKey
+      ? (getAdminClient(serviceRoleKey) ?? authClient)
+      : authClient,
+    error: null,
+    managedWorkspaceIds,
+  };
+}
+
 function isLocalImage(value: unknown): value is string {
   return (
     typeof value === "string" &&
@@ -239,20 +323,28 @@ function safeCompany(row: Record<string, unknown>) {
 }
 
 export async function GET(request: NextRequest) {
-  const { client, error } = await requireAdmin(request);
+  const { client, error, managedWorkspaceIds } =
+    await requireCompaniesAccess(request);
   if (error || !client) return error;
 
+  let workspaceQuery = client
+    .from("pierphish_workspaces")
+    .select("id,name,environment,description,logo_url,created_at")
+    .order("created_at", { ascending: true });
+  let companyQuery = client
+    .from("pierphish_companies")
+    .select(
+      "id,workspace_id,name,description,client_id,client_secret_last4,client_secret_ciphertext,logo_url,status,created_at",
+    )
+    .order("created_at", { ascending: true });
+  if (managedWorkspaceIds) {
+    workspaceQuery = workspaceQuery.in("id", managedWorkspaceIds);
+    companyQuery = companyQuery.in("workspace_id", managedWorkspaceIds);
+  }
+
   const [workspaceResult, companyResult] = await Promise.all([
-    client
-      .from("pierphish_workspaces")
-      .select("id,name,environment,description,logo_url,created_at")
-      .order("created_at", { ascending: true }),
-    client
-      .from("pierphish_companies")
-      .select(
-        "id,workspace_id,name,description,client_id,client_secret_last4,client_secret_ciphertext,logo_url,status,created_at",
-      )
-      .order("created_at", { ascending: true }),
+    workspaceQuery,
+    companyQuery,
   ]);
 
   if (workspaceResult.error || companyResult.error) {
@@ -273,9 +365,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { client, error } = await requireAdmin(request);
-  if (error || !client) return error;
-
   let payload: WorkspacePayload;
   try {
     payload = (await request.json()) as WorkspacePayload;
@@ -293,6 +382,8 @@ export async function POST(request: NextRequest) {
   }
 
   if (type === "workspace") {
+    const { client, error } = await requireAdmin(request);
+    if (error || !client) return error;
     const environment =
       payload.environment === "production" ? "production" : "test";
     const { data, error: insertError } = await client
@@ -316,9 +407,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const { client, error, managedWorkspaceIds } =
+    await requireCompaniesAccess(request);
+  if (error || !client) return error;
+
   const workspaceId = text(payload.workspaceId);
   const databaseWorkspaceId =
     workspaceId === "primary" ? persistedPrimaryWorkspaceId : workspaceId;
+  if (
+    managedWorkspaceIds &&
+    !managedWorkspaceIds.includes(databaseWorkspaceId)
+  ) {
+    return responseError(
+      "Você só pode adicionar clientes aos workspaces que administra.",
+      403,
+    );
+  }
   const clientId = text(payload.clientId);
   const clientSecret = text(payload.clientSecret);
   if (!workspaceId) return responseError("Escolha um workspace.", 400);
@@ -413,8 +517,29 @@ export async function PATCH(request: NextRequest) {
     });
   }
 
-  const { client, error } = await requireAdmin(request);
+  const { client, error, managedWorkspaceIds } =
+    await requireCompaniesAccess(request);
   if (error || !client) return error;
+
+  if (managedWorkspaceIds) {
+    const { data: existingCompany, error: lookupError } = await client
+      .from("pierphish_companies")
+      .select("workspace_id")
+      .eq("id", id)
+      .maybeSingle();
+    if (lookupError) {
+      return responseError("Não foi possível verificar o cliente.", 503);
+    }
+    if (!existingCompany) {
+      return responseError("Cliente não encontrado.", 404);
+    }
+    if (!managedWorkspaceIds.includes(existingCompany.workspace_id)) {
+      return responseError(
+        "Você não pode editar clientes de outro workspace.",
+        403,
+      );
+    }
+  }
 
   const update: Record<string, unknown> = {
     name,
