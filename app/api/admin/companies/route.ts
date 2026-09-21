@@ -45,6 +45,89 @@ function getAdminClient(key: string | undefined, accessToken?: string) {
   });
 }
 
+function isGlobalAdminUser(user: {
+  email?: string;
+  app_metadata?: Record<string, unknown>;
+}) {
+  const role =
+    typeof user.app_metadata?.role === "string" ? user.app_metadata.role : "";
+  return (
+    user.email?.toLowerCase() === superAdminEmail ||
+    user.app_metadata?.is_admin === true ||
+    role === "admin" ||
+    role === "owner" ||
+    role === "super_admin"
+  );
+}
+
+async function requireWorkspaceManager(
+  request: NextRequest,
+  workspaceId: string,
+) {
+  const authorization = request.headers.get("authorization");
+  const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!token) {
+    return {
+      client: null,
+      error: responseError("Sessão não encontrada.", 401),
+    };
+  }
+
+  const authClient = getAdminClient(publishableKey ?? serviceRoleKey, token);
+  if (!authClient) {
+    return {
+      client: null,
+      error: responseError("O Supabase não foi configurado no servidor.", 503),
+    };
+  }
+
+  const { data, error } = await authClient.auth.getUser(token);
+  if (error || !data.user) {
+    return {
+      client: null,
+      error: responseError("Sua sessão não é válida.", 401),
+    };
+  }
+
+  if (!isGlobalAdminUser(data.user)) {
+    const databaseWorkspaceId =
+      workspaceId === "primary" ? persistedPrimaryWorkspaceId : workspaceId;
+    const { data: membership, error: membershipError } = await authClient
+      .from("pierphish_workspace_members")
+      .select("role")
+      .eq("workspace_id", databaseWorkspaceId)
+      .eq("user_id", data.user.id)
+      .eq("status", "active")
+      .in("role", ["owner", "admin"])
+      .maybeSingle();
+    if (membershipError) {
+      return {
+        client: null,
+        error: responseError(
+          "Não foi possível verificar o acesso ao workspace.",
+          503,
+        ),
+      };
+    }
+    if (!membership) {
+      return {
+        client: null,
+        error: responseError(
+          "Você não tem permissão para personalizar este workspace.",
+          403,
+        ),
+      };
+    }
+  }
+
+  return {
+    client: serviceRoleKey
+      ? (getAdminClient(serviceRoleKey) ?? authClient)
+      : authClient,
+    error: null,
+  };
+}
+
 async function requireAdmin(request: NextRequest) {
   const authorization = request.headers.get("authorization");
   const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
@@ -75,13 +158,7 @@ async function requireAdmin(request: NextRequest) {
   }
 
   const metadata = (data.user.app_metadata ?? {}) as AdminMetadata;
-  const role = typeof metadata.role === "string" ? metadata.role : "";
-  const isAdmin =
-    data.user.email?.toLowerCase() === superAdminEmail ||
-    metadata.is_admin === true ||
-    role === "admin" ||
-    role === "owner" ||
-    role === "super_admin";
+  const isAdmin = isGlobalAdminUser(data.user);
 
   if (!isAdmin) {
     return {
@@ -286,9 +363,6 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const { client, error } = await requireAdmin(request);
-  if (error || !client) return error;
-
   let payload: WorkspacePayload;
   try {
     payload = (await request.json()) as WorkspacePayload;
@@ -310,6 +384,10 @@ export async function PATCH(request: NextRequest) {
   }
 
   if (type === "workspace") {
+    const workspaceAccess = await requireWorkspaceManager(request, id);
+    if (workspaceAccess.error || !workspaceAccess.client)
+      return workspaceAccess.error;
+    const client = workspaceAccess.client;
     const databaseId = id === "primary" ? persistedPrimaryWorkspaceId : id;
     const environment =
       payload.environment === "production" ? "production" : "test";
@@ -334,6 +412,9 @@ export async function PATCH(request: NextRequest) {
       workspace: safeWorkspace(data as Record<string, unknown>),
     });
   }
+
+  const { client, error } = await requireAdmin(request);
+  if (error || !client) return error;
 
   const update: Record<string, unknown> = {
     name,

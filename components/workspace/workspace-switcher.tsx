@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Icon } from "@/components/ui/icon";
 import {
@@ -43,6 +44,18 @@ type WorkspaceDraft = {
   description: string;
 };
 
+type ManagedWorkspaceUser = {
+  id: string;
+  name: string;
+  email: string;
+  workspaceMemberships: Array<{
+    workspaceId: string;
+    role: WorkspaceRole;
+  }>;
+};
+
+type WorkspaceManageTab = "workspace" | "people";
+
 const emptyWorkspace: WorkspaceDraft = {
   name: "",
   environment: "test",
@@ -74,6 +87,383 @@ function roleLabel(role?: WorkspaceRole) {
   return "Visualizador";
 }
 
+const manageRoleOptions: Array<{
+  value: WorkspaceRole;
+  label: string;
+}> = [
+  { value: "admin", label: "Administrador" },
+  { value: "analyst", label: "Analista" },
+  { value: "viewer", label: "Visualizador" },
+];
+
+function workspaceCanBeManaged(
+  workspace: WorkspaceSummary,
+  globalAdmin: boolean,
+) {
+  return (
+    globalAdmin || workspace.role === "owner" || workspace.role === "admin"
+  );
+}
+
+function WorkspaceManagePanel({
+  workspace,
+  globalAdmin,
+  onBack,
+  onClose,
+  onUpdated,
+}: {
+  workspace: WorkspaceSummary;
+  globalAdmin: boolean;
+  onBack: () => void;
+  onClose: () => void;
+  onUpdated: (workspace: WorkspaceSummary) => void;
+}) {
+  const { user } = useAuth();
+  const [tab, setTab] = useState<WorkspaceManageTab>("workspace");
+  const [draft, setDraft] = useState<WorkspaceDraft>({
+    name: workspace.name,
+    environment: workspace.environment,
+    description: workspace.description,
+  });
+  const [people, setPeople] = useState<ManagedWorkspaceUser[]>([]);
+  const [loadingPeople, setLoadingPeople] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<WorkspaceRole>("viewer");
+  const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const canManage = workspaceCanBeManaged(workspace, globalAdmin);
+
+  async function getAccessToken() {
+    if (!supabase) return null;
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
+  }
+
+  async function loadPeople() {
+    setLoadingPeople(true);
+    setError(null);
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      setError("Sua sessão expirou. Entre novamente para ver as pessoas.");
+      setLoadingPeople(false);
+      return;
+    }
+    const response = await fetch("/api/admin/users", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const body = (await response.json().catch(() => ({}))) as {
+      users?: ManagedWorkspaceUser[];
+      error?: string;
+    };
+    if (!response.ok) {
+      setError(body.error ?? "Não foi possível carregar as pessoas.");
+      setLoadingPeople(false);
+      return;
+    }
+    setPeople(
+      (body.users ?? []).filter((managedUser) =>
+        managedUser.workspaceMemberships.some(
+          (membership) => membership.workspaceId === workspace.id,
+        ),
+      ),
+    );
+    setLoadingPeople(false);
+  }
+
+  useEffect(() => {
+    if (tab === "people" && isSupabaseConfigured) void loadPeople();
+    if (tab === "people" && !isSupabaseConfigured) {
+      setPeople([
+        {
+          id: "demo-admin",
+          name: "Admin PierPhish",
+          email: "admin@teste.com",
+          workspaceMemberships: [{ workspaceId: workspace.id, role: "owner" }],
+        },
+      ]);
+    }
+    // A troca de aba deve recarregar apenas a lista de pessoas.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, workspace.id]);
+
+  async function saveWorkspace(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+    setNotice(null);
+    const name = draft.name.trim();
+    if (name.length < 2) {
+      setError("Informe um nome com pelo menos 2 caracteres.");
+      setSaving(false);
+      return;
+    }
+
+    if (!isSupabaseConfigured) {
+      const nextLocalWorkspaces = readLocalWorkspaces().map((item) =>
+        item.id === workspace.id
+          ? {
+              ...item,
+              name,
+              environment: draft.environment,
+              description: draft.description.trim(),
+            }
+          : item,
+      );
+      writeLocalWorkspaces(nextLocalWorkspaces);
+      onUpdated({
+        ...workspace,
+        name,
+        environment: draft.environment,
+        description: draft.description.trim(),
+        initial: name.slice(0, 1).toUpperCase(),
+      });
+      setNotice("Workspace atualizado neste navegador.");
+      setSaving(false);
+      return;
+    }
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      setError("Sua sessão expirou. Entre novamente para salvar.");
+      setSaving(false);
+      return;
+    }
+    const response = await fetch("/api/admin/companies", {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type: "workspace",
+        id: workspace.id,
+        name,
+        environment: draft.environment,
+        description: draft.description.trim(),
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as {
+      workspace?: WorkspaceSummary;
+      error?: string;
+    };
+    if (!response.ok || !body.workspace) {
+      setError(body.error ?? "Não foi possível atualizar o workspace.");
+      setSaving(false);
+      return;
+    }
+    const nextWorkspace = {
+      ...body.workspace,
+      initial: body.workspace.name.slice(0, 1).toUpperCase(),
+      role: workspace.role,
+    };
+    onUpdated(nextWorkspace);
+    window.dispatchEvent(new Event("pierphish:workspaces-changed"));
+    setNotice("Workspace atualizado.");
+    setSaving(false);
+  }
+
+  async function invitePerson(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setInviting(true);
+    setError(null);
+    setNotice(null);
+    const email = inviteEmail.trim().toLowerCase();
+    if (!email) {
+      setError("Informe o e-mail da pessoa.");
+      setInviting(false);
+      return;
+    }
+    if (!isSupabaseConfigured) {
+      setNotice("No modo local, convites ficam disponíveis após configurar o servidor.");
+      setInviting(false);
+      return;
+    }
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      setError("Sua sessão expirou. Entre novamente para convidar.");
+      setInviting(false);
+      return;
+    }
+    const response = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        mode: "invite",
+        email,
+        workspaceId: workspace.id,
+        role: inviteRole,
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as {
+      invitation?: { name?: string };
+      error?: string;
+    };
+    if (!response.ok) {
+      setError(body.error ?? "Não foi possível convidar esta pessoa.");
+      setInviting(false);
+      return;
+    }
+    setInviteEmail("");
+    setNotice(`${body.invitation?.name || email} agora pode acessar este workspace.`);
+    setInviting(false);
+    await loadPeople();
+  }
+
+  return (
+    <>
+      <header className="workspace-modal-header">
+        <div>
+          <button className="workspace-modal-back" onClick={onBack} type="button">
+            <Icon name="arrow" size={15} />
+            Workspaces
+          </button>
+          <p className="workspace-modal-eyebrow">GERENCIAR WORKSPACE</p>
+          <h2 id="workspace-modal-title">{workspace.name}</h2>
+          <p>Personalize o ambiente e controle quem participa dele.</p>
+        </div>
+        <button
+          aria-label="Fechar gerenciamento de workspace"
+          className="workspace-modal-close"
+          onClick={onClose}
+          type="button"
+        >
+          <Icon name="close" size={17} />
+        </button>
+      </header>
+
+      <div className="workspace-manage-tabs" role="tablist" aria-label="Gerenciamento do workspace">
+        <button
+          className={tab === "workspace" ? "is-active" : ""}
+          onClick={() => setTab("workspace")}
+          role="tab"
+          aria-selected={tab === "workspace"}
+          type="button"
+        >
+          <Icon name="settings" size={14} /> Ambiente
+        </button>
+        <button
+          className={tab === "people" ? "is-active" : ""}
+          onClick={() => setTab("people")}
+          role="tab"
+          aria-selected={tab === "people"}
+          type="button"
+        >
+          <Icon name="users" size={14} /> Pessoas
+        </button>
+      </div>
+
+      {tab === "workspace" ? (
+        <form className="workspace-manage-body" onSubmit={(event) => void saveWorkspace(event)}>
+          <label className="workspace-field">
+            <span>Nome do workspace</span>
+            <input
+              autoFocus
+              maxLength={80}
+              onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
+              value={draft.name}
+            />
+          </label>
+          <fieldset className="workspace-fieldset">
+            <legend>Ambiente</legend>
+            <div className="workspace-environment-options">
+              {(["test", "production"] as WorkspaceEnvironment[]).map((environment) => (
+                <label className={draft.environment === environment ? "is-selected" : ""} key={environment}>
+                  <input
+                    checked={draft.environment === environment}
+                    name="manage-workspace-environment"
+                    onChange={() => setDraft((current) => ({ ...current, environment }))}
+                    type="radio"
+                    value={environment}
+                  />
+                  <span>
+                    <strong>{environmentLabel(environment)}</strong>
+                    <small>{environment === "production" ? "Dados oficiais" : "Testes e validações"}</small>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <label className="workspace-field">
+            <span>Descrição</span>
+            <textarea
+              maxLength={240}
+              onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
+              placeholder="Descreva o uso deste ambiente"
+              rows={3}
+              value={draft.description}
+            />
+          </label>
+          {(error || notice) && <p className="workspace-manage-feedback" role={error ? "alert" : "status"}>{error ?? notice}</p>}
+          <footer className="workspace-modal-footer">
+            <span>{canManage ? "As alterações valem para todo o time." : "Você pode consultar este workspace."}</span>
+            <button className="workspace-modal-primary" disabled={saving || !canManage} type="submit">
+              {saving ? "Salvando…" : "Salvar alterações"}
+              <Icon name="arrow" size={15} />
+            </button>
+          </footer>
+        </form>
+      ) : (
+        <div className="workspace-manage-body workspace-people-body">
+          <div className="workspace-people-summary">
+            <div>
+              <p className="workspace-modal-eyebrow">ACESSO DO TIME</p>
+              <strong>{people.length} {people.length === 1 ? "pessoa" : "pessoas"}</strong>
+              <span>com acesso ativo a este workspace</span>
+            </div>
+            <Link href={`/usuarios?workspace=${encodeURIComponent(workspace.id)}`} onClick={onClose}>
+              Gestão completa <Icon name="arrow" size={14} />
+            </Link>
+          </div>
+          <form className="workspace-invite-form" onSubmit={(event) => void invitePerson(event)}>
+            <label className="workspace-field">
+              <span>Convidar pessoa já cadastrada</span>
+              <input
+                type="email"
+                onChange={(event) => setInviteEmail(event.target.value)}
+                placeholder="nome@empresa.com"
+                value={inviteEmail}
+              />
+            </label>
+            <label className="workspace-field">
+              <span>Nível de acesso</span>
+              <select value={inviteRole} onChange={(event) => setInviteRole(event.target.value as WorkspaceRole)}>
+                {manageRoleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </label>
+            <button className="workspace-modal-primary" disabled={inviting || !canManage} type="submit">
+              {inviting ? "Convidando…" : "Convidar"}
+              <Icon name="arrow" size={15} />
+            </button>
+          </form>
+          {loadingPeople ? <p className="workspace-people-loading">Carregando pessoas…</p> : people.length ? (
+            <div className="workspace-people-list">
+              {people.map((person) => {
+                const membership = person.workspaceMemberships.find((item) => item.workspaceId === workspace.id);
+                return (
+                  <div className="workspace-person-row" key={person.id}>
+                    <span className="workspace-person-avatar">{(person.name || person.email).slice(0, 1).toUpperCase()}</span>
+                    <span className="workspace-person-copy"><strong>{person.name || "Sem nome"}</strong><small>{person.email}</small></span>
+                    <span className="workspace-person-role">{roleLabel(membership?.role)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : <div className="workspace-people-empty"><Icon name="users" size={18} /><strong>Nenhuma pessoa vinculada</strong><span>Adicione uma conta já criada para liberar o acesso.</span></div>}
+          {(error || notice) && <p className="workspace-manage-feedback" role={error ? "alert" : "status"}>{error ?? notice}</p>}
+        </div>
+      )}
+    </>
+  );
+}
+
 export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
   const { ready, user } = useAuth();
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([
@@ -83,6 +473,9 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
     connectedWorkspace.id,
   );
   const [createOpen, setCreateOpen] = useState(false);
+  const [manageWorkspaceId, setManageWorkspaceId] = useState<string | null>(
+    null,
+  );
   const [workspaceDraft, setWorkspaceDraft] =
     useState<WorkspaceDraft>(emptyWorkspace);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -95,6 +488,11 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
     setCreateOpen(false);
     setCreateError(null);
     setWorkspaceDraft(emptyWorkspace);
+  }
+
+  function openWorkspaceManager(workspace: WorkspaceSummary) {
+    setManageWorkspaceId(workspace.id);
+    setCreateOpen(false);
   }
 
   function createLocalWorkspace(name: string) {
@@ -260,6 +658,10 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
   }, [ready, user]);
 
   useEffect(() => {
+    if (!open) setManageWorkspaceId(null);
+  }, [open]);
+
+  useEffect(() => {
     if (!open) return;
 
     function handleKeyDown(event: KeyboardEvent) {
@@ -273,6 +675,10 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
   }, [createOpen, onClose, open]);
 
   if (!open) return null;
+
+  const managedWorkspace = manageWorkspaceId
+    ? workspaces.find((workspace) => workspace.id === manageWorkspaceId)
+    : null;
 
   return (
     <div
@@ -291,7 +697,23 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
         className="workspace-modal"
         role="dialog"
       >
-        {createOpen ? (
+        {managedWorkspace ? (
+          <WorkspaceManagePanel
+            globalAdmin={canCreateWorkspace}
+            onBack={() => setManageWorkspaceId(null)}
+            onClose={onClose}
+            onUpdated={(nextWorkspace) => {
+              setWorkspaces((current) =>
+                current.map((workspace) =>
+                  workspace.id === nextWorkspace.id
+                    ? { ...workspace, ...nextWorkspace }
+                    : workspace,
+                ),
+              );
+            }}
+            workspace={managedWorkspace}
+          />
+        ) : createOpen ? (
           <>
             <header className="workspace-modal-header">
               <div>
@@ -449,41 +871,52 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
 
             <div className="workspace-modal-body">
               {workspaces.map((workspace) => (
-                <button
-                  aria-pressed={workspace.id === activeWorkspaceId}
-                  className={`workspace-option ${workspace.id === activeWorkspaceId ? "is-current" : ""}`}
-                  key={workspace.id}
-                  onClick={() => {
-                    setActiveWorkspaceId(workspace.id);
-                    writeActiveWorkspaceId(workspace.id);
-                    onClose();
-                  }}
-                  type="button"
-                >
-                  <span className="workspace-option-avatar">
-                    {workspace.initial}
-                  </span>
-                  <span className="workspace-option-copy">
-                    <strong>{workspace.name}</strong>
-                    <small>
-                      {workspace.description ||
-                        (workspace.environment === "production"
-                          ? "Ambiente de produção"
-                          : "Ambiente de teste")}
-                      {" · "}
-                      {roleLabel(workspace.role)}
-                    </small>
-                  </span>
-                  <span className="workspace-option-status">
-                    <i />
-                    {workspace.id === activeWorkspaceId
-                      ? "Ativo"
-                      : environmentLabel(workspace.environment)}
-                  </span>
-                  {workspace.id === activeWorkspaceId && (
-                    <Icon name="check" size={16} />
+                <div className="workspace-option-row" key={workspace.id}>
+                  <button
+                    aria-pressed={workspace.id === activeWorkspaceId}
+                    className={`workspace-option ${workspace.id === activeWorkspaceId ? "is-current" : ""}`}
+                    onClick={() => {
+                      setActiveWorkspaceId(workspace.id);
+                      writeActiveWorkspaceId(workspace.id);
+                      onClose();
+                    }}
+                    type="button"
+                  >
+                    <span className="workspace-option-avatar">
+                      {workspace.initial}
+                    </span>
+                    <span className="workspace-option-copy">
+                      <strong>{workspace.name}</strong>
+                      <small>
+                        {workspace.description ||
+                          (workspace.environment === "production"
+                            ? "Ambiente de produção"
+                            : "Ambiente de teste")}
+                        {" · "}
+                        {roleLabel(workspace.role)}
+                      </small>
+                    </span>
+                    <span className="workspace-option-status">
+                      <i />
+                      {workspace.id === activeWorkspaceId
+                        ? "Ativo"
+                        : environmentLabel(workspace.environment)}
+                    </span>
+                    {workspace.id === activeWorkspaceId && (
+                      <Icon name="check" size={16} />
+                    )}
+                  </button>
+                  {workspaceCanBeManaged(workspace, canCreateWorkspace) && (
+                    <button
+                      aria-label={`Gerenciar ${workspace.name}`}
+                      className="workspace-option-manage"
+                      onClick={() => openWorkspaceManager(workspace)}
+                      type="button"
+                    >
+                      <Icon name="settings" size={15} />
+                    </button>
                   )}
-                </button>
+                </div>
               ))}
 
               {workspaces.length === 0 && !canCreateWorkspace && (
