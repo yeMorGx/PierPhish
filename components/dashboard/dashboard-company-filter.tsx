@@ -37,6 +37,7 @@ export function DashboardCompanyFilter({
 }: DashboardCompanyFilterProps) {
   return (
     <section
+      data-tour="dashboard-filter"
       className="dashboard-toolbar"
       aria-label="Filtros e resumo do relatório"
     >

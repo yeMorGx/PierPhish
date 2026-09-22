@@ -151,6 +151,7 @@ export function DashboardShell({
           ref={profileMenuRef}
         >
           <button
+            data-tour="profile-menu"
             className="sidebar-profile-button group grid size-[var(--avatar-size)] place-items-center overflow-hidden rounded-full border-1 bg-[var(--ink)] p-0 text-[16px] font-extrabold text-white shadow-[0_8px_18px_rgba(24,32,43,0.12)] transition-all duration-200 outline-none hover:border-5 focus-visible:ring-4 focus-visible:ring-[#b9c7cf] max-[720px]:size-[54px]"
             type="button"
             aria-label={
@@ -247,6 +248,19 @@ export function DashboardShell({
               </Link>
               <div className="my-2 h-px bg-[#edf0f1]" />
               <button
+                className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#edf4f5] hover:text-[#3e6573] focus-visible:bg-[#edf4f5] focus-visible:text-[#3e6573]"
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setProfileOpen(false);
+                  window.dispatchEvent(new Event("pierphish:start-tour"));
+                }}
+              >
+                <Icon name="help" size={16} />
+                Ver tour do produto
+              </button>
+              <div className="my-2 h-px bg-[#edf0f1]" />
+              <button
                 className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#fff1ed] hover:text-[#a5553b] focus-visible:bg-[#fff1ed] focus-visible:text-[#a5553b]"
                 type="button"
                 role="menuitem"
@@ -259,7 +273,10 @@ export function DashboardShell({
           )}
         </div>
 
-        <div className="bento-sidebar-rail surface-card flex min-h-0 flex-1 flex-col items-center justify-between rounded-[var(--radius-shell)] p-4 px-3 max-[1120px]:rounded-[45px] max-[720px]:flex-row max-[720px]:rounded-[23px] max-[720px]:p-[9px_12px]">
+        <div
+          data-tour="sidebar"
+          className="bento-sidebar-rail surface-card flex min-h-0 flex-1 flex-col items-center justify-between rounded-[var(--radius-shell)] p-4 px-3 max-[1120px]:rounded-[45px] max-[720px]:flex-row max-[720px]:rounded-[23px] max-[720px]:p-[9px_12px]"
+        >
           <nav className="mt-[18px] flex flex-col items-center gap-3 max-[720px]:mt-0 max-[720px]:ml-2 max-[720px]:flex-row max-[720px]:gap-[3px]">
             <Link
               href="/"
@@ -306,7 +323,10 @@ export function DashboardShell({
       </aside>
 
       <section className="flex min-w-0 flex-col">
-        <header className="bento-header surface-card flex h-[var(--header-height)] flex-none items-center justify-between gap-5 rounded-[var(--radius-shell)] px-8 py-3 max-[1120px]:rounded-[45px] max-[720px]:mb-2.5 max-[720px]:h-[118px] max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-[22px] max-[720px]:py-5">
+        <header
+          data-tour="header"
+          className="bento-header surface-card flex h-[var(--header-height)] flex-none items-center justify-between gap-5 rounded-[var(--radius-shell)] px-8 py-3 max-[1120px]:rounded-[45px] max-[720px]:mb-2.5 max-[720px]:h-[118px] max-[720px]:flex-col max-[720px]:items-start max-[720px]:rounded-[23px] max-[720px]:px-[22px] max-[720px]:py-5"
+        >
           <h1 className="m-0 text-[clamp(18px,3vw,24px)] leading-[0.95] font-[680] tracking-[-0.065em]">
             {title}
           </h1>

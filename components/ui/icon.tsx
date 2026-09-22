@@ -4,6 +4,7 @@ import {
   ChartNoAxesCombined,
   Check,
   ChevronDown,
+  CircleHelp,
   Grid2X2,
   Image as ImageIcon,
   LogOut,
@@ -38,7 +39,8 @@ export type IconName =
   | "plus"
   | "close"
   | "bell"
-  | "layers";
+  | "layers"
+  | "help";
 
 const iconComponents: Record<IconName, LucideIcon> = {
   grid: Grid2X2,
@@ -59,6 +61,7 @@ const iconComponents: Record<IconName, LucideIcon> = {
   plus: Plus,
   close: X,
   bell: Bell,
+  help: CircleHelp,
 };
 
 export function Icon({

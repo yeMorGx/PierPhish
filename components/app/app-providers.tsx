@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { PageMetadata } from "@/components/app/page-metadata";
+import { ProductTour } from "@/components/onboarding/product-tour";
 import { NotificationProvider } from "@/components/notifications/notification-center";
 import { CookieNotice } from "@/components/privacy/cookie-notice";
 import { ProfileProvider } from "@/components/profile/profile-provider";
@@ -57,6 +58,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <ThemeProvider>
           <PageMetadata />
           <AuthProvider>
+            <ProductTour />
             <NotificationProvider>
               <ProfileProvider>
                 <PageTransition>
