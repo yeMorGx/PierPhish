@@ -22,6 +22,7 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ssoLoading, setSsoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loginPhase, setLoginPhase] = useState<LoginPhase>("idle");
 
@@ -48,7 +49,7 @@ export function LoginForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!supabase) return;
+    if (!supabase || ssoLoading) return;
     setLoading(true);
     setError(null);
     setLoginPhase("authenticating");
@@ -69,6 +70,34 @@ export function LoginForm() {
       setLoginPhase("error");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleMicrosoftSignIn() {
+    if (!supabase || loading || ssoLoading) return;
+
+    setSsoLoading(true);
+    setError(null);
+    setLoginPhase("authenticating");
+
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "azure",
+        options: {
+          redirectTo: `${window.location.origin}/login`,
+          scopes: "email",
+        },
+      });
+
+      if (oauthError) {
+        setError("Não foi possível entrar com a conta Microsoft.");
+        setLoginPhase("error");
+        setSsoLoading(false);
+      }
+    } catch {
+      setError("Não foi possível entrar com a conta Microsoft.");
+      setLoginPhase("error");
+      setSsoLoading(false);
     }
   }
 
@@ -241,7 +270,7 @@ export function LoginForm() {
     <main
       ref={stageRef}
       className="login-page theme-canvas"
-      aria-busy={loading}
+      aria-busy={loading || ssoLoading}
       data-login-phase={loginPhase}
     >
       <section className="login-panel">
@@ -281,7 +310,7 @@ export function LoginForm() {
                   {error}
                 </p>
               )}
-              <button type="submit" disabled={loading}>
+              <button type="submit" disabled={loading || ssoLoading}>
                 {loading ? "Entrando…" : "Entrar"}
                 <Icon name="arrow" size={17} />
               </button>
@@ -295,6 +324,22 @@ export function LoginForm() {
               <Link href="/">
                 Abrir demonstração <Icon name="arrow" size={15} />
               </Link>
+            </div>
+          )}
+
+          {isSupabaseConfigured && (
+            <div className="login-sso-row">
+              <button
+                aria-label="Entrar com Microsoft"
+                className="login-sso-button"
+                disabled={loading || ssoLoading}
+                onClick={() => void handleMicrosoftSignIn()}
+                title="Entrar com Microsoft"
+                type="button"
+              >
+                <MicrosoftLogo />
+                <span className="login-sso-label">Microsoft</span>
+              </button>
             </div>
           )}
 
@@ -315,6 +360,33 @@ function LoginBrand() {
     <Link className="login-brand" href="/" aria-label="PierPhish">
       <span>PierPhish</span>
     </Link>
+  );
+}
+
+function MicrosoftLogo() {
+  return (
+    <svg aria-hidden="true" className="microsoft-logo" viewBox="0 0 24 24">
+      <rect className="microsoft-logo-square is-red" height="11" width="11" />
+      <rect
+        className="microsoft-logo-square is-green"
+        height="11"
+        width="11"
+        x="13"
+      />
+      <rect
+        className="microsoft-logo-square is-blue"
+        height="11"
+        width="11"
+        y="13"
+      />
+      <rect
+        className="microsoft-logo-square is-yellow"
+        height="11"
+        width="11"
+        x="13"
+        y="13"
+      />
+    </svg>
   );
 }
 

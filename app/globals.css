@@ -6409,6 +6409,102 @@ html[data-theme="dark"] .workspace-modal-backdrop {
   opacity: 0.65;
 }
 
+.login-sso-row {
+  display: flex;
+  width: min(100%, 360px);
+  margin-top: 14px;
+  align-items: center;
+}
+
+.login-sso-button {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0 11px;
+  color: var(--ink);
+  background: var(--surface-soft);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    width 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.login-sso-button:hover,
+.login-sso-button:focus-visible {
+  width: 134px;
+  border-color: var(--ink);
+  background: var(--surface);
+  outline: none;
+}
+
+.login-sso-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  outline-offset: 4px;
+}
+
+.login-sso-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.microsoft-logo {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.microsoft-logo-square {
+  fill: currentColor;
+  transition: fill 160ms ease;
+}
+
+.login-sso-button:hover .microsoft-logo-square.is-red,
+.login-sso-button:focus-visible .microsoft-logo-square.is-red {
+  fill: #f25022;
+}
+
+.login-sso-button:hover .microsoft-logo-square.is-green,
+.login-sso-button:focus-visible .microsoft-logo-square.is-green {
+  fill: #7fba00;
+}
+
+.login-sso-button:hover .microsoft-logo-square.is-blue,
+.login-sso-button:focus-visible .microsoft-logo-square.is-blue {
+  fill: #00a4ef;
+}
+
+.login-sso-button:hover .microsoft-logo-square.is-yellow,
+.login-sso-button:focus-visible .microsoft-logo-square.is-yellow {
+  fill: #ffb900;
+}
+
+.login-sso-label {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0;
+  transform: translateX(-5px);
+  transition:
+    opacity 140ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  white-space: nowrap;
+}
+
+.login-sso-button:hover .login-sso-label,
+.login-sso-button:focus-visible .login-sso-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
 .login-error {
   margin: 0;
   border-radius: 10px;
@@ -6854,7 +6950,9 @@ html[data-theme="dark"] .login-error {
 @media (prefers-reduced-motion: reduce) {
   .login-form input,
   .login-form button,
-  .login-demo-card a {
+  .login-demo-card a,
+  .login-sso-button,
+  .login-sso-label {
     transition: none;
   }
 }
