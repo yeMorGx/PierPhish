@@ -285,8 +285,6 @@ export function LoginForm() {
         <div className="login-panel-inner">
           <LoginBrand />
 
-          <h1 className="login-title">Entre no centro de risco.</h1>
-
           {isSupabaseConfigured ? (
             <form onSubmit={handleSubmit} className="login-form">
               <label>
