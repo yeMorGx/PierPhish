@@ -571,22 +571,26 @@ export default function Home() {
         attachedImages={attachedImages}
       />
       {themePreferences.dashboardMode === "visual" ? (
-        <VisualDashboardContent
-          campaignBars={campaignBars}
-          campaignSummary={campaignSummary}
-          personAvatars={personAvatars}
-          participantsByCampaign={participantsByCampaign}
-          totals={totals}
-        />
+        <div data-tour="dashboard-content">
+          <VisualDashboardContent
+            campaignBars={campaignBars}
+            campaignSummary={campaignSummary}
+            personAvatars={personAvatars}
+            participantsByCampaign={participantsByCampaign}
+            totals={totals}
+          />
+        </div>
       ) : (
-        <DashboardContent
-          campaignBars={campaignBars}
-          campaigns={filteredCampaigns}
-          campaignSummary={campaignSummary}
-          personAvatars={personAvatars}
-          participantsByCampaign={participantsByCampaign}
-          totals={totals}
-        />
+        <div data-tour="dashboard-content">
+          <DashboardContent
+            campaignBars={campaignBars}
+            campaigns={filteredCampaigns}
+            campaignSummary={campaignSummary}
+            personAvatars={personAvatars}
+            participantsByCampaign={participantsByCampaign}
+            totals={totals}
+          />
+        </div>
       )}
       <footer className="hidden">
         <span>

@@ -130,7 +130,10 @@ export function VisualCampaignContent({
 
   return (
     <div className="visual-campaign-dashboard">
-      <section className="surface-card visual-campaign-hero">
+      <section
+        className="surface-card visual-campaign-hero"
+        data-tour="campaign-metrics"
+      >
         <div className="visual-campaign-hero-main">
           <Link className="visual-campaign-back" href="/">
             <Icon name="arrow" size={15} />
@@ -202,7 +205,10 @@ export function VisualCampaignContent({
         </article>
       </section>
 
-      <section className="visual-campaign-content-grid">
+      <section
+        className="visual-campaign-content-grid"
+        data-tour="campaign-people"
+      >
         <article className="surface-card visual-campaign-people-card">
           <div className="visual-campaign-card-head">
             <div>

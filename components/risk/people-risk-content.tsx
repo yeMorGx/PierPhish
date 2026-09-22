@@ -630,7 +630,7 @@ function PeopleRiskPage() {
         </button>
       }
     >
-      <div className="grid gap-[var(--cards-gap)]">
+      <div className="grid gap-[var(--cards-gap)]" data-tour="risk-content">
         {error && (
           <div className="risk-error" role="alert">
             <span>{error}</span>
@@ -657,7 +657,10 @@ function PeopleRiskPage() {
           />
         ) : (
           <>
-            <section className="surface-card grid grid-cols-[minmax(0,1fr)_300px] gap-8 overflow-hidden rounded-[var(--radius-card)] p-8 max-[900px]:grid-cols-1 max-[720px]:rounded-[23px] max-[720px]:p-6">
+            <section
+              className="surface-card grid grid-cols-[minmax(0,1fr)_300px] gap-8 overflow-hidden rounded-[var(--radius-card)] p-8 max-[900px]:grid-cols-1 max-[720px]:rounded-[23px] max-[720px]:p-6"
+              data-tour="risk-summary"
+            >
               <div className="min-w-0">
                 <p className="mb-3 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
                   CENTRO DE RISCO
@@ -732,7 +735,10 @@ function PeopleRiskPage() {
               ))}
             </section>
 
-            <section className="grid grid-cols-[minmax(0,1.45fr)_minmax(270px,0.55fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-1">
+            <section
+              className="grid grid-cols-[minmax(0,1.45fr)_minmax(270px,0.55fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-1"
+              data-tour="risk-people"
+            >
               <article className="surface-card min-w-0 overflow-hidden rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
                 <div className="flex items-end justify-between gap-4 max-[720px]:flex-col max-[720px]:items-stretch">
                   <div>

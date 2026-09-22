@@ -828,8 +828,14 @@ export function UserManagementContent() {
 
   return (
     <DashboardShell activeSection="settings" title="Usuários">
-      <div className="mx-auto grid max-w-[1180px] gap-[var(--cards-gap)] pb-8">
-        <section className="surface-card rounded-[var(--radius-card)] p-8 max-[720px]:rounded-[23px] max-[720px]:p-6">
+      <div
+        className="mx-auto grid max-w-[1180px] gap-[var(--cards-gap)] pb-8"
+        data-tour="users-content"
+      >
+        <section
+          className="surface-card rounded-[var(--radius-card)] p-8 max-[720px]:rounded-[23px] max-[720px]:p-6"
+          data-tour="users-header"
+        >
           <div className="flex items-start justify-between gap-6 max-[620px]:flex-col">
             <div>
               <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
@@ -868,7 +874,10 @@ export function UserManagementContent() {
               </section>
             )}
 
-            <section className="grid grid-cols-[minmax(0,1.2fr)_minmax(270px,0.8fr)] gap-[var(--cards-gap)] max-[860px]:grid-cols-1">
+            <section
+              className="grid grid-cols-[minmax(0,1.2fr)_minmax(270px,0.8fr)] gap-[var(--cards-gap)] max-[860px]:grid-cols-1"
+              data-tour="users-form"
+            >
               <form
                 className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]"
                 onSubmit={handleSubmit}
@@ -1076,6 +1085,7 @@ export function UserManagementContent() {
 
             <section
               className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]"
+              data-tour="users-invite"
               id="workspace-invite"
             >
               <div className="flex items-start justify-between gap-6 max-[620px]:flex-col">
@@ -1213,7 +1223,10 @@ export function UserManagementContent() {
               ))}
             </section>
 
-            <section className="surface-card overflow-hidden rounded-[var(--radius-card)] max-[720px]:rounded-[23px]">
+            <section
+              className="surface-card overflow-hidden rounded-[var(--radius-card)] max-[720px]:rounded-[23px]"
+              data-tour="users-list"
+            >
               <div className="flex items-end justify-between gap-4 border-b border-[var(--line-soft)] px-6 py-5 max-[620px]:flex-col max-[620px]:items-start">
                 <div>
                   <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">

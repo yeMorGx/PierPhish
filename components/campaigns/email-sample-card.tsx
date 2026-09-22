@@ -311,7 +311,10 @@ export function EmailSampleCard({ campaignId }: { campaignId: number }) {
 
   return (
     <>
-      <section className="surface-card email-sample-card">
+      <section
+        className="surface-card email-sample-card"
+        data-tour="campaign-evidence"
+      >
         <div className="email-sample-card-head">
           <div>
             <span className="email-sample-overline">EVIDÊNCIA DA CAMPANHA</span>

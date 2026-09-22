@@ -390,7 +390,11 @@ function SettingsContent() {
       headerAction={accessibilityControl}
     >
       <div className="settings-page" data-text-size={textSize}>
-        <nav className="settings-tabs" aria-label="Seções das configurações">
+        <nav
+          className="settings-tabs"
+          aria-label="Seções das configurações"
+          data-tour="settings-tabs"
+        >
           {settingsTabs.map((tab) => (
             <button
               className={`settings-tab ${activeTab === tab.id ? "is-active" : ""}`}
@@ -408,7 +412,10 @@ function SettingsContent() {
         </nav>
 
         {activeTab === "account" && (
-          <div className="settings-bento-grid settings-account-grid">
+          <div
+            className="settings-bento-grid settings-account-grid"
+            data-tour="settings-content"
+          >
             <section className="settings-row settings-bento-card settings-bento-profile-info">
               <div className="settings-row-copy">
                 <h2>Perfil</h2>

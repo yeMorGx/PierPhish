@@ -182,7 +182,10 @@ export function StatusContent() {
 
   return (
     <DashboardShell activeSection="settings" title="Status do ambiente">
-      <div className="status-page mx-auto grid max-w-[1180px] gap-[var(--cards-gap)] pb-8">
+      <div
+        className="status-page mx-auto grid max-w-[1180px] gap-[var(--cards-gap)] pb-8"
+        data-tour="status-content"
+      >
         <section className="status-hero-card surface-card">
           <div className="status-hero-copy">
             <p className="status-eyebrow">STATUS DO AMBIENTE</p>
@@ -223,7 +226,11 @@ export function StatusContent() {
           </div>
         )}
 
-        <section className="status-metric-grid" aria-label="Resumo dos dados">
+        <section
+          className="status-metric-grid"
+          aria-label="Resumo dos dados"
+          data-tour="status-metrics"
+        >
           <StatusMetric
             label="Campanhas"
             value={loading ? "—" : totals.campaigns}

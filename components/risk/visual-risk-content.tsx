@@ -130,7 +130,10 @@ export function VisualRiskContent({
 
   return (
     <div className="visual-risk-dashboard">
-      <section className="surface-card visual-risk-hero">
+      <section
+        className="surface-card visual-risk-hero"
+        data-tour="risk-summary"
+      >
         <div className="visual-risk-hero-main">
           <div className="visual-risk-topline">
             <span className="visual-risk-icon">
@@ -197,7 +200,7 @@ export function VisualRiskContent({
         ))}
       </section>
 
-      <section className="visual-risk-content-grid">
+      <section className="visual-risk-content-grid" data-tour="risk-people">
         <article className="surface-card visual-risk-people-card">
           <div className="visual-risk-card-head">
             <div>

@@ -527,8 +527,11 @@ export function CompanyManagementContent() {
 
   return (
     <DashboardShell activeSection="companies" title="Empresas">
-      <div className="companies-page">
-        <header className="surface-card companies-header">
+      <div className="companies-page" data-tour="companies-content">
+        <header
+          className="surface-card companies-header"
+          data-tour="companies-header"
+        >
           <div>
             <span className="companies-overline">
               PIERPHISH / CLIENTES BEEPHISH
@@ -616,7 +619,10 @@ export function CompanyManagementContent() {
                   </div>
                 </section>
 
-                <section className="surface-card companies-client-section">
+                <section
+                  className="surface-card companies-client-section"
+                  data-tour="companies-clients"
+                >
                   <div className="companies-section-head">
                     <div>
                       <span className="companies-overline">

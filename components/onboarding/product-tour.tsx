@@ -12,9 +12,9 @@ import {
 import { useAuth } from "@/components/auth/auth-provider";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
-const tourStorageKey = "pierphish-product-tour-completed-v1";
+const tourStorageKey = "pierphish-product-tour-completed-v2";
 
-const tourSteps: Step[] = [
+const commonTourSteps: Step[] = [
   {
     target: '[data-tour="sidebar"]',
     title: "Navegue pelo PierPhish",
@@ -36,14 +36,183 @@ const tourSteps: Step[] = [
       "Abra seu avatar para consultar notificações, trocar de workspace e acessar sua conta.",
     placement: "right",
   },
-  {
-    target: '[data-tour="dashboard-filter"]',
-    title: "Leia o cenário certo",
-    content:
-      "Filtre o dashboard por empresa e acompanhe rapidamente taxa de cliques e imagens anexadas.",
-    placement: "bottom",
-  },
 ];
+
+const pageTourSteps: Record<string, Step[]> = {
+  "/": [
+    {
+      target: '[data-tour="dashboard-filter"]',
+      title: "Leia o cenário certo",
+      content:
+        "Filtre o dashboard por empresa e acompanhe rapidamente taxa de cliques e imagens anexadas.",
+      placement: "bottom",
+    },
+    {
+      target: '[data-tour="dashboard-content"]',
+      title: "Acompanhe o desempenho",
+      content:
+        "Os cards e gráficos consolidam campanhas, pessoas, entregas, cliques e relatos do workspace ativo.",
+      placement: "top",
+    },
+  ],
+  "/riscos": [
+    {
+      target: '[data-tour="risk-content"]',
+      title: "Priorize o risco humano",
+      content:
+        "Esta visão reúne os sinais observados nas campanhas para orientar a investigação e a resposta.",
+      placement: "top",
+    },
+    {
+      target: '[data-tour="risk-people"]',
+      title: "Investigue cada pessoa",
+      content:
+        "Use busca e filtros para encontrar pessoas, entender os sinais e abrir os detalhes do comportamento.",
+      placement: "top",
+    },
+  ],
+  "/empresas": [
+    {
+      target: '[data-tour="companies-content"]',
+      title: "Conecte os clientes",
+      content:
+        "Gerencie as conexões BeePhish que abastecem as campanhas do workspace selecionado.",
+      placement: "top",
+    },
+    {
+      target: '[data-tour="companies-clients"]',
+      title: "Edite cada cliente",
+      content:
+        "Adicione, personalize e revise logo, nome, informações e credenciais de cada cliente.",
+      placement: "top",
+    },
+  ],
+  "/workspaces": [
+    {
+      target: '[data-tour="workspaces-content"]',
+      title: "Separe cada operação",
+      content:
+        "Crie ambientes de teste e produção para manter dados, conexões e pessoas no contexto certo.",
+      placement: "top",
+    },
+    {
+      target: '[data-tour="workspace-list"]',
+      title: "Escolha o ambiente ativo",
+      content:
+        "Troque o workspace pela lista e use o painel ao lado para personalizar o ambiente e administrar participantes.",
+      placement: "top",
+    },
+  ],
+  "/configuracoes": [
+    {
+      target: '[data-tour="settings-tabs"]',
+      title: "Organize suas preferências",
+      content:
+        "As abas reúnem conta, usuários, estilo visual e status do ambiente em um só lugar.",
+      placement: "bottom",
+    },
+    {
+      target: '[data-tour="settings-content"]',
+      title: "Personalize a experiência",
+      content:
+        "Atualize seu perfil, escolha a aparência do dashboard e ajuste as opções de acessibilidade.",
+      placement: "top",
+    },
+  ],
+  "/usuarios": [
+    {
+      target: '[data-tour="users-content"]',
+      title: "Administre acessos",
+      content:
+        "Crie contas internas, defina o nível de acesso e associe cada pessoa aos workspaces corretos.",
+      placement: "top",
+    },
+    {
+      target: '[data-tour="users-form"]',
+      title: "Crie ou convide alguém",
+      content:
+        "Use os formulários para criar um usuário ou liberar um workspace para uma conta já cadastrada.",
+      placement: "top",
+    },
+    {
+      target: '[data-tour="users-list"]',
+      title: "Acompanhe as permissões",
+      content:
+        "A lista mostra os workspaces, cargos, status e ações disponíveis para cada usuário.",
+      placement: "top",
+    },
+  ],
+  "/status": [
+    {
+      target: '[data-tour="status-content"]',
+      title: "Verifique o ambiente",
+      content:
+        "Use o status para entender se a conexão, a leitura das campanhas e os dados do workspace estão disponíveis.",
+      placement: "top",
+    },
+    {
+      target: '[data-tour="status-metrics"]',
+      title: "Veja os indicadores",
+      content:
+        "As métricas resumem campanhas, pessoas, entregas e aberturas para uma checagem rápida.",
+      placement: "top",
+    },
+  ],
+  "/apresentacao": [
+    {
+      target: '[data-tour="presentation-content"]',
+      title: "Prepare uma apresentação",
+      content:
+        "Monte uma leitura guiada com os slides que fazem sentido para a reunião ou para o documento.",
+      placement: "top",
+    },
+    {
+      target: '[data-tour="presentation-slides"]',
+      title: "Escolha o roteiro",
+      content:
+        "Selecione panorama, campanhas e risco humano. Depois ajuste ritmo, rolagem e sincronização.",
+      placement: "top",
+    },
+  ],
+  "/campaigns/[id]": [
+    {
+      target: '[data-tour="campaign-content"]',
+      title: "Leia uma campanha",
+      content:
+        "Aqui você encontra o resumo, a situação da campanha e os sinais registrados por pessoa.",
+      placement: "top",
+    },
+    {
+      target: '[data-tour="campaign-evidence"]',
+      title: "Consulte a evidência",
+      content:
+        "Anexe, visualize e revise o exemplo original do e-mail usado na campanha, incluindo imagens e anexos.",
+      placement: "bottom",
+    },
+    {
+      target: '[data-tour="campaign-people"]',
+      title: "Entenda cada interação",
+      content:
+        "Filtre pessoas por abertura, clique ou relato e acompanhe a atividade recente.",
+      placement: "top",
+    },
+  ],
+};
+
+function normalizeTourPath(pathname: string) {
+  return pathname.startsWith("/campaigns/") ? "/campaigns/[id]" : pathname;
+}
+
+function stepsForPath(pathname: string) {
+  const pagePath = normalizeTourPath(pathname);
+  return pageTourSteps[pagePath]
+    ? [...commonTourSteps, ...pageTourSteps[pagePath]]
+    : [];
+}
+
+function storageKeyForPath(pathname: string) {
+  return `${tourStorageKey}:${normalizeTourPath(pathname)}`;
+}
 
 function finishTour(data: EventData) {
   return (
@@ -57,35 +226,55 @@ export function ProductTour() {
   const pathname = usePathname();
   const { ready, user } = useAuth();
   const [run, setRun] = useState(false);
+  const [activeSteps, setActiveSteps] = useState<Step[]>([]);
+  const steps = stepsForPath(pathname);
+  const pageStorageKey = storageKeyForPath(pathname);
+
+  function stepsMountedInPage() {
+    return steps.filter((step) => {
+      if (typeof step.target !== "string") return true;
+      return Boolean(document.querySelector(step.target));
+    });
+  }
 
   useEffect(() => {
     function startTour() {
-      window.localStorage.removeItem(tourStorageKey);
-      if (pathname === "/") {
-        setRun(true);
+      if (!steps.length) {
+        window.location.assign("/");
         return;
       }
-      window.location.assign("/");
+      const nextSteps = stepsMountedInPage();
+      if (!nextSteps.length) return;
+      window.localStorage.removeItem(pageStorageKey);
+      setActiveSteps(nextSteps);
+      setRun(false);
+      window.requestAnimationFrame(() => setRun(true));
     }
 
     window.addEventListener("pierphish:start-tour", startTour);
     return () => window.removeEventListener("pierphish:start-tour", startTour);
-  }, [pathname]);
+  }, [pageStorageKey, pathname, steps.length]);
 
   useEffect(() => {
-    if (!ready || pathname !== "/" || (isSupabaseConfigured && !user)) {
-      setRun(false);
+    setRun(false);
+    setActiveSteps([]);
+    if (!ready || !steps.length || (isSupabaseConfigured && !user)) {
       return;
     }
-    if (window.localStorage.getItem(tourStorageKey) === "true") return;
+    if (window.localStorage.getItem(pageStorageKey) === "true") return;
 
-    const timeout = window.setTimeout(() => setRun(true), 900);
+    const timeout = window.setTimeout(() => {
+      const nextSteps = stepsMountedInPage();
+      if (!nextSteps.length) return;
+      setActiveSteps(nextSteps);
+      setRun(true);
+    }, 900);
     return () => window.clearTimeout(timeout);
-  }, [pathname, ready, user]);
+  }, [pageStorageKey, pathname, ready, steps.length, user]);
 
   function handleEvent(data: EventData) {
     if (!finishTour(data)) return;
-    window.localStorage.setItem(tourStorageKey, "true");
+    window.localStorage.setItem(pageStorageKey, "true");
     setRun(false);
   }
 
@@ -114,9 +303,9 @@ export function ProductTour() {
         nextWithProgress: "Próximo ({current} de {total})",
         skip: "Pular tour",
       }}
-      run={run}
+      run={run && activeSteps.length > 0}
       scrollToFirstStep
-      steps={tourSteps}
+      steps={activeSteps}
       styles={{
         buttonBack: {
           color: "var(--muted)",

@@ -646,7 +646,10 @@ export default function CampaignPeoplePage() {
         </div>
       }
     >
-      <div className="mx-auto flex max-w-[1600px] flex-col gap-[var(--cards-gap)]">
+      <div
+        className="mx-auto flex max-w-[1600px] flex-col gap-[var(--cards-gap)]"
+        data-tour="campaign-content"
+      >
         {error && (
           <div className="flex items-center justify-between gap-4 rounded-[14px] bg-[#fff0e8] px-4 py-3 text-[12px] text-[#75402d]">
             <span>{error}</span>
@@ -710,7 +713,10 @@ export default function CampaignPeoplePage() {
               </div>
             </header>
 
-            <section className="grid grid-cols-4 gap-[var(--cards-gap)] max-[900px]:grid-cols-2 max-[520px]:grid-cols-1">
+            <section
+              className="grid grid-cols-4 gap-[var(--cards-gap)] max-[900px]:grid-cols-2 max-[520px]:grid-cols-1"
+              data-tour="campaign-metrics"
+            >
               {[
                 ["Pessoas", summary.total, "na campanha", "text-[var(--ink)]"],
                 [
@@ -751,7 +757,10 @@ export default function CampaignPeoplePage() {
               ))}
             </section>
 
-            <section className="grid grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-1">
+            <section
+              className="grid grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-1"
+              data-tour="campaign-people"
+            >
               <article className="surface-card min-w-0 overflow-hidden rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
                 <div className="flex items-start justify-between gap-4 max-[720px]:flex-col">
                   <div>

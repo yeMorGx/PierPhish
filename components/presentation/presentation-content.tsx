@@ -412,30 +412,36 @@ export function PresentationContent() {
     <div ref={animationScopeRef}>
       <div ref={setupRef}>
         <DashboardShell activeSection="presentation" title="Apresentação">
-          <div className="presentation-setup-status" aria-live="polite">
-            {error ? <span>{error}</span> : null}
-            {loading ? <span>Buscando as campanhas mais recentes…</span> : null}
+          <div data-tour="presentation-content">
+            <div className="presentation-setup-status" aria-live="polite">
+              {error ? <span>{error}</span> : null}
+              {loading ? (
+                <span>Buscando as campanhas mais recentes…</span>
+              ) : null}
+            </div>
+            <div data-tour="presentation-slides">
+              <PresentationSetup
+                campaignCount={data.totals.campaigns}
+                onAutoSyncChange={(autoSync) => updatePreferences({ autoSync })}
+                onScrollEnabledChange={(scrollEnabled) =>
+                  updatePreferences({ scrollEnabled })
+                }
+                onScrollSpeedChange={(scrollSpeed) =>
+                  updatePreferences({ scrollSpeed })
+                }
+                onSelectSlide={selectSlide}
+                onSlideDurationChange={(slideDuration) =>
+                  updatePreferences({ slideDuration })
+                }
+                onStart={startPresentation}
+                onSyncIntervalChange={(syncInterval) =>
+                  updatePreferences({ syncInterval })
+                }
+                preferences={preferences}
+                syncing={syncing}
+              />
+            </div>
           </div>
-          <PresentationSetup
-            campaignCount={data.totals.campaigns}
-            onAutoSyncChange={(autoSync) => updatePreferences({ autoSync })}
-            onScrollEnabledChange={(scrollEnabled) =>
-              updatePreferences({ scrollEnabled })
-            }
-            onScrollSpeedChange={(scrollSpeed) =>
-              updatePreferences({ scrollSpeed })
-            }
-            onSelectSlide={selectSlide}
-            onSlideDurationChange={(slideDuration) =>
-              updatePreferences({ slideDuration })
-            }
-            onStart={startPresentation}
-            onSyncIntervalChange={(syncInterval) =>
-              updatePreferences({ syncInterval })
-            }
-            preferences={preferences}
-            syncing={syncing}
-          />
         </DashboardShell>
       </div>
 

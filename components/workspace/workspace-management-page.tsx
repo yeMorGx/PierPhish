@@ -365,7 +365,7 @@ function WorkspacePageContent() {
 
   return (
     <DashboardShell activeSection="workspaces" title="Workspaces">
-      <div className="workspace-page">
+      <div className="workspace-page" data-tour="workspaces-content">
         <header className="workspace-page-intro">
           <div>
             <span className="workspace-page-eyebrow">
@@ -416,6 +416,7 @@ function WorkspacePageContent() {
           <section
             className="workspace-page-list surface-card"
             aria-label="Lista de workspaces"
+            data-tour="workspace-list"
           >
             <div className="workspace-page-section-heading">
               <div>
@@ -467,7 +468,10 @@ function WorkspacePageContent() {
           </section>
 
           {selectedWorkspace ? (
-            <section className="workspace-page-manage surface-card">
+            <section
+              className="workspace-page-manage surface-card"
+              data-tour="workspace-manage"
+            >
               <WorkspaceManagePanel
                 globalAdmin={canCreateWorkspace}
                 onBack={() => setSelectedWorkspaceId(null)}
