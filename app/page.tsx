@@ -21,7 +21,6 @@ import type {
 import type { WorkspaceRole } from "@/lib/company-data";
 import { demoCampaigns } from "@/lib/demo-data";
 import { demoCompanies, readLocalCompanies } from "@/lib/company-data";
-import { useCampaignLogos } from "@/components/campaigns/campaign-logo";
 import { readPersonAvatars, type PersonAvatarMap } from "@/lib/person-avatars";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import {
@@ -100,7 +99,6 @@ export default function Home() {
   const workspaceHasBeephishData = hasBeephishData(activeWorkspaceId);
   const [activeWorkspaceRole, setActiveWorkspaceRole] =
     useState<WorkspaceRole | null>(null);
-  const { logos: campaignLogos } = useCampaignLogos();
   const [campaigns, setCampaigns] = useState<Campaign[]>(
     isSupabaseConfigured ? [] : demoCampaigns,
   );
@@ -245,18 +243,6 @@ export default function Home() {
         };
       })(),
     [campaignSummary],
-  );
-
-  const attachedImages = useMemo(
-    () =>
-      filteredCampaigns
-        .filter((campaign) => campaignLogos[String(campaign.id)])
-        .map((campaign) => ({
-          id: campaign.id,
-          name: `Imagem de ${campaign.name}`,
-          src: campaignLogos[String(campaign.id)],
-        })),
-    [campaignLogos, filteredCampaigns],
   );
 
   const latestSync = useMemo(
@@ -567,8 +553,7 @@ export default function Home() {
         companies={companyFilters}
         selectedCompanyId={selectedCompanyId}
         onChange={setSelectedCompanyId}
-        clickRate={totals.clickRate}
-        attachedImages={attachedImages}
+        showLayoutControl={themePreferences.dashboardMode === "visual"}
       />
       {themePreferences.dashboardMode === "visual" ? (
         <div data-tour="dashboard-content">

@@ -44,7 +44,7 @@ const pageTourSteps: Record<string, Step[]> = {
       target: '[data-tour="dashboard-filter"]',
       title: "Leia o cenário certo",
       content:
-        "Filtre o dashboard por empresa e acompanhe rapidamente taxa de cliques e imagens anexadas.",
+        "Filtre o dashboard por empresa e mantenha a leitura concentrada no cenário que importa.",
       placement: "bottom",
     },
     {

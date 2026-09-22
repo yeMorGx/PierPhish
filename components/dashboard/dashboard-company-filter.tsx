@@ -1,7 +1,7 @@
 "use client";
 
-import { AnimatedNumber } from "@/components/dashboard/animated-number";
 import { Icon } from "@/components/ui/icon";
+import { useUiStore } from "@/lib/ui-store";
 
 export type DashboardCompanyFilterOption = {
   id: string;
@@ -10,18 +10,11 @@ export type DashboardCompanyFilterOption = {
   campaignCount: number;
 };
 
-type DashboardAttachedImage = {
-  id: number;
-  name: string;
-  src: string;
-};
-
 type DashboardCompanyFilterProps = {
   companies: DashboardCompanyFilterOption[];
   selectedCompanyId: string;
   onChange: (companyId: string) => void;
-  clickRate: number;
-  attachedImages: DashboardAttachedImage[];
+  showLayoutControl?: boolean;
 };
 
 function initial(name: string) {
@@ -32,9 +25,16 @@ export function DashboardCompanyFilter({
   companies,
   selectedCompanyId,
   onChange,
-  clickRate,
-  attachedImages,
+  showLayoutControl = false,
 }: DashboardCompanyFilterProps) {
+  const dashboardEditMode = useUiStore((state) => state.dashboardEditMode);
+  const setDashboardEditMode = useUiStore(
+    (state) => state.setDashboardEditMode,
+  );
+  const resetDashboardLayout = useUiStore(
+    (state) => state.resetDashboardLayout,
+  );
+
   return (
     <section
       data-tour="dashboard-filter"
@@ -79,33 +79,28 @@ export function DashboardCompanyFilter({
         </div>
       </div>
 
-      <div
-        className="dashboard-report-facts"
-        aria-label="Informações para o relatório"
-      >
-        <div className="dashboard-report-fact">
-          <span>Taxa de cliques</span>
-          <strong>
-            <AnimatedNumber value={clickRate} suffix="%" />
-          </strong>
-          <small>cliques / entregues</small>
-        </div>
-        <div className="dashboard-report-fact dashboard-report-images">
-          <span>Imagens anexadas</span>
-          <strong>
-            <AnimatedNumber value={attachedImages.length} />
-          </strong>
-          <div
-            className="dashboard-report-thumbnails"
-            aria-label={`${attachedImages.length} imagens de campanha anexadas`}
+      {showLayoutControl && (
+        <div className="dashboard-toolbar-actions">
+          {dashboardEditMode && (
+            <button
+              className="visual-dashboard-editor-reset"
+              type="button"
+              onClick={resetDashboardLayout}
+            >
+              Restaurar
+            </button>
+          )}
+          <button
+            className={`visual-dashboard-editor-toggle ${dashboardEditMode ? "is-active" : ""}`}
+            type="button"
+            aria-pressed={dashboardEditMode}
+            onClick={() => setDashboardEditMode(!dashboardEditMode)}
           >
-            {attachedImages.slice(0, 4).map((image) => (
-              <img src={image.src} alt={image.name} key={image.id} />
-            ))}
-            {!attachedImages.length && <Icon name="image" size={14} />}
-          </div>
+            <Icon name="tune" size={14} />
+            {dashboardEditMode ? "Concluir" : "Personalizar"}
+          </button>
         </div>
-      </div>
+      )}
     </section>
   );
 }

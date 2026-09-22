@@ -6,7 +6,6 @@ import {
   WidthProvider,
   type ResponsiveLayouts,
 } from "react-grid-layout/legacy";
-import { Icon } from "@/components/ui/icon";
 import {
   type DashboardLayoutItem,
   type DashboardWidgetId,
@@ -71,12 +70,6 @@ export function BentoDashboardGrid({ children }: BentoDashboardGridProps) {
   );
   const dashboardEditMode = useUiStore((state) => state.dashboardEditMode);
   const setDashboardLayouts = useUiStore((state) => state.setDashboardLayouts);
-  const setDashboardEditMode = useUiStore(
-    (state) => state.setDashboardEditMode,
-  );
-  const resetDashboardLayout = useUiStore(
-    (state) => state.resetDashboardLayout,
-  );
   const widgets = useMemo(
     () =>
       Children.toArray(children).flatMap((child) => {
@@ -111,33 +104,6 @@ export function BentoDashboardGrid({ children }: BentoDashboardGridProps) {
 
   return (
     <div className="visual-dashboard-editor">
-      <div className="visual-dashboard-editor-toolbar">
-        <span>
-          {dashboardEditMode
-            ? "Arraste ou redimensione os módulos."
-            : "Layout visual"}
-        </span>
-        <div>
-          {dashboardEditMode && (
-            <button
-              className="visual-dashboard-editor-reset"
-              type="button"
-              onClick={resetDashboardLayout}
-            >
-              Restaurar
-            </button>
-          )}
-          <button
-            className={`visual-dashboard-editor-toggle ${dashboardEditMode ? "is-active" : ""}`}
-            type="button"
-            aria-pressed={dashboardEditMode}
-            onClick={() => setDashboardEditMode(!dashboardEditMode)}
-          >
-            <Icon name="tune" size={14} />
-            {dashboardEditMode ? "Concluir" : "Personalizar"}
-          </button>
-        </div>
-      </div>
       <ResponsiveGridLayout
         className="visual-dashboard"
         layouts={orderedLayouts as ResponsiveLayouts}
