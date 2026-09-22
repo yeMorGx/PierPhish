@@ -101,9 +101,15 @@ export function LoginForm() {
           const noMotion = Boolean(conditions.reduceMotion);
           const focused = animationState === "focused";
           const errorState = animationState === "error";
+          const artworkFullScreenX = () => -panel.getBoundingClientRect().width;
 
           gsap.set(panel, { xPercent: 0, autoAlpha: 1 });
-          gsap.set(artwork, { width: "100%", xPercent: 0, autoAlpha: 1 });
+          gsap.set(artwork, {
+            width: "100%",
+            x: 0,
+            xPercent: 0,
+            autoAlpha: 1,
+          });
           gsap.set(video, { scale: 1 });
 
           if (!desktop) {
@@ -128,7 +134,11 @@ export function LoginForm() {
           if (noMotion) {
             if (focused) {
               gsap.set(panel, { xPercent: -100, autoAlpha: 0 });
-              gsap.set(artwork, { width: "200%", xPercent: -50 });
+              gsap.set(artwork, {
+                width: "100vw",
+                x: artworkFullScreenX,
+                xPercent: 0,
+              });
             }
             return;
           }
@@ -150,8 +160,9 @@ export function LoginForm() {
               .to(
                 artwork,
                 {
-                  width: "200%",
-                  xPercent: -50,
+                  width: "100vw",
+                  x: artworkFullScreenX,
+                  xPercent: 0,
                   duration: 0.94,
                   ease: "power4.inOut",
                 },
@@ -164,12 +175,17 @@ export function LoginForm() {
               );
           } else if (errorState) {
             gsap.set(panel, { xPercent: -100, autoAlpha: 0 });
-            gsap.set(artwork, { width: "200%", xPercent: -50 });
+            gsap.set(artwork, {
+              width: "100vw",
+              x: artworkFullScreenX,
+              xPercent: 0,
+            });
             timeline
               .to(
                 artwork,
                 {
                   width: "100%",
+                  x: 0,
                   xPercent: 0,
                   duration: 0.76,
                   ease: "power4.inOut",
