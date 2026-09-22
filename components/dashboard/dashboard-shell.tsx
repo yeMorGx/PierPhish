@@ -12,7 +12,10 @@ import { CommandPalette } from "@/components/ui/command-palette";
 import { Icon } from "@/components/ui/icon";
 import {
   readActiveWorkspaceId,
+  writeLocalWorkspaces,
   writeActiveWorkspaceId,
+  type WorkspaceEnvironment,
+  type WorkspaceRole,
 } from "@/lib/company-data";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
@@ -41,7 +44,7 @@ function WorkspaceBootstrap() {
   useEffect(() => {
     if (!isSupabaseConfigured || !ready || !user || !session) return;
 
-    const storageKey = `pierphish-workspace-bootstrap:${user.id}`;
+    const storageKey = `pierphish-workspace-bootstrap:v2:${user.id}`;
     if (window.sessionStorage.getItem(storageKey) === "ready") return;
 
     let cancelled = false;
@@ -52,9 +55,31 @@ function WorkspaceBootstrap() {
       if (!response.ok || cancelled) return;
 
       const body = (await response.json().catch(() => ({}))) as {
-        workspaces?: Array<{ id: string }>;
+        workspaces?: Array<{
+          createdAt?: string;
+          description?: string;
+          environment?: WorkspaceEnvironment;
+          id: string;
+          logoUrl?: string | null;
+          name: string;
+          role?: WorkspaceRole;
+        }>;
       };
       const workspaces = body.workspaces ?? [];
+      if (workspaces.length) {
+        writeLocalWorkspaces(
+          workspaces.map((workspace) => ({
+            createdAt: workspace.createdAt ?? "",
+            description: workspace.description ?? "",
+            environment:
+              workspace.environment === "production" ? "production" : "test",
+            id: workspace.id,
+            logoUrl: workspace.logoUrl ?? null,
+            name: workspace.name,
+            role: workspace.role,
+          })),
+        );
+      }
       const storedWorkspaceId = readActiveWorkspaceId();
       const hasStoredWorkspace = workspaces.some(
         (workspace) => workspace.id === storedWorkspaceId,

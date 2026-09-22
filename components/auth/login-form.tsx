@@ -13,6 +13,13 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type LoginPhase = "idle" | "authenticating" | "error" | "success";
 
+const loginArtworkPhrases = [
+  "Uma visão mais clara sobre o comportamento humano.",
+  "Transforme sinais em decisões mais seguras.",
+  "Antecipe riscos antes que virem incidentes.",
+  "Conscientização que protege cada pessoa.",
+];
+
 gsap.registerPlugin(useGSAP);
 
 export function LoginForm() {
@@ -395,6 +402,65 @@ function MicrosoftLogo() {
 }
 
 function LoginArtworkContent() {
+  const captionRef = useRef<HTMLParagraphElement>(null);
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const phrase = loginArtworkPhrases[phraseIndex];
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setPhraseIndex((current) => (current + 1) % loginArtworkPhrases.length);
+    }, 6200);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useGSAP(
+    () => {
+      const caption = captionRef.current;
+      if (!caption) return;
+
+      const letters = caption.querySelectorAll<HTMLElement>(
+        ".login-caption-letter",
+      );
+      if (!letters.length) return;
+
+      const media = gsap.matchMedia();
+      media.add(
+        { reduceMotion: "(prefers-reduced-motion: reduce)" },
+        (context) => {
+          const conditions = context.conditions as {
+            reduceMotion?: boolean;
+          };
+
+          if (conditions.reduceMotion) {
+            gsap.set(letters, { autoAlpha: 1, filter: "blur(0px)", y: 0 });
+            return;
+          }
+
+          gsap.fromTo(
+            letters,
+            { autoAlpha: 0, filter: "blur(4px)", y: 10 },
+            {
+              autoAlpha: 1,
+              filter: "blur(0px)",
+              duration: 0.42,
+              ease: "power3.out",
+              stagger: 0.028,
+              y: 0,
+            },
+          );
+        },
+      );
+
+      return () => media.revert();
+    },
+    {
+      dependencies: [phraseIndex],
+      revertOnUpdate: true,
+      scope: captionRef,
+    },
+  );
+
   return (
     <>
       <video
@@ -411,7 +477,22 @@ function LoginArtworkContent() {
         Seu navegador não suporta vídeo.
       </video>
       <div className="login-artwork-caption">
-        <p>Uma visão mais clara sobre o comportamento humano.</p>
+        <p
+          ref={captionRef}
+          aria-label={phrase}
+          aria-live="polite"
+          className="login-artwork-caption-text"
+        >
+          {Array.from(phrase).map((character, index) => (
+            <span
+              aria-hidden="true"
+              className="login-caption-letter"
+              key={`${phraseIndex}-${index}`}
+            >
+              {character === " " ? "\u00a0" : character}
+            </span>
+          ))}
+        </p>
       </div>
     </>
   );
