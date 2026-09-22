@@ -15,7 +15,11 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
-type MfaPhase = "checking" | "enroll" | "challenge";
+type MfaPhase =
+  | "checking"
+  | "password_required"
+  | "enroll"
+  | "challenge";
 
 type AuthFactor = {
   id: string;
@@ -39,6 +43,7 @@ export function MfaRequiredForm() {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [secret, setSecret] = useState<string | null>(null);
   const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const codeInputRefs = useRef<Array<HTMLInputElement | null>>([]);
@@ -82,6 +87,20 @@ export function MfaRequiredForm() {
       setQrCode(null);
       setSecret(null);
       setPhase("challenge");
+      return;
+    }
+
+    // First-factor enrollment requires recent password reauthentication
+    // to prevent an attacker with a stolen password from enrolling their
+    // own authenticator before the legitimate user completes setup.
+    const enrollmentAuthorizedAt =
+      user.app_metadata?.mfa_enrollment_authorized_at;
+    const isRecentlyAuthorized =
+      typeof enrollmentAuthorizedAt === "number" &&
+      Date.now() - enrollmentAuthorizedAt < 5 * 60 * 1000; // 5 minutes
+
+    if (!isRecentlyAuthorized) {
+      setPhase("password_required");
       return;
     }
 
@@ -170,6 +189,59 @@ export function MfaRequiredForm() {
     codeInputRefs.current[Math.min(pasted.length, 5)]?.focus();
   }
 
+  async function verifyPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!supabase) return;
+
+    if (!password) {
+      setError("Informe sua senha para continuar.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) {
+      setError("Sua sessão expirou. Entre novamente.");
+      setLoading(false);
+      return;
+    }
+
+    const response = await fetch("/api/account/mfa-enrollment-challenge", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password }),
+    });
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      setError(
+        body.error || "Não foi possível verificar sua senha. Tente novamente.",
+      );
+      setLoading(false);
+      return;
+    }
+
+    // Refresh the session to get the updated app_metadata with enrollment authorization
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      setError("Não foi possível atualizar sua sessão.");
+      setLoading(false);
+      return;
+    }
+
+    setPassword("");
+    setLoading(false);
+    void loadMfaFlow();
+  }
+
   async function verifyCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase || !factorId) return;
@@ -203,6 +275,20 @@ export function MfaRequiredForm() {
       return;
     }
 
+    // Clear the enrollment authorization after successful first-factor verification
+    if (phase === "enroll") {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (accessToken) {
+        await fetch("/api/account/mfa-enrollment-complete", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }).catch(() => {
+          // Non-critical cleanup; continue even if it fails
+        });
+      }
+    }
+
     const { error: refreshError } = await supabase.auth.refreshSession();
     if (refreshError) {
       setError("MFA confirmado, mas não foi possível atualizar sua sessão.");
@@ -219,6 +305,62 @@ export function MfaRequiredForm() {
         <MfaCard reducedMotion={reducedMotion}>
           <MfaBrand />
           <div className="login-loading">Preparando sua proteção…</div>
+        </MfaCard>
+      </MfaStage>
+    );
+  }
+
+  if (phase === "password_required") {
+    return (
+      <MfaStage>
+        <MfaCard reducedMotion={reducedMotion}>
+          <MfaBrand />
+          <div className="mfa-required-heading">
+            <span className="login-eyebrow">
+              <Icon name="shield" size={14} /> MFA obrigatório
+            </span>
+            <h1>Confirme sua identidade.</h1>
+            <p>
+              Para configurar a autenticação em duas etapas pela primeira vez,
+              confirme sua senha atual.
+            </p>
+          </div>
+
+          <form className="login-form mfa-required-form" onSubmit={verifyPassword}>
+            <label>
+              <span>Senha atual</span>
+              <input
+                autoComplete="current-password"
+                autoFocus
+                disabled={loading}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                type="password"
+                value={password}
+              />
+            </label>
+            {error && (
+              <p className="login-error" role="alert">
+                {error}
+              </p>
+            )}
+            <button type="submit" disabled={loading || !password}>
+              {loading ? "Verificando…" : "Continuar"}
+              <Icon name="arrow" size={17} />
+            </button>
+          </form>
+
+          <button
+            className="mfa-sign-out"
+            type="button"
+            onClick={() => void signOut()}
+          >
+            Sair desta conta
+          </button>
+          <p className="login-footer">
+            Esta verificação protege sua conta contra configuração não autorizada
+            do MFA.
+          </p>
         </MfaCard>
       </MfaStage>
     );
