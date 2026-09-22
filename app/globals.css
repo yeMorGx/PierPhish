@@ -6333,7 +6333,7 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 .login-form {
   display: flex;
   width: min(100%, 360px);
-  margin-top: 34px;
+  margin-top: 28px;
   flex-direction: column;
   gap: 17px;
 }
@@ -6426,15 +6426,15 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 .login-sso-row {
   display: flex;
   width: min(100%, 360px);
-  margin-top: 14px;
+  margin-top: 20px;
   align-items: center;
   flex-direction: column;
-  gap: 9px;
+  gap: 10px;
 }
 
 .login-sso-divider {
   display: flex;
-  width: 100%;
+  width: min(100%, 300px);
   align-items: center;
   gap: 10px;
   margin: 0;
@@ -6713,7 +6713,7 @@ html[data-theme="dark"] .workspace-modal-backdrop {
   min-width: 0;
   min-height: 100dvh;
   overflow: hidden;
-  border: 9px solid rgba(255, 255, 255, 0.94);
+  border: 9px solid var(--surface);
   border-radius: 30px;
   isolation: isolate;
   background: #2783a4;
