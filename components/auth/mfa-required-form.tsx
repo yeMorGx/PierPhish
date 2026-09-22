@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -343,18 +344,15 @@ function MfaBrand() {
 function MfaStage({ children }: { children: React.ReactNode }) {
   return (
     <main className="mfa-stage theme-canvas">
-      <video
-        className="auth-stage-video mfa-stage-video"
+      <Image
+        className="mfa-stage-background"
+        src="/mfa-door-background.png"
+        alt=""
         aria-hidden="true"
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="metadata"
-        poster="/pierphish-login.png"
-      >
-        <source src="/pierphish-login.mp4" type="video/mp4" />
-      </video>
+        fill
+        priority
+        sizes="100vw"
+      />
       {children}
     </main>
   );

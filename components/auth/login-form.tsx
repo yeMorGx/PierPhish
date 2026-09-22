@@ -4,14 +4,11 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useReducedMotion } from "motion/react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
-
-type LoginPhase = "idle" | "authenticating" | "error" | "success";
 
 const loginArtworkPhrases = [
   "Uma visão mais clara sobre o comportamento humano.",
@@ -25,14 +22,11 @@ gsap.registerPlugin(useGSAP);
 export function LoginForm() {
   const router = useRouter();
   const { ready, user } = useAuth();
-  const reducedMotion = useReducedMotion();
-  const stageRef = useRef<HTMLElement | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [ssoLoading, setSsoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loginPhase, setLoginPhase] = useState<LoginPhase>("idle");
 
   useEffect(() => {
     if (!ready || !user) return;
@@ -41,26 +35,14 @@ export function LoginForm() {
       user.app_metadata?.password_rotation_required === true
         ? "/alterar-senha"
         : "/mfa";
-    if (loginPhase === "idle") {
-      router.replace(destination);
-      return;
-    }
-
-    if (loginPhase !== "success") return;
-
-    const timeout = window.setTimeout(
-      () => router.replace(destination),
-      reducedMotion ? 0 : 1060,
-    );
-    return () => window.clearTimeout(timeout);
-  }, [loginPhase, ready, reducedMotion, router, user]);
+    router.replace(destination);
+  }, [ready, router, user]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase || ssoLoading) return;
     setLoading(true);
     setError(null);
-    setLoginPhase("authenticating");
 
     try {
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -69,13 +51,10 @@ export function LoginForm() {
       });
       if (signInError) {
         setError(signInError.message);
-        setLoginPhase("error");
         return;
       }
-      setLoginPhase("success");
     } catch {
       setError("Não foi possível entrar agora. Tente novamente.");
-      setLoginPhase("error");
     } finally {
       setLoading(false);
     }
@@ -86,7 +65,6 @@ export function LoginForm() {
 
     setSsoLoading(true);
     setError(null);
-    setLoginPhase("authenticating");
 
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -99,170 +77,17 @@ export function LoginForm() {
 
       if (oauthError) {
         setError("Não foi possível entrar com a conta Microsoft.");
-        setLoginPhase("error");
         setSsoLoading(false);
       }
     } catch {
       setError("Não foi possível entrar com a conta Microsoft.");
-      setLoginPhase("error");
       setSsoLoading(false);
     }
   }
 
-  const isVideoFocused =
-    loginPhase === "authenticating" || loginPhase === "success";
-  const animationState =
-    loginPhase === "error" ? "error" : isVideoFocused ? "focused" : "idle";
-  const animatedStageMounted = ready && (!user || loginPhase !== "idle");
-
-  useGSAP(
-    () => {
-      const stage = stageRef.current;
-      const panel = stage?.querySelector<HTMLElement>(".login-panel");
-      const artwork = stage?.querySelector<HTMLElement>(".login-artwork");
-      const video = artwork?.querySelector<HTMLVideoElement>("video");
-      if (!stage || !panel || !artwork || !video) return;
-
-      const media = gsap.matchMedia();
-      media.add(
-        {
-          desktop: "(min-width: 861px)",
-          reduceMotion: "(prefers-reduced-motion: reduce)",
-        },
-        (context) => {
-          const conditions = context.conditions as {
-            desktop?: boolean;
-            reduceMotion?: boolean;
-          };
-          const desktop = Boolean(conditions.desktop);
-          const noMotion = Boolean(conditions.reduceMotion);
-          const focused = animationState === "focused";
-          const errorState = animationState === "error";
-          const artworkFullScreenX = () => -panel.getBoundingClientRect().width;
-
-          gsap.set(panel, { xPercent: 0, autoAlpha: 1 });
-          gsap.set(artwork, {
-            width: "100%",
-            x: 0,
-            xPercent: 0,
-            autoAlpha: 1,
-          });
-          gsap.set(video, { scale: 1 });
-
-          if (!desktop) {
-            if (focused) {
-              gsap.to(panel, {
-                xPercent: -100,
-                autoAlpha: 0,
-                duration: noMotion ? 0 : 0.58,
-                ease: "power3.inOut",
-              });
-            }
-            if (errorState) {
-              gsap.fromTo(
-                panel,
-                { x: -16 },
-                { x: 0, duration: noMotion ? 0 : 0.36, ease: "power2.out" },
-              );
-            }
-            return;
-          }
-
-          if (noMotion) {
-            if (focused) {
-              gsap.set(panel, { xPercent: -100, autoAlpha: 0 });
-              gsap.set(artwork, {
-                width: "100vw",
-                x: artworkFullScreenX,
-                xPercent: 0,
-              });
-            }
-            return;
-          }
-
-          const timeline = gsap.timeline({ defaults: { overwrite: "auto" } });
-
-          if (focused) {
-            timeline
-              .to(
-                panel,
-                {
-                  xPercent: -100,
-                  autoAlpha: 0,
-                  duration: 0.62,
-                  ease: "power3.inOut",
-                },
-                0,
-              )
-              .to(
-                artwork,
-                {
-                  width: "100vw",
-                  x: artworkFullScreenX,
-                  xPercent: 0,
-                  duration: 0.94,
-                  ease: "power4.inOut",
-                },
-                0,
-              )
-              .to(
-                video,
-                { scale: 1.045, duration: 0.94, ease: "power2.out" },
-                0,
-              );
-          } else if (errorState) {
-            gsap.set(panel, { xPercent: -100, autoAlpha: 0 });
-            gsap.set(artwork, {
-              width: "100vw",
-              x: artworkFullScreenX,
-              xPercent: 0,
-            });
-            timeline
-              .to(
-                artwork,
-                {
-                  width: "100%",
-                  x: 0,
-                  xPercent: 0,
-                  duration: 0.76,
-                  ease: "power4.inOut",
-                },
-                0,
-              )
-              .to(
-                panel,
-                {
-                  xPercent: 0,
-                  autoAlpha: 1,
-                  duration: 0.62,
-                  ease: "back.out(1.2)",
-                },
-                0.12,
-              )
-              .fromTo(
-                panel,
-                { x: -18 },
-                { x: 0, duration: 0.28, ease: "power2.out" },
-                0.7,
-              );
-          }
-
-          return () => timeline.kill();
-        },
-      );
-
-      return () => media.revert();
-    },
-    {
-      dependencies: [animationState, animatedStageMounted],
-      scope: stageRef,
-      revertOnUpdate: true,
-    },
-  );
-
-  if (!ready || (user && loginPhase === "idle")) {
+  if (!ready || user) {
     return (
-      <main ref={stageRef} className="login-page theme-canvas">
+      <main className="login-page theme-canvas">
         <section className="login-panel">
           <div className="login-panel-inner">
             <LoginBrand />
@@ -276,10 +101,8 @@ export function LoginForm() {
 
   return (
     <main
-      ref={stageRef}
       className="login-page theme-canvas"
       aria-busy={loading || ssoLoading}
-      data-login-phase={loginPhase}
     >
       <section className="login-panel">
         <div className="login-panel-inner">
