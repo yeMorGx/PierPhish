@@ -279,9 +279,7 @@ export function LoginForm() {
           <LoginBrand />
 
           <div className="login-copy">
-            <p className="login-eyebrow">Acesso protegido</p>
             <h1>Entre no centro de risco.</h1>
-            <p>Acompanhe sinais de exposição humana com clareza operacional.</p>
           </div>
 
           {isSupabaseConfigured ? (
@@ -330,6 +328,9 @@ export function LoginForm() {
 
           {isSupabaseConfigured && (
             <div className="login-sso-row">
+              <p className="login-sso-divider">
+                <span>ou entre com</span>
+              </p>
               <button
                 aria-label="Entrar com Microsoft"
                 className="login-sso-button"
@@ -343,10 +344,6 @@ export function LoginForm() {
               </button>
             </div>
           )}
-
-          <p className="login-footer">
-            Acesso interno protegido pelo Supabase Auth.
-          </p>
         </div>
       </section>
       <aside className="login-artwork" aria-label="Ilustração do PierPhish">
@@ -416,7 +413,6 @@ function LoginArtworkContent() {
         Seu navegador não suporta vídeo.
       </video>
       <div className="login-artwork-caption">
-        <span>PIERPHISH</span>
         <p>Uma visão mais clara sobre o comportamento humano.</p>
       </div>
     </>

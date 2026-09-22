@@ -6242,7 +6242,7 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 
 /* Login split screen */
 .login-page {
-  --login-panel-width: clamp(320px, 25vw, 460px);
+  --login-panel-width: clamp(360px, 28vw, 500px);
   display: grid;
   min-height: 100dvh;
   grid-template-columns: var(--login-panel-width) minmax(0, 1fr);
@@ -6282,7 +6282,7 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 }
 
 .login-page .login-brand {
-  font-size: clamp(22px, 2.4vw, 34px);
+  font-size: clamp(25px, 2.7vw, 40px);
   letter-spacing: -0.075em;
 }
 
@@ -6293,17 +6293,17 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 .login-brand-powered {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1;
 }
 
 .login-brand-powered img {
-  width: 38px;
-  height: 38px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
 }
 
@@ -6321,21 +6321,13 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 }
 
 .login-copy h1 {
-  max-width: 520px;
+  max-width: 430px;
   margin: 0;
   color: var(--ink);
-  font-size: clamp(40px, 4.2vw, 60px);
+  font-size: clamp(34px, 3.4vw, 50px);
   font-weight: 800;
   letter-spacing: -0.075em;
   line-height: 0.94;
-}
-
-.login-copy > p:last-child {
-  max-width: 430px;
-  margin: 16px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.55;
 }
 
 .login-form {
@@ -6436,6 +6428,29 @@ html[data-theme="dark"] .workspace-modal-backdrop {
   width: min(100%, 360px);
   margin-top: 14px;
   align-items: center;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.login-sso-divider {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--muted-soft);
+  font-family: var(--font-data);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.login-sso-divider::before,
+.login-sso-divider::after {
+  flex: 1;
+  height: 1px;
+  background: var(--line-soft);
+  content: "";
 }
 
 .login-sso-button {
@@ -6694,9 +6709,12 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 .login-artwork {
   position: relative;
   z-index: 3;
+  box-sizing: border-box;
   min-width: 0;
   min-height: 100dvh;
   overflow: hidden;
+  border: 9px solid rgba(255, 255, 255, 0.94);
+  border-radius: 30px;
   isolation: isolate;
   background: #2783a4;
 }
@@ -6874,13 +6892,6 @@ html[data-theme="dark"] .workspace-modal-backdrop {
   color: #fff;
 }
 
-.login-artwork-caption span {
-  display: block;
-  font-size: 11px;
-  font-weight: 850;
-  letter-spacing: 0.2em;
-}
-
 .login-artwork-caption p {
   max-width: 260px;
   margin: 9px 0 0;
@@ -6996,13 +7007,17 @@ html[data-theme="dark"] .login-error {
   position: fixed;
   z-index: 1190;
   bottom: 18px;
-  left: 18px;
+  right: 18px;
   min-height: 32px;
   padding: 0 12px;
-  border-color: var(--line);
-  color: var(--muted);
-  background: var(--surface);
-  box-shadow: 0 10px 28px color-mix(in srgb, var(--ink) 12%, transparent);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+  box-shadow:
+    0 10px 28px color-mix(in srgb, var(--ink) 12%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
 }
 
 .cookie-policy-page {
@@ -7137,7 +7152,7 @@ html[data-theme="dark"] .login-error {
 
   .cookie-notice-reopen {
     bottom: 12px;
-    left: 12px;
+    right: 12px;
   }
 
   .cookie-policy-page {
@@ -7184,7 +7199,7 @@ html[data-theme="dark"] .login-error {
   }
 
   .login-copy h1 {
-    font-size: clamp(40px, 10vw, 56px);
+    font-size: clamp(34px, 10vw, 48px);
   }
 }
 
