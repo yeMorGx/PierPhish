@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReducedMotion } from "motion/react";
@@ -357,8 +358,16 @@ export function LoginForm() {
 
 function LoginBrand() {
   return (
-    <Link className="login-brand" href="/" aria-label="PierPhish">
-      <span>PierPhish</span>
+    <Link
+      className="login-brand"
+      href="/"
+      aria-label="PierPhish. Powered by PierSec"
+    >
+      <span className="login-brand-name">PierPhish</span>
+      <span className="login-brand-powered" aria-label="Powered by PierSec">
+        <span>Powered by</span>
+        <Image src="/piersec-logo.png" alt="PierSec" width={44} height={44} />
+      </span>
     </Link>
   );
 }
