@@ -6245,6 +6245,7 @@ html[data-theme="dark"] .workspace-modal-backdrop {
   --login-panel-width: clamp(360px, 28vw, 500px);
   display: grid;
   min-height: 100dvh;
+  background: var(--surface);
   grid-template-columns: var(--login-panel-width) minmax(0, 1fr);
   overflow: hidden;
 }
