@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { requireMfa } from "@/lib/server-auth";
+import { identifyAikidoUser, requireMfa } from "@/lib/server-auth";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
       403,
     );
   }
+  identifyAikidoUser(userData.user);
 
   try {
     const { data: rows, error: rowsError } = await serviceClient

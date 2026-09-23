@@ -2,7 +2,7 @@ import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
-import { requireMfa } from "@/lib/server-auth";
+import { identifyAikidoUser, requireMfa } from "@/lib/server-auth";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -94,6 +94,7 @@ async function requireWorkspaceManager(
       error: responseError("Sua sessão não é válida.", 401),
     };
   }
+  identifyAikidoUser(data.user);
 
   if (!isGlobalAdminUser(data.user)) {
     const databaseWorkspaceId =
@@ -167,6 +168,7 @@ async function requireAdmin(request: NextRequest) {
       error: responseError("Sua sessão não é válida.", 401),
     };
   }
+  identifyAikidoUser(data.user);
 
   const metadata = (data.user.app_metadata ?? {}) as AdminMetadata;
   const isAdmin = isGlobalAdminUser(data.user);
@@ -225,6 +227,7 @@ async function requireCompaniesAccess(request: NextRequest) {
       managedWorkspaceIds: null as string[] | null,
     };
   }
+  identifyAikidoUser(data.user);
 
   if (isGlobalAdminUser(data.user)) {
     return {

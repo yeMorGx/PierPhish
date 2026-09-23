@@ -2,7 +2,7 @@ import { createDecipheriv, createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
-import { requireMfa } from "@/lib/server-auth";
+import { identifyAikidoUser, requireMfa } from "@/lib/server-auth";
 import {
   adjustCampaignStats,
   loadExcludedWorkspaceEmails,
@@ -78,6 +78,7 @@ async function requireSyncAccess(request: NextRequest, workspaceId: string) {
   if (error || !data.user) {
     return { error: errorResponse("Sua sessão não é válida.", 401) };
   }
+  identifyAikidoUser(data.user);
 
   const metadata = data.user.app_metadata as
     | { role?: unknown; is_admin?: unknown }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, type User } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
-import { requireMfa } from "@/lib/server-auth";
+import { identifyAikidoUser, requireMfa } from "@/lib/server-auth";
 import { recalculateWorkspaceCampaignStats } from "@/lib/server-statistics";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -109,6 +109,7 @@ async function requireAdmin(request: NextRequest) {
       error: responseError("Sua sessão não é válida.", 401),
     };
   }
+  identifyAikidoUser(data.user);
 
   const metadata = (data.user.app_metadata ?? {}) as AdminMetadata;
   const role = typeof metadata.role === "string" ? metadata.role : "";

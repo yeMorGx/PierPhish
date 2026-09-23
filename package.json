@@ -3,15 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node --env-file-if-exists=.env.local -r @aikidosec/firewall/instrument ./node_modules/next/dist/bin/next dev",
     "build": "next build",
-    "start": "next start",
+    "postbuild": "node scripts/copy-aikido-firewall.mjs",
+    "start": "node --env-file-if-exists=.env.local -r @aikidosec/firewall/instrument .next/standalone/server.js",
     "test": "vitest run",
     "lint": "tsc --noEmit",
     "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"app/*.{ts,tsx,css}\" \"lib/**/*.{ts,tsx}\" \"lib/*.{ts,tsx}\" \"*.mjs\" package.json",
     "format:check": "prettier --check \"app/**/*.{ts,tsx,css}\" \"app/*.{ts,tsx,css}\" \"lib/**/*.{ts,tsx}\" \"lib/*.{ts,tsx}\" \"*.mjs\" package.json"
   },
   "dependencies": {
+    "@aikidosec/firewall": "1.8.42",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",

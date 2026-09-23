@@ -14,6 +14,14 @@ Preencha `.env.local` com `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUB
 
 Sem `.env.local`, a aplicação abre em modo demonstração para validar o layout.
 
+## Aikido Zen Firewall
+
+O servidor Next.js usa saída `standalone`; `npm run build` copia o pacote do Aikido para esse artefato e `npm run dev`/`npm start` carregam `.env.local` antes de pré-carregar a instrumentação do firewall. Use Node.js 22.15 ou superior; o Aikido recomenda Node.js 24 ou superior.
+
+Defina `AIKIDO_TOKEN` no `.env.local` e no ambiente de produção com o token criado no painel Aikido. `AIKIDO_BLOCK=false` mantém inicialmente o modo de detecção, sem bloquear requisições. Avalie os eventos em desenvolvimento ou staging antes de ativar bloqueios. Não exponha o token com prefixo `NEXT_PUBLIC_`.
+
+O projeto usa Next.js 15.5.24. A lista de compatibilidade atual do Aikido declara Next.js 12, 13, 14 e 16, sem incluir a versão 15; portanto, valide a inicialização e a cobertura de rotas no ambiente de staging antes de produção.
+
 ## Empresas e workspaces
 
 A página `/empresas` administra as conexões BeePhish do workspace ativo. O cadastro permite editar nome, logo, informações, Client ID e status do cliente. Workspaces são criados, trocados e administrados na página `/workspaces`, com ambientes internos de teste ou produção. A mesma página permite personalizar o ambiente e gerenciar as pessoas vinculadas a ele. Logos são escolhidos como arquivo local; não existe campo para link externo.

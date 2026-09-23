@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
-import { requireMfa } from "@/lib/server-auth";
+import { identifyAikidoUser, requireMfa } from "@/lib/server-auth";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
   if (userError || !userData.user) {
     return responseError("Sua sessão não é válida.", 401);
   }
+  identifyAikidoUser(userData.user);
 
   const admin = isAdminUser(userData.user);
   const { data: membershipRows, error: membershipError } = await client

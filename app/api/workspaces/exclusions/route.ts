@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
-import { requireMfa } from "@/lib/server-auth";
+import { identifyAikidoUser, requireMfa } from "@/lib/server-auth";
 import { loadExcludedWorkspaceEmails } from "@/lib/server-statistics";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
   if (userError || !data.user) {
     return errorResponse("Sua sessão não é válida.", 401);
   }
+  identifyAikidoUser(data.user);
 
   if (!isGlobalAdmin(data.user)) {
     const { data: membership, error: membershipError } = await authClient

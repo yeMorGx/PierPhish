@@ -12,7 +12,7 @@ import {
   canFitEmailSample,
   summarizeEmailSampleStorage,
 } from "@/lib/email-sample-quota";
-import { requireMfa } from "@/lib/server-auth";
+import { identifyAikidoUser, requireMfa } from "@/lib/server-auth";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -236,6 +236,7 @@ async function requireCampaignAccess(
   if (userError || !userData.user) {
     return { error: errorResponse("Sua sessão não é válida.", 401) };
   }
+  identifyAikidoUser(userData.user);
 
   const { data: campaign, error: campaignError } = await serviceClient
     .from("beephish_campaigns")

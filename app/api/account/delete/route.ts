@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { requireMfa } from "@/lib/server-auth";
+import { identifyAikidoUser, requireMfa } from "@/lib/server-auth";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
   if (error || !data.user?.email) {
     return responseError("Sua sessão não é válida.", 401);
   }
+  identifyAikidoUser(data.user);
 
   const verificationClient = createClient(supabaseUrl, publishableKey, {
     auth: { autoRefreshToken: false, persistSession: false },

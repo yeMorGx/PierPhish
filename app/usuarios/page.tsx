@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import { UserManagementPage } from "@/components/users/user-management-content";
 
 export default function UsersPage() {
-  return <UserManagementPage />;
+  return (
+    <Suspense fallback={null}>
+      <UserManagementPage />
+    </Suspense>
+  );
 }
