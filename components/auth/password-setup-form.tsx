@@ -2,6 +2,10 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  AuthPageShell,
+  StaticAuthArtwork,
+} from "@/components/auth/auth-page-shell";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -89,70 +93,65 @@ export function PasswordSetupForm() {
   }
 
   return (
-    <main className="login-page theme-canvas">
-      <section className="login-panel">
-        <div className="login-panel-inner">
-          <a className="login-brand" href="/" aria-label="PierPhish">
-            <span>PierPhish</span>
-          </a>
-          <div className="login-copy">
-            <p className="login-eyebrow">Primeiro acesso</p>
-            <h1>Defina sua senha pessoal.</h1>
-            <p>
-              A senha inicial foi criada pelo administrador. Escolha uma nova
-              senha para continuar no centro de risco.
-            </p>
-          </div>
-
-          {ready && user ? (
-            <form className="login-form" onSubmit={handleSubmit}>
-              <label>
-                Nova senha
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  autoComplete="new-password"
-                  minLength={12}
-                  required
-                />
-              </label>
-              <label>
-                Confirmar nova senha
-                <input
-                  type="password"
-                  value={confirmation}
-                  onChange={(event) => setConfirmation(event.target.value)}
-                  autoComplete="new-password"
-                  minLength={12}
-                  required
-                />
-              </label>
-              {error && <p className="login-error">{error}</p>}
-              <button type="submit" disabled={loading}>
-                {loading ? "Salvando…" : "Salvar nova senha"}
-                <Icon name="arrow" size={17} />
-              </button>
-            </form>
-          ) : (
-            <div className="login-loading">Verificando seu acesso…</div>
-          )}
-
-          <p className="login-footer">
-            Use pelo menos 12 caracteres com letras, números e símbolos.
-          </p>
-        </div>
-      </section>
-      <aside className="login-artwork" aria-label="Ilustração do PierPhish">
-        <img
-          src="/pierphish-login.png"
-          alt="Ilustração pixel art do PierPhish"
+    <AuthPageShell
+      artwork={
+        <StaticAuthArtwork
+          alt="Uma pessoa encontra uma chave dourada em uma rua escura e chuvosa."
+          caption="Uma visão mais clara sobre o comportamento humano."
+          src="/password-reset-artwork.png"
         />
-        <div className="login-artwork-caption">
-          <span>PIERPHISH</span>
-          <p>Uma visão mais clara sobre o comportamento humano.</p>
-        </div>
-      </aside>
-    </main>
+      }
+    >
+      <div className="login-copy">
+        <p className="login-eyebrow">Primeiro acesso</p>
+        <h1>Defina sua senha pessoal.</h1>
+        <p>
+          A senha inicial foi criada pelo administrador. Escolha uma nova senha
+          para continuar no centro de risco.
+        </p>
+      </div>
+
+      {ready && user ? (
+        <form className="login-form" onSubmit={handleSubmit}>
+          <label>
+            Nova senha
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="new-password"
+              minLength={12}
+              required
+            />
+          </label>
+          <label>
+            Confirmar nova senha
+            <input
+              type="password"
+              value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)}
+              autoComplete="new-password"
+              minLength={12}
+              required
+            />
+          </label>
+          {error && (
+            <p className="login-error" role="alert">
+              {error}
+            </p>
+          )}
+          <button type="submit" disabled={loading}>
+            {loading ? "Salvando…" : "Salvar nova senha"}
+            <Icon name="arrow" size={17} />
+          </button>
+        </form>
+      ) : (
+        <div className="login-loading">Verificando seu acesso…</div>
+      )}
+
+      <p className="login-footer">
+        Use pelo menos 12 caracteres com letras, números e símbolos.
+      </p>
+    </AuthPageShell>
   );
 }

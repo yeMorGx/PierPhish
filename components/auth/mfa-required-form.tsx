@@ -9,10 +9,12 @@ import {
   useRef,
   useState,
 } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "motion/react";
 import { useAuth } from "@/components/auth/auth-provider";
+import {
+  AuthPageShell,
+  StaticAuthArtwork,
+} from "@/components/auth/auth-page-shell";
 import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
@@ -43,8 +45,6 @@ export function MfaRequiredForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const codeInputRefs = useRef<Array<HTMLInputElement | null>>([]);
-  const reducedMotion = useReducedMotion();
-
   const mustChangePassword =
     user?.app_metadata?.password_rotation_required === true;
 
@@ -216,167 +216,127 @@ export function MfaRequiredForm() {
 
   if (!ready || !user || mustChangePassword || phase === "checking") {
     return (
-      <MfaStage>
-        <MfaCard reducedMotion={reducedMotion}>
-          <MfaBrand />
-          <div className="login-loading">Preparando sua proteção…</div>
-        </MfaCard>
-      </MfaStage>
+      <AuthPageShell
+        artwork={
+          <StaticAuthArtwork
+            alt=""
+            caption="Conscientização que protege cada pessoa."
+            src="/mfa-door-background.png"
+          />
+        }
+      >
+        <div className="login-loading">Preparando sua proteção…</div>
+      </AuthPageShell>
     );
   }
 
   const isEnrollment = phase === "enroll";
 
   return (
-    <MfaStage>
-      <MfaCard reducedMotion={reducedMotion}>
-        <MfaBrand />
-        <div className="mfa-required-heading">
-          <span className="login-eyebrow">
-            <Icon name="shield" size={14} /> MFA obrigatório
-          </span>
-          <h1>
-            {isEnrollment ? "Ative sua segunda etapa." : "Confirme seu acesso."}
-          </h1>
-          <p>
-            {isEnrollment
-              ? "Use um aplicativo autenticador para proteger sua conta antes de entrar no PierPhish."
-              : `Abra ${factorName} e informe o código atual para continuar.`}
-          </p>
-        </div>
-
-        {isEnrollment && qrCode && (
-          <div className="mfa-setup-card">
-            <img
-              className="mfa-qr-code"
-              src={qrImageSource(qrCode)}
-              alt="QR Code para configurar o autenticador"
-            />
-            <div className="mfa-setup-copy">
-              <strong>1. Escaneie o QR Code</strong>
-              <span>
-                Abra Google Authenticator, Microsoft Authenticator ou outro app
-                TOTP compatível.
-              </span>
-              {secret && (
-                <details>
-                  <summary>Não consegue escanear?</summary>
-                  <code>{secret}</code>
-                </details>
-              )}
-            </div>
-          </div>
-        )}
-
-        <form className="login-form mfa-required-form" onSubmit={verifyCode}>
-          <label className="mfa-code-label">
-            <span>
-              {isEnrollment
-                ? "2. Código de confirmação"
-                : "Código do autenticador"}
-            </span>
-            <div
-              className="mfa-code-grid"
-              role="group"
-              aria-label="Código de 6 dígitos"
-            >
-              {Array.from({ length: 6 }, (_, index) => (
-                <input
-                  aria-label={`Dígito ${index + 1} de 6`}
-                  autoComplete={index === 0 ? "one-time-code" : "off"}
-                  autoFocus={index === 0}
-                  className="mfa-code-input"
-                  inputMode="numeric"
-                  key={index}
-                  maxLength={1}
-                  onChange={(event) =>
-                    updateCodeDigit(index, event.target.value)
-                  }
-                  onKeyDown={(event) => handleCodeKeyDown(index, event)}
-                  onPaste={handleCodePaste}
-                  pattern="[0-9]"
-                  ref={(element) => {
-                    codeInputRefs.current[index] = element;
-                  }}
-                  required
-                  value={/\d/.test(code[index] ?? "") ? code[index] : ""}
-                />
-              ))}
-            </div>
-          </label>
-          {error && (
-            <p className="login-error" role="alert">
-              {error}
-            </p>
-          )}
-          <button
-            type="submit"
-            disabled={loading || code.replace(/\D/g, "").length !== 6}
-          >
-            {loading ? "Verificando…" : "Continuar"}
-            <Icon name="arrow" size={17} />
-          </button>
-        </form>
-
-        <button
-          className="mfa-sign-out"
-          type="button"
-          onClick={() => void signOut()}
-        >
-          Sair desta conta
-        </button>
-        <p className="login-footer">
-          Acesso liberado somente após a confirmação da segunda etapa.
-        </p>
-      </MfaCard>
-    </MfaStage>
-  );
-}
-
-function MfaBrand() {
-  return (
-    <div className="login-brand" aria-label="PierPhish">
-      <span>PierPhish</span>
-    </div>
-  );
-}
-
-function MfaStage({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="mfa-stage theme-canvas">
-      <Image
-        className="mfa-stage-background"
-        src="/mfa-door-background.png"
-        alt=""
-        aria-hidden="true"
-        fill
-        priority
-        sizes="100vw"
-      />
-      {children}
-    </main>
-  );
-}
-
-function MfaCard({
-  children,
-  reducedMotion,
-}: {
-  children: React.ReactNode;
-  reducedMotion: boolean | null;
-}) {
-  return (
-    <motion.section
-      className="mfa-card"
-      initial={reducedMotion ? false : { opacity: 0, y: 20, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={
-        reducedMotion
-          ? { duration: 0 }
-          : { duration: 0.58, ease: [0.22, 1, 0.36, 1] }
+    <AuthPageShell
+      artwork={
+        <StaticAuthArtwork
+          alt=""
+          caption="Conscientização que protege cada pessoa."
+          src="/mfa-door-background.png"
+        />
       }
     >
-      {children}
-    </motion.section>
+      <div className="login-copy mfa-required-heading">
+        <span className="login-eyebrow">
+          <Icon name="shield" size={14} /> MFA obrigatório
+        </span>
+        <h1>
+          {isEnrollment ? "Ative sua segunda etapa." : "Confirme seu acesso."}
+        </h1>
+        <p>
+          {isEnrollment
+            ? "Use um aplicativo autenticador para proteger sua conta antes de entrar no PierPhish."
+            : `Abra ${factorName} e informe o código atual para continuar.`}
+        </p>
+      </div>
+
+      {isEnrollment && qrCode && (
+        <div className="mfa-setup-card">
+          <img
+            className="mfa-qr-code"
+            src={qrImageSource(qrCode)}
+            alt="QR Code para configurar o autenticador"
+          />
+          <div className="mfa-setup-copy">
+            <strong>1. Escaneie o QR Code</strong>
+            <span>
+              Abra Google Authenticator, Microsoft Authenticator ou outro app
+              TOTP compatível.
+            </span>
+            {secret && (
+              <details>
+                <summary>Não consegue escanear?</summary>
+                <code>{secret}</code>
+              </details>
+            )}
+          </div>
+        </div>
+      )}
+
+      <form className="login-form mfa-required-form" onSubmit={verifyCode}>
+        <label className="mfa-code-label">
+          <span>
+            {isEnrollment
+              ? "2. Código de confirmação"
+              : "Código do autenticador"}
+          </span>
+          <div
+            className="mfa-code-grid"
+            role="group"
+            aria-label="Código de 6 dígitos"
+          >
+            {Array.from({ length: 6 }, (_, index) => (
+              <input
+                aria-label={`Dígito ${index + 1} de 6`}
+                autoComplete={index === 0 ? "one-time-code" : "off"}
+                autoFocus={index === 0}
+                className="mfa-code-input"
+                inputMode="numeric"
+                key={index}
+                maxLength={1}
+                onChange={(event) => updateCodeDigit(index, event.target.value)}
+                onKeyDown={(event) => handleCodeKeyDown(index, event)}
+                onPaste={handleCodePaste}
+                pattern="[0-9]"
+                ref={(element) => {
+                  codeInputRefs.current[index] = element;
+                }}
+                required
+                value={/\d/.test(code[index] ?? "") ? code[index] : ""}
+              />
+            ))}
+          </div>
+        </label>
+        {error && (
+          <p className="login-error" role="alert">
+            {error}
+          </p>
+        )}
+        <button
+          type="submit"
+          disabled={loading || code.replace(/\D/g, "").length !== 6}
+        >
+          {loading ? "Verificando…" : "Continuar"}
+          <Icon name="arrow" size={17} />
+        </button>
+      </form>
+
+      <button
+        className="mfa-sign-out"
+        type="button"
+        onClick={() => void signOut()}
+      >
+        Sair desta conta
+      </button>
+      <p className="login-footer">
+        Acesso liberado somente após a confirmação da segunda etapa.
+      </p>
+    </AuthPageShell>
   );
 }

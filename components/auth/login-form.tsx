@@ -1,12 +1,12 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { useAuth } from "@/components/auth/auth-provider";
+import { AuthPageShell, LoginBrand } from "@/components/auth/auth-page-shell";
 import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
@@ -87,111 +87,80 @@ export function LoginForm() {
 
   if (!ready || user) {
     return (
-      <main className="login-page theme-canvas">
-        <section className="login-panel">
-          <div className="login-panel-inner">
-            <LoginBrand />
-            <div className="login-loading">Abrindo o centro de risco…</div>
-          </div>
-        </section>
-        <LoginArtwork />
-      </main>
+      <AuthPageShell artwork={<LoginArtworkContent />}>
+        <div className="login-loading">Abrindo o centro de risco…</div>
+      </AuthPageShell>
     );
   }
 
   return (
-    <main
-      className="login-page theme-canvas"
-      aria-busy={loading || ssoLoading}
+    <AuthPageShell
+      ariaBusy={loading || ssoLoading}
+      artwork={<LoginArtworkContent />}
     >
-      <section className="login-panel">
-        <div className="login-panel-inner">
-          <LoginBrand />
-
-          {isSupabaseConfigured ? (
-            <form onSubmit={handleSubmit} className="login-form">
-              <label>
-                E-mail
-                <input
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  type="email"
-                  autoComplete="email"
-                  required
-                />
-              </label>
-              <label>
-                Senha
-                <input
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                />
-              </label>
-              {error && (
-                <p className="login-error" role="alert">
-                  {error}
-                </p>
-              )}
-              <button type="submit" disabled={loading || ssoLoading}>
-                {loading ? "Entrando…" : "Entrar"}
-                <Icon name="arrow" size={17} />
-              </button>
-            </form>
-          ) : (
-            <div className="login-demo-card">
-              <p>
-                O Supabase ainda não está configurado neste ambiente. Abra a
-                demonstração local para explorar o painel.
-              </p>
-              <Link href="/">
-                Abrir demonstração <Icon name="arrow" size={15} />
-              </Link>
-            </div>
+      {isSupabaseConfigured ? (
+        <form onSubmit={handleSubmit} className="login-form">
+          <label>
+            E-mail
+            <input
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              type="email"
+              autoComplete="email"
+              required
+            />
+          </label>
+          <label>
+            Senha
+            <input
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              type="password"
+              autoComplete="current-password"
+              required
+            />
+          </label>
+          {error && (
+            <p className="login-error" role="alert">
+              {error}
+            </p>
           )}
-
-          {isSupabaseConfigured && (
-            <div className="login-sso-row">
-              <p className="login-sso-divider">
-                <span>ou entre com</span>
-              </p>
-              <button
-                aria-label="Entrar com Microsoft"
-                className="login-sso-button"
-                disabled={loading || ssoLoading}
-                onClick={() => void handleMicrosoftSignIn()}
-                title="Entrar com Microsoft"
-                type="button"
-              >
-                <MicrosoftLogo />
-                <span className="login-sso-label">Microsoft</span>
-              </button>
-            </div>
-          )}
+          <button type="submit" disabled={loading || ssoLoading}>
+            {loading ? "Entrando…" : "Entrar"}
+            <Icon name="arrow" size={17} />
+          </button>
+        </form>
+      ) : (
+        <div className="login-demo-card">
+          <p>
+            O Supabase ainda não está configurado neste ambiente. Abra a
+            demonstração local para explorar o painel.
+          </p>
+          <Link href="/">
+            Abrir demonstração <Icon name="arrow" size={15} />
+          </Link>
         </div>
-      </section>
-      <aside className="login-artwork" aria-label="Ilustração do PierPhish">
-        <LoginArtworkContent />
-      </aside>
-    </main>
-  );
-}
+      )}
 
-function LoginBrand() {
-  return (
-    <Link
-      className="login-brand"
-      href="/"
-      aria-label="PierPhish. Powered by PierSec"
-    >
-      <span className="login-brand-name">PierPhish</span>
-      <span className="login-brand-powered" aria-label="Powered by PierSec">
-        <span>Powered by</span>
-        <Image src="/piersec-logo.png" alt="PierSec" width={44} height={44} />
-      </span>
-    </Link>
+      {isSupabaseConfigured && (
+        <div className="login-sso-row">
+          <p className="login-sso-divider">
+            <span>ou entre com</span>
+          </p>
+          <button
+            aria-label="Entrar com Microsoft"
+            className="login-sso-button"
+            disabled={loading || ssoLoading}
+            onClick={() => void handleMicrosoftSignIn()}
+            title="Entrar com Microsoft"
+            type="button"
+          >
+            <MicrosoftLogo />
+            <span className="login-sso-label">Microsoft</span>
+          </button>
+        </div>
+      )}
+    </AuthPageShell>
   );
 }
 
@@ -316,13 +285,5 @@ function LoginArtworkContent() {
         </p>
       </div>
     </>
-  );
-}
-
-function LoginArtwork() {
-  return (
-    <aside className="login-artwork" aria-label="Ilustração do PierPhish">
-      <LoginArtworkContent />
-    </aside>
   );
 }

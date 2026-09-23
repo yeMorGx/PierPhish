@@ -6574,8 +6574,8 @@ html[data-theme="dark"] .workspace-modal-backdrop {
   font-size: 12px;
 }
 
-.mfa-required-heading {
-  margin-top: clamp(46px, 7vh, 82px);
+.login-copy {
+  margin-top: clamp(28px, 4vh, 40px);
 }
 
 .mfa-required-heading .login-eyebrow {
@@ -6584,31 +6584,31 @@ html[data-theme="dark"] .workspace-modal-backdrop {
   gap: 7px;
 }
 
-.mfa-required-heading h1 {
+.login-copy h1 {
   max-width: 520px;
   margin: 0;
   color: var(--ink);
-  font-size: clamp(36px, 4vw, 56px);
+  font-size: clamp(28px, 2.25vw, 34px);
   font-weight: 800;
-  letter-spacing: -0.075em;
-  line-height: 0.94;
+  letter-spacing: -0.055em;
+  line-height: 1.04;
 }
 
-.mfa-required-heading p {
+.login-copy p:not(.login-eyebrow) {
   max-width: 430px;
-  margin: 16px 0 0;
+  margin: 12px 0 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.55;
 }
 
 .mfa-setup-card {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   margin-top: 30px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 16px;
   padding: 16px;
   background: var(--surface-soft);
 }
@@ -6663,11 +6663,11 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 }
 
 .mfa-required-form {
-  margin-top: 24px;
+  margin-top: 28px;
 }
 
 .mfa-required-form input {
-  letter-spacing: 0.25em;
+  letter-spacing: normal;
 }
 
 .mfa-sign-out {
@@ -6706,85 +6706,9 @@ html[data-theme="dark"] .workspace-modal-backdrop {
   background: #2783a4;
 }
 
-/* Fullscreen MFA stage */
-.mfa-stage {
-  position: relative;
-  display: flex;
-  min-height: 100dvh;
-  align-items: center;
-  justify-content: flex-start;
-  overflow: hidden;
-  isolation: isolate;
-  padding: clamp(20px, 4vw, 64px);
-  background: #071c2a;
-}
-
-.mfa-stage-background {
-  z-index: 0;
+.auth-static-artwork-image {
   object-fit: cover;
   object-position: center;
-}
-
-.mfa-card {
-  position: relative;
-  z-index: 1;
-  width: min(480px, 100%);
-  max-height: calc(100dvh - 48px);
-  overflow-y: auto;
-  border: 1px solid rgba(32, 40, 49, 0.12);
-  border-radius: 24px;
-  padding: clamp(24px, 3vw, 36px);
-  color: #202831;
-  background: #fff;
-  box-shadow: 0 24px 80px rgba(2, 8, 20, 0.34);
-}
-
-.mfa-card .login-brand {
-  color: #202831;
-}
-
-.mfa-card .mfa-required-heading {
-  margin-top: 28px;
-}
-
-.mfa-card .mfa-required-heading h1 {
-  color: #202831;
-  font-size: clamp(30px, 3vw, 40px);
-}
-
-.mfa-card .mfa-required-heading p,
-.mfa-card .login-footer,
-.mfa-card .mfa-sign-out {
-  color: #747c84;
-}
-
-.mfa-card .login-loading {
-  color: #747c84;
-}
-
-.mfa-card .login-eyebrow {
-  color: #b84d43;
-}
-
-.mfa-card .mfa-setup-card {
-  border-color: #dedfdd;
-  background: #f7f7f6;
-}
-
-.mfa-card .mfa-setup-copy strong,
-.mfa-card .mfa-setup-copy summary {
-  color: #202831;
-}
-
-.mfa-card .mfa-setup-copy code {
-  color: #172530;
-  background: #f7f7f6;
-}
-
-.mfa-card .mfa-code-input {
-  border-color: #dedfdd;
-  color: #202831;
-  background: #fff;
 }
 
 .mfa-code-grid {
@@ -6796,12 +6720,12 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 
 .mfa-code-input {
   width: 100%;
-  height: 58px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 13px;
+  height: 50px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
   outline: 0;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--ink);
+  background: var(--surface-soft);
   font-family: var(--font-data);
   font-size: 25px;
   font-weight: 800;
@@ -6813,32 +6737,9 @@ html[data-theme="dark"] .workspace-modal-backdrop {
 }
 
 .mfa-code-input:focus {
-  border-color: #e26759;
-  background: #fff;
-  box-shadow: 0 0 0 4px rgba(226, 103, 89, 0.16);
-}
-
-.mfa-card .mfa-required-form {
-  margin-top: 24px;
-}
-
-.mfa-card .mfa-required-form label {
-  color: #747c84;
-}
-
-.mfa-card .login-form button {
-  color: #fff;
-  background: #202831;
-}
-
-.mfa-card .login-form button:hover:not(:disabled) {
-  color: #fff;
-  background: #3b454d;
-}
-
-.mfa-card .login-error {
-  color: #8b4d39;
-  background: #fff0e9;
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .login-artwork::after {
@@ -7143,34 +7044,6 @@ html[data-theme="dark"] .login-error {
     width: min(100%, 620px);
     padding: 44px 24px 48px;
   }
-
-  .mfa-required-heading {
-    margin-top: 54px;
-  }
-
-  .mfa-stage {
-    align-items: flex-end;
-    justify-content: center;
-    padding: 16px;
-  }
-
-  .mfa-stage-background {
-    object-position: 68% center;
-  }
-
-  .mfa-card {
-    width: min(100%, 520px);
-    max-height: calc(100dvh - 32px);
-    padding: clamp(22px, 5vw, 30px);
-  }
-
-  .mfa-card .mfa-required-heading {
-    margin-top: 22px;
-  }
-
-  .mfa-card .mfa-required-heading h1 {
-    font-size: clamp(28px, 6vw, 36px);
-  }
 }
 
 @media (max-width: 480px) {
@@ -7186,10 +7059,6 @@ html[data-theme="dark"] .login-error {
     padding: 32px 20px 40px;
   }
 
-  .mfa-required-heading {
-    margin-top: 46px;
-  }
-
   .mfa-setup-card {
     align-items: flex-start;
     flex-direction: column;
@@ -7198,23 +7067,6 @@ html[data-theme="dark"] .login-error {
   .mfa-qr-code {
     width: 144px;
     height: 144px;
-  }
-
-  .mfa-card {
-    border-radius: 20px;
-    padding: 20px;
-  }
-
-  .mfa-card .mfa-required-heading {
-    margin-top: 18px;
-  }
-
-  .mfa-card .mfa-required-heading h1 {
-    font-size: 30px;
-  }
-
-  .mfa-card .mfa-code-input {
-    height: 52px;
   }
 
   .login-form,
