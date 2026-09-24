@@ -1,6 +1,6 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -20,6 +20,7 @@ export type WorkspaceSummary = {
   environment: WorkspaceEnvironment;
   id: string;
   initial: string;
+  logoUrl?: string | null;
   name: string;
   role?: WorkspaceRole;
 };
@@ -42,6 +43,7 @@ type WorkspaceDraft = {
   name: string;
   environment: WorkspaceEnvironment;
   description: string;
+  logoUrl: string | null;
 };
 
 type ManagedWorkspaceUser = {
@@ -61,14 +63,120 @@ const emptyWorkspace: WorkspaceDraft = {
   name: "",
   environment: "test",
   description: "",
+  logoUrl: null,
 };
+
+const maxWorkspaceLogoSize = 2.5 * 1024 * 1024;
+const acceptedWorkspaceLogoTypes = ["image/png", "image/jpeg", "image/webp"];
+
+function readWorkspaceLogo(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("Formato de imagem inválido."));
+    };
+    reader.onerror = () => reject(new Error("Não foi possível ler a imagem."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function WorkspaceLogoField({
+  logoUrl,
+  name,
+  disabled,
+  onChange,
+}: {
+  logoUrl: string | null;
+  name: string;
+  disabled: boolean;
+  onChange: (value: string | null) => void;
+}) {
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  async function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!acceptedWorkspaceLogoTypes.includes(file.type)) {
+      setUploadError("Use uma imagem PNG, JPG ou WEBP.");
+      return;
+    }
+    if (file.size > maxWorkspaceLogoSize) {
+      setUploadError("A imagem deve ter até 2,5 MB.");
+      return;
+    }
+    try {
+      setUploadError(null);
+      onChange(await readWorkspaceLogo(file));
+    } catch {
+      setUploadError("Não foi possível preparar esta imagem.");
+    }
+  }
+
+  return (
+    <div className="workspace-logo-field">
+      <span className="workspace-logo-field-label">Logo do workspace</span>
+      <div className="workspace-logo-control">
+        <span className="workspace-logo-preview" aria-hidden="true">
+          {logoUrl ? (
+            <img src={logoUrl} alt="" />
+          ) : (
+            name.trim().slice(0, 1) || "W"
+          )}
+        </span>
+        <div className="workspace-logo-details">
+          <div className="workspace-logo-actions">
+            <label
+              className={`workspace-logo-button ${disabled ? "is-disabled" : ""}`}
+              aria-disabled={disabled}
+            >
+              <Icon name="image" size={14} />
+              {logoUrl ? "Trocar" : "Adicionar"}
+              <input
+                className="sr-only"
+                type="file"
+                accept={acceptedWorkspaceLogoTypes.join(",")}
+                onChange={(event) => void handleChange(event)}
+                aria-label={
+                  logoUrl
+                    ? "Trocar logo do workspace"
+                    : "Adicionar logo ao workspace"
+                }
+                disabled={disabled}
+              />
+            </label>
+            {logoUrl && (
+              <button
+                className="workspace-logo-remove"
+                type="button"
+                onClick={() => {
+                  setUploadError(null);
+                  onChange(null);
+                }}
+                disabled={disabled}
+              >
+                Remover
+              </button>
+            )}
+          </div>
+          <small>PNG, JPG ou WEBP · até 2,5 MB</small>
+          {uploadError && (
+            <span className="workspace-logo-error" role="alert">
+              {uploadError}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function isAdminUser(user: ReturnType<typeof useAuth>["user"]) {
   if (!isSupabaseConfigured) return true;
   if (user?.email?.toLowerCase() === "admin@teste.com") return true;
   const metadata = user?.app_metadata as
-    | { role?: unknown; is_admin?: unknown }
-    | undefined;
+    { role?: unknown; is_admin?: unknown } | undefined;
   return (
     metadata?.is_admin === true ||
     metadata?.role === "admin" ||
@@ -133,6 +241,7 @@ export function WorkspaceManagePanel({
     name: workspace.name,
     environment: workspace.environment,
     description: workspace.description,
+    logoUrl: workspace.logoUrl ?? null,
   });
   const [people, setPeople] = useState<ManagedWorkspaceUser[]>([]);
   const [loadingPeople, setLoadingPeople] = useState(false);
@@ -230,6 +339,7 @@ export function WorkspaceManagePanel({
               name,
               environment: draft.environment,
               description: draft.description.trim(),
+              logoUrl: draft.logoUrl,
             }
           : item,
       );
@@ -239,6 +349,7 @@ export function WorkspaceManagePanel({
         name,
         environment: draft.environment,
         description: draft.description.trim(),
+        logoUrl: draft.logoUrl,
         initial: name.slice(0, 1).toUpperCase(),
       });
       setNotice("Workspace atualizado neste navegador.");
@@ -264,6 +375,7 @@ export function WorkspaceManagePanel({
         name,
         environment: draft.environment,
         description: draft.description.trim(),
+        logoUrl: draft.logoUrl,
       }),
     });
     const body = (await response.json().catch(() => ({}))) as {
@@ -480,20 +592,30 @@ export function WorkspaceManagePanel({
           className="workspace-manage-body"
           onSubmit={(event) => void saveWorkspace(event)}
         >
-          <label className="workspace-field">
-            <span>Nome do workspace</span>
-            <input
-              autoFocus
-              maxLength={80}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  name: event.target.value,
-                }))
+          <div className="workspace-manage-identity">
+            <label className="workspace-field">
+              <span>Nome do workspace</span>
+              <input
+                autoFocus
+                maxLength={80}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
+                }
+                value={draft.name}
+              />
+            </label>
+            <WorkspaceLogoField
+              disabled={!canManage}
+              logoUrl={draft.logoUrl}
+              name={draft.name}
+              onChange={(logoUrl) =>
+                setDraft((current) => ({ ...current, logoUrl }))
               }
-              value={draft.name}
             />
-          </label>
+          </div>
           <fieldset className="workspace-fieldset">
             <legend>Ambiente</legend>
             <div className="workspace-environment-options">
@@ -643,9 +765,9 @@ export function WorkspaceManagePanel({
                 );
                 const canEditPerson = Boolean(
                   membership &&
-                    canEditMemberships &&
-                    person.id !== user?.id &&
-                    (globalAdmin || membership.role !== "owner"),
+                  canEditMemberships &&
+                  person.id !== user?.id &&
+                  (globalAdmin || membership.role !== "owner"),
                 );
                 return (
                   <div className="workspace-person-row" key={person.id}>
@@ -881,6 +1003,7 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
         environment: workspace.environment,
         id: workspace.id,
         initial: workspace.name.slice(0, 1).toUpperCase(),
+        logoUrl: workspace.logoUrl,
         name: workspace.name,
       }));
       if (!isSupabaseConfigured) {
@@ -899,6 +1022,7 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
           description?: string;
           environment?: WorkspaceEnvironment;
           id: string;
+          logoUrl?: string | null;
           name: string;
           role?: WorkspaceRole;
         }>;
@@ -911,6 +1035,7 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
             workspace.environment === "production" ? "production" : "test",
           id: workspace.id,
           initial: workspace.name.slice(0, 1).toUpperCase(),
+          logoUrl: workspace.logoUrl,
           name: workspace.name,
           role: workspace.role,
         })),
@@ -974,6 +1099,7 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
       >
         {managedWorkspace ? (
           <WorkspaceManagePanel
+            key={managedWorkspace.id}
             globalAdmin={canCreateWorkspace}
             onBack={() => setManageWorkspaceId(null)}
             onClose={onClose}
@@ -1157,8 +1283,14 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
                     }}
                     type="button"
                   >
-                    <span className="workspace-option-avatar">
-                      {workspace.initial}
+                    <span
+                      className={`workspace-option-avatar ${workspace.logoUrl ? "has-image" : ""}`}
+                    >
+                      {workspace.logoUrl ? (
+                        <img src={workspace.logoUrl} alt="" />
+                      ) : (
+                        workspace.initial
+                      )}
                     </span>
                     <span className="workspace-option-copy">
                       <strong>{workspace.name}</strong>

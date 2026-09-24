@@ -36,8 +36,7 @@ function isGlobalAdmin(user: ReturnType<typeof useAuth>["user"]) {
   if (!isSupabaseConfigured) return true;
   if (user?.email?.toLowerCase() === "admin@teste.com") return true;
   const metadata = user?.app_metadata as
-    | { role?: unknown; is_admin?: unknown }
-    | undefined;
+    { role?: unknown; is_admin?: unknown } | undefined;
   return (
     metadata?.is_admin === true ||
     metadata?.role === "admin" ||
@@ -58,6 +57,7 @@ function localWorkspaceSummary(
     environment: workspace.environment,
     id: workspace.id,
     initial: workspace.name.slice(0, 1).toUpperCase(),
+    logoUrl: workspace.logoUrl,
     name: workspace.name,
   };
 }
@@ -241,6 +241,7 @@ function WorkspacePageContent() {
         description?: string;
         environment?: WorkspaceEnvironment;
         id: string;
+        logoUrl?: string | null;
         name: string;
         role?: WorkspaceSummary["role"];
       }>;
@@ -253,6 +254,7 @@ function WorkspacePageContent() {
           workspace.environment === "production" ? "production" : "test",
         id: workspace.id,
         initial: workspace.name.slice(0, 1).toUpperCase(),
+        logoUrl: workspace.logoUrl,
         name: workspace.name,
         role: workspace.role,
       })),
@@ -431,8 +433,14 @@ function WorkspacePageContent() {
                   onClick={() => selectWorkspace(workspace.id)}
                   aria-pressed={workspace.id === selectedWorkspaceId}
                 >
-                  <span className="workspace-page-option-avatar">
-                    {workspace.initial}
+                  <span
+                    className={`workspace-page-option-avatar ${workspace.logoUrl ? "has-image" : ""}`}
+                  >
+                    {workspace.logoUrl ? (
+                      <img src={workspace.logoUrl} alt="" />
+                    ) : (
+                      workspace.initial
+                    )}
                   </span>
                   <span className="workspace-page-option-copy">
                     <strong>{workspace.name}</strong>
@@ -470,6 +478,7 @@ function WorkspacePageContent() {
               data-tour="workspace-manage"
             >
               <WorkspaceManagePanel
+                key={selectedWorkspace.id}
                 globalAdmin={canCreateWorkspace}
                 onBack={() => setSelectedWorkspaceId(null)}
                 onClose={() => undefined}

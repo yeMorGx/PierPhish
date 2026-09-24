@@ -42,6 +42,13 @@ function isAdminUser(user: {
   );
 }
 
+function isLocalImage(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^data:image\/(png|jpeg|jpg|webp|svg\+xml);base64,/i.test(value)
+  );
+}
+
 function safeWorkspace(row: Record<string, unknown>, role: WorkspaceRole) {
   const databaseId = String(row.id);
   return {
@@ -49,7 +56,7 @@ function safeWorkspace(row: Record<string, unknown>, role: WorkspaceRole) {
     name: String(row.name ?? "Workspace sem nome"),
     environment: row.environment === "production" ? "production" : "test",
     description: String(row.description ?? ""),
-    logoUrl: null,
+    logoUrl: isLocalImage(row.logo_url) ? row.logo_url : null,
     createdAt: String(row.created_at ?? ""),
     role,
   };
@@ -102,7 +109,7 @@ export async function GET(request: NextRequest) {
 
   let workspaceQuery = client
     .from("pierphish_workspaces")
-    .select("id,name,environment,description,created_at")
+    .select("id,name,environment,description,logo_url,created_at")
     .order("created_at", { ascending: true });
   if (!admin) workspaceQuery = workspaceQuery.in("id", workspaceIds);
   const { data: workspaceRows, error: workspaceError } = await workspaceQuery;
