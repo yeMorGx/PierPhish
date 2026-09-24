@@ -6,6 +6,7 @@ import { AuthGuard } from "@/components/auth/auth-guard";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Icon } from "@/components/ui/icon";
+import { WorkspaceManagePanel } from "@/components/workspace/workspace-switcher";
 import {
   demoCompanies,
   demoWorkspaces,
@@ -202,6 +203,7 @@ export function CompanyManagementContent() {
     isSupabaseConfigured ? "" : demoWorkspaces[0].id,
   );
   const [modal, setModal] = useState<Modal>(null);
+  const [workspaceManagerOpen, setWorkspaceManagerOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<CompanyRecord | null>(
     null,
   );
@@ -416,6 +418,12 @@ export function CompanyManagementContent() {
     setModal("company");
   }
 
+  function openWorkspaceManager() {
+    setError(null);
+    setNotice(null);
+    setWorkspaceManagerOpen(true);
+  }
+
   function persistDemo(
     nextWorkspaces: WorkspaceRecord[],
     nextCompanies: CompanyRecord[],
@@ -599,8 +607,18 @@ export function CompanyManagementContent() {
             {selectedWorkspace ? (
               <>
                 <section
-                  aria-label={`Workspace ${selectedWorkspace.name}`}
                   className="surface-card companies-workspace-hero"
+                  role="button"
+                  tabIndex={0}
+                  aria-haspopup="dialog"
+                  aria-label={`Editar workspace ${selectedWorkspace.name}`}
+                  onClick={openWorkspaceManager}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openWorkspaceManager();
+                    }
+                  }}
                 >
                   <div className="companies-workspace-identity">
                     <LogoPreview
@@ -923,6 +941,50 @@ export function CompanyManagementContent() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {workspaceManagerOpen && selectedWorkspace && (
+        <div
+          className="workspace-modal-backdrop"
+          role="presentation"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setWorkspaceManagerOpen(false);
+          }}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setWorkspaceManagerOpen(false);
+            }
+          }}
+        >
+          <section
+            aria-labelledby="workspace-modal-title"
+            aria-modal="true"
+            className="workspace-modal"
+            onMouseDown={(event) => event.stopPropagation()}
+            role="dialog"
+          >
+            <WorkspaceManagePanel
+              globalAdmin={isAdminUser(user)}
+              onBack={() => setWorkspaceManagerOpen(false)}
+              onClose={() => setWorkspaceManagerOpen(false)}
+              onUpdated={(nextWorkspace) => {
+                setWorkspaces((current) =>
+                  current.map((workspace) =>
+                    workspace.id === nextWorkspace.id
+                      ? { ...workspace, ...nextWorkspace }
+                      : workspace,
+                  ),
+                );
+              }}
+              variant="modal"
+              workspace={{
+                ...selectedWorkspace,
+                initial: getInitial(selectedWorkspace.name),
+                role: selectedWorkspace.role ?? activeWorkspaceRole ?? undefined,
+              }}
+            />
+          </section>
         </div>
       )}
     </DashboardShell>

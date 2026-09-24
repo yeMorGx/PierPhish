@@ -11939,6 +11939,15 @@ html[data-theme][data-card-style] .companies-workspace-hero {
   transition: none;
 }
 
+.companies-workspace-hero[role="button"] {
+  cursor: pointer;
+}
+
+.companies-workspace-hero[role="button"]:focus-visible {
+  outline: 2px solid #a6f0d3;
+  outline-offset: 3px;
+}
+
 html[data-card-style] .companies-header h1,
 html[data-theme][data-card-style] .companies-header h1 {
   color: #ffffff;
