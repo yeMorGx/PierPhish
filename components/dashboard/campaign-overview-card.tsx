@@ -8,6 +8,7 @@ import {
   AnimatedTooltip,
   type AnimatedTooltipItem,
 } from "@/components/ui/animated-tooltip";
+import { Icon } from "@/components/ui/icon";
 import type {
   CampaignParticipants,
   CampaignSummary,
@@ -107,19 +108,46 @@ export function CampaignOverviewCard({
   totals,
 }: CampaignOverviewCardProps) {
   const { logos } = useCampaignLogos();
-  const metrics: Array<{ label: string; value: number; suffix?: string }> = [
-    { label: "Campanhas", value: totals.campaigns },
-    { label: "Pessoas", value: totals.people },
-    { label: "Entregues", value: totals.delivered },
+  const metrics: Array<{
+    label: string;
+    value: number;
+    suffix?: string;
+    help: string;
+  }> = [
+    {
+      label: "Campanhas",
+      value: totals.campaigns,
+      help: "Número de campanhas incluídas no painel após aplicar os filtros atuais.",
+    },
+    {
+      label: "Participações",
+      value: totals.people,
+      help: "Soma dos destinatários de todas as campanhas. A mesma pessoa é contada novamente se participar de outra campanha.",
+    },
+    {
+      label: "Entregues",
+      value: totals.delivered,
+      help: "Soma dos e-mails entregues em todas as campanhas incluídas.",
+    },
     {
       label: "Abertura",
       value: totals.people
         ? Math.round((totals.opened / totals.people) * 100)
         : 0,
       suffix: "%",
+      help: "Aberturas ÷ participações. É calculada sobre os totais consolidados, não pela média das taxas de cada campanha.",
     },
-    { label: "Taxa de cliques", value: totals.clickRate, suffix: "%" },
-    { label: "Reportes", value: totals.reported },
+    {
+      label: "Taxa de cliques",
+      value: totals.clickRate,
+      suffix: "%",
+      help: "Cliques ÷ e-mails entregues. Se não houver entregas registradas, as participações são usadas como base. O percentual é arredondado.",
+    },
+    {
+      label: "Reportes",
+      value: totals.reported,
+      help: "Soma das mensagens reportadas nas campanhas incluídas.",
+    },
   ] as const;
 
   return (
@@ -129,17 +157,14 @@ export function CampaignOverviewCard({
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="mb-[9px] text-[10px] leading-none font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-            VISÃO DE CAMPANHAS
-          </p>
           <h3 className="m-0 text-[17px] font-bold tracking-[-0.03em]">
             Todas as campanhas
           </h3>
-          <p className="mt-2 text-[11px] text-[#8b949d]">
-            Ranking por quantidade de pessoas incluídas em cada campanha.
+          <p className="mt-2 text-[12px] text-[var(--text-muted)]">
+            Ranking por número de destinatários em cada campanha.
           </p>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2 text-[10px] text-[#89939c]">
+        <div className="flex flex-wrap items-center justify-end gap-2 text-[11px] text-[var(--text-muted)]">
           <span className="campaign-count-pill rounded-full bg-[#f4f6f7] px-3 py-1.5">
             {campaigns.length} campanhas
           </span>
@@ -152,17 +177,39 @@ export function CampaignOverviewCard({
       </div>
 
       <div className="mt-5 grid grid-cols-6 gap-2 max-[1120px]:grid-cols-3 max-[720px]:grid-cols-2">
-        {metrics.map(({ label, value, suffix }) => (
-          <div
-            className="campaign-overview-metric rounded-[16px] bg-[#f7f8f8] px-4 py-3"
-            key={label}
-          >
-            <span className="block text-[10px] text-[#8b949d]">{label}</span>
-            <strong className="mt-1 block text-[21px] leading-none tracking-[-0.06em] text-[#18202b]">
-              <AnimatedNumber value={value} suffix={suffix} />
-            </strong>
-          </div>
-        ))}
+        {metrics.map(({ label, value, suffix, help }, index) => {
+          const mobilePopoverAlignment =
+            index % 2 === 1
+              ? "max-[720px]:right-0 max-[720px]:left-auto max-[720px]:translate-x-0"
+              : "";
+
+          return (
+            <div
+              className="campaign-overview-metric rounded-[16px] bg-[#f7f8f8] px-4 py-3"
+              key={label}
+            >
+              <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+                {label}
+                <details className="group relative inline-flex">
+                  <summary
+                    aria-label={`Como calculamos ${label.toLowerCase()}`}
+                    className="flex size-4 cursor-pointer list-none items-center justify-center rounded-full border border-current/40 text-current transition hover:border-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6556f5] [&::-webkit-details-marker]:hidden"
+                  >
+                    <Icon name="help" size={10} />
+                  </summary>
+                  <span
+                    className={`absolute top-full left-1/2 z-30 mt-2 hidden w-56 max-w-[calc(100vw-3rem)] -translate-x-1/2 rounded-xl border border-[#e2e7e9] bg-white p-3 text-left text-[11px] leading-5 font-normal whitespace-normal text-[#34404a] shadow-[0_8px_24px_rgba(24,32,43,0.14)] group-open:block ${mobilePopoverAlignment}`}
+                  >
+                    {help}
+                  </span>
+                </details>
+              </span>
+              <strong className="mt-1 block text-[21px] leading-none tracking-[-0.06em] text-[#18202b]">
+                <AnimatedNumber value={value} suffix={suffix} />
+              </strong>
+            </div>
+          );
+        })}
       </div>
 
       <div className="campaign-overview-table-wrap mt-5 overflow-x-auto rounded-[18px] border border-[#edf0f1]">
@@ -171,10 +218,10 @@ export function CampaignOverviewCard({
           aria-label="Resumo de todas as campanhas"
         >
           <thead>
-            <tr className="campaign-overview-table-head border-b border-[#edf0f1] bg-[#fafbfb] text-[10px] tracking-[0.1em] text-[#9299a2] uppercase">
+            <tr className="campaign-overview-table-head border-b border-[#edf0f1] bg-[#fafbfb] text-[11px] tracking-[0.1em] text-[var(--text-muted)] uppercase">
               <th className="w-[48px] px-4 py-3 font-extrabold">#</th>
               <th className="px-4 py-3 font-extrabold">Campanha</th>
-              <th className="px-4 py-3 font-extrabold">Pessoas</th>
+              <th className="px-4 py-3 font-extrabold">Participações</th>
               <th className="px-4 py-3 font-extrabold">Entregues</th>
               <th className="px-4 py-3 font-extrabold">Abertura</th>
               <th className="px-4 py-3 font-extrabold">Cliques</th>
@@ -188,7 +235,7 @@ export function CampaignOverviewCard({
                 className="campaign-overview-table-row border-b border-[#f0f1f2] text-[11px] text-[#69737d] last:border-0 hover:bg-[#fcfdfd]"
                 key={campaign.id}
               >
-                <td className="px-4 py-3.5 font-bold text-[#9aa3aa]">
+                <td className="px-4 py-3.5 font-bold text-[var(--text-muted)]">
                   {String(index + 1).padStart(2, "0")}
                 </td>
                 <td className="px-4 py-3.5">
@@ -204,7 +251,7 @@ export function CampaignOverviewCard({
                       <strong className="campaign-name overflow-hidden text-[12px] text-ellipsis whitespace-nowrap text-[#35414d]">
                         {campaign.name}
                       </strong>
-                      <span className="campaign-id mt-0.5 text-[10px] text-[#a0a7ad]">
+                      <span className="campaign-id mt-0.5 text-[11px] text-[var(--text-muted)]">
                         ID {campaign.id}
                       </span>
                     </span>
@@ -221,7 +268,7 @@ export function CampaignOverviewCard({
                       personAvatars={personAvatars}
                     />
                     {index === 0 && (
-                      <span className="inline-flex rounded-full bg-[#edf2f3] px-2 py-1 text-[9px] font-bold text-[#5f7681]">
+                      <span className="inline-flex rounded-full bg-[#edf2f3] px-2 py-1 text-[10px] font-bold text-[#5f7681]">
                         maior alcance
                       </span>
                     )}
@@ -257,7 +304,7 @@ export function CampaignOverviewCard({
             {!campaigns.length && (
               <tr>
                 <td
-                  className="px-4 py-8 text-center text-[11px] text-[#9aa1a7]"
+                  className="px-4 py-8 text-center text-[11px] text-[var(--text-muted)]"
                   colSpan={8}
                 >
                   Nenhuma campanha encontrada.

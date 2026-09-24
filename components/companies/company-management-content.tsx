@@ -533,10 +533,7 @@ export function CompanyManagementContent() {
           data-tour="companies-header"
         >
           <div>
-            <span className="companies-overline">
-              PIERPHISH / CLIENTES BEEPHISH
-            </span>
-            <h1>Empresas para campanhas.</h1>
+            <h1>Conexões BeePhish</h1>
             <p>Gerencie as conexões BeePhish deste workspace.</p>
           </div>
           <div className="companies-header-actions">
@@ -625,10 +622,7 @@ export function CompanyManagementContent() {
                 >
                   <div className="companies-section-head">
                     <div>
-                      <span className="companies-overline">
-                        CLIENTES BEEPHISH
-                      </span>
-                      <h2>Conexões deste ambiente.</h2>
+                      <h2>Clientes BeePhish</h2>
                     </div>
                     <button
                       className="companies-secondary-button"
@@ -745,9 +739,8 @@ export function CompanyManagementContent() {
           >
             <div className="companies-modal-head">
               <div>
-                <span className="companies-overline">CONEXÃO BEEPHISH</span>
                 <h2 id="company-modal-heading">
-                  {editingCompany ? "Editar cliente." : "Adicionar cliente."}
+                  {editingCompany ? "Editar conexão" : "Adicionar conexão"}
                 </h2>
                 <p>
                   Os dados de acesso são usados somente pela conexão

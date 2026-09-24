@@ -828,7 +828,7 @@ function SettingsContent() {
                   </div>
                 </div>
               </div>
-              <p>Uma leitura visual, com menos palavras e mais sinais.</p>
+              <p>Mostra os dados em gráficos e reduz os textos explicativos.</p>
             </aside>
             <DashboardWidgetOrderEditor />
             <div className="settings-footer">

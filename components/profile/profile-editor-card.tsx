@@ -38,8 +38,7 @@ export function ProfileEditorCard() {
     <section className="surface-card profile-panel-card profile-editor-card">
       <div className="profile-panel-heading">
         <div>
-          <p className="profile-eyebrow">PERSONALIZAÇÃO</p>
-          <h2>Seu perfil no PierPhish</h2>
+          <h2>Editar perfil</h2>
         </div>
         <Icon name="settings" size={19} />
       </div>

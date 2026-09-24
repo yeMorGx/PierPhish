@@ -104,7 +104,7 @@ export function PasswordSetupForm() {
     >
       <div className="login-copy">
         <p className="login-eyebrow">Primeiro acesso</p>
-        <h1>Defina sua senha pessoal.</h1>
+        <h1>Defina uma nova senha</h1>
         <p>
           A senha inicial foi criada pelo administrador. Escolha uma nova senha
           para continuar no centro de risco.

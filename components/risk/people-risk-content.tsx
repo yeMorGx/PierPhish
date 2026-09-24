@@ -658,21 +658,17 @@ function PeopleRiskPage() {
         ) : (
           <>
             <section
-              className="surface-card grid grid-cols-[minmax(0,1fr)_300px] gap-8 overflow-hidden rounded-[var(--radius-card)] p-8 max-[900px]:grid-cols-1 max-[720px]:rounded-[23px] max-[720px]:p-6"
+              className="surface-card grid grid-cols-[minmax(0,1fr)_300px] gap-8 overflow-hidden rounded-[var(--radius-card)] p-6 max-[900px]:grid-cols-1 max-[720px]:rounded-[23px] max-[720px]:p-5"
               data-tour="risk-summary"
             >
               <div className="min-w-0">
-                <p className="mb-3 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-                  CENTRO DE RISCO
-                </p>
-                <h2 className="m-0 max-w-[640px] text-[clamp(34px,5vw,58px)] leading-[0.93] font-[680] tracking-[-0.08em]">
-                  Pessoas que pedem atenção.
+                <h2 className="m-0 max-w-[640px] text-[clamp(25px,2.5vw,32px)] leading-[1.08] font-[600] tracking-[-0.04em]">
+                  Pessoas por nível de risco
                 </h2>
-                <p className="mt-5 mb-0 max-w-[620px] text-[13px] leading-relaxed text-[#7c8795]">
-                  Uma leitura consolidada de todas as campanhas, com os sinais
-                  que ajudam a priorizar orientação e resposta.
+                <p className="mt-3 mb-0 max-w-[620px] text-[13px] leading-relaxed text-[var(--muted)]">
+                  Resumo das pessoas e dos sinais registrados nas campanhas.
                 </p>
-                <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] text-[#87919a]">
+                <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-[var(--text-muted)]">
                   <span>{campaignTotal} campanhas analisadas</span>
                   <span>{summary.total} pessoas consolidadas</span>
                   <span>Atualizado {formatDateTime(updatedAt)}</span>
@@ -742,13 +738,13 @@ function PeopleRiskPage() {
               <article className="surface-card min-w-0 overflow-hidden rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
                 <div className="flex items-end justify-between gap-4 max-[720px]:flex-col max-[720px]:items-stretch">
                   <div>
-                    <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                    <p className="mb-2 text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-muted)] uppercase">
                       PRIORIZAÇÃO INDIVIDUAL
                     </p>
                     <h2 className="m-0 text-[20px] font-bold tracking-[-0.04em]">
                       Mapa de exposição
                     </h2>
-                    <p className="mt-2 mb-0 text-[12px] text-[#87919a]">
+                    <p className="mt-2 mb-0 text-[12px] text-[var(--text-muted)]">
                       Uma pessoa pode aparecer em mais de uma campanha.
                     </p>
                   </div>
@@ -908,20 +904,20 @@ function PeopleRiskPage() {
                     </div>
                   )}
                 </div>
-                <p className="mt-4 mb-0 text-[10px] text-[#87919a]">
+                <p className="mt-4 mb-0 text-[11px] text-[var(--text-muted)]">
                   Mostrando {visiblePeople.length} de {people.length} pessoas
                   consolidadas.
                 </p>
               </article>
 
               <aside className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
-                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                <p className="mb-2 text-[11px] font-extrabold tracking-[0.16em] text-[var(--text-muted)] uppercase">
                   LEITURA DO RISCO
                 </p>
                 <h2 className="m-0 text-[20px] font-bold tracking-[-0.04em]">
                   O que cada nível significa
                 </h2>
-                <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[#87919a]">
+                <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[var(--text-muted)]">
                   A classificação prioriza comportamento observado, não o cargo
                   ou a área da pessoa.
                 </p>

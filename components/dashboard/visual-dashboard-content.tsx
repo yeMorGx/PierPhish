@@ -160,13 +160,13 @@ function CampaignOpeningsChart({ campaigns }: { campaigns: CampaignBar[] }) {
           <XAxis
             axisLine={false}
             dataKey="name"
-            tick={{ fill: "var(--muted-soft)", fontSize: 9 }}
+            tick={{ fill: "var(--text-muted)", fontSize: 11 }}
             tickLine={false}
           />
           <YAxis
             axisLine={false}
             domain={[0, 100]}
-            tick={{ fill: "var(--muted-soft)", fontSize: 9 }}
+            tick={{ fill: "var(--text-muted)", fontSize: 11 }}
             tickLine={false}
             unit="%"
           />
@@ -183,7 +183,7 @@ function CampaignOpeningsChart({ campaigns }: { campaigns: CampaignBar[] }) {
           />
           <Bar
             dataKey="rate"
-            fill="var(--accent)"
+            fill="var(--chart-series)"
             maxBarSize={36}
             radius={[8, 8, 0, 0]}
           />

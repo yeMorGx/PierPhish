@@ -80,7 +80,7 @@ export function SignalSummaryCard({
                 style={{ width: `${Math.min(signal.rate, 100)}%` }}
               />
             </div>
-            <span className="mt-1.5 block text-[9px] text-[#969da2]">
+            <span className="mt-1.5 block text-[11px] text-[var(--text-muted)]">
               <AnimatedNumber value={signal.rate} suffix="%" /> da base ·{" "}
               {signal.helper}
             </span>

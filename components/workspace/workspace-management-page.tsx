@@ -368,13 +368,10 @@ function WorkspacePageContent() {
       <div className="workspace-page" data-tour="workspaces-content">
         <header className="workspace-page-intro">
           <div>
-            <span className="workspace-page-eyebrow">
-              AMBIENTES DE OPERAÇÃO
-            </span>
-            <h1>Um espaço para cada contexto.</h1>
+            <h1>Gerenciar workspaces</h1>
             <p>
-              Separe testes e produção, escolha o ambiente ativo e controle quem
-              participa de cada operação.
+              Crie e selecione ambientes para separar testes e produção e
+              controlar quem participa de cada operação.
             </p>
           </div>
           <div className="workspace-page-intro-actions">

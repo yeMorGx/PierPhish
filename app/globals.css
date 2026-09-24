@@ -14,6 +14,8 @@
   --ink-strong: #3b454d;
   --muted: #747c84;
   --muted-soft: #969da2;
+  --text-muted: #626e77;
+  --chart-series: #6f8e9b;
   --line: #dedfdd;
   --line-soft: #ebedeb;
   --soft: #ececea;
@@ -59,6 +61,8 @@ html[data-theme="dark"] {
   --ink-strong: #d5dddc;
   --muted: #9ba7a8;
   --muted-soft: #7f8d8f;
+  --text-muted: #aeb9ba;
+  --chart-series: #8aa8b5;
   --line: #2f3b40;
   --line-soft: #263338;
   --soft: #243238;
@@ -972,9 +976,9 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
 
 .workspace-page-eyebrow {
   display: block;
-  color: var(--muted-soft);
+  color: var(--text-muted);
   font-family: var(--font-data);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 750;
   letter-spacing: 0.17em;
   line-height: 1;
@@ -983,19 +987,19 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
 
 .workspace-page-intro h1 {
   max-width: 720px;
-  margin: 13px 0 0;
+  margin: 8px 0 0;
   color: var(--ink);
-  font-size: clamp(30px, 4.2vw, 58px);
-  font-weight: 420;
-  letter-spacing: -0.08em;
-  line-height: 0.94;
+  font-size: clamp(26px, 2.8vw, 34px);
+  font-weight: 560;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
 }
 
 .workspace-page-intro p {
   max-width: 610px;
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -3061,8 +3065,8 @@ html[data-theme="dark"] .campaign-status-neutral {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  color: var(--muted-soft);
-  font-size: 10px;
+  color: var(--text-muted);
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.14em;
 }
@@ -3107,8 +3111,8 @@ html[data-theme="dark"] .campaign-status-neutral {
 .risk-hero-meter small {
   display: block;
   margin-top: 10px;
-  color: var(--muted-soft);
-  font-size: 10px;
+  color: var(--text-muted);
+  font-size: 11px;
 }
 
 .risk-summary-card {
@@ -7450,7 +7454,8 @@ html[data-card-style="apple"] .surface-card,
   font-family: var(--font-data);
   font-size: 36px;
   font-weight: 400;
-  letter-spacing: -0.09em;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
   line-height: 0.9;
 }
 
@@ -7513,17 +7518,7 @@ html[data-card-style="apple"] .surface-card,
   > div:nth-child(2)
   > div {
   border-radius: 8px 8px 0 0;
-  background: #cfd4d2 !important;
-}
-
-.bento-dashboard
-  .campaign-openings-card
-  > div:nth-of-type(2)
-  > div
-  > div:first-child
-  > div:nth-child(2)
-  > div {
-  background: var(--accent) !important;
+  background: var(--chart-series) !important;
 }
 
 .bento-dashboard
@@ -11648,27 +11643,17 @@ html[data-theme="dark"] .settings-page {
   align-items: flex-end;
   justify-content: space-between;
   gap: 30px;
-  padding: 30px 32px;
-}
-
-.companies-overline {
-  display: block;
-  color: var(--muted);
-  font-family: var(--font-data);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  padding: 26px 28px;
 }
 
 .companies-header h1 {
   max-width: 760px;
-  margin: 10px 0 0;
+  margin: 0;
   color: var(--ink);
-  font-size: clamp(34px, 5vw, 62px);
-  font-weight: 400;
-  line-height: 0.94;
-  letter-spacing: -0.085em;
+  font-size: clamp(26px, 2.8vw, 34px);
+  font-weight: 560;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
 }
 
 .companies-header p {
@@ -11691,9 +11676,9 @@ html[data-theme="dark"] .settings-page {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: var(--muted);
+  color: var(--text-muted);
   font-family: var(--font-data);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .companies-security-note svg {
@@ -12582,7 +12567,7 @@ html[data-theme="dark"] .settings-page {
   }
 
   .companies-header h1 {
-    font-size: 43px;
+    font-size: 30px;
   }
 
   .companies-section-head {

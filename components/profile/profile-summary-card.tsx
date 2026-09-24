@@ -32,8 +32,7 @@ export function ProfileSummaryCard({ totals }: ProfileSummaryCardProps) {
     <section className="surface-card profile-panel-card">
       <div className="profile-panel-heading">
         <div>
-          <p className="profile-eyebrow">LEITURA DA CONTA</p>
-          <h2>O ambiente em números</h2>
+          <h2>Indicadores da conta</h2>
         </div>
         <span className="profile-panel-kicker">Todas as campanhas</span>
       </div>

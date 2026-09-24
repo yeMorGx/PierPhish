@@ -66,7 +66,7 @@ export function InvestigationCard({
               <strong className="overflow-hidden text-[12px] text-ellipsis whitespace-nowrap text-[#4f5963]">
                 {event.event_type ?? "Evento registrado"}
               </strong>
-              <span className="flex-none text-[10px] text-[#a5abb1]">
+              <span className="flex-none text-[11px] text-[var(--text-muted)]">
                 {formatDate(event.occurred_at)}
               </span>
             </div>
@@ -74,7 +74,7 @@ export function InvestigationCard({
           </div>
         ))}
         {!isSupabaseConfigured && (
-          <div className="mt-3 inline-block rounded-md bg-[#fff7ef] px-2 py-[5px] text-[9px] text-[#9a7b5e]">
+          <div className="mt-3 inline-block rounded-md bg-[#fff7ef] px-2 py-[5px] text-[11px] text-[#785536]">
             Dados de demonstração
           </div>
         )}

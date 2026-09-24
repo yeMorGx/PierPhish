@@ -6,7 +6,7 @@ const actions = [
     href: "/",
     icon: "chart" as const,
     label: "Visão geral",
-    description: "Acompanhe o panorama consolidado.",
+    description: "Consulte indicadores e campanhas do workspace.",
   },
   {
     href: "/riscos",
@@ -33,8 +33,7 @@ export function ProfileActionsCard() {
     <section className="surface-card profile-panel-card">
       <div className="profile-panel-heading">
         <div>
-          <p className="profile-eyebrow">ACESSO RÁPIDO</p>
-          <h2>Continue sua leitura</h2>
+          <h2>Atalhos</h2>
         </div>
       </div>
       <div className="profile-action-list">

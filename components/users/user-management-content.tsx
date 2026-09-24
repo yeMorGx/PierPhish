@@ -833,18 +833,15 @@ export function UserManagementContent() {
         data-tour="users-content"
       >
         <section
-          className="surface-card rounded-[var(--radius-card)] p-8 max-[720px]:rounded-[23px] max-[720px]:p-6"
+          className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5"
           data-tour="users-header"
         >
           <div className="flex items-start justify-between gap-6 max-[620px]:flex-col">
             <div>
-              <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-                ADMINISTRAÇÃO / ACESSOS
-              </p>
-              <h1 className="m-0 max-w-[650px] text-[clamp(30px,4vw,52px)] leading-[0.96] font-[680] tracking-[-0.07em]">
-                Pessoas certas, com acesso certo.
+              <h1 className="m-0 max-w-[650px] text-[clamp(25px,2.7vw,32px)] leading-[1.08] font-[600] tracking-[-0.04em]">
+                Gerenciar usuários
               </h1>
-              <p className="mt-4 mb-0 max-w-[620px] text-[13px] leading-relaxed text-[#7b838d]">
+              <p className="mt-3 mb-0 max-w-[620px] text-[13px] leading-relaxed text-[var(--muted)]">
                 Crie acessos internos para o time e entregue uma senha inicial
                 que deverá ser trocada no primeiro acesso.
               </p>
@@ -1053,12 +1050,15 @@ export function UserManagementContent() {
                 </div>
               </form>
 
-              <aside className="surface-card rounded-[var(--radius-card)] bg-[var(--ink)] p-6 text-white max-[720px]:rounded-[23px]">
-                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#a6b1b5] uppercase">
-                  POLÍTICA DE ACESSO
-                </p>
+              <aside
+                className="rounded-[var(--radius-card)] border border-[var(--contrast-line)] p-6 max-[720px]:rounded-[23px]"
+                style={{
+                  backgroundColor: "var(--contrast-block)",
+                  color: "var(--contrast-text)",
+                }}
+              >
                 <h2 className="m-0 max-w-[240px] text-[25px] leading-[1.02] font-bold tracking-[-0.06em]">
-                  Um começo seguro para cada pessoa.
+                  Regras de acesso
                 </h2>
                 <div className="mt-8 grid gap-4">
                   {[

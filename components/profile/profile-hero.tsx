@@ -30,13 +30,12 @@ export function ProfileHero({
             )}
           </div>
           <div className="profile-hero-copy">
-            <p className="profile-eyebrow">PERFIL NO PIERPHISH</p>
-            <h2>{displayName || "Seu espaço no PierPhish."}</h2>
+            <h2>{displayName || "Perfil"}</h2>
             <p>{email}</p>
           </div>
         </div>
         <Link className="profile-hero-action" href="/configuracoes">
-          Ajustar espaço
+          Editar perfil
           <Icon name="arrow" size={16} />
         </Link>
       </div>

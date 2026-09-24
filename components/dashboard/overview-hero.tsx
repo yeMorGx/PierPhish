@@ -111,8 +111,8 @@ export function OverviewHero({
           </div>
 
           <p className="bento-hero-insight-footer">
-            <AnimatedNumber value={totals.opened} /> de {totals.people} pessoas
-            abriram a mensagem.
+            <AnimatedNumber value={totals.opened} /> aberturas em{" "}
+            <AnimatedNumber value={totals.people} /> participações.
           </p>
         </div>
       </div>

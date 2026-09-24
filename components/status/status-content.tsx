@@ -188,8 +188,7 @@ export function StatusContent() {
       >
         <section className="status-hero-card surface-card">
           <div className="status-hero-copy">
-            <p className="status-eyebrow">STATUS DO AMBIENTE</p>
-            <h2>Uma leitura clara da operação.</h2>
+            <h2>Conexão com BeePhish</h2>
             <p>
               Acompanhe a conexão com o BeePhish, a última sincronização e a
               disponibilidade dos dados consolidados em um único lugar.
