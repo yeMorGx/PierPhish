@@ -61,6 +61,22 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function formatWorkspaceDate(value: string) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  const parts = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((datePart) => datePart.type === type)?.value ?? "";
+
+  return `${part("day")}/${part("month").replace(/\.$/, "")}/${part("year")}`;
+}
+
 function environmentLabel(environment: WorkspaceEnvironment) {
   return environment === "production" ? "Produção" : "Teste";
 }
@@ -98,10 +114,12 @@ function LogoPreview({
 }: {
   logoUrl: string | null;
   fallback: string;
-  size?: "md" | "lg";
+  size?: "md" | "lg" | "hero";
 }) {
   return (
-    <span className={`companies-logo companies-logo-${size}`}>
+    <span
+      className={`companies-logo companies-logo-${size} ${logoUrl ? "has-image" : "is-fallback"}`}
+    >
       {logoUrl ? <img src={logoUrl} alt="" /> : fallback}
     </span>
   );
@@ -580,38 +598,35 @@ export function CompanyManagementContent() {
           <>
             {selectedWorkspace ? (
               <>
-                <section className="surface-card companies-workspace-hero">
+                <section
+                  aria-label={`Workspace ${selectedWorkspace.name}`}
+                  className="surface-card companies-workspace-hero"
+                >
                   <div className="companies-workspace-identity">
                     <LogoPreview
                       logoUrl={selectedWorkspace.logoUrl}
                       fallback={getInitial(selectedWorkspace.name)}
-                      size="lg"
+                      size="hero"
                     />
-                    <div>
-                      <span
-                        className={`companies-environment-badge ${selectedWorkspace.environment}`}
-                      >
-                        <i /> {environmentLabel(selectedWorkspace.environment)}
-                      </span>
-                      <h2>{selectedWorkspace.name}</h2>
-                      <p>
-                        {selectedWorkspace.description ||
-                          "Sem descrição adicionada."}
-                      </p>
-                    </div>
+                    <h2>{selectedWorkspace.name}</h2>
                   </div>
-                  <div className="companies-workspace-stats">
-                    <div>
+                  <div
+                    aria-label="Informações do workspace"
+                    className="companies-workspace-stats"
+                  >
+                    <div className="companies-workspace-stat">
                       <strong>{workspaceCompanies.length}</strong>
-                      <span>clientes</span>
+                      <span>Clientes</span>
                     </div>
-                    <div>
+                    <div className="companies-workspace-stat">
                       <strong>{activeCompanies}</strong>
-                      <span>ativos</span>
+                      <span>Ativos</span>
                     </div>
-                    <div>
-                      <strong>{formatDate(selectedWorkspace.createdAt)}</strong>
-                      <span>criado em</span>
+                    <div className="companies-workspace-stat">
+                      <time dateTime={selectedWorkspace.createdAt}>
+                        {formatWorkspaceDate(selectedWorkspace.createdAt)}
+                      </time>
+                      <span>Criado em</span>
                     </div>
                   </div>
                 </section>
