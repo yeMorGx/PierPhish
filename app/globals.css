@@ -11646,6 +11646,46 @@ html[data-theme="dark"] .settings-page {
   padding: 26px 28px;
 }
 
+html[data-card-style] .companies-header,
+html[data-theme][data-card-style] .companies-header {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 190px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 20px !important;
+  padding: 30px clamp(24px, 4vw, 48px);
+  color: #ffffff;
+  background: #172126 url("/companies-header-meadow.png") center 64% / cover
+    no-repeat !important;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html[data-card-style] .companies-header::before,
+html[data-theme][data-card-style] .companies-header::before {
+  position: absolute;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(12, 21, 25, 0.78) 0%,
+    rgba(12, 21, 25, 0.59) 54%,
+    rgba(12, 21, 25, 0.4) 100%
+  );
+  content: "";
+  inset: 0;
+  pointer-events: none;
+}
+
+html[data-card-style] .companies-header > div,
+html[data-theme][data-card-style] .companies-header > div {
+  position: relative;
+  z-index: 1;
+}
+
 .companies-header h1 {
   max-width: 760px;
   margin: 0;
@@ -11897,6 +11937,30 @@ html[data-theme][data-card-style] .companies-workspace-hero {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   transition: none;
+}
+
+html[data-card-style] .companies-header h1,
+html[data-theme][data-card-style] .companies-header h1 {
+  color: #ffffff;
+}
+
+html[data-card-style] .companies-header p,
+html[data-theme][data-card-style] .companies-header p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+html[data-card-style] .companies-security-note,
+html[data-theme][data-card-style] .companies-security-note {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.94);
+  padding: 9px 12px;
+  background: rgba(12, 21, 25, 0.76);
+}
+
+html[data-card-style] .companies-security-note svg,
+html[data-theme][data-card-style] .companies-security-note svg {
+  color: #a6f0d3;
 }
 
 .companies-workspace-hero::before {
