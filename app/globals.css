@@ -12074,7 +12074,8 @@ html[data-theme][data-card-style] .companies-header > div {
 .companies-logo img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
 }
 
 .companies-logo-md {
@@ -12174,11 +12175,13 @@ html[data-theme][data-card-style] .companies-security-note svg {
 }
 
 .companies-logo-hero.has-image {
-  width: 125px;
+  width: 72px;
+  height: 72px;
 }
 
-.companies-logo-hero img {
+.companies-logo.companies-logo-hero.has-image img {
   object-fit: contain;
+  padding: 4px;
 }
 
 .companies-workspace-identity h2 {
@@ -12851,6 +12854,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
 
   .companies-logo-hero.has-image {
     width: 60px;
+    height: 60px;
   }
 
   .companies-workspace-identity h2 {
