@@ -1,6 +1,10 @@
 "use client";
 
-import type { ChangeEvent, FormEvent } from "react";
+import type {
+  ChangeEvent,
+  FormEvent,
+  KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -57,7 +61,7 @@ type ManagedWorkspaceUser = {
   }>;
 };
 
-type WorkspaceManageTab = "workspace" | "people";
+type WorkspaceManageTab = "workspace" | "people" | "settings";
 
 const emptyWorkspace: WorkspaceDraft = {
   name: "",
@@ -83,12 +87,10 @@ function readWorkspaceLogo(file: File) {
 
 function WorkspaceLogoField({
   logoUrl,
-  name,
   disabled,
   onChange,
 }: {
   logoUrl: string | null;
-  name: string;
   disabled: boolean;
   onChange: (value: string | null) => void;
 }) {
@@ -122,7 +124,7 @@ function WorkspaceLogoField({
           {logoUrl ? (
             <img src={logoUrl} alt="" />
           ) : (
-            name.trim().slice(0, 1) || "W"
+            <Icon name="image" size={16} />
           )}
         </span>
         <div className="workspace-logo-details">
@@ -259,6 +261,69 @@ export function WorkspaceManagePanel({
 
   const canManage = workspaceCanBeManaged(workspace, globalAdmin);
   const canEditMemberships = globalAdmin || workspace.role === "owner";
+  const tabOptions: WorkspaceManageTab[] =
+    variant === "modal"
+      ? ["workspace", "people", "settings"]
+      : ["workspace", "people"];
+  const tabPrefix = `workspace-${variant}`;
+  const tabPanelId = `${tabPrefix}-tabpanel`;
+
+  function handleManageTabKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
+    const currentIndex = tabOptions.indexOf(tab);
+    let nextIndex = currentIndex;
+
+    if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = tabOptions.length - 1;
+    else if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      nextIndex = (currentIndex + 1) % tabOptions.length;
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      nextIndex = (currentIndex - 1 + tabOptions.length) % tabOptions.length;
+    } else return;
+
+    event.preventDefault();
+    const nextTab = tabOptions[nextIndex];
+    setTab(nextTab);
+    event.currentTarget
+      .querySelector<HTMLButtonElement>(`#${tabPrefix}-${nextTab}-tab`)
+      ?.focus();
+  }
+
+  const environmentFieldset = (
+    <fieldset className="workspace-fieldset">
+      <legend>Ambiente</legend>
+      <p className="workspace-settings-description">
+        Separe os testes dos dados oficiais deste workspace.
+      </p>
+      <div className="workspace-environment-options">
+        {(["test", "production"] as WorkspaceEnvironment[]).map(
+          (environment) => (
+            <label
+              className={draft.environment === environment ? "is-selected" : ""}
+              key={environment}
+            >
+              <input
+                checked={draft.environment === environment}
+                name="manage-workspace-environment"
+                onChange={() =>
+                  setDraft((current) => ({ ...current, environment }))
+                }
+                type="radio"
+                value={environment}
+              />
+              <span>
+                <strong>{environmentLabel(environment)}</strong>
+                <small>
+                  {environment === "production"
+                    ? "Dados oficiais"
+                    : "Testes e validações"}
+                </small>
+              </span>
+            </label>
+          ),
+        )}
+      </div>
+    </fieldset>
+  );
 
   async function getAccessToken() {
     if (!supabase) return null;
@@ -535,135 +600,199 @@ export function WorkspaceManagePanel({
   return (
     <>
       <header
-        className={`workspace-modal-header ${variant === "page" ? "workspace-page-manage-header" : ""}`}
+        className={`workspace-modal-header ${
+          variant === "modal"
+            ? "workspace-manage-header"
+            : "workspace-page-manage-header"
+        }`}
       >
-        <div>
-          <button
-            className="workspace-modal-back"
-            onClick={onBack}
-            type="button"
-          >
-            <Icon name="arrow" size={15} />
-            Workspaces
-          </button>
-          <p className="workspace-modal-eyebrow">GERENCIAR WORKSPACE</p>
-          <h2 id="workspace-modal-title">{workspace.name}</h2>
-          <p>Personalize o ambiente e controle quem participa dele.</p>
-        </div>
-        {variant === "modal" && (
-          <button
-            aria-label="Fechar gerenciamento de workspace"
-            className="workspace-modal-close"
-            onClick={onClose}
-            type="button"
-          >
-            <Icon name="close" size={17} />
-          </button>
+        {variant === "modal" ? (
+          <>
+            <div aria-hidden="true" className="workspace-manage-header-art" />
+            <div className="workspace-manage-header-top">
+              <button
+                aria-label="Fechar gerenciamento de workspace"
+                className="workspace-modal-close"
+                onClick={onClose}
+                type="button"
+              >
+                <Icon name="close" size={17} />
+              </button>
+            </div>
+            <div className="workspace-manage-header-brand">
+              {draft.logoUrl ? (
+                <div
+                  className="workspace-manage-header-logo"
+                  aria-hidden="true"
+                >
+                  <img src={draft.logoUrl} alt="" />
+                </div>
+              ) : null}
+              <div className="workspace-manage-header-copy">
+                <p className="workspace-modal-eyebrow">Nome do workspace:</p>
+                <h2 id="workspace-modal-title">
+                  {draft.name.trim() || "Workspace"}
+                </h2>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div>
+            <button
+              className="workspace-modal-back"
+              onClick={onBack}
+              type="button"
+            >
+              <Icon name="arrow" size={15} />
+              Workspaces
+            </button>
+            <p className="workspace-modal-eyebrow">GERENCIAR WORKSPACE</p>
+            <h2 id="workspace-modal-title">{workspace.name}</h2>
+            <p>Personalize o ambiente e controle quem participa dele.</p>
+          </div>
         )}
       </header>
 
-      <div
-        className="workspace-manage-tabs"
-        role="tablist"
-        aria-label="Gerenciamento do workspace"
-      >
-        <button
-          className={tab === "workspace" ? "is-active" : ""}
-          onClick={() => setTab("workspace")}
-          role="tab"
-          aria-selected={tab === "workspace"}
-          type="button"
+      {variant === "modal" ? (
+        <nav
+          aria-label="Navegação do workspace"
+          aria-orientation="vertical"
+          className="workspace-manage-nav"
+          onKeyDown={handleManageTabKeyDown}
+          role="tablist"
         >
-          <Icon name="settings" size={14} /> Ambiente
-        </button>
-        <button
-          className={tab === "people" ? "is-active" : ""}
-          onClick={() => setTab("people")}
-          role="tab"
-          aria-selected={tab === "people"}
-          type="button"
+          <button
+            aria-label="Personalização"
+            aria-controls={tabPanelId}
+            aria-selected={tab === "workspace"}
+            className={tab === "workspace" ? "is-active" : ""}
+            id={`${tabPrefix}-workspace-tab`}
+            onClick={() => setTab("workspace")}
+            role="tab"
+            tabIndex={tab === "workspace" ? 0 : -1}
+            title="Personalização"
+            type="button"
+          >
+            <Icon name="palette" size={16} />
+          </button>
+          <button
+            aria-label="Pessoas"
+            aria-controls={tabPanelId}
+            aria-selected={tab === "people"}
+            className={tab === "people" ? "is-active" : ""}
+            id={`${tabPrefix}-people-tab`}
+            onClick={() => setTab("people")}
+            role="tab"
+            tabIndex={tab === "people" ? 0 : -1}
+            title="Pessoas"
+            type="button"
+          >
+            <Icon name="users" size={16} />
+          </button>
+          <button
+            aria-label="Configurações"
+            aria-controls={tabPanelId}
+            aria-selected={tab === "settings"}
+            className={tab === "settings" ? "is-active" : ""}
+            id={`${tabPrefix}-settings-tab`}
+            onClick={() => setTab("settings")}
+            role="tab"
+            tabIndex={tab === "settings" ? 0 : -1}
+            title="Configurações"
+            type="button"
+          >
+            <Icon name="settings" size={16} />
+          </button>
+        </nav>
+      ) : (
+        <div
+          className="workspace-manage-tabs"
+          role="tablist"
+          onKeyDown={handleManageTabKeyDown}
+          aria-label="Gerenciamento do workspace"
         >
-          <Icon name="users" size={14} /> Pessoas
-        </button>
-      </div>
+          <button
+            id={`${tabPrefix}-workspace-tab`}
+            aria-controls={tabPanelId}
+            className={tab === "workspace" ? "is-active" : ""}
+            onClick={() => setTab("workspace")}
+            role="tab"
+            aria-selected={tab === "workspace"}
+            tabIndex={tab === "workspace" ? 0 : -1}
+            type="button"
+          >
+            <Icon name="settings" size={14} /> Ambiente
+          </button>
+          <button
+            id={`${tabPrefix}-people-tab`}
+            aria-controls={tabPanelId}
+            className={tab === "people" ? "is-active" : ""}
+            onClick={() => setTab("people")}
+            role="tab"
+            aria-selected={tab === "people"}
+            tabIndex={tab === "people" ? 0 : -1}
+            type="button"
+          >
+            <Icon name="users" size={14} /> Pessoas
+          </button>
+        </div>
+      )}
 
-      {tab === "workspace" ? (
+      {tab !== "people" ? (
         <form
-          className="workspace-manage-body"
+          aria-labelledby={`${tabPrefix}-${tab}-tab`}
+          className={`workspace-manage-body ${
+            tab === "settings" ? "workspace-settings-body" : ""
+          }`}
+          id={tabPanelId}
           onSubmit={(event) => void saveWorkspace(event)}
+          role="tabpanel"
+          tabIndex={0}
         >
-          <div className="workspace-manage-identity">
-            <label className="workspace-field">
-              <span>Nome do workspace</span>
-              <input
-                autoFocus
-                maxLength={80}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    name: event.target.value,
-                  }))
-                }
-                value={draft.name}
-              />
-            </label>
-            <WorkspaceLogoField
-              disabled={!canManage}
-              logoUrl={draft.logoUrl}
-              name={draft.name}
-              onChange={(logoUrl) =>
-                setDraft((current) => ({ ...current, logoUrl }))
-              }
-            />
-          </div>
-          <fieldset className="workspace-fieldset">
-            <legend>Ambiente</legend>
-            <div className="workspace-environment-options">
-              {(["test", "production"] as WorkspaceEnvironment[]).map(
-                (environment) => (
-                  <label
-                    className={
-                      draft.environment === environment ? "is-selected" : ""
+          {tab === "workspace" ? (
+            <>
+              <div className="workspace-manage-identity">
+                <WorkspaceLogoField
+                  disabled={!canManage}
+                  logoUrl={draft.logoUrl}
+                  onChange={(logoUrl) =>
+                    setDraft((current) => ({ ...current, logoUrl }))
+                  }
+                />
+                <label className="workspace-field">
+                  <span>Nome do workspace</span>
+                  <input
+                    maxLength={80}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        name: event.target.value,
+                      }))
                     }
-                    key={environment}
-                  >
-                    <input
-                      checked={draft.environment === environment}
-                      name="manage-workspace-environment"
-                      onChange={() =>
-                        setDraft((current) => ({ ...current, environment }))
-                      }
-                      type="radio"
-                      value={environment}
-                    />
-                    <span>
-                      <strong>{environmentLabel(environment)}</strong>
-                      <small>
-                        {environment === "production"
-                          ? "Dados oficiais"
-                          : "Testes e validações"}
-                      </small>
-                    </span>
-                  </label>
-                ),
-              )}
-            </div>
-          </fieldset>
-          <label className="workspace-field">
-            <span>Descrição</span>
-            <textarea
-              maxLength={240}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  description: event.target.value,
-                }))
-              }
-              placeholder="Descreva o uso deste ambiente"
-              rows={3}
-              value={draft.description}
-            />
-          </label>
+                    value={draft.name}
+                  />
+                </label>
+              </div>
+              {variant === "page" ? environmentFieldset : null}
+              <label className="workspace-field">
+                <span>Descrição</span>
+                <textarea
+                  maxLength={240}
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))
+                  }
+                  placeholder="Descreva o uso deste ambiente"
+                  rows={3}
+                  value={draft.description}
+                />
+              </label>
+            </>
+          ) : (
+            environmentFieldset
+          )}
           {(error || notice) && (
             <p
               className="workspace-manage-feedback"
@@ -689,7 +818,13 @@ export function WorkspaceManagePanel({
           </footer>
         </form>
       ) : (
-        <div className="workspace-manage-body workspace-people-body">
+        <div
+          aria-labelledby={`${tabPrefix}-people-tab`}
+          className="workspace-manage-body workspace-people-body"
+          id={tabPanelId}
+          role="tabpanel"
+          tabIndex={0}
+        >
           <div className="workspace-people-summary">
             <div>
               <p className="workspace-modal-eyebrow">ACESSO DO TIME</p>
@@ -1094,7 +1229,9 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
       <section
         aria-labelledby="workspace-modal-title"
         aria-modal="true"
-        className="workspace-modal"
+        className={`workspace-modal ${
+          managedWorkspace ? "workspace-modal-manage" : ""
+        }`}
         role="dialog"
       >
         {managedWorkspace ? (
