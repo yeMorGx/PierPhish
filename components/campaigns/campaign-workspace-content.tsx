@@ -1173,25 +1173,44 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                   Campanhas e resultados
                 </h3>
                 <p className="mt-1 mb-0 text-[11px] text-[var(--muted)]">
-                  Indicadores consolidados de cada campanha.
+                  Enviados foram aceitos pelo servidor de e-mail; isso não
+                  garante chegada à caixa de entrada. Falhas mostram rejeições
+                  no envio.
                 </p>
               </div>
-              <span className="text-[10px] text-[var(--muted)]">
-                {numberFormat(campaigns.length)} campanha(s)
-              </span>
+              <div className="text-right">
+                <span className="block text-[10px] text-[var(--muted)]">
+                  {numberFormat(campaigns.length)} campanha(s)
+                </span>
+                <span className="mt-1 block text-[9px] text-[var(--muted)]">
+                  Dados de {dateFormat(snapshot?.updatedAt)}
+                </span>
+              </div>
             </div>
             {campaigns.length ? (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[850px] border-collapse text-left text-[11px]">
+                <table className="w-full min-w-[1020px] border-collapse text-left text-[11px]">
                   <thead className="bg-[var(--surface-soft)] text-[9px] font-extrabold tracking-[0.1em] text-[var(--muted)] uppercase">
                     <tr>
                       <th className="px-5 py-3">Campanha</th>
                       <th className="px-4 py-3">Estado</th>
                       <th className="px-4 py-3 text-right">Destinatários</th>
+                      <th
+                        className="px-4 py-3 text-right"
+                        title="E-mails que o servidor de envio aceitou. Isso não confirma chegada à caixa de entrada."
+                      >
+                        Enviados
+                      </th>
+                      <th
+                        className="px-4 py-3 text-right"
+                        title="E-mails que tiveram erro durante o envio."
+                      >
+                        Falhas
+                      </th>
                       <th className="px-4 py-3 text-right">Abertos</th>
                       <th className="px-4 py-3 text-right">Cliques</th>
                       <th className="px-4 py-3 text-right">Dados</th>
-                      <th className="px-5 py-3">Envio</th>
+                      <th className="px-5 py-3">Início</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1220,6 +1239,12 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         </td>
                         <td className="px-4 py-3.5 text-right tabular-nums">
                           {numberFormat(campaign.stats.total)}
+                        </td>
+                        <td className="px-4 py-3.5 text-right tabular-nums">
+                          {numberFormat(campaign.stats.sent)}
+                        </td>
+                        <td className="px-4 py-3.5 text-right tabular-nums">
+                          {numberFormat(campaign.stats.error)}
                         </td>
                         <td className="px-4 py-3.5 text-right tabular-nums">
                           {numberFormat(campaign.stats.opened)}
