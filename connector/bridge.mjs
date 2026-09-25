@@ -1,10 +1,19 @@
 import { readFile, mkdir, writeFile } from "node:fs/promises";
+import {
+  constants,
+  createDecipheriv,
+  generateKeyPairSync,
+  privateDecrypt,
+} from "node:crypto";
 import https from "node:https";
 import tls from "node:tls";
 import path from "node:path";
 
 const dataDirectory = process.env.DATA_DIR || "/data";
 const configurationPath = path.join(dataDirectory, "connection.json");
+const commandPrivateKeyPath = path.join(dataDirectory, "command-private.pem");
+const commandPublicKeyPath = path.join(dataDirectory, "command-public.pem");
+let commandPrivateKey;
 const campaignServiceUrl = process.env.CAMPAIGN_SERVICE_URL;
 const piersecUrl = process.env.PIERSEC_URL;
 const apiKeyFile =
@@ -141,12 +150,36 @@ function piersecRequest(pathname, options = {}) {
 }
 
 function apiPathAllowed(method, pathname) {
-  if (method === "POST") return /^api\/campaigns\/?$/.test(pathname);
+  if (method === "POST")
+    return /^api\/(campaigns|groups|templates|pages|smtp)\/?$/.test(pathname);
   return (
     /^api\/(campaigns|groups|templates|pages|smtp)(\/summary)?\/?$/.test(
       pathname,
     ) || /^api\/campaigns\/[0-9]+\/summary\/?$/.test(pathname)
   );
+}
+
+async function loadOrCreateCommandKeys() {
+  try {
+    const [privateKey, publicKey] = await Promise.all([
+      readFile(commandPrivateKeyPath, "utf8"),
+      readFile(commandPublicKeyPath, "utf8"),
+    ]);
+    return { privateKey, publicKey };
+  } catch (error) {
+    if (error?.code !== "ENOENT")
+      throw new Error("Não foi possível ler as chaves protegidas da fila.");
+  }
+
+  await mkdir(dataDirectory, { recursive: true, mode: 0o700 });
+  const pair = generateKeyPairSync("rsa", {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: "spki", format: "pem" },
+    privateKeyEncoding: { type: "pkcs8", format: "pem" },
+  });
+  await writeFile(commandPrivateKeyPath, pair.privateKey, { mode: 0o600 });
+  await writeFile(commandPublicKeyPath, pair.publicKey, { mode: 0o600 });
+  return pair;
 }
 
 async function serviceRequest(pathname, apiKey, agent, options = {}) {
@@ -185,7 +218,7 @@ function safeAsset(item, extra = {}) {
   };
 }
 
-async function readSnapshot(apiKey, agent) {
+async function readSnapshot(apiKey, agent, commandEncryptionKey) {
   const [rawCampaigns, rawGroups, rawTemplates, rawPages, rawProfiles] =
     await Promise.all([
       serviceRequest("api/campaigns/", apiKey, agent),
@@ -234,6 +267,7 @@ async function readSnapshot(apiKey, agent) {
 
   return {
     updatedAt: new Date().toISOString(),
+    commandEncryptionKey,
     campaigns,
     groups: (Array.isArray(rawGroups) ? rawGroups : [])
       .slice(0, 2000)
@@ -270,7 +304,7 @@ async function saveConfiguration(configuration) {
   });
 }
 
-async function pairIfNeeded(agent, apiKey) {
+async function pairIfNeeded(agent, apiKey, commandEncryptionKey) {
   try {
     const configuration = JSON.parse(await readFile(configurationPath, "utf8"));
     return configuration;
@@ -287,7 +321,7 @@ async function pairIfNeeded(agent, apiKey) {
       "Gere um código temporário na página Conexão e configure a Stack no Portainer.",
     );
 
-  await readSnapshot(apiKey, agent);
+  await readSnapshot(apiKey, agent, commandEncryptionKey);
   const enrollment = await piersecRequest("/api/campaigns/connection/enroll", {
     body: { pairingCode },
   });
@@ -475,6 +509,207 @@ async function createConfirmedCampaign(apiKey, agent, payload) {
   return { status: "succeeded", campaignId, message: "Campanha registrada." };
 }
 
+function decryptCommandPayload(envelope, privateKey) {
+  if (
+    !envelope ||
+    envelope.version !== 1 ||
+    typeof envelope.wrappedKey !== "string" ||
+    typeof envelope.iv !== "string" ||
+    typeof envelope.ciphertext !== "string" ||
+    envelope.wrappedKey.length > 1000 ||
+    envelope.iv.length > 64 ||
+    envelope.ciphertext.length > 2_000_000
+  )
+    throw new Error("O comando protegido tem formato inválido.");
+
+  const key = privateDecrypt(
+    {
+      key: privateKey,
+      padding: constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: "sha256",
+    },
+    Buffer.from(envelope.wrappedKey, "base64"),
+  );
+  const iv = Buffer.from(envelope.iv, "base64");
+  const ciphertextAndTag = Buffer.from(envelope.ciphertext, "base64");
+  if (
+    key.byteLength !== 32 ||
+    iv.byteLength !== 12 ||
+    ciphertextAndTag.byteLength < 17
+  ) {
+    key.fill(0);
+    throw new Error("O comando protegido tem formato inválido.");
+  }
+  const ciphertext = ciphertextAndTag.subarray(0, -16);
+  const tag = ciphertextAndTag.subarray(-16);
+  const decipher = createDecipheriv("aes-256-gcm", key, iv);
+  decipher.setAuthTag(tag);
+  let plaintext;
+  try {
+    plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  } finally {
+    key.fill(0);
+  }
+  try {
+    return JSON.parse(plaintext.toString("utf8"));
+  } finally {
+    plaintext.fill(0);
+  }
+}
+
+function validateAssetCommand(type, payload) {
+  if (!isRecord(payload)) throw new Error("O ativo protegido está inválido.");
+  const name = text(payload.name, 120);
+  if (!name) throw new Error("Informe um nome válido para o ativo.");
+
+  if (type === "group") {
+    if (
+      !Array.isArray(payload.targets) ||
+      payload.targets.length < 1 ||
+      payload.targets.length > 500
+    )
+      throw new Error("O público precisa ter de 1 a 500 destinatários.");
+    const seen = new Set();
+    const targets = payload.targets.map((target) => {
+      if (!isRecord(target)) throw new Error("Um destinatário está inválido.");
+      const email = text(target.email, 320).toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || seen.has(email))
+        throw new Error("Revise os e-mails e remova endereços duplicados.");
+      seen.add(email);
+      return {
+        email,
+        first_name: text(target.first_name, 100),
+        last_name: text(target.last_name, 100),
+        position: text(target.position, 120),
+      };
+    });
+    return { name, body: { name, targets }, endpoint: "api/groups/" };
+  }
+
+  if (type === "template") {
+    const subject = text(payload.subject, 200);
+    const textBody =
+      typeof payload.text === "string" ? payload.text.slice(0, 100_000) : "";
+    const html =
+      typeof payload.html === "string" ? payload.html.slice(0, 200_000) : "";
+    if (
+      !subject ||
+      (!textBody && !html) ||
+      /<\s*(script|form|input|iframe)\b/i.test(html)
+    )
+      throw new Error("O modelo está incompleto ou contém conteúdo bloqueado.");
+    return {
+      name,
+      body: { name, subject, text: textBody, html },
+      endpoint: "api/templates/",
+    };
+  }
+
+  if (type === "page") {
+    const html =
+      typeof payload.html === "string" ? payload.html.slice(0, 200_000) : "";
+    if (
+      !html.trim() ||
+      /<\s*(form|input|button|textarea|select|script|iframe)\b/i.test(html)
+    )
+      throw new Error(
+        "A página está vazia ou contém campos de entrada bloqueados.",
+      );
+    return {
+      name,
+      body: {
+        name,
+        html,
+        capture_credentials: false,
+        capture_passwords: false,
+      },
+      endpoint: "api/pages/",
+    };
+  }
+
+  if (type === "sending_profile") {
+    const host = text(payload.host, 255);
+    const fromAddress = text(payload.from_address, 254);
+    const username = text(payload.username, 255);
+    const password =
+      typeof payload.password === "string" ? payload.password : "";
+    if (
+      !/^[A-Za-z0-9.-]+:\d{1,5}$/.test(host) ||
+      !/^(?:[^<>]{1,100}\s*<)?[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+>?$/.test(
+        fromAddress,
+      ) ||
+      Boolean(username) !== Boolean(password) ||
+      password.length > 512 ||
+      payload.ignore_cert_errors !== false
+    )
+      throw new Error("O perfil de envio contém campos inválidos.");
+    const port = Number(host.slice(host.lastIndexOf(":") + 1));
+    if (port < 1 || port > 65535)
+      throw new Error("A porta do servidor de e-mail é inválida.");
+    return {
+      name,
+      body: {
+        name,
+        host,
+        from_address: fromAddress,
+        interface_type: "SMTP",
+        username,
+        password,
+        ignore_cert_errors: false,
+      },
+      endpoint: "api/smtp/",
+    };
+  }
+  throw new Error("Tipo de ativo não permitido.");
+}
+
+async function createCampaignAsset(apiKey, agent, type, encryptedPayload) {
+  const payload = validateAssetCommand(
+    type,
+    decryptCommandPayload(encryptedPayload, commandPrivateKey),
+  );
+  if (!apiPathAllowed("POST", payload.endpoint))
+    throw new Error("Endpoint não permitido pelo conector.");
+  let response;
+  try {
+    response = await requestJson(campaignServiceUrl, payload.endpoint, {
+      method: "POST",
+      apiKey,
+      agent,
+      body: payload.body,
+    });
+  } catch {
+    return {
+      status: "uncertain",
+      assetId: null,
+      message:
+        "A resposta foi interrompida. Confira o ativo no ambiente antes de repetir.",
+    };
+  }
+  if (response.status >= 500)
+    return {
+      status: "uncertain",
+      assetId: null,
+      message:
+        "O ambiente retornou erro. Confira se o ativo foi criado antes de repetir.",
+    };
+  if (response.status < 200 || response.status >= 300)
+    return {
+      status: "failed",
+      assetId: null,
+      message: "O ambiente recusou o ativo com HTTP " + response.status + ".",
+    };
+  const assetId = count(response.body?.id);
+  if (!assetId)
+    return {
+      status: "uncertain",
+      assetId: null,
+      message:
+        "A resposta não trouxe um recibo válido. Confira o ambiente antes de repetir.",
+    };
+  return { status: "succeeded", assetId, message: "Ativo criado." };
+}
+
 async function postSnapshot(configuration, snapshot) {
   const response = await piersecRequest("/api/campaigns/connection/snapshot", {
     token: configuration.connectorToken,
@@ -492,6 +727,33 @@ async function claimCommand(configuration) {
   if (response.status < 200 || response.status >= 300)
     throw new Error("Fila temporariamente indisponível.");
   return response.body;
+}
+
+async function claimAssetCommand(configuration) {
+  const response = await piersecRequest(
+    "/api/campaigns/connection/assets/queue",
+    { token: configuration.connectorToken, body: {} },
+  );
+  if (response.status < 200 || response.status >= 300)
+    throw new Error("Fila de ativos temporariamente indisponível.");
+  return response.body;
+}
+
+async function sendAssetCommandResult(configuration, commandId, result) {
+  const response = await piersecRequest(
+    "/api/campaigns/connection/assets/result",
+    {
+      token: configuration.connectorToken,
+      body: {
+        commandId,
+        status: result.status,
+        assetId: result.assetId,
+        message: text(result.message, 500),
+      },
+    },
+  );
+  if (response.status < 200 || response.status >= 300)
+    throw new Error("Falha ao registrar o resultado da operação.");
 }
 
 async function sendCommandResult(configuration, commandId, result) {
@@ -519,13 +781,23 @@ async function run() {
   const apiKey = text(await readFile(apiKeyFile, "utf8"), 512);
   if (!apiKey) throw new Error("O arquivo secreto da chave de API está vazio.");
   const ca = await readFile(caFile);
+  const commandKeys = await loadOrCreateCommandKeys();
+  commandPrivateKey = commandKeys.privateKey;
   const agent = serviceAgent(ca);
   try {
-    const configuration = await pairIfNeeded(agent, apiKey);
+    const configuration = await pairIfNeeded(
+      agent,
+      apiKey,
+      commandKeys.publicKey,
+    );
     console.log("Conector ativo. Nenhuma porta de entrada foi publicada.");
     for (;;) {
       try {
-        const snapshot = await readSnapshot(apiKey, agent);
+        const snapshot = await readSnapshot(
+          apiKey,
+          agent,
+          commandKeys.publicKey,
+        );
         await postSnapshot(configuration, snapshot);
         console.log(
           "Dados sincronizados: " +
@@ -537,6 +809,59 @@ async function run() {
       } catch (error) {
         console.warn(
           "Sincronização indisponível; nova tentativa em 30 segundos.",
+          error.message,
+        );
+      }
+      try {
+        const assetDispatch = await claimAssetCommand(configuration);
+        if (assetDispatch?.commandId) {
+          let result;
+          try {
+            result = await createCampaignAsset(
+              apiKey,
+              agent,
+              text(assetDispatch.type, 40),
+              assetDispatch.payload,
+            );
+          } catch (error) {
+            result = {
+              status: "failed",
+              assetId: null,
+              message: text(error.message, 500),
+            };
+          }
+          try {
+            await sendAssetCommandResult(
+              configuration,
+              assetDispatch.commandId,
+              result,
+            );
+            console.log("Operação de ativo processada: " + result.status + ".");
+            if (result.status === "succeeded") {
+              try {
+                const refreshed = await readSnapshot(
+                  apiKey,
+                  agent,
+                  commandKeys.publicKey,
+                );
+                await postSnapshot(configuration, refreshed);
+              } catch (error) {
+                console.warn(
+                  "Ativo criado; atualização da lista será repetida.",
+                  error.message,
+                );
+              }
+            }
+          } catch (error) {
+            console.error(
+              "Não foi possível registrar o resultado da operação.",
+              error.message,
+            );
+          }
+        }
+      } catch (error) {
+        console.warn(
+          "Fila de ativos temporariamente indisponível.",
           error.message,
         );
       }

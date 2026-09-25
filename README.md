@@ -53,13 +53,13 @@ A sincronização web usa `/api/sync-beephish`: ela lê as conexões ativas do w
 
 ## Conexão Docker para campanhas
 
-A área `/campanhas` lista campanhas, grupos, resultados e solicitações. A página `/campanhas/nova` conduz a criação em etapas e exige revisão e confirmação explícita antes de colocar uma ordem na fila.
+A área `/campanhas` lista campanhas e resultados. Páginas separadas permitem criar grupos, modelos de e-mail, páginas de destino e perfis de envio dentro do PierSec. A página `/campanhas/nova` conduz a criação em etapas e exige revisão e confirmação explícita antes de colocar uma ordem na fila.
 
 Para ativar o serviço, abra `/campanhas/conexao` e implante `deploy/portainer/campaign-bridge.compose.yaml` como Stack no Portainer. O agente usa uma rede Docker privada para alcançar o serviço e inicia conexões HTTPS de saída ao Piersec; a Stack não publica portas.
 
-A chave de API e o certificado ficam em arquivos protegidos no host Docker e são montados como segredos. Não os insira no navegador, no repositório ou em variáveis de ambiente. O agente envia somente nomes e IDs de ativos, datas e estatísticas agregadas; listas de pessoas, endereços, eventos individuais e dados submetidos não são enviados à nuvem.
+A chave de API e o certificado ficam em arquivos protegidos no host Docker e são montados como segredos. A chave privada para operações cifradas fica no volume persistente do conector. Não coloque esses segredos no navegador, no repositório ou em variáveis de ambiente. Conteúdo de criação e listas de destinatários ficam cifrados na fila do Supabase e são apagados depois do resultado ou expiração; nomes, contagens e histórico permanecem para auditoria. A sincronização periódica não envia endereços, eventos individuais ou dados submetidos.
 
-Consulte `deploy/portainer/README.md` para a lista de variáveis e o fluxo de implantação. As migrations de conexão e fila precisam estar aplicadas e o servidor deve ter `SUPABASE_SERVICE_ROLE_KEY` configurada.
+Consulte `deploy/portainer/README.md` para a lista de variáveis e o fluxo de implantação. As migrations de conexão, fila e ativos precisam estar aplicadas e o servidor deve ter `SUPABASE_SERVICE_ROLE_KEY` configurada.
 
 ## Exemplos reais de e-mail
 

@@ -23,22 +23,26 @@ No Portainer, crie uma Stack a partir do repositório PierPhish, selecione a bra
 
 Defina as variáveis da Stack:
 
-| Variável                   | Valor                                                                            |
-| -------------------------- | -------------------------------------------------------------------------------- |
-| `PIERSEC_URL`              | URL HTTPS atual do Piersec                                                       |
-| `PIERSEC_PAIRING_CODE`     | Código de uso único gerado em Campanhas → Conexão                                |
-| `CAMPAIGN_SERVICE_URL`     | `https://campaign-engine:3333`                                                   |
-| `CAMPAIGN_TLS_SERVER_NAME` | Nome DNS presente no certificado, se diferente do host em `CAMPAIGN_SERVICE_URL` |
-| `CAMPAIGN_DOCKER_NETWORK`  | `piersec_campaign_private`                                                       |
+| Variável                   | Valor                                                                                               |
+| -------------------------- | --------------------------------------------------------------------------------------------------- |
+| `PIERSEC_URL`              | URL HTTPS atual do Piersec                                                                          |
+| `PIERSEC_PAIRING_CODE`     | Código de uso único gerado em Campanhas → Conexão                                                   |
+| `CAMPAIGN_SERVICE_URL`     | `https://campaign-engine:3333`                                                                      |
+| `CAMPAIGN_TLS_SERVER_NAME` | Nome DNS presente no certificado, se diferente do host em `CAMPAIGN_SERVICE_URL`                    |
+| `CAMPAIGN_DOCKER_NETWORK`  | `piersec_campaign_private`                                                                          |
 | `CAMPAIGN_API_KEY_FILE`    | `/var/snap/docker/common/var-lib-docker/volumes/piersec_campaign_config/_data/campaign-api-key.txt` |
-| `CAMPAIGN_ADMIN_CERT_FILE` | `/var/snap/docker/common/var-lib-docker/volumes/piersec_campaign_config/_data/gophish_admin.crt`     |
+| `CAMPAIGN_ADMIN_CERT_FILE` | `/var/snap/docker/common/var-lib-docker/volumes/piersec_campaign_config/_data/gophish_admin.crt`    |
 
 Implante a Stack e aguarde o status **Conectado** no Piersec. Depois, remova `PIERSEC_PAIRING_CODE` das variáveis da Stack e atualize-a. O código expira em 10 minutos e só pode ser usado uma vez.
 
 ## Operação
 
-O agente mantém a chave e o token em arquivos montados ou em um volume Docker privado. Ele envia apenas nomes e IDs de ativos, horários e estatísticas agregadas. Não envia listas de pessoas, endereços de e-mail, IPs, eventos individuais, conteúdo submetido ou dados de credenciais.
+O agente mantém a chave e o token em arquivos montados ou em um volume Docker privado. A chave privada usada para abrir operações de criação também fica nesse volume; somente a chave pública é sincronizada com o PierSec. O conector faz as chamadas administrativas dentro da rede privada.
 
-A criação de campanha revalida grupos, modelo, página e perfil antes da chamada única de criação. Se o resultado da chamada ficar inconclusivo, o histórico pede conferência manual e o agente não repete a operação automaticamente.
+No PierSec, usuários autorizados podem criar grupos, modelos de e-mail, páginas de destino e perfis de envio, além de montar e revisar campanhas. Listas de destinatários, conteúdo de modelos/páginas e segredos SMTP são cifrados para a chave pública do conector antes de entrar na fila do Supabase. O conector abre o conteúdo localmente e o PierSec apaga o payload cifrado quando recebe o resultado ou quando a ordem expira. O histórico mantém somente tipo/nome do ativo, quantidade quando aplicável, solicitante, horário e resultado.
+
+O conector sincroniza nomes e IDs de ativos, horários e estatísticas agregadas. Não envia listas de pessoas, endereços de e-mail, IPs, eventos individuais, conteúdo submetido ou dados de credenciais.
+
+A criação de página força `capture_credentials` e `capture_passwords` para `false`; campos de entrada, formulários e scripts são bloqueados. A criação de campanha revalida grupos, modelo, página e perfil antes da chamada única de criação e continua exigindo revisão e confirmação explícita. Se o resultado da chamada ficar inconclusivo, o histórico pede conferência manual e o agente não repete a operação automaticamente.
 
 Para remover a conexão, pare e exclua a Stack pelo Portainer e remova o volume `campaign_bridge_state` se também quiser descartar o token persistido.

@@ -461,6 +461,13 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
           >
             Voltar às campanhas
           </Link>
+        ) : view === "groups" ? (
+          <Link
+            href="/campanhas/grupos/nova"
+            className="campaign-primary-action inline-flex h-10 items-center justify-center rounded-full px-4 text-[11px] font-bold transition-colors"
+          >
+            Novo grupo
+          </Link>
         ) : undefined
       }
     >
@@ -705,6 +712,14 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                           </option>
                         ))}
                       </select>
+                      <Link
+                        href="/campanhas/modelos/novo"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-fit text-[9px] font-semibold text-[var(--ink)] underline underline-offset-4"
+                      >
+                        Criar modelo no PierSec
+                      </Link>
                     </label>
                     <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
                       PÁGINA DE DESTINO
@@ -734,6 +749,14 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                           );
                         })}
                       </select>
+                      <Link
+                        href="/campanhas/paginas/nova"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-fit text-[9px] font-semibold text-[var(--ink)] underline underline-offset-4"
+                      >
+                        Criar página no PierSec
+                      </Link>
                     </label>
                     <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
                       PERFIL DE ENVIO
@@ -755,6 +778,14 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         Apenas o nome aparece aqui; as credenciais ficam no
                         ambiente conectado.
                       </span>
+                      <Link
+                        href="/campanhas/envio/novo"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-fit text-[9px] font-semibold text-[var(--ink)] underline underline-offset-4"
+                      >
+                        Criar perfil no PierSec
+                      </Link>
                     </label>
                     <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)] md:col-span-2">
                       URL DE DESTINO HTTPS
@@ -830,9 +861,19 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         ))}
                       </div>
                     ) : (
-                      <p className="m-0 text-[11px] text-[var(--muted)]">
-                        Nenhum grupo sincronizado ainda.
-                      </p>
+                      <div className="grid gap-2">
+                        <p className="m-0 text-[11px] text-[var(--muted)]">
+                          Nenhum grupo sincronizado ainda.
+                        </p>
+                        <Link
+                          href="/campanhas/grupos/nova"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-fit text-[10px] font-semibold text-[var(--ink)] underline underline-offset-4"
+                        >
+                          Criar grupo no PierSec
+                        </Link>
+                      </div>
                     )}
                   </fieldset>
                   <div className="mt-5 flex flex-wrap justify-between gap-2">
@@ -1249,7 +1290,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
               <p className="m-0 px-5 py-7 text-center text-[11px] text-[var(--muted)]">
                 {loading
                   ? "Carregando grupos…"
-                  : "Os grupos serão exibidos depois da primeira sincronização."}
+                  : "Ainda não há grupos neste ambiente. Crie o primeiro pelo PierSec."}
               </p>
             )}
           </section>

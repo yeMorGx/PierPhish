@@ -1,11 +1,21 @@
 import Link from "next/link";
 
 export type CampaignPageView =
-  "campaigns" | "new" | "groups" | "activity" | "connection";
+  | "campaigns"
+  | "new"
+  | "groups"
+  | "templates"
+  | "pages"
+  | "sendingProfiles"
+  | "activity"
+  | "connection";
 
 const items = [
   { view: "campaigns", href: "/campanhas", label: "Campanhas" },
   { view: "groups", href: "/campanhas/grupos", label: "Grupos" },
+  { view: "templates", href: "/campanhas/modelos", label: "Modelos" },
+  { view: "pages", href: "/campanhas/paginas", label: "Páginas" },
+  { view: "sendingProfiles", href: "/campanhas/envio", label: "Envio" },
   { view: "activity", href: "/campanhas/atividade", label: "Atividade" },
   { view: "connection", href: "/campanhas/conexao", label: "Conexão" },
 ] as const;

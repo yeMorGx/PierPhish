@@ -112,6 +112,7 @@ function cleanSnapshot(value: unknown) {
 
   return {
     updatedAt: boundedText(value.updatedAt, 50),
+    commandEncryptionKey: boundedText(value.commandEncryptionKey, 4096),
     groups,
     campaigns,
     templates,
