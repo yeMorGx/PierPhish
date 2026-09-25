@@ -2886,6 +2886,19 @@ html[data-theme="dark"] [class*="bg-[#"] {
   background-color: var(--surface-soft) !important;
 }
 
+/* Keep dark-mode primary controls distinct from their white foreground. */
+html[data-theme="dark"] [class*="bg-[var(--ink)]"] {
+  background-color: #27404a !important;
+}
+
+html[data-theme="dark"] [class*="bg-[var(--ink)]"]:hover:not(:disabled) {
+  background-color: #315361 !important;
+}
+
+html[data-theme="dark"] [class*="bg-[var(--ink)]"]:disabled {
+  background-color: #20343c !important;
+}
+
 html[data-theme="dark"] .bg-white,
 html[data-theme="dark"] [class*="bg-[rgba(255,255,255"] {
   background-color: var(--surface-muted) !important;
@@ -2949,6 +2962,18 @@ button {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.58;
+}
+
+.campaign-workspace-error {
+  border-color: #efc6bc;
+  color: #984f3f;
+  background: #fff5f2;
+}
+
+html[data-theme="dark"] .campaign-workspace-error {
+  border-color: #5a3931 !important;
+  color: #f0b19d !important;
+  background: #3d2c2a !important;
 }
 
 .header-sync-button {

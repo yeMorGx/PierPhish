@@ -371,11 +371,14 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
       setConfirmationText("");
       setConfirmationChecked(false);
     } catch (cause) {
-      setError(
+      const message =
         cause instanceof Error
           ? cause.message
-          : "Não foi possível preparar a prévia.",
-      );
+          : "Não foi possível preparar a prévia.";
+      setError(message);
+      toast.error("Não foi possível preparar a revisão", {
+        description: message,
+      });
     } finally {
       setCreatingPreview(false);
     }
@@ -473,6 +476,14 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
     >
       <div className="grid gap-4">
         <CampaignsNavigation current={view} />
+        {error && (
+          <p
+            className="campaign-workspace-error m-0 rounded-[14px] border px-4 py-3 text-[12px]"
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
         {view === "connection" && (
           <>
             <section className="surface-card rounded-[22px] border border-[var(--card-border)] p-6 max-[720px]:p-4">
@@ -595,15 +606,6 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 </div>
               </div>
             </section>
-
-            {error && (
-              <p
-                className="m-0 rounded-[14px] border border-[#efc6bc] bg-[#fff5f2] px-4 py-3 text-[12px] text-[#984f3f]"
-                role="alert"
-              >
-                {error}
-              </p>
-            )}
 
             {!isSupabaseConfigured && (
               <p className="m-0 rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-[12px] text-[var(--muted)]">
