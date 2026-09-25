@@ -5,6 +5,7 @@ services:
       dockerfile: deploy/portainer/campaign-engine.Dockerfile
       args:
         CAMPAIGN_ENGINE_VERSION: "0.12.1"
+    pull_policy: build
     image: piersec-campaign-engine:0.12.1
     container_name: piersec-campaign-engine
     restart: unless-stopped

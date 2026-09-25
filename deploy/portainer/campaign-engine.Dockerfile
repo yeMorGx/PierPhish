@@ -9,6 +9,7 @@ RUN apt-get update \
       "https://github.com/gophish/gophish/releases/download/v${CAMPAIGN_ENGINE_VERSION}/gophish-v${CAMPAIGN_ENGINE_VERSION}-linux-64bit.zip" \
       --output /tmp/campaign-engine.zip \
     && unzip -q /tmp/campaign-engine.zip -d /out \
+    && chmod 0755 /out/gophish \
     && rm -f /tmp/campaign-engine.zip \
     && rm -rf /var/lib/apt/lists/*
 
