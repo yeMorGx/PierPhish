@@ -4,7 +4,6 @@ services:
       context: ../..
       dockerfile: connector/Dockerfile
     restart: unless-stopped
-    init: true
     read_only: true
     tmpfs:
       - /tmp
