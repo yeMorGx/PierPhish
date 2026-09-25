@@ -1,0 +1,40 @@
+services:
+  campaign-engine:
+    build:
+      context: ../..
+      dockerfile: deploy/portainer/campaign-engine.Dockerfile
+      args:
+        CAMPAIGN_ENGINE_VERSION: "0.12.1"
+    image: piersec-campaign-engine:0.12.1
+    container_name: piersec-campaign-engine
+    init: true
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    volumes:
+      - type: bind
+        source: /var/snap/docker/common/var-lib-docker/volumes/piersec_campaign_config/_data/config.json
+        target: /app/config.json
+        read_only: true
+      - type: volume
+        source: campaign_data
+        target: /opt/gophish
+    networks:
+      - campaign_private
+
+networks:
+  campaign_private:
+    name: piersec_campaign_private
+    driver: bridge
+
+volumes:
+  campaign_data:
+    external: true
+    name: piersec_campaign_data

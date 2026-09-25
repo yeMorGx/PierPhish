@@ -1,6 +1,12 @@
 # Campanhas no Portainer
 
-O agente de campanhas roda em um contêiner Docker gerenciado pelo Portainer. Ele compartilha uma rede privada com o serviço de campanhas e inicia conexões HTTPS de saída para o Piersec. A Stack não publica portas.
+O serviço de campanhas e o agente rodam em contêineres Docker gerenciados pelo Portainer. A porta administrativa não é publicada. O agente compartilha uma rede Docker com o serviço e inicia conexões HTTPS de saída para o Piersec.
+
+## Criar o serviço de campanhas
+
+No Portainer, crie uma Stack a partir do repositório PierPhish, branch `main`, usando `deploy/portainer/campaign-engine.compose.yaml`. A Stack baixa a versão Linux fixada no Dockerfile, monta a configuração/certificado como somente leitura e usa o volume persistente `piersec_campaign_data` para o banco operacional. Não adicione mapeamentos de portas.
+
+O nome interno do serviço é `campaign-engine`, na rede `piersec_campaign_private`. O serviço escuta a API administrativa em HTTPS nessa rede; o listener de páginas também permanece sem porta publicada.
 
 ## Preparar os arquivos no host Docker
 
@@ -21,11 +27,11 @@ Defina as variáveis da Stack:
 | -------------------------- | -------------------------------------------------------------------------------- |
 | `PIERSEC_URL`              | URL HTTPS atual do Piersec                                                       |
 | `PIERSEC_PAIRING_CODE`     | Código de uso único gerado em Campanhas → Conexão                                |
-| `CAMPAIGN_SERVICE_URL`     | URL HTTPS interna do serviço na rede Docker, incluindo a porta administrativa    |
+| `CAMPAIGN_SERVICE_URL`     | `https://campaign-engine:3333`                                                   |
 | `CAMPAIGN_TLS_SERVER_NAME` | Nome DNS presente no certificado, se diferente do host em `CAMPAIGN_SERVICE_URL` |
-| `CAMPAIGN_DOCKER_NETWORK`  | Nome da rede Docker privada compartilhada com o serviço                          |
-| `CAMPAIGN_API_KEY_FILE`    | Caminho absoluto no host para `campaign-api-key.txt`                             |
-| `CAMPAIGN_ADMIN_CERT_FILE` | Caminho absoluto no host para `campaign-admin.crt`                               |
+| `CAMPAIGN_DOCKER_NETWORK`  | `piersec_campaign_private`                                                       |
+| `CAMPAIGN_API_KEY_FILE`    | `/var/snap/docker/common/var-lib-docker/volumes/piersec_campaign_config/_data/campaign-api-key.txt` |
+| `CAMPAIGN_ADMIN_CERT_FILE` | `/var/snap/docker/common/var-lib-docker/volumes/piersec_campaign_config/_data/gophish_admin.crt`     |
 
 Implante a Stack e aguarde o status **Conectado** no Piersec. Depois, remova `PIERSEC_PAIRING_CODE` das variáveis da Stack e atualize-a. O código expira em 10 minutos e só pode ser usado uma vez.
 
