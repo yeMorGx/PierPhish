@@ -46,6 +46,12 @@ const navigationCommands: CommandItem[] = [
     icon: Building2,
   },
   {
+    label: "Campanhas",
+    hint: "Simulações e resultados",
+    href: "/campanhas",
+    icon: ShieldCheck,
+  },
+  {
     label: "Usuários",
     hint: "Acessos do ambiente",
     href: "/usuarios",

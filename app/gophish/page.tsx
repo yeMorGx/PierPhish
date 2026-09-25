@@ -1,10 +1,5 @@
-import { AuthGuard } from "@/components/auth/auth-guard";
-import { GophishPageContent } from "@/components/gophish/gophish-page-content";
+import { redirect } from "next/navigation";
 
-export default function GophishPage() {
-  return (
-    <AuthGuard>
-      <GophishPageContent />
-    </AuthGuard>
-  );
+export default function LegacyCampaignRoute() {
+  redirect("/campanhas");
 }

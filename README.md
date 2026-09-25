@@ -51,19 +51,15 @@ No Supabase Dashboard, habilite o fator **TOTP** em Authentication → Multi-Fac
 
 A sincronização web usa `/api/sync-beephish`: ela lê as conexões ativas do workspace, descriptografa o Client Secret somente no servidor e chama a API Beephish com autenticação Basic (`Client ID:Client Secret`), conforme o esquema exibido no Swagger. `BEEPHISH_BASE_URL` pode ser definido no servidor; se omitido, usa `https://portal.beephish.com/api`. A credencial global `BEEPHISH_AUTHORIZATION` permanece apenas como fallback legado.
 
-## Conector local GoPhish
+## Conexão Docker para campanhas
 
-A página `/gophish` pareia um computador Windows com o workspace ativo por um código de uso único, válido por 10 minutos. Aplique `supabase/migrations/20260924120000_add_gophish_local_connector.sql` e `supabase/migrations/20260924150000_add_gophish_campaign_dispatch.sql` antes de usar o pareamento e o envio. O servidor precisa de `SUPABASE_SERVICE_ROLE_KEY` para guardar hashes dos códigos e tokens; nenhum deles é armazenado em texto puro.
+A área `/campanhas` lista campanhas, grupos, resultados e solicitações. A página `/campanhas/nova` conduz a criação em etapas e exige revisão e confirmação explícita antes de colocar uma ordem na fila.
 
-No computador que executa o GoPhish, use PowerShell 7 e copie `scripts/gophish-connector.ps1` para uma pasta local. Inicie o GoPhish com a interface administrativa acessível apenas em `127.0.0.1:3333`, execute `pwsh -NoProfile -File .\gophish-connector.ps1`, e informe a URL HTTPS do Piersec, o código da tela, o caminho de `admin.crt` e a chave API no prompt seguro do terminal. O conector fixa o certificado local informado, valida os endpoints antes de parear e protege a chave API e o token permanente com DPAPI no perfil Windows atual. Não abra a porta 3333 no firewall nem na internet.
+Para ativar o serviço, abra `/campanhas/conexao` e implante `deploy/portainer/campaign-bridge.compose.yaml` como Stack no Portainer. O agente usa uma rede Docker privada para alcançar o serviço e inicia conexões HTTPS de saída ao Piersec; a Stack não publica portas.
 
-O conector lê `GET /api/campaigns/`, `GET /api/campaigns/:id/summary`, `GET /api/groups/summary`, `GET /api/templates/`, `GET /api/pages/` e `GET /api/smtp/`. A resposta é desserializada por campos permitidos. Ao Piersec seguem nomes e IDs de ativos, datas, flags de captura de credenciais e contagens agregadas. E-mails, pessoas, IPs, resultados individuais, HTML dos modelos e páginas, conteúdo submetido, credenciais SMTP e senhas não são enviados ou guardados na nuvem.
+A chave de API e o certificado ficam em arquivos protegidos no host Docker e são montados como segredos. Não os insira no navegador, no repositório ou em variáveis de ambiente. O agente envia somente nomes e IDs de ativos, datas e estatísticas agregadas; listas de pessoas, endereços, eventos individuais e dados submetidos não são enviados à nuvem.
 
-Para criar uma campanha, um proprietário ou administrador prepara a prévia com grupos, modelo, página, perfil de envio, URL HTTPS e horário. Páginas que capturam credenciais ou senhas são bloqueadas. A prévia mostra a estimativa de destinatários e expira em cinco minutos. O envio só entra na fila depois que a pessoa marca a confirmação e digita o nome exato da campanha. O conector revalida os ativos e o total localmente antes de fazer a única chamada `POST /api/campaigns/`; se algo mudou, ele bloqueia o envio. A ordem expira se não for buscada em dez minutos. Uma resposta inconclusiva fica marcada para verificação manual e não é repetida automaticamente.
-
-As confirmações, quem as pediu, os grupos, o total estimado, horários e o recibo ou erro são mantidos no histórico do workspace. A tela indica o conector como conectado enquanto recebe atualização a cada 30 segundos; após 90 segundos sem atualização, mostra que perdeu o sinal. Não abra a porta 3333 no firewall nem na internet.
-
-Referências: [API de campanhas](https://docs.getgophish.com/api-documentation/campaigns) e [API de usuários e grupos](https://docs.getgophish.com/api-documentation/users-and-groups).
+Consulte `deploy/portainer/README.md` para a lista de variáveis e o fluxo de implantação. As migrations de conexão e fila precisam estar aplicadas e o servidor deve ter `SUPABASE_SERVICE_ROLE_KEY` configurada.
 
 ## Exemplos reais de e-mail
 

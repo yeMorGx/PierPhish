@@ -23,7 +23,7 @@ type ActiveSection =
   | "overview"
   | "risk"
   | "companies"
-  | "gophish"
+  | "campaigns"
   | "workspaces"
   | "settings"
   | "presentation";
@@ -304,10 +304,10 @@ export function DashboardShell({
               <Icon name="grid" />
             </Link>
             <Link
-              href="/gophish"
-              className={`${navClass(activeSection === "gophish")} max-[720px]:hidden`}
-              aria-label="GoPhish local"
-              aria-current={activeSection === "gophish" ? "page" : undefined}
+              href="/campanhas"
+              className={`${navClass(activeSection === "campaigns")} max-[720px]:hidden`}
+              aria-label="Campanhas"
+              aria-current={activeSection === "campaigns" ? "page" : undefined}
             >
               <Icon name="shield" />
             </Link>

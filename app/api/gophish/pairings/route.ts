@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   const connectorName =
     typeof body.connectorName === "string"
       ? body.connectorName.trim().slice(0, 80)
-      : "GoPhish local";
+      : "Piersec campanhas";
   const pairingCode = randomBytes(24).toString("base64url");
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   const { error } = await access.client
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     .insert({
       workspace_id: databaseWorkspaceId(body.workspaceId),
       created_by: access.userId,
-      connector_name: connectorName || "GoPhish local",
+      connector_name: connectorName || "Piersec campanhas",
       code_hash: createHash("sha256").update(pairingCode).digest("hex"),
       expires_at: expiresAt,
     });

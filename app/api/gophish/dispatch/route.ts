@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     { p_connector_id: auth.connectorId },
   );
   if (error)
-    return gophishError("Não foi possível consultar a fila local.", 502);
+    return gophishError("Não foi possível consultar a fila de campanhas.", 502);
   const row = Array.isArray(data) ? data[0] : data;
   return NextResponse.json(
     row?.command_id

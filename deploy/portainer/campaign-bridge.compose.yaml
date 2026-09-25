@@ -1,0 +1,43 @@
+services:
+  campaign-bridge:
+    build:
+      context: ../..
+      dockerfile: connector/Dockerfile
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      PIERSEC_URL: ${PIERSEC_URL:?Set the public HTTPS URL of Piersec}
+      CAMPAIGN_SERVICE_URL: ${CAMPAIGN_SERVICE_URL:?Set the private HTTPS address of the campaign service}
+      CAMPAIGN_TLS_SERVER_NAME: ${CAMPAIGN_TLS_SERVER_NAME:-}
+      PIERSEC_PAIRING_CODE: ${PIERSEC_PAIRING_CODE:-}
+      CAMPAIGN_API_KEY_FILE: /run/secrets/campaign_api_key
+      CAMPAIGN_CA_FILE: /run/secrets/campaign_admin_certificate
+      DATA_DIR: /data
+    secrets:
+      - campaign_api_key
+      - campaign_admin_certificate
+    volumes:
+      - campaign_bridge_state:/data
+    networks:
+      - campaign_private
+
+networks:
+  campaign_private:
+    external: true
+    name: ${CAMPAIGN_DOCKER_NETWORK:?Set the existing private Docker network}
+
+secrets:
+  campaign_api_key:
+    file: ${CAMPAIGN_API_KEY_FILE:?Set a protected host path for the API key file}
+  campaign_admin_certificate:
+    file: ${CAMPAIGN_ADMIN_CERT_FILE:?Set a protected host path for the service certificate}
+
+volumes:
+  campaign_bridge_state:
