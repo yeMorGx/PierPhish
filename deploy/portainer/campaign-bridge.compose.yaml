@@ -17,12 +17,12 @@ services:
       PIERSEC_PAIRING_CODE: ${PIERSEC_PAIRING_CODE:-}
       CAMPAIGN_API_KEY_FILE: /run/secrets/campaign_api_key
       CAMPAIGN_CA_FILE: /run/secrets/campaign_admin_certificate
-      DATA_DIR: /data
+      DATA_DIR: /state
     secrets:
       - campaign_api_key
       - campaign_admin_certificate
     volumes:
-      - campaign_bridge_state:/data
+      - campaign_bridge_runtime_state:/state
     networks:
       - campaign_private
 
@@ -38,4 +38,4 @@ secrets:
     file: ${CAMPAIGN_ADMIN_CERT_FILE:?Set a protected host path for the service certificate}
 
 volumes:
-  campaign_bridge_state:
+  campaign_bridge_runtime_state:
