@@ -92,7 +92,20 @@ function requestJson(baseUrl, pathname, options = {}) {
           try {
             body = raw ? JSON.parse(raw) : null;
           } catch {
-            reject(new Error("O serviço retornou uma resposta inválida."));
+            const contentType = String(
+              res.headers["content-type"] || "desconhecido",
+            ).slice(0, 100);
+            reject(
+              new Error(
+                "O serviço retornou uma resposta inválida em " +
+                  target.pathname +
+                  " (HTTP " +
+                  (res.statusCode || 0) +
+                  "; " +
+                  contentType +
+                  ").",
+              ),
+            );
             return;
           }
           resolve({ status: res.statusCode || 0, body });
