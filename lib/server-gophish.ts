@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
@@ -25,6 +26,48 @@ export function gophishServiceClient() {
   });
 }
 
+export async function authenticateGophishConnector(request: NextRequest) {
+  const token = request.headers
+    .get("authorization")
+    ?.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!token || token.length > 200) {
+    return {
+      client: null,
+      connectorId: null,
+      error: gophishError("Credencial do conector inválida.", 401),
+    };
+  }
+  const client = gophishServiceClient();
+  if (!client) {
+    return {
+      client: null,
+      connectorId: null,
+      error: gophishError("Conector não configurado no servidor.", 503),
+    };
+  }
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const { data, error } = await client
+    .from("pierphish_gophish_connectors")
+    .select("id")
+    .eq("token_hash", tokenHash)
+    .maybeSingle();
+  if (error) {
+    return {
+      client: null,
+      connectorId: null,
+      error: gophishError("Não foi possível validar o conector.", 502),
+    };
+  }
+  if (!data) {
+    return {
+      client: null,
+      connectorId: null,
+      error: gophishError("Credencial do conector inválida.", 401),
+    };
+  }
+  return { client, connectorId: data.id, error: null };
+}
+
 export function databaseWorkspaceId(workspaceId: string) {
   return workspaceId === "primary" ? persistedPrimaryWorkspaceId : workspaceId;
 }
@@ -44,7 +87,12 @@ export async function requireGophishWorkspaceAccess(
   workspaceId: string,
   managerOnly = false,
 ): Promise<
-  | { client: SupabaseClient; userId: string; error?: never }
+  | {
+      client: SupabaseClient;
+      userId: string;
+      userLabel: string;
+      error?: never;
+    }
   | { client?: never; userId?: never; error: NextResponse }
 > {
   const token = request.headers
@@ -120,5 +168,13 @@ export async function requireGophishWorkspaceAccess(
       ),
     };
   }
-  return { client, userId: data.user.id };
+  const metadataFields = data.user.user_metadata as
+    { full_name?: unknown; name?: unknown } | undefined;
+  const userLabel =
+    (typeof metadataFields?.full_name === "string" &&
+      metadataFields.full_name.trim()) ||
+    (typeof metadataFields?.name === "string" && metadataFields.name.trim()) ||
+    data.user.email ||
+    data.user.id;
+  return { client, userId: data.user.id, userLabel: userLabel.slice(0, 120) };
 }

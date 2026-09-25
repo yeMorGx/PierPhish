@@ -26,13 +26,49 @@ function cleanSnapshot(value: unknown) {
   if (!isRecord(value)) return null;
   const sourceGroups = Array.isArray(value.groups) ? value.groups : [];
   const sourceCampaigns = Array.isArray(value.campaigns) ? value.campaigns : [];
-  if (sourceGroups.length > 2000 || sourceCampaigns.length > 2000) return null;
+  const sourceTemplates = Array.isArray(value.templates) ? value.templates : [];
+  const sourcePages = Array.isArray(value.pages) ? value.pages : [];
+  const sourceSendingProfiles = Array.isArray(value.sendingProfiles)
+    ? value.sendingProfiles
+    : [];
+  if (
+    sourceGroups.length > 2000 ||
+    sourceCampaigns.length > 2000 ||
+    sourceTemplates.length > 2000 ||
+    sourcePages.length > 2000 ||
+    sourceSendingProfiles.length > 2000
+  )
+    return null;
 
   const groups = sourceGroups.filter(isRecord).map((group) => ({
     id: boundedCount(group.id),
     name: boundedText(group.name),
     numTargets: boundedCount(group.numTargets),
+    modifiedDate: boundedText(group.modifiedDate, 50),
   }));
+  const templates = sourceTemplates.filter(isRecord).map((template) => ({
+    id: boundedCount(template.id),
+    name: boundedText(template.name),
+    modifiedDate: boundedText(template.modifiedDate, 50),
+  }));
+  const pages = sourcePages.filter(isRecord).map((page) => ({
+    id: boundedCount(page.id),
+    name: boundedText(page.name),
+    captureCredentials:
+      typeof page.captureCredentials === "boolean"
+        ? page.captureCredentials
+        : null,
+    capturePasswords:
+      typeof page.capturePasswords === "boolean" ? page.capturePasswords : null,
+    modifiedDate: boundedText(page.modifiedDate, 50),
+  }));
+  const sendingProfiles = sourceSendingProfiles
+    .filter(isRecord)
+    .map((profile) => ({
+      id: boundedCount(profile.id),
+      name: boundedText(profile.name),
+      modifiedDate: boundedText(profile.modifiedDate, 50),
+    }));
 
   const statsKeys = [
     "total",
@@ -78,6 +114,9 @@ function cleanSnapshot(value: unknown) {
     updatedAt: boundedText(value.updatedAt, 50),
     groups,
     campaigns,
+    templates,
+    pages,
+    sendingProfiles,
   };
 }
 
