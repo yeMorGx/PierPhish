@@ -3,6 +3,7 @@ services:
     build:
       context: ../..
       dockerfile: connector/Dockerfile
+    pull_policy: build
     user: "0:0"
     restart: unless-stopped
     read_only: true
