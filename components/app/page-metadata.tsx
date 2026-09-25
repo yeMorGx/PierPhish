@@ -16,6 +16,7 @@ function pageTitle(pathname: string) {
     "/apresentacao": "Apresentação",
     "/configuracoes": "Configurações",
     "/empresas": "Empresas",
+    "/gophish": "GoPhish local",
     "/login": "Entrar",
     "/mfa": "Verificação MFA",
     "/politica-de-cookies": "Política de cookies",

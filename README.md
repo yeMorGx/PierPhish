@@ -51,6 +51,16 @@ No Supabase Dashboard, habilite o fator **TOTP** em Authentication → Multi-Fac
 
 A sincronização web usa `/api/sync-beephish`: ela lê as conexões ativas do workspace, descriptografa o Client Secret somente no servidor e chama a API Beephish com autenticação Basic (`Client ID:Client Secret`), conforme o esquema exibido no Swagger. `BEEPHISH_BASE_URL` pode ser definido no servidor; se omitido, usa `https://portal.beephish.com/api`. A credencial global `BEEPHISH_AUTHORIZATION` permanece apenas como fallback legado.
 
+## Conector local GoPhish (somente leitura)
+
+A página `/gophish` pareia um computador Windows com o workspace ativo por um código de uso único, válido por 10 minutos. Aplique `supabase/migrations/20260924120000_add_gophish_local_connector.sql` antes de usar o pareamento. O servidor precisa de `SUPABASE_SERVICE_ROLE_KEY` para guardar hashes dos códigos e tokens; nenhum deles é armazenado em texto puro.
+
+No computador que executa o GoPhish, use PowerShell 7 e copie `scripts/gophish-connector.ps1` para uma pasta local. Inicie o GoPhish com a interface administrativa acessível apenas em `127.0.0.1:3333`, execute `pwsh -NoProfile -File .\gophish-connector.ps1`, e informe a URL HTTPS do Piersec, o código da tela, o caminho de `admin.crt` e a chave API no prompt seguro do terminal. O conector fixa o certificado local informado, valida os endpoints antes de parear e protege a chave API e o token permanente com DPAPI no perfil Windows atual. Não abra a porta 3333 no firewall nem na internet.
+
+O conector usa somente `GET /api/campaigns/`, `GET /api/campaigns/:id/summary` e `GET /api/groups/summary` da API oficial do GoPhish. A resposta de campanhas é desserializada por uma lista estrita de campos permitidos; resultados individuais, timeline, detalhes de eventos e dados submetidos são ignorados. Ao Piersec seguem apenas nomes de campanhas, grupos, modelos e páginas, datas, estados e contagens agregadas. E-mails, pessoas, IPs, timeline, dados submetidos e senhas não são enviados nem persistidos pelo Piersec. A tela indica o conector como conectado enquanto recebe atualização a cada 30 segundos; após 90 segundos sem atualização, mostra que perdeu o sinal. Não há chamada de criação, edição, conclusão ou lançamento de campanhas nesta entrega.
+
+Referências: [API de campanhas](https://docs.getgophish.com/api-documentation/campaigns) e [API de usuários e grupos](https://docs.getgophish.com/api-documentation/users-and-groups).
+
 ## Exemplos reais de e-mail
 
 Na página `/campaigns/[id]`, usuários autorizados no workspace podem anexar um `.eml` ou `.msg` exportado do Gmail ou Outlook. O binário fica no bucket privado `campaign-email-samples`; a tabela guarda os metadados e a representação sanitizada usada na prévia. O conteúdo nunca é buscado na API Beephish.
