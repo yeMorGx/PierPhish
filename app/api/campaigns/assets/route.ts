@@ -357,6 +357,28 @@ export async function POST(request: NextRequest) {
     );
 
   const snapshot = isRecord(connector.snapshot) ? connector.snapshot : {};
+  const assetListField: Record<AssetType, string> = {
+    group: "groups",
+    template: "templates",
+    page: "pages",
+    sending_profile: "sendingProfiles",
+  };
+  const existingAssets = snapshot[assetListField[asset.type]];
+  const duplicateName = Array.isArray(existingAssets)
+    ? existingAssets.some(
+        (item) =>
+          isRecord(item) &&
+          cleanText(item.name, 120).toLowerCase() === asset.name.toLowerCase(),
+      )
+    : false;
+  if (duplicateName) {
+    const assetLabel = asset.type === "group" ? "grupo" : "ativo";
+    return gophishError(
+      `Já existe um ${assetLabel} com esse nome na conexão. Escolha outro nome.`,
+      409,
+    );
+  }
+
   const publicKey =
     typeof snapshot.commandEncryptionKey === "string"
       ? snapshot.commandEncryptionKey

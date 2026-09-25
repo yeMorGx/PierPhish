@@ -209,6 +209,15 @@ function count(value) {
     : 0;
 }
 
+function groupSummaryItems(value) {
+  if (Array.isArray(value)) return value;
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? Array.isArray(value.groups)
+      ? value.groups
+      : []
+    : [];
+}
+
 function safeAsset(item, extra = {}) {
   return {
     id: count(item?.id),
@@ -269,7 +278,7 @@ async function readSnapshot(apiKey, agent, commandEncryptionKey) {
     updatedAt: new Date().toISOString(),
     commandEncryptionKey,
     campaigns,
-    groups: (Array.isArray(rawGroups) ? rawGroups : [])
+    groups: groupSummaryItems(rawGroups)
       .slice(0, 2000)
       .map((group) =>
         safeAsset(group, { numTargets: count(group?.num_targets) }),
@@ -379,7 +388,7 @@ async function createConfirmedCampaign(apiKey, agent, payload) {
     serviceRequest("api/smtp/", apiKey, agent),
   ]);
 
-  const currentGroups = Array.isArray(groups) ? groups : [];
+  const currentGroups = groupSummaryItems(groups);
   for (const expected of Array.isArray(selected.groups)
     ? selected.groups
     : []) {
@@ -697,7 +706,12 @@ async function createCampaignAsset(apiKey, agent, type, encryptedPayload) {
     return {
       status: "failed",
       assetId: null,
-      message: "O ambiente recusou o ativo com HTTP " + response.status + ".",
+      message:
+        response.status === 409 && type === "group"
+          ? "Já existe um grupo com esse nome no ambiente conectado. Atualize a lista e escolha outro nome."
+          : response.status === 409
+            ? "O ambiente encontrou um conflito ao criar este ativo. Confira se já existe um item com esse nome."
+            : "O ambiente recusou o ativo com HTTP " + response.status + ".",
     };
   const assetId = count(response.body?.id);
   if (!assetId)
