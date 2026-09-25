@@ -189,7 +189,7 @@ async function readSnapshot(apiKey, agent) {
   const [rawCampaigns, rawGroups, rawTemplates, rawPages, rawProfiles] =
     await Promise.all([
       serviceRequest("api/campaigns/", apiKey, agent),
-      serviceRequest("api/groups/summary/", apiKey, agent),
+      serviceRequest("api/groups/summary", apiKey, agent),
       serviceRequest("api/templates/", apiKey, agent),
       serviceRequest("api/pages/", apiKey, agent),
       serviceRequest("api/smtp/", apiKey, agent),
@@ -339,7 +339,7 @@ async function createConfirmedCampaign(apiKey, agent, payload) {
     throw new Error("A ordem não contém uma campanha confirmada válida.");
   const selected = payload.selected;
   const [groups, templates, pages, profiles] = await Promise.all([
-    serviceRequest("api/groups/summary/", apiKey, agent),
+    serviceRequest("api/groups/summary", apiKey, agent),
     serviceRequest("api/templates/", apiKey, agent),
     serviceRequest("api/pages/", apiKey, agent),
     serviceRequest("api/smtp/", apiKey, agent),
