@@ -1,23 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
 import { useAuth } from "@/components/auth/auth-provider";
 import { AuthPageShell, LoginBrand } from "@/components/auth/auth-page-shell";
 import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
-
-const loginArtworkPhrases = [
-  "Uma visão mais clara sobre o comportamento humano.",
-  "Transforme sinais em decisões mais seguras.",
-  "Antecipe riscos antes que virem incidentes.",
-  "Conscientização que protege cada pessoa.",
-];
-
-gsap.registerPlugin(useGSAP);
 
 export function LoginForm() {
   const router = useRouter();
@@ -192,98 +181,19 @@ function MicrosoftLogo() {
 }
 
 function LoginArtworkContent() {
-  const captionRef = useRef<HTMLParagraphElement>(null);
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const phrase = loginArtworkPhrases[phraseIndex];
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setPhraseIndex((current) => (current + 1) % loginArtworkPhrases.length);
-    }, 6200);
-
-    return () => window.clearInterval(interval);
-  }, []);
-
-  useGSAP(
-    () => {
-      const caption = captionRef.current;
-      if (!caption) return;
-
-      const letters = caption.querySelectorAll<HTMLElement>(
-        ".login-caption-letter",
-      );
-      if (!letters.length) return;
-
-      const media = gsap.matchMedia();
-      media.add(
-        { reduceMotion: "(prefers-reduced-motion: reduce)" },
-        (context) => {
-          const conditions = context.conditions as {
-            reduceMotion?: boolean;
-          };
-
-          if (conditions.reduceMotion) {
-            gsap.set(letters, { autoAlpha: 1, filter: "blur(0px)", y: 0 });
-            return;
-          }
-
-          gsap.fromTo(
-            letters,
-            { autoAlpha: 0, filter: "blur(4px)", y: 10 },
-            {
-              autoAlpha: 1,
-              filter: "blur(0px)",
-              duration: 0.42,
-              ease: "power3.out",
-              stagger: 0.028,
-              y: 0,
-            },
-          );
-        },
-      );
-
-      return () => media.revert();
-    },
-    {
-      dependencies: [phraseIndex],
-      revertOnUpdate: true,
-      scope: captionRef,
-    },
-  );
-
   return (
-    <>
-      <video
-        className="auth-stage-video"
-        aria-label="Animação pixel art do PierPhish"
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="metadata"
-        poster="/pierphish-login.png"
-      >
-        <source src="/pierphish-login.mp4" type="video/mp4" />
-        Seu navegador não suporta vídeo.
-      </video>
-      <div className="login-artwork-caption">
-        <p
-          ref={captionRef}
-          aria-label={phrase}
-          aria-live="polite"
-          className="login-artwork-caption-text"
-        >
-          {Array.from(phrase).map((character, index) => (
-            <span
-              aria-hidden="true"
-              className="login-caption-letter"
-              key={`${phraseIndex}-${index}`}
-            >
-              {character === " " ? "\u00a0" : character}
-            </span>
-          ))}
-        </p>
-      </div>
-    </>
+    <video
+      className="auth-stage-video"
+      aria-label="Animação pixel art do PierPhish"
+      autoPlay
+      loop
+      muted
+      playsInline
+      preload="metadata"
+      poster="/pierphish-login.png"
+    >
+      <source src="/pierphish-login.mp4" type="video/mp4" />
+      Seu navegador não suporta vídeo.
+    </video>
   );
 }

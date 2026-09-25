@@ -61,6 +61,13 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-25 — Ajuste do vídeo da tela de login
+
+- O vídeo da área visual do login passou a preencher todo o painel com `object-fit: cover`, mantendo o enquadramento responsivo em desktop e mobile.
+- Removido o texto promocional que alternava automaticamente e toda a lógica de intervalo/animação associada.
+- Validações executadas: Prettier nos arquivos alterados, TypeScript (`tsc --noEmit`), detector Impeccable e `git diff --check`. O detector registrou apenas avisos preexistentes em outras regras do CSS.
+- Ainda não foi feito commit, push ou deploy. A conferência visual em produção continua pendente.
+
 ### 2026-09-25 — Passagem de contexto e rotina do change log
 
 - Criado este arquivo para permitir continuidade do trabalho em computadores diferentes.
