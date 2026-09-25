@@ -450,7 +450,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
         view === "campaigns" ? (
           <Link
             href="/campanhas/nova"
-            className="inline-flex h-10 items-center justify-center rounded-full bg-[var(--ink)] px-4 text-[11px] font-bold text-white transition-opacity hover:opacity-90"
+            className="campaign-primary-action inline-flex h-10 items-center justify-center rounded-full px-4 text-[11px] font-bold transition-colors"
           >
             Nova campanha
           </Link>

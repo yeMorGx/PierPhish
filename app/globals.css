@@ -2956,7 +2956,16 @@ button:disabled {
   background: var(--ink);
 }
 
+.campaign-primary-action {
+  color: #ffffff;
+  background: var(--ink);
+}
+
 .header-sync-button:hover:not(:disabled) {
+  background: #2d3a49;
+}
+
+.campaign-primary-action:hover {
   background: #2d3a49;
 }
 
@@ -2967,7 +2976,20 @@ html[data-theme="dark"] .header-sync-button {
   box-shadow: none !important;
 }
 
+html[data-theme="dark"] a.campaign-primary-action {
+  border: 1px solid rgba(160, 198, 209, 0.18) !important;
+  color: #eaf5f7 !important;
+  background: #27404a !important;
+  box-shadow: none !important;
+}
+
 html[data-theme="dark"] .header-sync-button:hover:not(:disabled) {
+  color: #f2fbfc !important;
+  background: #315361 !important;
+  border-color: rgba(175, 213, 222, 0.28) !important;
+}
+
+html[data-theme="dark"] a.campaign-primary-action:hover {
   color: #f2fbfc !important;
   background: #315361 !important;
   border-color: rgba(175, 213, 222, 0.28) !important;
