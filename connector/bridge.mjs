@@ -57,7 +57,7 @@ function requestJson(baseUrl, pathname, options = {}) {
   }
 
   const headers = { Accept: "application/json" };
-  if (options.apiKey) headers.Authorization = "Bearer " + options.apiKey;
+  if (options.apiKey) headers.Authorization = options.apiKey;
   let requestBody;
   if (options.body !== undefined) {
     requestBody = Buffer.from(JSON.stringify(options.body));
