@@ -760,7 +760,7 @@ function PeopleRiskPage() {
                   </label>
                 </div>
 
-                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-b border-[#edf0f1] pb-4">
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 pb-4">
                   <div className="flex flex-wrap gap-2">
                     {(
                       [
