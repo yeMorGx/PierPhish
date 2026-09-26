@@ -67,7 +67,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - Criado `components/ui/spotlight-card.tsx`, componente reutilizável que acompanha o ponteiro dentro dos cards do dashboard visual, sem alterar dados, navegação ou fluxo de campanhas.
 - Aplicado o spotlight no hero, métricas, gráfico, risco e visão de campanhas; o estado do hero passou a usar o nome PierSec, um pulso sutil de monitoramento ativo e suporte a `prefers-reduced-motion`.
 - Validações: TypeScript (`tsc --noEmit`), Prettier nos arquivos TS/TSX e `git diff --check` passaram; o detector Impeccable foi executado uma vez e manteve somente os dois avisos visuais preexistentes de `side-tab` e transição de largura. O `next build` compilou, verificou tipos e gerou 59 páginas, mas terminou bloqueado pelo Windows ao copiar symlinks para `.next/standalone` (`EPERM`), limitação já observada no projeto.
-- Commit, push e confirmação visual em produção ainda pendentes.
+- Commit `b939501` criado e push para `origin/main` confirmado; a confirmação visual em produção permanece pendente até o deploy automático ficar disponível.
 
 ### 2026-09-26 — Logo da empresa no mapa de exposição
 
