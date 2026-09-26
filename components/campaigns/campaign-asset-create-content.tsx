@@ -392,7 +392,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
       headerAction={
         <Link
           href={config.listHref}
-          className="inline-flex h-10 items-center justify-center rounded-full border border-[var(--line)] px-4 text-[11px] font-bold text-[var(--muted)] transition-colors hover:bg-[var(--surface-soft)]"
+          className="inline-flex h-10 items-center justify-center rounded-full border border-[var(--line)] px-4 text-[11px] font-bold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)]"
         >
           Voltar
         </Link>
@@ -411,7 +411,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                     ? "Conteúdo da página"
                     : "Configuração de envio"}
             </h2>
-            <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[var(--muted)]">
+            <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[var(--text-muted)]">
               O PierSec envia este pedido de forma protegida pela conexão
               privada. O ambiente confirma a criação e o histórico registra
               responsável, horário e resultado.
@@ -419,7 +419,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
           </div>
 
           {onlineConnectors.length > 1 && (
-            <label className="mt-5 grid max-w-[430px] gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+            <label className="mt-5 grid max-w-[430px] gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
               AMBIENTE
               <select
                 className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)]"
@@ -436,7 +436,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
           )}
 
           {!selectedConnector && (
-            <div className="mt-5 rounded-[12px] border border-[var(--line)] bg-[var(--surface-soft)] p-4 text-[12px] text-[var(--muted)]">
+            <div className="mt-5 rounded-[12px] border border-[var(--line)] bg-[var(--surface-soft)] p-4 text-[12px] text-[var(--text-muted)]">
               {loading
                 ? "Verificando conexão…"
                 : "Conecte um ambiente para criar ativos no PierSec."}{" "}
@@ -472,7 +472,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
 
           {selectedConnector && (
             <form className="mt-5 grid max-w-[960px] gap-5" onSubmit={submit}>
-              <label className="grid max-w-[600px] gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+              <label className="grid max-w-[600px] gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                 NOME
                 <input
                   required
@@ -495,7 +495,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       <h3 className="m-0 text-[13px] font-semibold text-[var(--ink)]">
                         Destinatários · {targetCount}
                       </h3>
-                      <p className="mt-1 mb-0 text-[10px] text-[var(--muted)]">
+                      <p className="mt-1 mb-0 text-[10px] text-[var(--text-muted)]">
                         Use somente uma lista autorizada para simulação. Não
                         inclua senhas.
                       </p>
@@ -513,13 +513,13 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       />
                     </label>
                   </div>
-                  <p className="m-0 text-[10px] text-[var(--muted)]">
+                  <p className="m-0 text-[10px] text-[var(--text-muted)]">
                     CSV com cabeçalho <code>email,nome,sobrenome,cargo</code>;
                     também aceita ponto e vírgula.
                   </p>
                   <div className="overflow-x-auto rounded-[12px] border border-[var(--line-soft)]">
                     <table className="w-full min-w-[720px] border-collapse text-left">
-                      <thead className="bg-[var(--surface-soft)] text-[9px] font-bold text-[var(--muted)]">
+                      <thead className="bg-[var(--surface-soft)] text-[9px] font-bold text-[var(--text-muted)]">
                         <tr>
                           <th className="px-3 py-2">E-MAIL</th>
                           <th className="px-3 py-2">NOME</th>
@@ -584,7 +584,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                                   )
                                 }
                                 aria-label={`Remover destinatário ${index + 1}`}
-                                className="grid size-8 place-items-center rounded-full text-[var(--muted)] hover:bg-[var(--surface-soft)]"
+                                className="grid size-8 place-items-center rounded-full text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"
                               >
                                 <Icon name="close" size={15} />
                               </button>
@@ -608,7 +608,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                   >
                     Adicionar destinatário
                   </button>
-                  <p className="m-0 text-[10px] leading-relaxed text-[var(--muted)]">
+                  <p className="m-0 text-[10px] leading-relaxed text-[var(--text-muted)]">
                     Os endereços ficam cifrados somente na fila e são removidos
                     após o processamento. O ambiente conectado mantém o grupo
                     para uso em campanhas.
@@ -618,7 +618,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
 
               {type === "template" && (
                 <div className="grid gap-4 md:grid-cols-2">
-                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)] md:col-span-2">
+                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)] md:col-span-2">
                     ASSUNTO
                     <input
                       required
@@ -630,7 +630,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)]"
                     />
                   </label>
-                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                     TEXTO SIMPLES · OPCIONAL
                     <textarea
                       maxLength={100000}
@@ -641,7 +641,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       placeholder="Versão em texto simples do e-mail"
                     />
                   </label>
-                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                     CONTEÚDO HTML
                     <textarea
                       required
@@ -652,7 +652,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-3 font-mono text-[11px] leading-relaxed text-[var(--ink)]"
                     />
                   </label>
-                  <p className="m-0 text-[10px] leading-relaxed text-[var(--muted)] md:col-span-2">
+                  <p className="m-0 text-[10px] leading-relaxed text-[var(--text-muted)] md:col-span-2">
                     Variáveis disponíveis: <code>{"{{.FirstName}}"}</code>,{" "}
                     <code>{"{{.LastName}}"}</code> e <code>{"{{.URL}}"}</code>.
                     Scripts e formulários são removidos; o rastreamento de
@@ -663,7 +663,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
 
               {type === "page" && (
                 <div className="grid gap-2">
-                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                     CONTEÚDO HTML
                     <textarea
                       required
@@ -674,7 +674,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-3 font-mono text-[11px] leading-relaxed text-[var(--ink)]"
                     />
                   </label>
-                  <p className="m-0 text-[10px] leading-relaxed text-[var(--muted)]">
+                  <p className="m-0 text-[10px] leading-relaxed text-[var(--text-muted)]">
                     Formulários, campos de entrada, scripts e captura de
                     credenciais são bloqueados. Crie páginas estáticas para
                     treinamento.
@@ -684,7 +684,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
 
               {type === "sending_profile" && (
                 <div className="grid gap-4 md:grid-cols-2">
-                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                     SERVIDOR SMTP · HOST:PORTA
                     <input
                       required
@@ -694,7 +694,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       placeholder="smtp.empresa.com:587"
                     />
                   </label>
-                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                     REMETENTE
                     <input
                       required
@@ -705,7 +705,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       placeholder="Treinamento <treinamento@empresa.com>"
                     />
                   </label>
-                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                     USUÁRIO SMTP · OPCIONAL
                     <input
                       autoComplete="username"
@@ -714,7 +714,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)]"
                     />
                   </label>
-                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                     SENHA SMTP · OPCIONAL
                     <input
                       type="password"
@@ -724,7 +724,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)]"
                     />
                   </label>
-                  <p className="m-0 text-[10px] leading-relaxed text-[var(--muted)] md:col-span-2">
+                  <p className="m-0 text-[10px] leading-relaxed text-[var(--text-muted)] md:col-span-2">
                     A senha é cifrada para a conexão privada, não aparece no
                     histórico e é apagada da fila depois do processamento. A
                     validação de certificado permanece ativa.
@@ -733,7 +733,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
               )}
 
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line-soft)] pt-4">
-                <p className="m-0 text-[10px] text-[var(--muted)]">
+                <p className="m-0 text-[10px] text-[var(--text-muted)]">
                   Conexão: {selectedConnector.name}
                 </p>
                 <button
@@ -768,12 +768,12 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                 <h2 className="m-0 text-[13px] font-semibold text-[var(--ink)]">
                   {operation.name}
                 </h2>
-                <p className="mt-1 mb-0 text-[11px] text-[var(--muted)]">
+                <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
                   {operation.result ??
                     "O PierSec consulta a conexão privada a cada 30 segundos."}
                 </p>
               </div>
-              <span className="rounded-full bg-[var(--surface-soft)] px-3 py-1 text-[10px] font-bold text-[var(--muted)]">
+              <span className="rounded-full bg-[var(--surface-soft)] px-3 py-1 text-[10px] font-bold text-[var(--text-muted)]">
                 {statusLabel(operation.status)}
               </span>
             </div>

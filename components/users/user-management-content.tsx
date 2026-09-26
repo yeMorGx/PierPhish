@@ -840,7 +840,7 @@ export function UserManagementContent() {
               <h1 className="m-0 max-w-[650px] text-[clamp(25px,2.7vw,32px)] leading-[1.08] font-[600] tracking-[-0.04em]">
                 Gerenciar usuários
               </h1>
-              <p className="mt-3 mb-0 max-w-[620px] text-[13px] leading-relaxed text-[var(--muted)]">
+              <p className="mt-3 mb-0 max-w-[620px] text-[13px] leading-relaxed text-[var(--text-muted)]">
                 Crie acessos internos para o time e entregue uma senha inicial
                 que deverá ser trocada no primeiro acesso.
               </p>
@@ -1008,7 +1008,7 @@ export function UserManagementContent() {
                         required
                       />
                       <button
-                        className="h-12 rounded-[14px] border border-[var(--line)] px-3 text-[10px] font-bold tracking-normal text-[#6e7c84] normal-case transition-colors hover:border-[var(--muted)]"
+                        className="h-12 rounded-[14px] border border-[var(--line)] px-3 text-[10px] font-bold tracking-normal text-[#6e7c84] normal-case transition-colors hover:border-[var(--text-muted)]"
                         type="button"
                         onClick={() => setShowPassword((current) => !current)}
                       >
@@ -1236,7 +1236,7 @@ export function UserManagementContent() {
                   </h2>
                 </div>
                 <button
-                  className="inline-flex items-center gap-2 rounded-[11px] border border-[var(--line)] px-3 py-2 text-[10px] font-bold text-[#6e7c84] transition-colors hover:border-[var(--muted)]"
+                  className="inline-flex items-center gap-2 rounded-[11px] border border-[var(--line)] px-3 py-2 text-[10px] font-bold text-[#6e7c84] transition-colors hover:border-[var(--text-muted)]"
                   type="button"
                   onClick={() => void loadUsers()}
                   disabled={loadingUsers || !isSupabaseConfigured}
@@ -1364,7 +1364,7 @@ export function UserManagementContent() {
                               {canManageTarget(managedUser) ? (
                                 <div className="flex justify-end gap-2">
                                   <button
-                                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[#687780] transition-colors hover:border-[var(--muted)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[#687780] transition-colors hover:border-[var(--text-muted)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
                                     type="button"
                                     onClick={() =>
                                       openResetPassword(managedUser)

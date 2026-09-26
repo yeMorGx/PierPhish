@@ -2,6 +2,7 @@
 
 import { ChangeEvent, useEffect, useState } from "react";
 import { readCampaignLogos, writeCampaignLogos } from "@/lib/campaign-logos";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const maxFileSize = 2.5 * 1024 * 1024;
 const logoSize = 160;
@@ -77,19 +78,14 @@ export function CampaignLogo({
   src?: string | null;
   variant?: "compact" | "hero";
 }) {
-  return src ? (
-    <img
-      className={`campaign-logo campaign-logo-${variant}`}
-      src={src}
-      alt=""
-    />
-  ) : (
-    <span
-      className={`campaign-logo campaign-logo-${variant}`}
+  return (
+    <Avatar
+      className={`campaign-logo campaign-logo-${variant} after:hidden`}
       aria-hidden="true"
     >
-      {fallback}
-    </span>
+      {src ? <AvatarImage src={src} alt="" /> : null}
+      <AvatarFallback>{fallback}</AvatarFallback>
+    </Avatar>
   );
 }
 

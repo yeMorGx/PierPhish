@@ -201,12 +201,12 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
               <h2 className="m-0 text-[16px] font-semibold tracking-[-0.03em]">
                 {config.title}
               </h2>
-              <p className="mt-1 mb-0 text-[11px] text-[var(--muted)]">
+              <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
                 Ativos disponíveis para montar uma campanha dentro do PierSec.
               </p>
             </div>
             <span
-              className={`rounded-full px-3 py-1 text-[10px] font-bold ${connected ? "bg-[#e8f4ed] text-[#28744c]" : "bg-[var(--surface-soft)] text-[var(--muted)]"}`}
+              className={`rounded-full px-3 py-1 text-[10px] font-bold ${connected ? "bg-[#e8f4ed] text-[#28744c]" : "bg-[var(--surface-soft)] text-[var(--text-muted)]"}`}
             >
               {connected ? "Ambiente conectado" : "Sem conexão ativa"}
             </span>
@@ -223,7 +223,7 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
                       {asset.name}
                     </strong>
                     {section === "pages" && (
-                      <span className="mt-1 block text-[10px] text-[var(--muted)]">
+                      <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
                         {asset.captureCredentials === false &&
                         asset.capturePasswords === false
                           ? "Sem captura de credenciais"
@@ -231,7 +231,7 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] text-[var(--muted)]">
+                  <span className="text-[10px] text-[var(--text-muted)]">
                     Atualizado {dateFormat(asset.modifiedDate)}
                   </span>
                 </div>
@@ -244,7 +244,7 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
                   ? "Carregando ativos…"
                   : `Nenhum ${config.singular} disponível`}
               </strong>
-              <p className="mx-auto mt-2 mb-0 max-w-[440px] text-[11px] leading-relaxed text-[var(--muted)]">
+              <p className="mx-auto mt-2 mb-0 max-w-[440px] text-[11px] leading-relaxed text-[var(--text-muted)]">
                 {connected
                   ? `Crie o primeiro ${config.singular} pelo PierSec para usá-lo nas campanhas.`
                   : "Conecte um ambiente de campanhas para criar e sincronizar ativos."}
@@ -266,7 +266,7 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
             <h2 className="m-0 text-[14px] font-semibold tracking-[-0.02em]">
               Atividade recente
             </h2>
-            <p className="mt-1 mb-0 text-[11px] text-[var(--muted)]">
+            <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
               Registro do pedido, responsável, horário e resultado. Conteúdo e
               segredos não aparecem no histórico.
             </p>
@@ -282,7 +282,7 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
                     <strong className="block truncate text-[11px] text-[var(--ink)]">
                       {operation.name}
                     </strong>
-                    <span className="mt-1 block text-[10px] text-[var(--muted)]">
+                    <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
                       {operation.requestedBy} · {dateFormat(operation.queuedAt)}
                     </span>
                   </div>
@@ -291,7 +291,7 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
                       {statusLabel(operation.status)}
                     </span>
                     {operation.result && (
-                      <span className="mt-1 block max-w-[320px] text-[10px] text-[var(--muted)]">
+                      <span className="mt-1 block max-w-[320px] text-[10px] text-[var(--text-muted)]">
                         {operation.result}
                       </span>
                     )}
@@ -300,7 +300,7 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
               ))}
             </div>
           ) : (
-            <p className="m-0 px-5 py-5 text-[11px] text-[var(--muted)]">
+            <p className="m-0 px-5 py-5 text-[11px] text-[var(--text-muted)]">
               Nenhuma operação registrada.
             </p>
           )}

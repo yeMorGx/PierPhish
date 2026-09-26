@@ -9,6 +9,7 @@ import {
   type AnimatedTooltipItem,
 } from "@/components/ui/animated-tooltip";
 import { Icon } from "@/components/ui/icon";
+import { Card } from "@/components/ui/card";
 import type {
   CampaignParticipants,
   CampaignSummary,
@@ -151,7 +152,8 @@ export function CampaignOverviewCard({
   ] as const;
 
   return (
-    <article
+    <Card
+      as="article"
       id="campaign-overview"
       className="surface-card campaign-overview-card col-span-full min-w-0 scroll-mt-4 overflow-hidden rounded-[var(--radius-card)] p-[25px] max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px] max-[720px]:p-[22px]"
     >
@@ -314,6 +316,6 @@ export function CampaignOverviewCard({
           </tbody>
         </table>
       </div>
-    </article>
+    </Card>
   );
 }

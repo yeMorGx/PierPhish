@@ -61,6 +61,16 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-26 — Migração visual para shadcn e paleta neutra
+
+- Inicializado o kit shadcn/base-nova no projeto e adicionados os primitives de botão, campos, labels, cards, badges, avatar, diálogos, menus, selects, tabelas, tabs, tooltips, sheets, popovers, command, skeleton e estados de alerta.
+- Migrados login, providers globais e logos de campanha para os componentes do kit; as imagens dos cards e logos continuam sendo exibidas, com fallback acessível pelo `Avatar`.
+- Substituída a paleta quente/azulada por tokens neutros inspirados no ChatGPT, com tema claro/escuro, superfícies, bordas, foco e scrollbar consistentes. O fluxo de autenticação, MFA, workspaces, campanhas e permissões não foi alterado.
+- Validações: `pnpm exec tsc --noEmit`, Prettier nos arquivos alterados, `git diff --check` e detector Impeccable (`[]`) passaram. A prévia local em `http://localhost:3000/` respondeu e a árvore de acessibilidade confirmou os cards, logos e imagens de participantes. `pnpm run build` compilou, verificou tipos e gerou 59 páginas, mas a etapa final falhou no Windows ao copiar symlinks para `.next/standalone` (`EPERM`). Nenhum teste automatizado foi executado.
+- Commit e push ainda pendentes nesta etapa. Não houve deploy nem alteração remota de banco ou infraestrutura.
+
+Próximos passos: revisar o diff final, criar o commit da migração e enviar para `origin/main` se a autenticação do upstream estiver disponível; depois conferir o deploy automático e a aparência em produção.
+
 ### 2026-09-26 — Configuração e documentação dos MCPs de referências de design
 
 - Verificadas as dez fontes de referência indicadas e documentados os caminhos oficiais em `docs/mcp-design-references.md`.

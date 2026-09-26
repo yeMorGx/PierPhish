@@ -328,7 +328,7 @@ export function ProductTour() {
       steps={activeSteps}
       styles={{
         buttonBack: {
-          color: "var(--muted)",
+          color: "var(--text-muted)",
           fontSize: 12,
           fontWeight: 700,
         },
@@ -352,7 +352,7 @@ export function ProductTour() {
           maxWidth: 360,
         },
         tooltipContent: {
-          color: "var(--muted)",
+          color: "var(--text-muted)",
           fontSize: 12,
           lineHeight: 1.55,
           padding: "5px 2px 12px",

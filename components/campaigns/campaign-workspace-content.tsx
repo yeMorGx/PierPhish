@@ -460,7 +460,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
         ) : view === "new" ? (
           <Link
             href="/campanhas"
-            className="inline-flex h-10 items-center justify-center rounded-full border border-[var(--line)] px-4 text-[11px] font-bold text-[var(--muted)] transition-colors hover:bg-[var(--surface-soft)]"
+            className="inline-flex h-10 items-center justify-center rounded-full border border-[var(--line)] px-4 text-[11px] font-bold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)]"
           >
             Voltar às campanhas
           </Link>
@@ -492,7 +492,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                   <h2 className="mt-2 mb-0 text-[22px] font-semibold tracking-[-0.05em]">
                     Conecte o ambiente de campanhas
                   </h2>
-                  <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[var(--muted)]">
+                  <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[var(--text-muted)]">
                     Uma Stack Docker no Portainer acessa o serviço pela rede
                     privada e inicia conexões HTTPS de saída para o Piersec. A
                     chave de API fica em um segredo montado no contêiner; não
@@ -501,7 +501,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`inline-flex h-9 items-center gap-2 rounded-full px-3 text-[11px] font-bold ${connected ? "bg-[#e8f4ed] text-[#28744c]" : "bg-[var(--surface-soft)] text-[var(--muted)]"}`}
+                    className={`inline-flex h-9 items-center gap-2 rounded-full px-3 text-[11px] font-bold ${connected ? "bg-[#e8f4ed] text-[#28744c]" : "bg-[var(--surface-soft)] text-[var(--text-muted)]"}`}
                   >
                     <span
                       className={`size-2 rounded-full ${connected ? "bg-[#3a9a68]" : "bg-[#a4adb2]"}`}
@@ -509,7 +509,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                     {statusLabel}
                   </span>
                   <button
-                    className="grid size-9 place-items-center rounded-full border border-[var(--line)] text-[var(--muted)] transition-colors hover:bg-[var(--surface-soft)] disabled:opacity-50"
+                    className="grid size-9 place-items-center rounded-full border border-[var(--line)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)] disabled:opacity-50"
                     type="button"
                     aria-label="Atualizar estado do conector"
                     onClick={() => void loadConnectors(true)}
@@ -520,7 +520,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 </div>
               </div>
               {connected && (
-                <p className="mt-4 mb-0 text-[11px] text-[var(--muted)]">
+                <p className="mt-4 mb-0 text-[11px] text-[var(--text-muted)]">
                   {connected.name} · última atualização{" "}
                   {dateFormat(snapshot?.updatedAt)}
                 </p>
@@ -533,7 +533,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                   <h3 className="mt-2 mb-0 text-[17px] font-semibold tracking-[-0.04em]">
                     Stack Docker no Portainer
                   </h3>
-                  <ol className="mt-4 grid gap-2 pl-5 text-[12px] leading-relaxed text-[var(--muted)] marker:font-bold marker:text-[var(--ink)]">
+                  <ol className="mt-4 grid gap-2 pl-5 text-[12px] leading-relaxed text-[var(--text-muted)] marker:font-bold marker:text-[var(--ink)]">
                     <li>Gere um código de pareamento válido por 10 minutos.</li>
                     <li>
                       Crie uma Stack a partir do repositório PierPhish, branch
@@ -552,7 +552,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                       host Docker.
                     </li>
                   </ol>
-                  <p className="mt-4 mb-0 text-[11px] leading-relaxed text-[var(--muted)]">
+                  <p className="mt-4 mb-0 text-[11px] leading-relaxed text-[var(--text-muted)]">
                     A Stack não publica portas. O contêiner só inicia tráfego de
                     saída para o Piersec e acessa o serviço pela rede Docker
                     selecionada. Após o pareamento, remova o código temporário
@@ -560,7 +560,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                   </p>
                 </div>
                 <div className="rounded-[17px] border border-[var(--line-soft)] bg-[var(--surface-soft)] p-4">
-                  <label className="grid gap-2 text-[11px] font-semibold text-[var(--muted)]">
+                  <label className="grid gap-2 text-[11px] font-semibold text-[var(--text-muted)]">
                     Nome dessa conexão
                     <input
                       className="h-10 rounded-[11px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal tracking-normal text-[var(--ink)] normal-case outline-none focus:border-[var(--accent)]"
@@ -608,7 +608,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
             </section>
 
             {!isSupabaseConfigured && (
-              <p className="m-0 rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-[12px] text-[var(--muted)]">
+              <p className="m-0 rounded-[14px] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-[12px] text-[var(--text-muted)]">
                 A conexão não está disponível neste ambiente. Solicite a
                 ativação ao administrador.
               </p>
@@ -623,7 +623,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 <h3 className="mt-2 mb-0 text-[18px] font-semibold tracking-[-0.04em]">
                   Configure a campanha
                 </h3>
-                <p className="mt-2 mb-0 text-[11px] leading-relaxed text-[var(--muted)]">
+                <p className="mt-2 mb-0 text-[11px] leading-relaxed text-[var(--text-muted)]">
                   Escolha o conteúdo, o público e o horário. A campanha só entra
                   na fila depois da revisão final e da confirmação explícita.
                 </p>
@@ -642,7 +642,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                       <li
                         key={label}
                         aria-current={active ? "step" : undefined}
-                        className={`border-b-2 pb-2 text-[11px] font-semibold ${active ? "border-[var(--ink)] text-[var(--ink)]" : complete ? "border-[#8db69c] text-[var(--ink)]" : "border-[var(--line-soft)] text-[var(--muted)]"}`}
+                        className={`border-b-2 pb-2 text-[11px] font-semibold ${active ? "border-[var(--ink)] text-[var(--ink)]" : complete ? "border-[#8db69c] text-[var(--ink)]" : "border-[var(--line-soft)] text-[var(--text-muted)]"}`}
                       >
                         <span className="mr-1.5 tabular-nums">{step}</span>
                         {label}
@@ -653,7 +653,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
               </ol>
 
               {!campaignConnector && (
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 py-3 text-[11px] text-[var(--muted)]">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 py-3 text-[11px] text-[var(--text-muted)]">
                   <span>
                     Conecte o ambiente de campanhas para carregar os ativos.
                   </span>
@@ -667,7 +667,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
               )}
 
               {onlineConnectors.length > 1 && (
-                <label className="mt-4 grid max-w-[420px] gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                <label className="mt-4 grid max-w-[420px] gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                   AMBIENTE DE ENVIO
                   <select
                     className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
@@ -688,7 +688,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
               {campaignStep === 1 && (
                 <>
                   <div className="mt-5 grid gap-4 md:grid-cols-2">
-                    <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                    <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                       NOME DA CAMPANHA
                       <input
                         className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
@@ -700,7 +700,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         placeholder="Ex.: Treinamento de segurança — setembro"
                       />
                     </label>
-                    <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                    <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                       MODELO DE E-MAIL
                       <select
                         className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
@@ -723,7 +723,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         Criar modelo no PierSec
                       </Link>
                     </label>
-                    <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                    <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                       PÁGINA DE DESTINO
                       <select
                         className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
@@ -760,7 +760,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         Criar página no PierSec
                       </Link>
                     </label>
-                    <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                    <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                       PERFIL DE ENVIO
                       <select
                         className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
@@ -789,7 +789,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         Criar perfil no PierSec
                       </Link>
                     </label>
-                    <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)] md:col-span-2">
+                    <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)] md:col-span-2">
                       URL DE DESTINO HTTPS
                       <input
                         className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
@@ -831,7 +831,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
               {campaignStep === 2 && (
                 <>
                   <fieldset className="mt-5 rounded-[14px] border border-[var(--line-soft)] p-4">
-                    <legend className="px-1 text-[10px] font-bold text-[var(--muted)]">
+                    <legend className="px-1 text-[10px] font-bold text-[var(--text-muted)]">
                       GRUPOS · {numberFormat(estimatedRecipientCount)}{" "}
                       destinatário(s) estimado(s)
                     </legend>
@@ -856,7 +856,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                             <span className="min-w-0 flex-1 truncate">
                               {group.name}
                             </span>
-                            <span className="text-[10px] text-[var(--muted)] tabular-nums">
+                            <span className="text-[10px] text-[var(--text-muted)] tabular-nums">
                               {numberFormat(group.numTargets)}
                             </span>
                           </label>
@@ -864,7 +864,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                       </div>
                     ) : (
                       <div className="grid gap-2">
-                        <p className="m-0 text-[11px] text-[var(--muted)]">
+                        <p className="m-0 text-[11px] text-[var(--text-muted)]">
                           Nenhum grupo sincronizado ainda.
                         </p>
                         <Link
@@ -880,7 +880,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                   </fieldset>
                   <div className="mt-5 flex flex-wrap justify-between gap-2">
                     <button
-                      className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[var(--line)] px-4 text-[11px] font-bold text-[var(--muted)]"
+                      className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[var(--line)] px-4 text-[11px] font-bold text-[var(--text-muted)]"
                       type="button"
                       onClick={() => setCampaignStep(1)}
                     >
@@ -903,7 +903,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
               {campaignStep === 3 && (
                 <>
                   <div className="mt-4 grid gap-3 md:grid-cols-[minmax(200px,0.55fr)_1fr]">
-                    <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                    <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                       QUANDO ENVIAR
                       <select
                         className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
@@ -922,7 +922,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                     </label>
                     {launchMode === "scheduled" && (
                       <div className="grid gap-3 sm:grid-cols-2">
-                        <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                        <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                           INÍCIO
                           <input
                             className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
@@ -933,7 +933,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                             }
                           />
                         </label>
-                        <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                        <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                           ENVIAR ATÉ · OPCIONAL
                           <input
                             className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
@@ -950,7 +950,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
 
                   <div className="mt-5 flex flex-wrap justify-between gap-2">
                     <button
-                      className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[var(--line)] px-4 text-[11px] font-bold text-[var(--muted)]"
+                      className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[var(--line)] px-4 text-[11px] font-bold text-[var(--text-muted)]"
                       type="button"
                       onClick={() => setCampaignStep(2)}
                     >
@@ -1035,7 +1035,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                   no horário agendado. Confira o grupo e o total antes de
                   continuar.
                 </div>
-                <label className="mt-4 grid max-w-[520px] gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                <label className="mt-4 grid max-w-[520px] gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                   DIGITE O NOME EXATO DA CAMPANHA PARA CONFIRMAR
                   <input
                     className="h-10 rounded-[10px] border border-[var(--line)] bg-white px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
@@ -1074,7 +1074,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                       : "Confirmar campanha"}
                   </button>
                   <button
-                    className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[var(--line)] px-4 text-[11px] font-bold text-[var(--muted)]"
+                    className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[var(--line)] px-4 text-[11px] font-bold text-[var(--text-muted)]"
                     type="button"
                     onClick={() => {
                       setPreview(null);
@@ -1096,13 +1096,13 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Histórico de solicitações
                 </h3>
-                <p className="mt-1 mb-0 text-[11px] text-[var(--muted)]">
+                <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
                   Solicitante, grupos, estimativa e resultado de cada ordem
                   confirmada.
                 </p>
               </div>
               <button
-                className="rounded-[8px] border border-[var(--line)] px-3 py-1.5 text-[10px] font-bold text-[var(--muted)]"
+                className="rounded-[8px] border border-[var(--line)] px-3 py-1.5 text-[10px] font-bold text-[var(--text-muted)]"
                 type="button"
                 onClick={() => void loadOperations()}
               >
@@ -1110,7 +1110,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
               </button>
             </div>
             {operationsError ? (
-              <p className="m-0 px-5 py-5 text-[11px] text-[var(--muted)]">
+              <p className="m-0 px-5 py-5 text-[11px] text-[var(--text-muted)]">
                 {operationsError}
               </p>
             ) : operations.length ? (
@@ -1124,7 +1124,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                       <strong className="block truncate text-[11px] text-[var(--ink)]">
                         {operation.campaignName}
                       </strong>
-                      <span className="mt-1 block text-[10px] leading-relaxed text-[var(--muted)]">
+                      <span className="mt-1 block text-[10px] leading-relaxed text-[var(--text-muted)]">
                         {operation.groups
                           .map(
                             (group) =>
@@ -1135,7 +1135,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         destinatário(s) · {operation.template} ·{" "}
                         {operation.page}
                       </span>
-                      <span className="mt-1 block text-[10px] text-[var(--muted)]">
+                      <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
                         Solicitante: {operation.requestedBy} · confirmada{" "}
                         {dateFormat(operation.queuedAt)} · início{" "}
                         {operation.launchAt
@@ -1146,19 +1146,19 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                           : ""}
                       </span>
                       {operation.result && (
-                        <span className="mt-1 block text-[10px] text-[var(--muted)]">
+                        <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
                           {operation.result}
                         </span>
                       )}
                     </div>
-                    <span className="h-fit rounded-full bg-[var(--surface-soft)] px-3 py-1.5 text-[10px] font-bold text-[var(--muted)]">
+                    <span className="h-fit rounded-full bg-[var(--surface-soft)] px-3 py-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                       {operationStatus(operation.status)}
                     </span>
                   </article>
                 ))}
               </div>
             ) : (
-              <p className="m-0 px-5 py-6 text-center text-[11px] text-[var(--muted)]">
+              <p className="m-0 px-5 py-6 text-center text-[11px] text-[var(--text-muted)]">
                 Nenhuma campanha confirmada pelo Piersec.
               </p>
             )}
@@ -1172,17 +1172,17 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Campanhas e resultados
                 </h3>
-                <p className="mt-1 mb-0 text-[11px] text-[var(--muted)]">
+                <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
                   Enviados foram aceitos pelo servidor de e-mail; isso não
                   garante chegada à caixa de entrada. Falhas mostram rejeições
                   no envio.
                 </p>
               </div>
               <div className="text-right">
-                <span className="block text-[10px] text-[var(--muted)]">
+                <span className="block text-[10px] text-[var(--text-muted)]">
                   {numberFormat(campaigns.length)} campanha(s)
                 </span>
-                <span className="mt-1 block text-[9px] text-[var(--muted)]">
+                <span className="mt-1 block text-[9px] text-[var(--text-muted)]">
                   Dados de {dateFormat(snapshot?.updatedAt)}
                 </span>
               </div>
@@ -1190,7 +1190,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
             {campaigns.length ? (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[1020px] border-collapse text-left text-[11px]">
-                  <thead className="bg-[var(--surface-soft)] text-[9px] font-extrabold tracking-[0.1em] text-[var(--muted)] uppercase">
+                  <thead className="bg-[var(--surface-soft)] text-[9px] font-extrabold tracking-[0.1em] text-[var(--text-muted)] uppercase">
                     <tr>
                       <th className="px-5 py-3">Campanha</th>
                       <th className="px-4 py-3">Estado</th>
@@ -1223,18 +1223,18 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                           <strong className="block text-[11px] text-[var(--ink)]">
                             {campaign.name}
                           </strong>
-                          <span className="mt-1 block text-[10px] text-[var(--muted)]">
+                          <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
                             {[campaign.template, campaign.page]
                               .filter(Boolean)
                               .join(" · ") || "Modelo e página não informados"}
                           </span>
                           {campaign.groups.length > 0 && (
-                            <span className="mt-1 block text-[10px] text-[var(--muted)]">
+                            <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
                               Grupos: {campaign.groups.join(", ")}
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3.5 text-[var(--muted)]">
+                        <td className="px-4 py-3.5 text-[var(--text-muted)]">
                           {campaignStatus(campaign.status)}
                         </td>
                         <td className="px-4 py-3.5 text-right tabular-nums">
@@ -1255,7 +1255,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         <td className="px-4 py-3.5 text-right tabular-nums">
                           {numberFormat(campaign.stats.submittedData)}
                         </td>
-                        <td className="px-5 py-3.5 text-[var(--muted)]">
+                        <td className="px-5 py-3.5 text-[var(--text-muted)]">
                           {dateFormat(campaign.launchAt)}
                         </td>
                       </tr>
@@ -1270,7 +1270,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                     ? "Carregando campanhas…"
                     : "Nenhuma campanha sincronizada"}
                 </strong>
-                <span className="mt-1 block text-[11px] text-[var(--muted)]">
+                <span className="mt-1 block text-[11px] text-[var(--text-muted)]">
                   {connectors.length
                     ? "Verifique se a Stack Docker está ativa no Portainer."
                     : "Configure a conexão para carregar campanhas e resultados."}
@@ -1287,11 +1287,11 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Grupos disponíveis
                 </h3>
-                <p className="mt-1 mb-0 text-[11px] text-[var(--muted)]">
+                <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
                   Somente nome e quantidade de destinatários.
                 </p>
               </div>
-              <span className="text-[10px] text-[var(--muted)]">
+              <span className="text-[10px] text-[var(--text-muted)]">
                 {numberFormat(groups.length)} grupo(s)
               </span>
             </div>
@@ -1307,14 +1307,14 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         {group.name}
                       </strong>
                     </div>
-                    <span className="flex-none rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[10px] font-bold text-[var(--muted)]">
+                    <span className="flex-none rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[10px] font-bold text-[var(--text-muted)]">
                       {numberFormat(group.numTargets)} pessoas
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="m-0 px-5 py-7 text-center text-[11px] text-[var(--muted)]">
+              <p className="m-0 px-5 py-7 text-center text-[11px] text-[var(--text-muted)]">
                 {loading
                   ? "Carregando grupos…"
                   : "Ainda não há grupos neste ambiente. Crie o primeiro pelo PierSec."}
@@ -1324,7 +1324,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
         )}
 
         {snapshot && (view === "campaigns" || view === "groups") && (
-          <p className="m-0 px-1 text-[10px] leading-relaxed text-[var(--muted)]">
+          <p className="m-0 px-1 text-[10px] leading-relaxed text-[var(--text-muted)]">
             A nuvem recebe apenas nomes de campanhas, grupos e modelos, datas e
             estatísticas agregadas. A lista de pessoas, e-mails, IPs, eventos
             brutos e dados submetidos nunca é enviada pelo conector.

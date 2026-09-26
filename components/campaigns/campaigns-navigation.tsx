@@ -39,7 +39,7 @@ export function CampaignsNavigation({
             key={item.view}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`relative -mb-px flex-none px-3 py-3 text-[12px] font-semibold transition-colors ${active ? "border-b-2 border-[var(--ink)] text-[var(--ink)]" : "text-[var(--muted)] hover:text-[var(--ink)]"}`}
+            className={`relative -mb-px flex-none px-3 py-3 text-[12px] font-semibold transition-colors ${active ? "border-b-2 border-[var(--ink)] text-[var(--ink)]" : "text-[var(--text-muted)] hover:text-[var(--ink)]"}`}
           >
             {item.label}
           </Link>

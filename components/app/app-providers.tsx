@@ -12,6 +12,7 @@ import { CookieNotice } from "@/components/privacy/cookie-notice";
 import { ProfileProvider } from "@/components/profile/profile-provider";
 import { ThemeProvider, useTheme } from "@/components/theme/theme-provider";
 import { PageTransition } from "@/components/ui/page-transition";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 function AppToaster() {
   const { preferences } = useTheme();
@@ -61,10 +62,12 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
             <ProfileProvider>
               <ProductTour />
               <NotificationProvider>
-                <PageTransition>
-                  {children}
-                  <CookieNotice />
-                </PageTransition>
+                <TooltipProvider>
+                  <PageTransition>
+                    {children}
+                    <CookieNotice />
+                  </PageTransition>
+                </TooltipProvider>
               </NotificationProvider>
             </ProfileProvider>
           </AuthProvider>

@@ -646,7 +646,7 @@ export default function CampaignPeoplePage() {
             {sessionEmail ?? "Modo demonstração"}
           </span>
           <button
-            className="surface-card grid size-10 place-items-center rounded-[var(--radius-control)] text-[#6f7883] transition hover:border-[var(--muted)] hover:text-[var(--ink)]"
+            className="surface-card grid size-10 place-items-center rounded-[var(--radius-control)] text-[#6f7883] transition hover:border-[var(--text-muted)] hover:text-[var(--ink)]"
             type="button"
             aria-label="Atualizar dados"
             onClick={() => void loadData()}
@@ -811,7 +811,7 @@ export default function CampaignPeoplePage() {
                     ] as [Filter, string][]
                   ).map(([value, label]) => (
                     <button
-                      className={`rounded-full border px-3 py-2 text-[10px] font-bold transition-colors ${filter === value ? "border-[var(--ink)] bg-[var(--ink)] text-white" : "border-[var(--line)] bg-transparent text-[#7d8790] hover:border-[var(--muted)]"}`}
+                      className={`rounded-full border px-3 py-2 text-[10px] font-bold transition-colors ${filter === value ? "border-[var(--ink)] bg-[var(--ink)] text-white" : "border-[var(--line)] bg-transparent text-[#7d8790] hover:border-[var(--text-muted)]"}`}
                       type="button"
                       key={value}
                       onClick={() => setFilter(value)}

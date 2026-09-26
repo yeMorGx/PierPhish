@@ -24,7 +24,7 @@ type ThemeContextValue = {
 };
 
 const defaultPreferences: ThemePreferences = {
-  canvas: "#f4f4f4",
+  canvas: "#f7f7f8",
   backgroundImage: null,
   mode: "light",
   cardStyle: "solid",

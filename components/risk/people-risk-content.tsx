@@ -749,7 +749,7 @@ function PeopleRiskPage() {
                 <h2 className="m-0 max-w-[640px] text-[clamp(25px,2.5vw,32px)] leading-[1.08] font-[600] tracking-[-0.04em]">
                   Pessoas por nível de risco
                 </h2>
-                <p className="mt-3 mb-0 max-w-[620px] text-[13px] leading-relaxed text-[var(--muted)]">
+                <p className="mt-3 mb-0 max-w-[620px] text-[13px] leading-relaxed text-[var(--text-muted)]">
                   Resumo das pessoas e dos sinais registrados nas campanhas.
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-[var(--text-muted)]">

@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { AuthPageShell, LoginBrand } from "@/components/auth/auth-page-shell";
 import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 export function LoginForm() {
@@ -89,35 +92,35 @@ export function LoginForm() {
     >
       {isSupabaseConfigured ? (
         <form onSubmit={handleSubmit} className="login-form">
-          <label>
+          <Label>
             E-mail
-            <input
+            <Input
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               type="email"
               autoComplete="email"
               required
             />
-          </label>
-          <label>
+          </Label>
+          <Label>
             Senha
-            <input
+            <Input
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               type="password"
               autoComplete="current-password"
               required
             />
-          </label>
+          </Label>
           {error && (
             <p className="login-error" role="alert">
               {error}
             </p>
           )}
-          <button type="submit" disabled={loading || ssoLoading}>
+          <Button type="submit" disabled={loading || ssoLoading}>
             {loading ? "Entrando…" : "Entrar"}
             <Icon name="arrow" size={17} />
-          </button>
+          </Button>
         </form>
       ) : (
         <div className="login-demo-card">
@@ -136,7 +139,7 @@ export function LoginForm() {
           <p className="login-sso-divider">
             <span>ou entre com</span>
           </p>
-          <button
+          <Button
             aria-label="Entrar com Microsoft"
             className="login-sso-button"
             disabled={loading || ssoLoading}
@@ -146,7 +149,7 @@ export function LoginForm() {
           >
             <MicrosoftLogo />
             <span className="login-sso-label">Microsoft</span>
-          </button>
+          </Button>
         </div>
       )}
     </AuthPageShell>
