@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CampaignLogoPicker } from "@/components/campaigns/campaign-logo";
+import { EmailSampleCard } from "@/components/campaigns/email-sample-card";
 import { PersonAvatar } from "@/components/people/person-avatar";
 import type { PersonDetails } from "@/components/people/person-details-modal";
 import { Icon } from "@/components/ui/icon";
@@ -158,6 +159,10 @@ export function VisualCampaignContent({
                 </span>
                 <small>Sincronizada {formatDateTime(campaign.synced_at)}</small>
               </div>
+              <EmailSampleCard
+                campaignId={campaign.id}
+                className="visual-campaign-email-trigger"
+              />
             </div>
           </div>
         </div>

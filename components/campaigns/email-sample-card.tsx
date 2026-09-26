@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowRight,
   Download,
   FileText,
   HardDrive,
@@ -108,7 +109,13 @@ async function accessToken() {
   return data.session?.access_token ?? null;
 }
 
-export function EmailSampleCard({ campaignId }: { campaignId: number }) {
+export function EmailSampleCard({
+  campaignId,
+  className,
+}: {
+  campaignId: number;
+  className?: string;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [sample, setSample] = useState<EmailSample | null>(null);
   const [storage, setStorage] = useState<StorageUsage | null>(null);
@@ -305,31 +312,13 @@ export function EmailSampleCard({ campaignId }: { campaignId: number }) {
     toast.success("Exemplo do e-mail removido.");
   }
 
-  const usageLabel = storage
-    ? `${formatBytes(storage.usedBytes)} de ${formatBytes(storage.maxBytes)} utilizados`
-    : "Armazenamento privado do workspace";
+  const triggerWrapClassName = ["email-sample-trigger-wrap", className]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <>
-      <section
-        className="surface-card email-sample-card"
-        data-tour="campaign-evidence"
-      >
-        <div className="email-sample-card-head">
-          <div>
-            <span className="email-sample-overline">EVIDÊNCIA DA CAMPANHA</span>
-            <h2>Exemplo do e-mail</h2>
-            <p>
-              Visualize a mensagem exatamente como foi exportada do Gmail ou
-              Outlook.
-            </p>
-          </div>
-          <span className="email-sample-storage-badge">
-            <HardDrive aria-hidden="true" size={15} strokeWidth={1.6} />
-            {usageLabel}
-          </span>
-        </div>
-
+      <div className={triggerWrapClassName}>
         <input
           ref={inputRef}
           accept=".eml,.msg,message/rfc822,application/vnd.ms-outlook"
@@ -337,102 +326,70 @@ export function EmailSampleCard({ campaignId }: { campaignId: number }) {
           type="file"
           onChange={(event) => void handleFileChange(event)}
         />
+        <button
+          className="email-sample-trigger"
+          data-tour="campaign-evidence"
+          type="button"
+          aria-busy={loading}
+          aria-haspopup="dialog"
+          disabled={loading}
+          onClick={() => setModalOpen(true)}
+        >
+          <span className="email-sample-trigger-icon">
+            {loading ? (
+              <RefreshCw
+                className="animate-spin"
+                aria-hidden="true"
+                size={16}
+              />
+            ) : (
+              <FileText aria-hidden="true" size={17} strokeWidth={1.7} />
+            )}
+          </span>
+          <span className="email-sample-trigger-copy">
+            <strong>Exemplo do e-mail</strong>
+            <small>
+              {loading
+                ? "Carregando…"
+                : sample
+                  ? `${sample.originalFileName} · ${formatBytes(sample.sizeBytes)}`
+                  : "Nenhum exemplo anexado"}
+            </small>
+          </span>
+          <ArrowRight aria-hidden="true" size={16} />
+        </button>
+      </div>
 
-        {loading ? (
-          <div className="email-sample-empty" aria-live="polite">
-            <RefreshCw className="animate-spin" aria-hidden="true" size={18} />
-            <span>Carregando exemplo…</span>
-          </div>
-        ) : sample ? (
-          <div className="email-sample-existing">
-            <div className="email-sample-file-icon">
-              <FileText aria-hidden="true" size={22} strokeWidth={1.5} />
-            </div>
-            <div className="email-sample-file-copy">
-              <strong>{sample.originalFileName}</strong>
-              <span>
-                .{sample.fileExtension.toUpperCase()} ·{" "}
-                {formatBytes(sample.sizeBytes)} · atualizado{" "}
-                {formatDate(sample.updatedAt)}
-              </span>
-              <small>{sample.subject || "Sem assunto identificado"}</small>
-            </div>
-            <div className="email-sample-actions">
-              <button type="button" onClick={() => setModalOpen(true)}>
-                Visualizar e-mail
-              </button>
-              <button type="button" onClick={chooseFile} disabled={uploading}>
-                <Upload aria-hidden="true" size={14} />
-                Substituir arquivo
-              </button>
-              <button type="button" onClick={() => void downloadOriginal()}>
-                <Download aria-hidden="true" size={14} />
-                Baixar original
-              </button>
-              <button
-                className="is-danger"
-                type="button"
-                onClick={() => void removeSample()}
-              >
-                <Trash2 aria-hidden="true" size={14} />
-                Remover
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="email-sample-empty">
-            <div className="email-sample-empty-icon">
-              <Upload aria-hidden="true" size={21} strokeWidth={1.5} />
-            </div>
-            <div>
-              <strong>Nenhum exemplo anexado</strong>
-              <span>
-                Envie o arquivo original exportado da caixa de entrada.
-              </span>
-            </div>
-            <button type="button" onClick={chooseFile} disabled={uploading}>
-              Adicionar exemplo do e-mail
-              <Upload aria-hidden="true" size={15} />
-            </button>
-          </div>
-        )}
-
-        {uploading && (
-          <div className="email-sample-upload-progress" aria-live="polite">
-            <div>
-              <span>Enviando arquivo…</span>
-              <strong>{uploadProgress}%</strong>
-            </div>
-            <span>
-              <i style={{ width: `${uploadProgress}%` }} />
-            </span>
-          </div>
-        )}
-      </section>
-
-      {sample && (
-        <EmailSamplePreviewModal
-          sample={sample}
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          onDownload={() => void downloadOriginal()}
-          onReplace={chooseFile}
-          onRemove={() => void removeSample()}
-        />
-      )}
+      <EmailSamplePreviewModal
+        sample={sample}
+        storage={storage}
+        uploading={uploading}
+        uploadProgress={uploadProgress}
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onDownload={() => void downloadOriginal()}
+        onReplace={chooseFile}
+        onRemove={() => void removeSample()}
+      />
     </>
   );
 }
 
 function EmailSamplePreviewModal({
   sample,
+  storage,
+  uploading,
+  uploadProgress,
   open,
   onClose,
   onDownload,
   onReplace,
   onRemove,
 }: {
-  sample: EmailSample;
+  sample: EmailSample | null;
+  storage: StorageUsage | null;
+  uploading: boolean;
+  uploadProgress: number;
   open: boolean;
   onClose: () => void;
   onDownload: () => void;
@@ -479,7 +436,7 @@ function EmailSamplePreviewModal({
 
   return (
     <div
-      className="email-sample-modal-backdrop"
+      className="email-sample-drawer-backdrop"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -487,7 +444,7 @@ function EmailSamplePreviewModal({
     >
       <div
         ref={dialogRef}
-        className="email-sample-modal"
+        className="email-sample-drawer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="email-sample-modal-title"
@@ -500,88 +457,143 @@ function EmailSamplePreviewModal({
             <span className="email-sample-overline">PRÉVIA SEGURA</span>
             <h2 id="email-sample-modal-title">Exemplo do e-mail</h2>
             <p id="email-sample-modal-description">
-              {sample.originalFileName} · .{sample.fileExtension.toUpperCase()}{" "}
-              · {formatBytes(sample.sizeBytes)}
+              {sample
+                ? `${sample.originalFileName} · .${sample.fileExtension.toUpperCase()} · ${formatBytes(sample.sizeBytes)}`
+                : "Anexe um arquivo .eml ou .msg para consultar a mensagem original."}
             </p>
           </div>
+          <span className="email-sample-storage-badge">
+            <HardDrive aria-hidden="true" size={15} strokeWidth={1.6} />
+            {storage
+              ? `${formatBytes(storage.usedBytes)} de ${formatBytes(storage.maxBytes)} utilizados`
+              : "Armazenamento privado do workspace"}
+          </span>
           <button type="button" aria-label="Fechar prévia" onClick={onClose}>
             <X aria-hidden="true" size={19} />
           </button>
         </header>
 
         <div className="email-sample-modal-body">
-          <div className="email-sample-meta-grid">
-            <div>
-              <span>Assunto</span>
-              <strong>{sample.subject || "—"}</strong>
-            </div>
-            <div>
-              <span>Remetente</span>
-              <strong>{sample.fromAddress || "—"}</strong>
-            </div>
-            <div>
-              <span>Destinatários</span>
-              <strong>{sample.toAddresses.join(", ") || "—"}</strong>
-            </div>
-            <div>
-              <span>Data do envio</span>
-              <strong>{formatDate(sample.sentAt)}</strong>
-            </div>
-          </div>
-
-          <div className="email-sample-preview-grid">
-            <section className="email-sample-rendered-preview">
-              <span className="email-sample-section-label">
-                HTML SANITIZADO
+          {uploading && (
+            <div className="email-sample-upload-progress" aria-live="polite">
+              <div>
+                <span>Enviando arquivo…</span>
+                <strong>{uploadProgress}%</strong>
+              </div>
+              <span>
+                <i style={{ width: `${uploadProgress}%` }} />
               </span>
-              {sample.parsedHtml ? (
-                <iframe
-                  className="email-sample-iframe"
-                  sandbox=""
-                  srcDoc={buildEmailPreviewDocument(sample.parsedHtml)}
-                  title="Conteúdo HTML sanitizado do e-mail"
-                />
-              ) : (
-                <pre>{sample.parsedText || "Sem conteúdo de mensagem."}</pre>
-              )}
-            </section>
-            <section className="email-sample-plain-preview">
-              <span className="email-sample-section-label">TEXTO PURO</span>
-              <pre>{sample.parsedText || "Sem texto puro disponível."}</pre>
-            </section>
-          </div>
+            </div>
+          )}
 
-          <section className="email-sample-attachments">
-            <span className="email-sample-section-label">ANEXOS</span>
-            {sample.attachments.length ? (
-              sample.attachments.map((attachment) => (
-                <div key={`${attachment.name}-${attachment.size}`}>
-                  <FileText aria-hidden="true" size={15} />
-                  <span>{attachment.name}</span>
-                  <small>
-                    {formatBytes(attachment.size)}
-                    {attachment.inline ? " · incorporado" : ""}
-                  </small>
+          {sample ? (
+            <>
+              <div className="email-sample-meta-grid">
+                <div>
+                  <span>Assunto</span>
+                  <strong>{sample.subject || "—"}</strong>
                 </div>
-              ))
-            ) : (
-              <p>Nenhum anexo encontrado.</p>
-            )}
-          </section>
+                <div>
+                  <span>Remetente</span>
+                  <strong>{sample.fromAddress || "—"}</strong>
+                </div>
+                <div>
+                  <span>Destinatários</span>
+                  <strong>{sample.toAddresses.join(", ") || "—"}</strong>
+                </div>
+                <div>
+                  <span>Data do envio</span>
+                  <strong>{formatDate(sample.sentAt)}</strong>
+                </div>
+              </div>
+
+              <div className="email-sample-preview-grid">
+                <section className="email-sample-rendered-preview">
+                  <span className="email-sample-section-label">
+                    HTML SANITIZADO
+                  </span>
+                  {sample.parsedHtml ? (
+                    <iframe
+                      className="email-sample-iframe"
+                      sandbox=""
+                      srcDoc={buildEmailPreviewDocument(sample.parsedHtml)}
+                      title="Conteúdo HTML sanitizado do e-mail"
+                    />
+                  ) : (
+                    <pre>
+                      {sample.parsedText || "Sem conteúdo de mensagem."}
+                    </pre>
+                  )}
+                </section>
+                <section className="email-sample-plain-preview">
+                  <span className="email-sample-section-label">TEXTO PURO</span>
+                  <pre>{sample.parsedText || "Sem texto puro disponível."}</pre>
+                </section>
+              </div>
+
+              <section className="email-sample-attachments">
+                <span className="email-sample-section-label">ANEXOS</span>
+                {sample.attachments.length ? (
+                  sample.attachments.map((attachment) => (
+                    <div key={`${attachment.name}-${attachment.size}`}>
+                      <FileText aria-hidden="true" size={15} />
+                      <span>{attachment.name}</span>
+                      <small>
+                        {formatBytes(attachment.size)}
+                        {attachment.inline ? " · incorporado" : ""}
+                      </small>
+                    </div>
+                  ))
+                ) : (
+                  <p>Nenhum anexo encontrado.</p>
+                )}
+              </section>
+            </>
+          ) : (
+            <div className="email-sample-drawer-empty">
+              <div className="email-sample-empty-icon">
+                <Upload aria-hidden="true" size={23} strokeWidth={1.5} />
+              </div>
+              <strong>Nenhum exemplo anexado</strong>
+              <p>
+                Adicione o arquivo original exportado da caixa de entrada para
+                consultar o HTML sanitizado, o texto puro e os anexos.
+              </p>
+              <button
+                className="is-primary"
+                type="button"
+                onClick={onReplace}
+                disabled={uploading}
+              >
+                <Upload aria-hidden="true" size={14} />
+                Adicionar exemplo do e-mail
+              </button>
+            </div>
+          )}
         </div>
 
         <footer className="email-sample-modal-footer">
-          <button className="is-danger" type="button" onClick={onRemove}>
-            <Trash2 aria-hidden="true" size={14} /> Remover exemplo
-          </button>
-          <div>
-            <button type="button" onClick={onReplace}>
-              <Upload aria-hidden="true" size={14} /> Substituir arquivo
-            </button>
-            <button className="is-primary" type="button" onClick={onDownload}>
-              <Download aria-hidden="true" size={14} /> Baixar original
-            </button>
-          </div>
+          {sample ? (
+            <>
+              <button className="is-danger" type="button" onClick={onRemove}>
+                <Trash2 aria-hidden="true" size={14} /> Remover exemplo
+              </button>
+              <div>
+                <button type="button" onClick={onReplace} disabled={uploading}>
+                  <Upload aria-hidden="true" size={14} /> Substituir arquivo
+                </button>
+                <button
+                  className="is-primary"
+                  type="button"
+                  onClick={onDownload}
+                >
+                  <Download aria-hidden="true" size={14} /> Baixar original
+                </button>
+              </div>
+            </>
+          ) : (
+            <span>O arquivo fica disponível apenas para esta campanha.</span>
+          )}
         </footer>
       </div>
     </div>

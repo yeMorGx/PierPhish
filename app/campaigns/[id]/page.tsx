@@ -663,8 +663,6 @@ export default function CampaignPeoplePage() {
           </div>
         )}
 
-        {campaign && <EmailSampleCard campaignId={campaign.id} />}
-
         {themePreferences.dashboardMode === "visual" ? (
           <VisualCampaignContent
             campaign={campaign}
@@ -680,7 +678,7 @@ export default function CampaignPeoplePage() {
           />
         ) : (
           <>
-            <header className="surface-card flex items-center rounded-[30px] px-8 py-7 max-[720px]:rounded-[22px] max-[720px]:px-6">
+            <header className="surface-card flex items-center justify-between gap-6 rounded-[30px] px-8 py-7 max-[720px]:flex-col max-[720px]:items-stretch max-[720px]:rounded-[22px] max-[720px]:px-6">
               <div className="min-w-0">
                 <Link
                   href="/"
@@ -711,6 +709,12 @@ export default function CampaignPeoplePage() {
                   </div>
                 </div>
               </div>
+              {campaign && (
+                <EmailSampleCard
+                  campaignId={campaign.id}
+                  className="campaign-detail-email-trigger ml-auto max-[720px]:ml-0 max-[720px]:w-full"
+                />
+              )}
             </header>
 
             <section
