@@ -66,7 +66,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - A tabela de pessoas por risco agora identifica a empresa vinculada à campanha e exibe sua logo ao lado do avatar da pessoa; quando não houver imagem, mostra a inicial da empresa.
 - Criada uma leitura server-side das empresas ativas do workspace, protegida por sessão, MFA e associação ao workspace, sem expor credenciais administrativas ao navegador.
 - Validações: Prettier nos arquivos alterados, `tsc --noEmit`, compilação/geração de páginas do `next build`, `git diff --check` e detector visual passaram; a etapa final do build foi bloqueada pelo Windows ao copiar symlinks para `.next/standalone` (`EPERM`). O detector manteve apenas os dois avisos visuais preexistentes de `side-tab` e transição de largura.
-- Commit/push e confirmação visual em produção ainda pendentes.
+- Commit `7a30c4f` (`Exibe logo da empresa no mapa de exposicao`) criado e enviado para `origin/main`; confirmação visual em produção ainda pendente.
 
 ### 2026-09-26 — Clareza visual do risco no modal
 
