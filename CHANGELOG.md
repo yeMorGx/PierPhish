@@ -69,7 +69,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - Perfil e tour passaram a carregar e salvar preferências por usuário no Supabase. A migration `20260926024934_add_profile_preferences.sql` criou a tabela com RLS, permissões por usuário e o bucket `profile-avatars` com upload/update/delete controlados; a migration foi aplicada e conferida no projeto remoto. A URL do avatar é pública para permitir a exibição entre dispositivos, mas o objeto só pode ser alterado pelo próprio usuário.
 - O tour deixou de depender do `localStorage`; o menu **Ver tour do produto** continua permitindo reiniciá-lo manualmente.
 - Validações: TypeScript (`tsc --noEmit`), Prettier nos arquivos TS/TSX, `git diff --check`, detector Impeccable e conferência visual local em visão geral, comandos, Pessoas por risco e Configurações. O `next build` compilou e gerou as páginas, mas terminou com `EPERM` ao copiar symlinks para `.next/standalone` por limitação de permissões do Windows.
-- Ainda pendentes: commit, push e confirmação do deploy da Vercel para esta alteração.
+- Commit `7e6a774` criado e enviado para `origin/main`. A publicação automática da Vercel e a confirmação visual em produção continuam pendentes.
 
 ### 2026-09-25 — Ajuste do vídeo da tela de login
 
