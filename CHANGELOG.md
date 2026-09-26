@@ -61,6 +61,15 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-26 — Correção da dependência de resize no build da Vercel
+
+- Analisado o log do deploy no commit `0a85249`: a Vercel não conseguia resolver `react-resizable/css/styles.css` porque `react-resizable` estava disponível apenas de forma transitiva via `react-grid-layout`.
+- Declarado `react-resizable@3.2.0` diretamente no `package.json` e atualizado o `pnpm-lock.yaml`, garantindo instalação determinística no pnpm isolado da Vercel.
+- Validações: `pnpm exec tsc --noEmit` passou; `pnpm run build` compilou, verificou tipos e gerou 59 páginas. A etapa final local continua bloqueada no Windows por `EPERM` ao criar symlinks para `.next/standalone`, limitação ambiental já registrada. Nenhum teste automatizado foi executado.
+- Commit e push desta correção ainda pendentes. Não houve alteração remota de banco, infraestrutura ou segredos.
+
+Próximo passo: enviar a correção para `origin/main` e acompanhar o novo deploy da Vercel.
+
 ### 2026-09-26 — Migração visual para shadcn e paleta neutra
 
 - Inicializado o kit shadcn/base-nova no projeto e adicionados os primitives de botão, campos, labels, cards, badges, avatar, diálogos, menus, selects, tabelas, tabs, tooltips, sheets, popovers, command, skeleton e estados de alerta.
