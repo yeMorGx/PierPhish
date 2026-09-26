@@ -61,6 +61,14 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-26 — Microinterações inspiradas em bibliotecas de componentes
+
+- Analisadas as referências loading.dev, React Bits, Originkit, MotionSites AI, Unlumen UI, Bencho, Osmo, Refero Styles, Inspora e Spell UI; a direção escolhida foi trazer exploração e movimento com função operacional, sem transformar o dashboard em uma landing page.
+- Criado `components/ui/spotlight-card.tsx`, componente reutilizável que acompanha o ponteiro dentro dos cards do dashboard visual, sem alterar dados, navegação ou fluxo de campanhas.
+- Aplicado o spotlight no hero, métricas, gráfico, risco e visão de campanhas; o estado do hero passou a usar o nome PierSec, um pulso sutil de monitoramento ativo e suporte a `prefers-reduced-motion`.
+- Validações: TypeScript (`tsc --noEmit`), Prettier nos arquivos TS/TSX e `git diff --check` passaram; o detector Impeccable foi executado uma vez e manteve somente os dois avisos visuais preexistentes de `side-tab` e transição de largura. O `next build` compilou, verificou tipos e gerou 59 páginas, mas terminou bloqueado pelo Windows ao copiar symlinks para `.next/standalone` (`EPERM`), limitação já observada no projeto.
+- Commit, push e confirmação visual em produção ainda pendentes.
+
 ### 2026-09-26 — Logo da empresa no mapa de exposição
 
 - A tabela de pessoas por risco agora identifica a empresa vinculada à campanha e exibe sua logo ao lado do avatar da pessoa; quando não houver imagem, mostra a inicial da empresa.

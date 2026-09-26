@@ -21,6 +21,7 @@ import {
 import { Icon, type IconName } from "@/components/ui/icon";
 import { AnimatedNumber } from "@/components/dashboard/animated-number";
 import { BentoDashboardGrid } from "@/components/dashboard/bento-dashboard-grid";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 import type {
   CampaignBar,
   CampaignParticipants,
@@ -247,14 +248,18 @@ export function VisualDashboardContent({
 
   return (
     <BentoDashboardGrid>
-      <section
+      <SpotlightCard
+        as="section"
         className="surface-card visual-dashboard-hero"
         data-widget-id="hero"
       >
         <div className="visual-dashboard-hero-main">
           <div className="visual-dashboard-topline">
-            <span className="visual-dashboard-live" />
-            <span className="visual-dashboard-overline">PierPhish</span>
+            <span className="visual-dashboard-live" aria-hidden="true" />
+            <span className="visual-dashboard-overline">PierSec</span>
+            <span className="visual-dashboard-live-label">
+              monitoramento ativo
+            </span>
           </div>
           <div className="visual-dashboard-primary-value">
             <strong>
@@ -293,7 +298,7 @@ export function VisualDashboardContent({
             <span>exposição</span>
           </div>
         </div>
-      </section>
+      </SpotlightCard>
 
       <section
         className="visual-dashboard-metric-grid"
@@ -301,7 +306,8 @@ export function VisualDashboardContent({
         data-widget-id="metrics"
       >
         {metrics.map((metric) => (
-          <article
+          <SpotlightCard
+            as="article"
             className="surface-card visual-dashboard-metric"
             key={metric.label}
           >
@@ -312,11 +318,12 @@ export function VisualDashboardContent({
               <AnimatedNumber value={metric.value} suffix={metric.suffix} />
             </strong>
             <span>{metric.label}</span>
-          </article>
+          </SpotlightCard>
         ))}
       </section>
 
-      <section
+      <SpotlightCard
+        as="section"
         className="surface-card visual-dashboard-chart-card"
         data-widget-id="chart"
       >
@@ -328,9 +335,10 @@ export function VisualDashboardContent({
           <Icon name="chart" size={18} />
         </div>
         <CampaignOpeningsChart campaigns={campaignBars} />
-      </section>
+      </SpotlightCard>
 
-      <section
+      <SpotlightCard
+        as="section"
         className="surface-card visual-dashboard-risk-card"
         data-widget-id="risk"
       >
@@ -358,9 +366,10 @@ export function VisualDashboardContent({
             </div>
           ))}
         </div>
-      </section>
+      </SpotlightCard>
 
-      <section
+      <SpotlightCard
+        as="section"
         className="surface-card visual-dashboard-campaigns-card"
         id="campaign-overview"
         data-widget-id="campaigns"
@@ -409,7 +418,7 @@ export function VisualDashboardContent({
             <div className="visual-dashboard-empty">—</div>
           )}
         </div>
-      </section>
+      </SpotlightCard>
     </BentoDashboardGrid>
   );
 }

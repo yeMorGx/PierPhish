@@ -11037,10 +11037,29 @@ html[data-theme="dark"] .settings-page {
 }
 
 .visual-dashboard-live {
+  position: relative;
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--accent);
+}
+
+.visual-dashboard-live::after {
+  position: absolute;
+  inset: -5px;
+  border: 1px solid color-mix(in srgb, var(--accent) 54%, transparent);
+  border-radius: inherit;
+  content: "";
+  animation: visual-dashboard-live-pulse 2.4s ease-out infinite;
+}
+
+.visual-dashboard-live-label {
+  margin-left: 4px;
+  color: var(--muted-soft);
+  font-family: var(--font-data);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
 }
 
 .visual-dashboard-overline {
@@ -11213,6 +11232,33 @@ html[data-theme="dark"] .settings-page {
   border-color: var(--line) !important;
   background: var(--surface) !important;
   color: var(--ink);
+}
+
+.visual-dashboard .spotlight-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.visual-dashboard .spotlight-card::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle 180px at var(--spotlight-x) var(--spotlight-y),
+    color-mix(in srgb, var(--accent) 13%, transparent),
+    transparent 72%
+  );
+  content: "";
+  opacity: var(--spotlight-opacity);
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.visual-dashboard .spotlight-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .visual-dashboard-hero-insight,
@@ -11626,10 +11672,31 @@ html[data-theme="dark"] .settings-page {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .visual-dashboard-live::after {
+    animation: none;
+  }
+
+  .visual-dashboard .spotlight-card::after {
+    display: none;
+  }
+
   .visual-dashboard-chart-column > i,
   .visual-dashboard-campaign-tile,
   .visual-dashboard-campaigns-head > a {
     transition: none;
+  }
+}
+
+@keyframes visual-dashboard-live-pulse {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.55);
+  }
+
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
   }
 }
 
