@@ -61,12 +61,22 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-25 — Refinamentos da visão geral, perfil e tour
+
+- O gráfico de rosca de **Abertura consolidada** ficou maior e passou a usar um contêiner relativo para manter a porcentagem e o rótulo centralizados em diferentes larguras.
+- O botão do cabeçalho deixou de se chamar “Buscar” e passou a indicar **Comandos**, com o atalho `⌘K` redesenhado; o item de Workspaces foi removido da navegação lateral.
+- As linhas da tabela de Pessoas por risco passaram a usar a mesma borda semântica nas células, evitando a linha branca inconsistente.
+- Perfil e tour passaram a carregar e salvar preferências por usuário no Supabase. A migration `20260926024934_add_profile_preferences.sql` criou a tabela com RLS, permissões por usuário e o bucket `profile-avatars` com upload/update/delete controlados; a migration foi aplicada e conferida no projeto remoto. A URL do avatar é pública para permitir a exibição entre dispositivos, mas o objeto só pode ser alterado pelo próprio usuário.
+- O tour deixou de depender do `localStorage`; o menu **Ver tour do produto** continua permitindo reiniciá-lo manualmente.
+- Validações: TypeScript (`tsc --noEmit`), Prettier nos arquivos TS/TSX, `git diff --check`, detector Impeccable e conferência visual local em visão geral, comandos, Pessoas por risco e Configurações. O `next build` compilou e gerou as páginas, mas terminou com `EPERM` ao copiar symlinks para `.next/standalone` por limitação de permissões do Windows.
+- Ainda pendentes: commit, push e confirmação do deploy da Vercel para esta alteração.
+
 ### 2026-09-25 — Ajuste do vídeo da tela de login
 
 - O vídeo da área visual do login passou a preencher todo o painel com `object-fit: cover`, mantendo o enquadramento responsivo em desktop e mobile.
 - Removido o texto promocional que alternava automaticamente e toda a lógica de intervalo/animação associada.
 - Validações executadas: Prettier nos arquivos alterados, TypeScript (`tsc --noEmit`), detector Impeccable e `git diff --check`. O detector registrou apenas avisos preexistentes em outras regras do CSS.
-- Ainda não foi feito commit, push ou deploy. A conferência visual em produção continua pendente.
+- O commit `a640108` foi criado e enviado para `origin/main`; a confirmação visual do deploy em produção continua pendente.
 
 ### 2026-09-25 — Passagem de contexto e rotina do change log
 

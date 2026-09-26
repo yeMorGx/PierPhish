@@ -58,15 +58,15 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <ThemeProvider>
           <PageMetadata />
           <AuthProvider>
-            <ProductTour />
-            <NotificationProvider>
-              <ProfileProvider>
+            <ProfileProvider>
+              <ProductTour />
+              <NotificationProvider>
                 <PageTransition>
                   {children}
                   <CookieNotice />
                 </PageTransition>
-              </ProfileProvider>
-            </NotificationProvider>
+              </NotificationProvider>
+            </ProfileProvider>
           </AuthProvider>
           <AppToaster />
         </ThemeProvider>

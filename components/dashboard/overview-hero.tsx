@@ -85,7 +85,7 @@ export function OverviewHero({
             </span>
           </div>
 
-          <div>
+          <div className="bento-ring-wrap">
             <svg
               className="bento-ring"
               viewBox="0 0 120 120"

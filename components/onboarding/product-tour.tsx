@@ -10,6 +10,7 @@ import {
   type Step,
 } from "react-joyride";
 import { useAuth } from "@/components/auth/auth-provider";
+import { useProfile } from "@/components/profile/profile-provider";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 const tourStorageKey = "pierphish-product-tour-completed-v2";
@@ -19,7 +20,7 @@ const commonTourSteps: Step[] = [
     target: '[data-tour="sidebar"]',
     title: "Navegue pelo PierPhish",
     content:
-      "Use esta barra para alternar entre visão geral, riscos, empresas, workspaces e configurações.",
+      "Use esta barra para alternar entre visão geral, riscos, empresas, campanhas e configurações.",
     placement: "right",
   },
   {
@@ -225,6 +226,12 @@ function finishTour(data: EventData) {
 export function ProductTour() {
   const pathname = usePathname();
   const { ready, user } = useAuth();
+  const {
+    ready: profileReady,
+    isTourCompleted,
+    markTourCompleted,
+    resetTour,
+  } = useProfile();
   const [run, setRun] = useState(false);
   const [activeSteps, setActiveSteps] = useState<Step[]>([]);
   const steps = stepsForPath(pathname);
@@ -245,7 +252,7 @@ export function ProductTour() {
       }
       const nextSteps = stepsMountedInPage();
       if (!nextSteps.length) return;
-      window.localStorage.removeItem(pageStorageKey);
+      resetTour(pageStorageKey);
       setActiveSteps(nextSteps);
       setRun(false);
       window.requestAnimationFrame(() => setRun(true));
@@ -253,15 +260,20 @@ export function ProductTour() {
 
     window.addEventListener("pierphish:start-tour", startTour);
     return () => window.removeEventListener("pierphish:start-tour", startTour);
-  }, [pageStorageKey, pathname, steps.length]);
+  }, [pageStorageKey, pathname, resetTour, steps.length]);
 
   useEffect(() => {
     setRun(false);
     setActiveSteps([]);
-    if (!ready || !steps.length || (isSupabaseConfigured && !user)) {
+    if (
+      !ready ||
+      !profileReady ||
+      !steps.length ||
+      (isSupabaseConfigured && !user)
+    ) {
       return;
     }
-    if (window.localStorage.getItem(pageStorageKey) === "true") return;
+    if (isTourCompleted(pageStorageKey)) return;
 
     const timeout = window.setTimeout(() => {
       const nextSteps = stepsMountedInPage();
@@ -270,11 +282,19 @@ export function ProductTour() {
       setRun(true);
     }, 900);
     return () => window.clearTimeout(timeout);
-  }, [pageStorageKey, pathname, ready, steps.length, user]);
+  }, [
+    isTourCompleted,
+    pageStorageKey,
+    pathname,
+    profileReady,
+    ready,
+    steps.length,
+    user,
+  ]);
 
   function handleEvent(data: EventData) {
     if (!finishTour(data)) return;
-    window.localStorage.setItem(pageStorageKey, "true");
+    markTourCompleted(pageStorageKey);
     setRun(false);
   }
 

@@ -64,9 +64,9 @@ type ProfilePhotoModalProps = {
   avatar: string | null;
   initial: string;
   onClose: () => void;
-  onRemove: () => void;
+  onRemove: () => void | Promise<void>;
   onSelect: (avatar: string) => void;
-  onUpload: (event: ChangeEvent<HTMLInputElement>) => void;
+  onUpload: (event: ChangeEvent<HTMLInputElement>) => void | Promise<void>;
 };
 
 function ProfilePhotoModal({
@@ -196,8 +196,10 @@ function SettingsContent() {
   } = useTheme();
   const {
     preferences: profilePreferences,
+    removeAvatar,
     setAvatar,
     setDisplayName,
+    uploadAvatar,
   } = useProfile();
   const [activeTab, setActiveTab] = useState<SettingsTab>("account");
   const [textSize, setTextSize] = useState<TextSize>(() => {
@@ -251,7 +253,7 @@ function SettingsContent() {
     };
   }, [photoModalOpen]);
 
-  function handleAvatarUpload(event: ChangeEvent<HTMLInputElement>) {
+  async function handleAvatarUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
@@ -265,14 +267,16 @@ function SettingsContent() {
     }
 
     setError(null);
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setAvatar(reader.result);
-        setPhotoModalOpen(false);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      await uploadAvatar(file);
+      setPhotoModalOpen(false);
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Não foi possível salvar a foto.",
+      );
+    }
   }
 
   function handleBackgroundUpload(event: ChangeEvent<HTMLInputElement>) {
@@ -998,8 +1002,15 @@ function SettingsContent() {
           initial={profileInitial}
           onClose={() => setPhotoModalOpen(false)}
           onRemove={() => {
-            setAvatar(null);
-            setPhotoModalOpen(false);
+            void removeAvatar()
+              .then(() => setPhotoModalOpen(false))
+              .catch((removeError) => {
+                setError(
+                  removeError instanceof Error
+                    ? removeError.message
+                    : "Não foi possível remover a foto.",
+                );
+              });
           }}
           onSelect={(avatar) => {
             setAvatar(avatar);

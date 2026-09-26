@@ -9,11 +9,13 @@ const maxAvatarSize = 1.5 * 1024 * 1024;
 const supportedAvatarTypes = ["image/png", "image/jpeg", "image/webp"];
 
 export function ProfileEditorCard() {
-  const { preferences, setAvatar, setDisplayName } = useProfile();
+  const { preferences, removeAvatar, setAvatar, setDisplayName, uploadAvatar } =
+    useProfile();
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const usingDefaultAvatar = preferences.avatar?.startsWith("/avatars/");
 
-  function handleAvatar(event: ChangeEvent<HTMLInputElement>) {
+  async function handleAvatar(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
@@ -27,11 +29,18 @@ export function ProfileEditorCard() {
     }
 
     setError(null);
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") setAvatar(reader.result);
-    };
-    reader.readAsDataURL(file);
+    setUploading(true);
+    try {
+      await uploadAvatar(file);
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Não foi possível salvar a foto.",
+      );
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (
@@ -44,7 +53,8 @@ export function ProfileEditorCard() {
       </div>
       <p className="profile-panel-description">
         Escolha como seu nome e sua foto aparecem no painel. As alterações são
-        salvas automaticamente neste navegador.
+        salvas automaticamente na sua conta conectada; no modo demonstração,
+        ficam neste navegador.
       </p>
       <div className="profile-editor-grid">
         <label className="profile-avatar-upload">
@@ -61,11 +71,13 @@ export function ProfileEditorCard() {
           </span>
           <span className="profile-editor-copy">
             <strong>
-              {preferences.avatar
-                ? usingDefaultAvatar
-                  ? "Trocar avatar"
-                  : "Trocar foto"
-                : "Adicionar foto"}
+              {uploading
+                ? "Salvando…"
+                : preferences.avatar
+                  ? usingDefaultAvatar
+                    ? "Trocar avatar"
+                    : "Trocar foto"
+                  : "Adicionar foto"}
             </strong>
             <small>PNG, JPG ou WEBP · até 1,5 MB</small>
           </span>
@@ -133,7 +145,18 @@ export function ProfileEditorCard() {
       <div className="profile-editor-footer">
         <span>O e-mail de acesso continua vinculado à sua conta.</span>
         {preferences.avatar && (
-          <button type="button" onClick={() => setAvatar(null)}>
+          <button
+            type="button"
+            onClick={() => {
+              void removeAvatar().catch((removeError) => {
+                setError(
+                  removeError instanceof Error
+                    ? removeError.message
+                    : "Não foi possível remover a foto.",
+                );
+              });
+            }}
+          >
             Remover {usingDefaultAvatar ? "avatar" : "foto"}
           </button>
         )}

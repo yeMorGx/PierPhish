@@ -311,14 +311,6 @@ export function DashboardShell({
             >
               <Icon name="shield" />
             </Link>
-            <Link
-              href="/workspaces"
-              className={`${navClass(activeSection === "workspaces")} max-[720px]:hidden`}
-              aria-label="Workspaces"
-              aria-current={activeSection === "workspaces" ? "page" : undefined}
-            >
-              <Icon name="layers" />
-            </Link>
           </nav>
           <Link
             href="/configuracoes"

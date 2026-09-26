@@ -100,10 +100,10 @@ export function CommandPalette() {
         type="button"
         className="command-palette-trigger"
         onClick={() => setOpen(true)}
-        aria-label="Abrir paleta de comandos"
+        aria-label="Abrir comandos e ações"
       >
         <Search aria-hidden="true" size={16} strokeWidth={1.7} />
-        <span className="max-[840px]:hidden">Buscar</span>
+        <span className="max-[840px]:hidden">Comandos</span>
         <kbd>⌘K</kbd>
       </button>
 
