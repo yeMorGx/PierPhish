@@ -65,7 +65,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 - Removido o divisor inferior do bloco de filtros da página Pessoas por risco, mantendo o espaçamento e o alinhamento existentes.
 - Validações: Prettier em `components/risk/people-risk-content.tsx` e `git diff --check` passaram.
-- Commit `acc54dd` criado; push para a branch atual pendente.
+- Commits `acc54dd` e `5d7f1a0` criados e enviados para `origin/main`.
 
 ### 2026-09-25 — Refinamentos da visão geral, perfil e tour
 
