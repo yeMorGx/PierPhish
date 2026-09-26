@@ -68,7 +68,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - React Bits Pro e Spell UI foram documentados como integrações do MCP do shadcn via registries, não como servidores MCP independentes. Eles não foram ativados neste repositório porque não há `components.json` e o React Bits exige licença.
 - Loading.dev, Unlumen UI, Bencho, Osmo e Inspora foram registrados como fontes sem MCP oficial encontrado na verificação; o manual explica como usar cada uma sem inventar endpoints.
 - Validações: `codex mcp list` confirmou os três servidores remotos habilitados; a tentativa de consultar `pnpm dlx shadcn@latest mcp --help` baixou os pacotes, mas terminou com `ERR_MODULE_NOT_FOUND` para `chalk` no runtime local. Nenhum teste automatizado foi executado.
-- Commit, push e confirmação visual em produção ainda pendentes.
+- Commit `a852bd9` criado e push para `origin/main` confirmado; não há deploy ou confirmação visual de produção envolvidos nesta tarefa.
 
 ### 2026-09-26 — Microinterações inspiradas em bibliotecas de componentes
 
