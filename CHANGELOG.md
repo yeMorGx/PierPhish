@@ -61,6 +61,12 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-25 — Ajuste das bordas da visão geral e configurações
+
+- Removido o divisor inferior do card de aberturas da visão geral, mantendo o restante do layout inalterado.
+- Corrigida a borda dos cards de configurações para usar `var(--line)` e acompanhar corretamente o tema claro ou escuro.
+- Validações e commit/push desta alteração pendentes.
+
 ### 2026-09-25 — Ajuste do divisor da página de risco
 
 - Removido o divisor inferior do bloco de filtros da página Pessoas por risco, mantendo o espaçamento e o alinhamento existentes.

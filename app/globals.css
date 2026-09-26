@@ -10316,7 +10316,7 @@ html[data-theme="dark"] .settings-page {
 .settings-bento-card.settings-row,
 .settings-style-preview,
 .settings-summary-panel.settings-bento-card {
-  border-color: #e1e4e2;
+  border-color: var(--line);
   background: var(--surface-soft);
 }
 

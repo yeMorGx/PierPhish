@@ -28,7 +28,7 @@ export function CampaignOpeningsCard({
         </Link>
       </div>
       <div
-        className="flex min-h-0 flex-1 items-end overflow-x-auto border-b border-[#e9ebec]"
+        className="flex min-h-0 flex-1 items-end overflow-x-auto"
         aria-label="Taxa de abertura de todas as campanhas"
       >
         <div
