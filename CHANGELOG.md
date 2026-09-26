@@ -65,9 +65,9 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 - Verificadas as dez fontes de referência indicadas e documentados os caminhos oficiais em `docs/mcp-design-references.md`.
 - Configurados globalmente no Codex os MCPs remotos oficiais `motionsites`, `originkit` e `refero`; os fluxos OAuth de MotionSites e Refero foram concluídos. O OriginKit ficou configurado para ler `ORIGINKIT_API_KEY` do ambiente local, sem gravar a chave no repositório.
-- React Bits Pro e Spell UI foram documentados como integrações do MCP do shadcn via registries, não como servidores MCP independentes. Eles não foram ativados neste repositório porque não há `components.json` e o React Bits exige licença.
+- Instalado `shadcn@4.21.0` como dependência de desenvolvimento, aprovado somente o build do `esbuild` e registrado o servidor global `shadcn` no Codex usando `pnpm exec shadcn mcp`. React Bits Pro e Spell UI continuam dependendo dos respectivos registries em `components.json`; React Bits também exige licença.
 - Loading.dev, Unlumen UI, Bencho, Osmo e Inspora foram registrados como fontes sem MCP oficial encontrado na verificação; o manual explica como usar cada uma sem inventar endpoints.
-- Validações: `codex mcp list` confirmou os três servidores remotos habilitados; a tentativa de consultar `pnpm dlx shadcn@latest mcp --help` baixou os pacotes, mas terminou com `ERR_MODULE_NOT_FOUND` para `chalk` no runtime local. Nenhum teste automatizado foi executado.
+- Validações: `codex mcp list` confirmou os três servidores remotos e `shadcn` habilitados; `pnpm exec shadcn mcp init --client codex` concluiu e exibiu a configuração do cliente. `npx` não está disponível nesta máquina, e o `pnpm dlx` inicial falhou com `ERR_MODULE_NOT_FOUND` para `chalk`; o binário local funcionou após a instalação e aprovação do build. Nenhum teste automatizado foi executado.
 - Commit `a852bd9` criado e push para `origin/main` confirmado; não há deploy ou confirmação visual de produção envolvidos nesta tarefa.
 
 ### 2026-09-26 — Microinterações inspiradas em bibliotecas de componentes

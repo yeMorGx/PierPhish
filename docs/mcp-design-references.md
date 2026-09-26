@@ -9,8 +9,8 @@ Este documento registra o estado das integrações de design verificadas em 26/0
 | [MotionSites AI](https://motionsites.ai/mcp) | MCP remoto por HTTP | Configurado como `motionsites`; OAuth concluído |
 | [OriginKit](https://www.originkit.dev/docs/components) | MCP remoto por HTTP | Configurado como `originkit`; requer `ORIGINKIT_API_KEY` |
 | [Refero](https://refero.design/mcp) | MCP remoto por HTTP | Configurado como `refero`; OAuth concluído |
-| [React Bits Pro](https://pro.reactbits.dev/docs/mcp) | MCP oficial baseado no servidor do shadcn + registries | Não ativado neste repositório: falta `components.json` e licença |
-| [Spell UI](https://spell.sh/docs/mcp) | MCP baseado no servidor do shadcn + registry | Não ativado neste repositório: falta `components.json` |
+| [React Bits Pro](https://pro.reactbits.dev/docs/mcp) | MCP oficial baseado no servidor do shadcn + registries | Servidor `shadcn` configurado; registry/licença ainda não adicionados |
+| [Spell UI](https://spell.sh/docs/mcp) | MCP baseado no servidor do shadcn + registry | Servidor `shadcn` configurado; registry ainda não adicionado |
 | [Loading.dev](https://loading.dev/) | Biblioteca React/npm, sem MCP oficial encontrado | Usar como pacote ou copiar o componente |
 | [Unlumen UI](https://ui.unlumen.com/) | Registry shadcn, sem MCP próprio encontrado | Usar o registry/código-fonte |
 | [Bencho](https://bencho.dev/) | Blocos interativos para copiar, sem MCP encontrado | Usar a página e copiar o código |
@@ -35,7 +35,12 @@ codex mcp add motionsites --url https://xgdzyqfalbibzelpdpvr.supabase.co/functio
 codex mcp add originkit --url https://mcp.originkit.dev/mcp --bearer-token-env-var ORIGINKIT_API_KEY
 
 codex mcp add refero --url https://api.refero.design/mcp
+
+# Neste computador, npx não está disponível; o shadcn usa o binário local.
+codex mcp add shadcn -- pnpm exec shadcn mcp
 ```
+
+O `shadcn` foi instalado como dependência de desenvolvimento (`shadcn@4.21.0`) e o build necessário do `esbuild` foi aprovado somente para este projeto. O `components.json` ainda precisa ser criado/configurado antes de instalar itens de registries.
 
 Não há tokens ou chaves neste repositório. O OAuth é autorizado no navegador quando necessário. Para o OriginKit, configure a chave apenas no ambiente local do usuário e reinicie o Codex:
 
