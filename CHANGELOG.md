@@ -65,7 +65,8 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 - Removido o divisor inferior do card de aberturas da visão geral, mantendo o restante do layout inalterado.
 - Corrigida a borda dos cards de configurações para usar `var(--line)` e acompanhar corretamente o tema claro ou escuro.
-- Validações e commit/push desta alteração pendentes.
+- Validações: Prettier, `git diff --check` e detector visual passaram; o detector manteve apenas avisos preexistentes fora deste ajuste.
+- Commit `e32ead1` criado e enviado para `origin/main`.
 
 ### 2026-09-25 — Ajuste do divisor da página de risco
 
