@@ -61,6 +61,15 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-26 — Configuração e documentação dos MCPs de referências de design
+
+- Verificadas as dez fontes de referência indicadas e documentados os caminhos oficiais em `docs/mcp-design-references.md`.
+- Configurados globalmente no Codex os MCPs remotos oficiais `motionsites`, `originkit` e `refero`; os fluxos OAuth de MotionSites e Refero foram concluídos. O OriginKit ficou configurado para ler `ORIGINKIT_API_KEY` do ambiente local, sem gravar a chave no repositório.
+- React Bits Pro e Spell UI foram documentados como integrações do MCP do shadcn via registries, não como servidores MCP independentes. Eles não foram ativados neste repositório porque não há `components.json` e o React Bits exige licença.
+- Loading.dev, Unlumen UI, Bencho, Osmo e Inspora foram registrados como fontes sem MCP oficial encontrado na verificação; o manual explica como usar cada uma sem inventar endpoints.
+- Validações: `codex mcp list` confirmou os três servidores remotos habilitados; a tentativa de consultar `pnpm dlx shadcn@latest mcp --help` baixou os pacotes, mas terminou com `ERR_MODULE_NOT_FOUND` para `chalk` no runtime local. Nenhum teste automatizado foi executado.
+- Commit, push e confirmação visual em produção ainda pendentes.
+
 ### 2026-09-26 — Microinterações inspiradas em bibliotecas de componentes
 
 - Analisadas as referências loading.dev, React Bits, Originkit, MotionSites AI, Unlumen UI, Bencho, Osmo, Refero Styles, Inspora e Spell UI; a direção escolhida foi trazer exploração e movimento com função operacional, sem transformar o dashboard em uma landing page.
