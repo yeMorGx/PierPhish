@@ -66,7 +66,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - Removido o card grande embutido de “Exemplo do e-mail” e criado um gatilho compacto no card principal da campanha, tanto na visão visual quanto na visão clássica.
 - A prévia agora abre em uma barra lateral pela direita, com animação, fechamento por botão, Escape ou clique fora e layout responsivo; o conteúdo existente de HTML sanitizado, texto puro, metadados, anexos, upload, substituição, download e remoção foi preservado.
 - Validações: Prettier nos arquivos alterados, `tsc --noEmit`, `git diff --check` e detector visual passaram; o detector manteve somente os dois avisos preexistentes de `side-tab` e transição de largura.
-- Commit/push e confirmação visual em produção ainda pendentes.
+- Commit `2fe91e3` criado e enviado para `origin/main`; a publicação automática da Vercel deve seguir o fluxo já configurado. A confirmação visual em produção ainda está pendente.
 
 ### 2026-09-25 — Normalização de bordas por tema
 
