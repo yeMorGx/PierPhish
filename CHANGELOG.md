@@ -61,6 +61,13 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-26 — Clareza visual do risco no modal
+
+- Removida a fração ambígua `3/4` da leitura de risco; o modal agora apresenta diretamente “Risco alto”, “Atenção” ou “Risco baixo”, com escala visual identificada de baixa a alta exposição.
+- Reforçadas as cores dos sinais ativos com fundos e bordas semânticos por tipo, deixando clique, abertura, reporte e envio de dados mais legíveis no tema escuro.
+- Validações: Prettier em `components/people/person-details-modal.tsx`, `tsc --noEmit`, `git diff --check` e detector visual passaram; o detector manteve apenas os dois avisos preexistentes de `side-tab` e transição de largura.
+- Commit/push e confirmação visual em produção ainda pendentes.
+
 ### 2026-09-26 — Redesign do modal de detalhes da pessoa
 
 - Reorganizado o modal de detalhes com cabeçalho mais leve, fechamento menos invasivo e agrupamento visual mais claro para risco, sinais, dados, campanhas e linha do tempo.

@@ -1792,22 +1792,40 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
   background: var(--surface-soft);
 }
 
+.person-modal-score.is-high {
+  border-color: color-mix(in srgb, var(--campaign-status-action) 32%, var(--line));
+  color: var(--campaign-status-action);
+  background: color-mix(
+    in srgb,
+    var(--campaign-status-action-soft) 76%,
+    var(--surface)
+  );
+}
+
+.person-modal-score.is-attention {
+  border-color: color-mix(in srgb, #a97837 32%, var(--line));
+  color: #a97837;
+  background: color-mix(in srgb, #fff5df 76%, var(--surface));
+}
+
+.person-modal-score.is-low {
+  border-color: color-mix(in srgb, var(--campaign-status-safe) 32%, var(--line));
+  color: var(--campaign-status-safe);
+  background: color-mix(
+    in srgb,
+    var(--campaign-status-safe-soft) 76%,
+    var(--surface)
+  );
+}
+
 .person-score-value {
   display: block;
   margin-top: 7px;
-  color: var(--ink);
-  font-size: 37px;
+  color: currentColor;
+  font-size: 27px;
   font-weight: 720;
-  letter-spacing: -0.08em;
-  line-height: 0.9;
-}
-
-.person-score-value small {
-  margin-left: 3px;
-  color: var(--muted-soft);
-  font-size: 15px;
-  font-weight: 650;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.06em;
+  line-height: 1;
 }
 
 .person-modal-score p {
@@ -1820,19 +1838,7 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
   display: grid;
   min-width: 220px;
   gap: 9px;
-  color: #7892a0;
-}
-
-.person-score-meter.is-high {
-  color: #b26549;
-}
-
-.person-score-meter.is-attention {
-  color: #a97837;
-}
-
-.person-score-meter.is-low {
-  color: #6c8d43;
+  color: currentColor;
 }
 
 .person-score-meter-bars {
@@ -1852,11 +1858,13 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
   box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent);
 }
 
-.person-score-meter > strong {
-  color: currentColor;
-  font-size: 10px;
-  font-weight: 750;
-  text-align: right;
+.person-score-meter-scale {
+  display: flex;
+  justify-content: space-between;
+  color: color-mix(in srgb, currentColor 68%, var(--muted));
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .person-modal-section {
@@ -1935,8 +1943,32 @@ html[data-theme="dark"][data-card-style="apple"] .surface-card {
   color: var(--campaign-status-critical);
 }
 
+.person-signal-card.is-opened.is-active {
+  border-color: color-mix(in srgb, var(--campaign-status-info) 48%, var(--line));
+  background: var(--campaign-status-info-soft);
+}
+
+.person-signal-card.is-clicked.is-active {
+  border-color: color-mix(in srgb, var(--campaign-status-action) 48%, var(--line));
+  background: var(--campaign-status-action-soft);
+}
+
+.person-signal-card.is-reported.is-active {
+  border-color: color-mix(in srgb, var(--campaign-status-safe) 48%, var(--line));
+  background: var(--campaign-status-safe-soft);
+}
+
+.person-signal-card.is-submitted.is-active {
+  border-color: color-mix(in srgb, var(--campaign-status-critical) 48%, var(--line));
+  background: var(--campaign-status-critical-soft);
+}
+
 .person-signal-card.is-active .person-signal-dot {
   box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 17%, transparent);
+}
+
+.person-signal-card.is-active small {
+  color: color-mix(in srgb, currentColor 62%, var(--muted));
 }
 
 .person-signal-card strong,
@@ -2200,6 +2232,12 @@ html[data-theme="dark"] .person-score-meter.is-high {
   color: #f0ad91;
 }
 
+html[data-theme="dark"] .person-modal-score.is-attention {
+  border-color: rgba(235, 190, 121, 0.3);
+  color: #e9bd79;
+  background: #393025;
+}
+
 html[data-theme="dark"] .person-score-meter.is-attention {
   color: #e9bd79;
 }
@@ -2248,10 +2286,6 @@ html[data-theme="dark"] .person-score-meter.is-low {
 
   .person-score-meter {
     min-width: 0;
-  }
-
-  .person-score-meter > strong {
-    text-align: left;
   }
 
   .person-signal-grid,

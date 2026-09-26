@@ -213,19 +213,25 @@ export function PersonDetailsModal({
               {avatarError}
             </p>
           )}
-          <section className="person-modal-score" aria-label="Resumo do risco">
+          <section
+            className={`person-modal-score is-${person.risk}`}
+            aria-label="Resumo do risco"
+          >
             <div>
               <span className="person-modal-label">LEITURA DE RISCO</span>
               <strong className="person-score-value">
-                {person.score}
-                <small>/4</small>
+                {riskLabels[person.risk]}
               </strong>
               <p>{riskDescriptions[person.risk]}</p>
             </div>
             <div
               className={`person-score-meter is-${person.risk}`}
-              role="img"
-              aria-label={`${riskLabels[person.risk]}: ${person.score} de 4`}
+              role="meter"
+              aria-valuemin={0}
+              aria-valuemax={4}
+              aria-valuenow={person.score}
+              aria-valuetext={riskLabels[person.risk]}
+              aria-label="Escala de exposição"
             >
               <div className="person-score-meter-bars" aria-hidden="true">
                 {Array.from({ length: 4 }, (_, index) => (
@@ -235,7 +241,10 @@ export function PersonDetailsModal({
                   />
                 ))}
               </div>
-              <strong>{riskLabels[person.risk]}</strong>
+              <div className="person-score-meter-scale" aria-hidden="true">
+                <span>Baixa</span>
+                <span>Alta</span>
+              </div>
             </div>
           </section>
 
