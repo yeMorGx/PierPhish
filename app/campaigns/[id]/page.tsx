@@ -277,6 +277,16 @@ function statusLabel(value: string | null) {
   return value;
 }
 
+function statusTone(value: string | null) {
+  if (containsSignal(value, ["submitted", "submit", "data"])) {
+    return "critical";
+  }
+  if (containsSignal(value, ["click", "link"])) return "action";
+  if (containsSignal(value, ["report"])) return "safe";
+  if (containsSignal(value, ["open"])) return "info";
+  return "neutral";
+}
+
 function fullName(result: RawResult) {
   const name = [result.first_name, result.last_name]
     .filter(Boolean)
@@ -860,7 +870,10 @@ export default function CampaignPeoplePage() {
                             </span>
                           </td>
                           <td className="px-2 py-4">
-                            <span className="inline-flex rounded-full bg-[#f3f5f5] px-2.5 py-1.5 text-[10px] font-bold text-[#697680]">
+                            <span
+                              className={`campaign-status-badge is-${statusTone(person.status)}`}
+                            >
+                              <span aria-hidden="true" />
                               {person.status}
                             </span>
                           </td>
@@ -971,17 +984,15 @@ function Signal({
   tone: "blue" | "orange" | "green";
 }) {
   const tones = {
-    blue: "bg-[#edf3f5] text-[#6f8995]",
-    orange: "bg-[#fff0e9] text-[#b4775e]",
-    green: "bg-[#f0f6df] text-[#778d4e]",
+    blue: "blue",
+    orange: "orange",
+    green: "green",
   };
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold ${active ? tones[tone] : "bg-[#f7f8f8] text-[#c1c7ca]"}`}
+      className={`campaign-signal is-${tones[tone]} ${active ? "is-active" : "is-inactive"}`}
     >
-      <span
-        className={`size-1.5 rounded-full ${active ? (tone === "blue" ? "bg-[#7892a0]" : tone === "orange" ? "bg-[#cf8b6b]" : "bg-[#9dbd47]") : "bg-[#d4d9db]"}`}
-      />
+      <span className="campaign-signal-dot" />
       {label}
     </span>
   );

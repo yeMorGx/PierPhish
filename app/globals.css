@@ -24,6 +24,16 @@
   --success: var(--accent);
   --signal: var(--accent);
   --signal-soft: var(--accent-soft);
+  --campaign-status-info: #5f8393;
+  --campaign-status-info-soft: #edf3f5;
+  --campaign-status-action: #b4775e;
+  --campaign-status-action-soft: #fff0e9;
+  --campaign-status-safe: #778d4e;
+  --campaign-status-safe-soft: #f0f6df;
+  --campaign-status-critical: #b8626a;
+  --campaign-status-critical-soft: #f9eaed;
+  --campaign-status-neutral: #697680;
+  --campaign-status-neutral-soft: #f3f5f5;
   --aqua: #6e777e;
   --font-display:
     "Avenir Next", "Segoe UI Variable", "Century Gothic", "Trebuchet MS",
@@ -71,6 +81,16 @@ html[data-theme="dark"] {
   --success: var(--accent);
   --signal: var(--accent);
   --signal-soft: var(--accent-soft);
+  --campaign-status-info: #a3c5cf;
+  --campaign-status-info-soft: #243941;
+  --campaign-status-action: #f0ad91;
+  --campaign-status-action-soft: #3a2928;
+  --campaign-status-safe: #b8d98e;
+  --campaign-status-safe-soft: #283528;
+  --campaign-status-critical: #ef9aa0;
+  --campaign-status-critical-soft: #452a30;
+  --campaign-status-neutral: #aeb9ba;
+  --campaign-status-neutral-soft: #243238;
   --aqua: #a7b0b0;
   --card-border: rgba(221, 231, 229, 0.14);
   --card-shadow: none;
@@ -8130,6 +8150,80 @@ html[data-theme="dark"] .login-error {
 }
 
 /* Shared semantic accents */
+.campaign-status-badge,
+.campaign-signal {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: var(--font-data);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.campaign-status-badge {
+  gap: 6px;
+  padding: 7px 10px;
+  font-size: 10px;
+}
+
+.campaign-status-badge > span,
+.campaign-signal-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.campaign-status-badge.is-info,
+.campaign-signal.is-blue {
+  border-color: color-mix(in srgb, var(--campaign-status-info) 28%, transparent);
+  color: var(--campaign-status-info);
+  background: var(--campaign-status-info-soft);
+}
+
+.campaign-status-badge.is-action,
+.campaign-signal.is-orange {
+  border-color: color-mix(in srgb, var(--campaign-status-action) 28%, transparent);
+  color: var(--campaign-status-action);
+  background: var(--campaign-status-action-soft);
+}
+
+.campaign-status-badge.is-safe,
+.campaign-signal.is-green {
+  border-color: color-mix(in srgb, var(--campaign-status-safe) 28%, transparent);
+  color: var(--campaign-status-safe);
+  background: var(--campaign-status-safe-soft);
+}
+
+.campaign-status-badge.is-critical {
+  border-color: color-mix(in srgb, var(--campaign-status-critical) 30%, transparent);
+  color: var(--campaign-status-critical);
+  background: var(--campaign-status-critical-soft);
+}
+
+.campaign-status-badge.is-neutral {
+  border-color: color-mix(in srgb, var(--campaign-status-neutral) 24%, transparent);
+  color: var(--campaign-status-neutral);
+  background: var(--campaign-status-neutral-soft);
+}
+
+.campaign-signal {
+  gap: 5px;
+  padding: 6px 9px;
+  font-size: 9px;
+}
+
+.campaign-signal.is-inactive {
+  border-color: var(--line-soft);
+  opacity: 0.58;
+}
+
+.campaign-signal.is-inactive .campaign-signal-dot {
+  opacity: 0.7;
+}
+
 .campaign-status-progress,
 .risk-signal-orange.is-active {
   color: var(--signal);

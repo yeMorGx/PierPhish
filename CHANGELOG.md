@@ -61,6 +61,13 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-26 — Cores semânticas para status e sinais
+
+- A tabela de pessoas impactadas passou a diferenciar visualmente status de abertura, clique, reporte, envio de dados e estados neutros.
+- Os sinais de abriu, clicou e reportou agora mantêm cores próprias nos estados ativo e inativo, com tokens específicos para os temas claro e escuro.
+- Validações: Prettier em `app/campaigns/[id]/page.tsx`, `tsc --noEmit`, `git diff --check` e detector visual passaram; o detector manteve apenas os dois avisos preexistentes de `side-tab` e transição de largura.
+- Commit/push e confirmação visual em produção ainda pendentes.
+
 ### 2026-09-25 — Prévia de e-mail em drawer lateral
 
 - Removido o card grande embutido de “Exemplo do e-mail” e criado um gatilho compacto no card principal da campanha, tanto na visão visual quanto na visão clássica.
