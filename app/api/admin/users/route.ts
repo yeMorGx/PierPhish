@@ -223,6 +223,32 @@ async function canOwnerManageUser(
     };
   }
 
+  // Check if the target is an owner in ANY workspace, not just the requester's workspaces.
+  // This prevents a workspace owner from performing account-global operations (delete, password reset)
+  // on users who are owners of other workspaces.
+  const { data: allOwnerMemberships, error: allOwnerError } = await client
+    .from("pierphish_workspace_members")
+    .select("workspace_id")
+    .eq("user_id", targetId)
+    .eq("status", "active")
+    .eq("role", "owner");
+  if (allOwnerError) {
+    return {
+      allowed: false,
+      error: responseError("Não foi possível verificar o usuário.", 503),
+    };
+  }
+
+  if (allOwnerMemberships && allOwnerMemberships.length > 0) {
+    return {
+      allowed: false,
+      error: responseError(
+        "A conta de um proprietário não pode ser alterada por outro proprietário.",
+        403,
+      ),
+    };
+  }
+
   return { allowed: true, error: null };
 }
 
