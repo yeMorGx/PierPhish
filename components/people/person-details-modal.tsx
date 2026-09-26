@@ -14,6 +14,10 @@ export type PersonDetails = {
   email: string;
   position: string;
   department: string;
+  company?: {
+    name: string;
+    logoUrl: string | null;
+  } | null;
   status: string;
   campaigns: Array<{ id: number; name: string }>;
   opened: boolean;

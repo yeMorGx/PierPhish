@@ -32,7 +32,11 @@ import {
   loadWorkspaceExcludedEmails,
   normalizeWorkspaceEmail,
 } from "@/lib/workspace-exclusions";
-import { readActiveWorkspaceId } from "@/lib/company-data";
+import {
+  demoCompanies,
+  readActiveWorkspaceId,
+  readLocalCompanies,
+} from "@/lib/company-data";
 
 type RiskLevel = "high" | "attention" | "low";
 type RiskFilter = "all" | RiskLevel;
@@ -65,6 +69,13 @@ type CampaignRow = {
   id: number;
   name: string;
   synced_at: string | null;
+  company_id: string | null;
+};
+
+type CompanyLogo = {
+  id: string;
+  name: string;
+  logoUrl: string | null;
 };
 
 const riskColumn = createColumnHelper<RiskPerson>();
@@ -250,14 +261,33 @@ function scoreFromSignals({
   return 0;
 }
 
+function withDemoCompany(people: RiskPerson[]) {
+  const company =
+    readLocalCompanies().find((item) => item.status === "active") ??
+    demoCompanies[0];
+  if (!company) return people;
+
+  return people.map((person) => ({
+    ...person,
+    company: {
+      name: company.name,
+      logoUrl: company.logoUrl,
+    },
+  }));
+}
+
 function buildPeople(
   results: RawResult[],
   events: RawEvent[],
   campaigns: CampaignRow[],
+  companies: CompanyLogo[],
   personAvatars: PersonAvatarMap = {},
 ) {
   const campaignById = new Map(
     campaigns.map((campaign) => [campaign.id, campaign]),
+  );
+  const companyById = new Map(
+    companies.map((company) => [company.id, company]),
   );
   const eventsByPerson = new Map<string, RawEvent[]>();
 
@@ -299,6 +329,9 @@ function buildPeople(
       ...relatedEvents.map((event) => event.occurred_at),
     ]);
     const campaign = campaignById.get(result.campaign_id);
+    const company = campaign?.company_id
+      ? companyById.get(campaign.company_id)
+      : undefined;
     const existing = peopleByKey.get(personKey);
 
     if (existing) {
@@ -325,6 +358,12 @@ function buildPeople(
       ) {
         existing.campaigns.push({ id: campaign.id, name: campaign.name });
       }
+      if (!existing.company && company) {
+        existing.company = {
+          name: company.name,
+          logoUrl: company.logoUrl,
+        };
+      }
       existing.risk = riskFromSignals(existing);
       existing.score = scoreFromSignals(existing);
       continue;
@@ -337,6 +376,9 @@ function buildPeople(
       email: result.email ?? "E-mail não informado",
       position: result.position ?? "—",
       department: result.department ?? "—",
+      company: company
+        ? { name: company.name, logoUrl: company.logoUrl }
+        : null,
       status: statusLabel(result.status),
       campaigns: campaign ? [{ id: campaign.id, name: campaign.name }] : [],
       opened,
@@ -421,12 +463,30 @@ function RiskBadge({ level }: { level: RiskLevel }) {
   );
 }
 
+function CompanyMark({ company }: { company: RiskPerson["company"] }) {
+  if (!company) return null;
+
+  return (
+    <span
+      aria-hidden="true"
+      className="risk-company-mark"
+      title={`Empresa: ${company.name}`}
+    >
+      {company.logoUrl ? (
+        <img alt="" src={company.logoUrl} />
+      ) : (
+        company.name.trim().slice(0, 1).toUpperCase() || "E"
+      )}
+    </span>
+  );
+}
+
 function PeopleRiskPage() {
   const { preferences: themePreferences } = useTheme();
   const activeWorkspaceId = useActiveWorkspaceId();
   const workspaceHasBeephishData = hasBeephishData(activeWorkspaceId);
   const [people, setPeople] = useState<RiskPerson[]>(
-    isSupabaseConfigured ? [] : demoRiskPeople,
+    isSupabaseConfigured ? [] : withDemoCompany(demoRiskPeople),
   );
   const [campaignTotal, setCampaignTotal] = useState(
     isSupabaseConfigured ? 0 : demoCampaigns.length,
@@ -456,10 +516,12 @@ function PeopleRiskPage() {
     }
     if (!isSupabaseConfigured) {
       setPeople(
-        demoRiskPeople.map((person) => ({
-          ...person,
-          avatar: personAvatars[person.id] ?? person.avatar ?? null,
-        })),
+        withDemoCompany(
+          demoRiskPeople.map((person) => ({
+            ...person,
+            avatar: personAvatars[person.id] ?? person.avatar ?? null,
+          })),
+        ),
       );
       setCampaignTotal(demoCampaigns.length);
       setUpdatedAt("2026-09-02T15:14:59Z");
@@ -477,6 +539,25 @@ function PeopleRiskPage() {
     );
   }, []);
 
+  async function loadCompanyLogos(workspaceId: string) {
+    if (!supabase) return [] as CompanyLogo[];
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) return [] as CompanyLogo[];
+
+    const response = await fetch(
+      `/api/risk/company-logos?workspaceId=${encodeURIComponent(workspaceId)}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!response.ok) return [] as CompanyLogo[];
+
+    const body = (await response.json().catch(() => ({}))) as {
+      companies?: CompanyLogo[];
+    };
+    return body.companies ?? [];
+  }
+
   async function loadData() {
     if (!supabase || !workspaceHasBeephishData) {
       setLoading(false);
@@ -485,27 +566,29 @@ function PeopleRiskPage() {
     setLoading(true);
     setError(null);
 
-    const [campaignResult, resultResult, eventResult] = await Promise.all([
-      supabase
-        .from("beephish_campaigns")
-        .select("id,name,synced_at")
-        .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
-        .order("launch_date", { ascending: false }),
-      supabase
-        .from("beephish_results")
-        .select(
-          "campaign_id,beephish_id,status,reported,email,first_name,last_name,position,department,modified_date,send_date",
-        )
-        .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
-        .order("modified_date", { ascending: false })
-        .limit(5000),
-      supabase
-        .from("beephish_events")
-        .select("campaign_id,beephish_event_id,event_type,email,occurred_at")
-        .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
-        .order("occurred_at", { ascending: false })
-        .limit(5000),
-    ]);
+    const [campaignResult, resultResult, eventResult, companyLogos] =
+      await Promise.all([
+        supabase
+          .from("beephish_campaigns")
+          .select("id,name,synced_at,company_id")
+          .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
+          .order("launch_date", { ascending: false }),
+        supabase
+          .from("beephish_results")
+          .select(
+            "campaign_id,beephish_id,status,reported,email,first_name,last_name,position,department,modified_date,send_date",
+          )
+          .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
+          .order("modified_date", { ascending: false })
+          .limit(5000),
+        supabase
+          .from("beephish_events")
+          .select("campaign_id,beephish_event_id,event_type,email,occurred_at")
+          .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
+          .order("occurred_at", { ascending: false })
+          .limit(5000),
+        loadCompanyLogos(activeWorkspaceId),
+      ]);
 
     const queryError =
       campaignResult.error ?? resultResult.error ?? eventResult.error;
@@ -532,6 +615,7 @@ function PeopleRiskPage() {
         visibleResults,
         visibleEvents,
         campaignRows,
+        companyLogos,
         readPersonAvatars(),
       ),
     );
@@ -827,6 +911,7 @@ function PeopleRiskPage() {
                                     name={person.name}
                                     size="sm"
                                   />
+                                  <CompanyMark company={person.company} />
                                   <span className="min-w-0">
                                     <strong>{person.name}</strong>
                                     <small>{person.email}</small>
