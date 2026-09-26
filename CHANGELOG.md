@@ -68,7 +68,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - Instalado `shadcn@4.21.0` como dependência de desenvolvimento, aprovado somente o build do `esbuild` e registrado o servidor global `shadcn` no Codex usando `pnpm exec shadcn mcp`. React Bits Pro e Spell UI continuam dependendo dos respectivos registries em `components.json`; React Bits também exige licença.
 - Loading.dev, Unlumen UI, Bencho, Osmo e Inspora foram registrados como fontes sem MCP oficial encontrado na verificação; o manual explica como usar cada uma sem inventar endpoints.
 - Validações: `codex mcp list` confirmou os três servidores remotos e `shadcn` habilitados; `pnpm exec shadcn mcp init --client codex` concluiu e exibiu a configuração do cliente. `npx` não está disponível nesta máquina, e o `pnpm dlx` inicial falhou com `ERR_MODULE_NOT_FOUND` para `chalk`; o binário local funcionou após a instalação e aprovação do build. Nenhum teste automatizado foi executado.
-- Commit `a852bd9` criado e push para `origin/main` confirmado; não há deploy ou confirmação visual de produção envolvidos nesta tarefa.
+- Commit `262eed2` criado e push para `origin/main` confirmado; não há deploy ou confirmação visual de produção envolvidos nesta tarefa.
 
 ### 2026-09-26 — Microinterações inspiradas em bibliotecas de componentes
 
