@@ -99,7 +99,7 @@ export function ProfileEditorCard() {
           />
         </label>
       </div>
-      <div className="mt-7 border-t border-[#edf0f1] pt-5">
+      <div className="mt-7 border-t border-[var(--line-soft)] pt-5">
         <div className="flex items-end justify-between gap-4 max-[560px]:flex-col max-[560px]:items-start">
           <div>
             <p className="m-0 text-[10px] font-extrabold tracking-[0.14em] text-[#9299a2] uppercase">

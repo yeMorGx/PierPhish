@@ -136,7 +136,7 @@ export function AnimatedTooltip({
                     rotate,
                     whiteSpace: "nowrap",
                   }}
-                  className="flex max-w-[250px] flex-col items-center justify-center rounded-[10px] border border-[#dfe5e8] bg-white px-3 py-2 text-left"
+                  className="flex max-w-[250px] flex-col items-center justify-center rounded-[10px] border border-[var(--line)] bg-white px-3 py-2 text-left"
                   role="tooltip"
                 >
                   {isShowingRemaining ? (

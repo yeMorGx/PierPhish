@@ -88,7 +88,7 @@ export function SignalSummaryCard({
         ))}
       </div>
 
-      <div className="bento-signals-footer mt-5 border-t border-[#ebedeb] pt-4 text-[10px] text-[#7c8790]">
+      <div className="bento-signals-footer mt-5 border-t border-[var(--line-soft)] pt-4 text-[10px] text-[#7c8790]">
         Comece por quem clicou ou enviou dados.
       </div>
     </article>

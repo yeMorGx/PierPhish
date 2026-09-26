@@ -19,7 +19,10 @@ export function InvestigationCard({
   selectedCampaignId,
 }: InvestigationCardProps) {
   return (
-    <article id="individual-investigation" className="surface-card scroll-mt-4 col-span-2 min-w-0 overflow-hidden rounded-[var(--radius-card)] p-[25px] max-[1120px]:col-span-full max-[1120px]:rounded-[45px] max-[720px]:col-span-1 max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
+    <article
+      id="individual-investigation"
+      className="surface-card col-span-2 min-w-0 scroll-mt-4 overflow-hidden rounded-[var(--radius-card)] p-[25px] max-[1120px]:col-span-full max-[1120px]:rounded-[45px] max-[720px]:col-span-1 max-[720px]:rounded-[23px] max-[720px]:p-[22px]"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="mb-[9px] text-[10px] leading-none font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
@@ -33,7 +36,7 @@ export function InvestigationCard({
           <label className="min-w-0 flex-1">
             <span className="sr-only">Campanha para investigar</span>
             <select
-              className="min-h-[34px] w-full max-w-[250px] rounded-[10px] border border-[#e4e8ea] bg-[#fafbfb] px-2.5 text-[10px] font-bold text-[#52616c] outline-none focus:border-[#7d92a0] focus:ring-[3px] focus:ring-[rgba(125,146,160,0.12)]"
+              className="min-h-[34px] w-full max-w-[250px] rounded-[10px] border border-[var(--line)] bg-[#fafbfb] px-2.5 text-[10px] font-bold text-[#52616c] outline-none focus:border-[var(--accent)] focus:ring-[3px] focus:ring-[rgba(125,146,160,0.12)]"
               value={selectedCampaignId ?? ""}
               onChange={(event) => onSelectedChange(Number(event.target.value))}
               disabled={!campaigns.length}
@@ -56,7 +59,7 @@ export function InvestigationCard({
       <div className="mt-[17px]">
         {events.map((event, index) => (
           <div
-            className="grid grid-cols-[10px_1fr_15px] items-center gap-[11px] border-b border-[#eff0f0] py-[14px] last:border-0"
+            className="grid grid-cols-[10px_1fr_15px] items-center gap-[11px] border-b border-[var(--line-soft)] py-[14px] last:border-0"
             key={event.id}
           >
             <span

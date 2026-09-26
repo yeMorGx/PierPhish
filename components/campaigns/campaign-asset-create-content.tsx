@@ -479,7 +479,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                   maxLength={120}
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[#aab8bd]"
+                  className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                   placeholder={
                     type === "group"
                       ? "Ex.: Equipe de teste autorizada"
@@ -558,7 +558,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                                       event.target.value,
                                     )
                                   }
-                                  className="h-9 w-full rounded-[8px] border border-[var(--line)] bg-[var(--surface)] px-2 text-[11px] font-normal text-[var(--ink)] outline-none focus:border-[#aab8bd]"
+                                  className="h-9 w-full rounded-[8px] border border-[var(--line)] bg-[var(--surface)] px-2 text-[11px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                                   placeholder={
                                     field === "email"
                                       ? "nome@empresa.com"

@@ -928,7 +928,7 @@ function SettingsContent() {
                   </p>
                 </div>
                 <button
-                  className="grid size-9 flex-none place-items-center rounded-[11px] border border-[#e1e5e6] text-[#7d8990] transition-colors hover:bg-[#f4f6f6]"
+                  className="grid size-9 flex-none place-items-center rounded-[11px] border border-[var(--line)] text-[#7d8990] transition-colors hover:bg-[#f4f6f6]"
                   type="button"
                   aria-label="Fechar exclusão da conta"
                   onClick={() => setDangerModalOpen(false)}
@@ -941,7 +941,7 @@ function SettingsContent() {
               <label className="mt-6 grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
                 Senha atual
                 <input
-                  className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[#f7f8f8] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] outline-none focus:border-[#c77968]"
+                  className="h-12 rounded-[14px] border border-[var(--line)] bg-[#f7f8f8] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] outline-none focus:border-[#c77968]"
                   value={dangerPassword}
                   onChange={(event) => setDangerPassword(event.target.value)}
                   type="password"
@@ -971,7 +971,7 @@ function SettingsContent() {
               )}
               <div className="mt-6 flex justify-end gap-2">
                 <button
-                  className="h-11 rounded-[13px] border border-[#e1e5e6] px-4 text-[12px] font-bold text-[#687780] transition-colors hover:bg-[#f5f7f7]"
+                  className="h-11 rounded-[13px] border border-[var(--line)] px-4 text-[12px] font-bold text-[#687780] transition-colors hover:bg-[#f5f7f7]"
                   type="button"
                   onClick={() => setDangerModalOpen(false)}
                   disabled={deletingAccount}

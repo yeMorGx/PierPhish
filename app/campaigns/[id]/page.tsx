@@ -636,7 +636,7 @@ export default function CampaignPeoplePage() {
             {sessionEmail ?? "Modo demonstração"}
           </span>
           <button
-            className="surface-card grid size-10 place-items-center rounded-[var(--radius-control)] text-[#6f7883] transition hover:border-[#cbd0d5] hover:text-[var(--ink)]"
+            className="surface-card grid size-10 place-items-center rounded-[var(--radius-control)] text-[#6f7883] transition hover:border-[var(--muted)] hover:text-[var(--ink)]"
             type="button"
             aria-label="Atualizar dados"
             onClick={() => void loadData()}
@@ -780,14 +780,14 @@ export default function CampaignPeoplePage() {
                       <Icon name="search" size={15} />
                     </span>
                     <input
-                      className="h-10 w-full rounded-[var(--radius-control)] border border-[var(--line)] bg-[#fbfcfc] pr-3 pl-9 text-[11px] text-[var(--ink)] outline-none focus:border-[#8a9ba6] focus:ring-2 focus:ring-[#e6edef]"
+                      className="h-10 w-full rounded-[var(--radius-control)] border border-[var(--line)] bg-[#fbfcfc] pr-3 pl-9 text-[11px] text-[var(--ink)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[#e6edef]"
                       placeholder="Buscar nome ou e-mail"
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
                     />
                   </label>
                 </div>
-                <div className="mt-6 flex flex-wrap gap-2 border-b border-[#edf0f1] pb-4">
+                <div className="mt-6 flex flex-wrap gap-2 border-b border-[var(--line-soft)] pb-4">
                   {(
                     [
                       ["all", "Todas"],
@@ -797,7 +797,7 @@ export default function CampaignPeoplePage() {
                     ] as [Filter, string][]
                   ).map(([value, label]) => (
                     <button
-                      className={`rounded-full border px-3 py-2 text-[10px] font-bold transition-colors ${filter === value ? "border-[var(--ink)] bg-[var(--ink)] text-white" : "border-[#e5e9ea] bg-transparent text-[#7d8790] hover:border-[#aab5bb]"}`}
+                      className={`rounded-full border px-3 py-2 text-[10px] font-bold transition-colors ${filter === value ? "border-[var(--ink)] bg-[var(--ink)] text-white" : "border-[var(--line)] bg-transparent text-[#7d8790] hover:border-[var(--muted)]"}`}
                       type="button"
                       key={value}
                       onClick={() => setFilter(value)}
@@ -809,7 +809,7 @@ export default function CampaignPeoplePage() {
                 <div className="mt-2 overflow-x-auto">
                   <table className="w-full min-w-[700px] border-collapse text-left">
                     <thead>
-                      <tr className="border-b border-[#edf0f1] text-[10px] font-extrabold tracking-[0.12em] text-[#9aa2a8] uppercase">
+                      <tr className="border-b border-[var(--line-soft)] text-[10px] font-extrabold tracking-[0.12em] text-[#9aa2a8] uppercase">
                         <th className="px-2 py-4 font-extrabold">Pessoa</th>
                         <th className="px-2 py-4 font-extrabold">Área</th>
                         <th className="px-2 py-4 font-extrabold">Status</th>
@@ -822,7 +822,7 @@ export default function CampaignPeoplePage() {
                     <tbody>
                       {visiblePeople.map((person) => (
                         <tr
-                          className="border-b border-[#f0f2f2] last:border-0"
+                          className="border-b border-[var(--line-soft)] last:border-0"
                           key={person.id}
                         >
                           <td className="px-2 py-4">
@@ -904,7 +904,7 @@ export default function CampaignPeoplePage() {
                 <div className="mt-6 flex flex-col">
                   {events.slice(0, 8).map((event, index) => (
                     <div
-                      className="relative flex gap-3 border-b border-[#f0f2f2] py-4 first:pt-0 last:border-0"
+                      className="relative flex gap-3 border-b border-[var(--line-soft)] py-4 first:pt-0 last:border-0"
                       key={event.beephish_event_id}
                     >
                       <span
@@ -925,7 +925,7 @@ export default function CampaignPeoplePage() {
                         <Icon name="arrow" size={14} />
                       </span>
                       {index < Math.min(events.length, 8) - 1 && (
-                        <span className="absolute bottom-[-1px] left-[3px] h-4 w-px bg-[#edf0f1]" />
+                        <span className="absolute bottom-[-1px] left-[3px] h-4 w-px bg-[var(--line-soft)]" />
                       )}
                     </div>
                   ))}

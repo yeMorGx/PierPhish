@@ -198,7 +198,7 @@ export function CampaignOverviewCard({
                     <Icon name="help" size={10} />
                   </summary>
                   <span
-                    className={`absolute top-full left-1/2 z-30 mt-2 hidden w-56 max-w-[calc(100vw-3rem)] -translate-x-1/2 rounded-xl border border-[#e2e7e9] bg-white p-3 text-left text-[11px] leading-5 font-normal whitespace-normal text-[#34404a] shadow-[0_8px_24px_rgba(24,32,43,0.14)] group-open:block ${mobilePopoverAlignment}`}
+                    className={`absolute top-full left-1/2 z-30 mt-2 hidden w-56 max-w-[calc(100vw-3rem)] -translate-x-1/2 rounded-xl border border-[var(--line)] bg-white p-3 text-left text-[11px] leading-5 font-normal whitespace-normal text-[#34404a] shadow-[0_8px_24px_rgba(24,32,43,0.14)] group-open:block ${mobilePopoverAlignment}`}
                   >
                     {help}
                   </span>
@@ -212,13 +212,13 @@ export function CampaignOverviewCard({
         })}
       </div>
 
-      <div className="campaign-overview-table-wrap mt-5 overflow-x-auto rounded-[18px] border border-[#edf0f1]">
+      <div className="campaign-overview-table-wrap mt-5 overflow-x-auto rounded-[18px] border border-[var(--line-soft)]">
         <table
           className="campaign-overview-table w-full min-w-[820px] border-collapse text-left"
           aria-label="Resumo de todas as campanhas"
         >
           <thead>
-            <tr className="campaign-overview-table-head border-b border-[#edf0f1] bg-[#fafbfb] text-[11px] tracking-[0.1em] text-[var(--text-muted)] uppercase">
+            <tr className="campaign-overview-table-head border-b border-[var(--line-soft)] bg-[#fafbfb] text-[11px] tracking-[0.1em] text-[var(--text-muted)] uppercase">
               <th className="w-[48px] px-4 py-3 font-extrabold">#</th>
               <th className="px-4 py-3 font-extrabold">Campanha</th>
               <th className="px-4 py-3 font-extrabold">Participações</th>
@@ -232,7 +232,7 @@ export function CampaignOverviewCard({
           <tbody>
             {campaigns.map((campaign, index) => (
               <tr
-                className="campaign-overview-table-row border-b border-[#f0f1f2] text-[11px] text-[#69737d] last:border-0 hover:bg-[#fcfdfd]"
+                className="campaign-overview-table-row border-b border-[var(--line-soft)] text-[11px] text-[#69737d] last:border-0 hover:bg-[#fcfdfd]"
                 key={campaign.id}
               >
                 <td className="px-4 py-3.5 font-bold text-[var(--text-muted)]">

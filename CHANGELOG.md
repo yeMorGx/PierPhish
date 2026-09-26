@@ -61,6 +61,13 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-25 — Normalização de bordas por tema
+
+- Varredura do site para substituir bordas e divisores neutros hardcoded por `var(--line)`, `var(--line-soft)`, `var(--muted)` ou `var(--accent)` conforme o papel do elemento.
+- Atualizados dashboard, detalhes de campanhas, configurações, usuários, perfil, tooltips e formulários; bordas de erro, aviso, sucesso e superfícies intencionalmente escuras foram preservadas.
+- Validações: Prettier nos arquivos TS/TSX alterados, `tsc --noEmit`, `git diff --check` e detector visual passaram; o detector manteve apenas dois avisos preexistentes fora deste ajuste.
+- Commit/push desta alteração pendentes.
+
 ### 2026-09-25 — Ajuste das bordas da visão geral e configurações
 
 - Removido o divisor inferior do card de aberturas da visão geral, mantendo o restante do layout inalterado.

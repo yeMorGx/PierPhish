@@ -208,8 +208,7 @@ function isGlobalAdminUser(user: ReturnType<typeof useAuth>["user"]) {
   if (!isSupabaseConfigured) return true;
   if (user?.email?.toLowerCase() === superAdminEmail) return true;
   const metadata = user?.app_metadata as
-    | { role?: unknown; is_admin?: unknown }
-    | undefined;
+    { role?: unknown; is_admin?: unknown } | undefined;
   return (
     metadata?.is_admin === true ||
     metadata?.role === "admin" ||
@@ -862,7 +861,7 @@ export function UserManagementContent() {
         {adminAccess && (
           <>
             {!isSupabaseConfigured && (
-              <section className="flex items-center gap-3 rounded-[var(--radius-card)] border border-[#dfe6e7] bg-[var(--surface-soft)] px-5 py-4 text-[11px] text-[#687780]">
+              <section className="flex items-center gap-3 rounded-[var(--radius-card)] border border-[var(--line)] bg-[var(--surface-soft)] px-5 py-4 text-[11px] text-[#687780]">
                 <span className="grid size-7 flex-none place-items-center rounded-full bg-[var(--surface)] text-[var(--aqua)]">
                   <Icon name="settings" size={15} />
                 </span>
@@ -900,7 +899,7 @@ export function UserManagementContent() {
                   <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
                     Nome completo
                     <input
-                      className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[#90a7af]"
+                      className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[var(--accent)]"
                       value={name}
                       onChange={(event) => setName(event.target.value)}
                       placeholder="Ex.: Mariana Souza"
@@ -912,7 +911,7 @@ export function UserManagementContent() {
                   <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
                     E-mail de acesso
                     <input
-                      className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[#90a7af]"
+                      className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[var(--accent)]"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
                       placeholder="mariana@empresa.com"
@@ -925,7 +924,7 @@ export function UserManagementContent() {
                     <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
                       Workspace
                       <select
-                        className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none focus:border-[#90a7af] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none focus:border-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
                         value={selectedWorkspaceId}
                         onChange={(event) =>
                           setSelectedWorkspaceId(event.target.value)
@@ -955,7 +954,7 @@ export function UserManagementContent() {
                     <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
                       Nível de acesso
                       <select
-                        className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none focus:border-[#90a7af]"
+                        className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none focus:border-[var(--accent)]"
                         value={selectedRole}
                         onChange={(event) =>
                           setSelectedRole(event.target.value as WorkspaceRole)
@@ -976,7 +975,7 @@ export function UserManagementContent() {
                       )?.description
                     }
                   </p>
-                  <label className="flex items-start gap-3 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 py-3 text-[11px] text-[#687780]">
+                  <label className="flex items-start gap-3 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 py-3 text-[11px] text-[#687780]">
                     <input
                       className="mt-0.5 size-4 accent-[var(--accent)]"
                       type="checkbox"
@@ -999,7 +998,7 @@ export function UserManagementContent() {
                     Senha inicial
                     <div className="flex gap-2">
                       <input
-                        className="h-12 min-w-0 flex-1 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[#90a7af]"
+                        className="h-12 min-w-0 flex-1 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[var(--accent)]"
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
                         placeholder="Mínimo de 12 caracteres"
@@ -1009,7 +1008,7 @@ export function UserManagementContent() {
                         required
                       />
                       <button
-                        className="h-12 rounded-[14px] border border-[#e1e5e6] px-3 text-[10px] font-bold tracking-normal text-[#6e7c84] normal-case transition-colors hover:border-[#a9b7bc]"
+                        className="h-12 rounded-[14px] border border-[var(--line)] px-3 text-[10px] font-bold tracking-normal text-[#6e7c84] normal-case transition-colors hover:border-[var(--muted)]"
                         type="button"
                         onClick={() => setShowPassword((current) => !current)}
                       >
@@ -1067,7 +1066,7 @@ export function UserManagementContent() {
                     "Troca da senha no primeiro acesso",
                   ].map((item) => (
                     <div className="flex items-start gap-3" key={item}>
-                      <span className="mt-0.5 grid size-5 flex-none place-items-center rounded-full border border-[#819198] text-[#d9e2e2]">
+                      <span className="mt-0.5 grid size-5 flex-none place-items-center rounded-full border border-[var(--contrast-line)] text-[#d9e2e2]">
                         <Icon name="check" size={12} />
                       </span>
                       <span className="text-[11px] leading-relaxed text-[#c0cbcd]">
@@ -1114,7 +1113,7 @@ export function UserManagementContent() {
                 <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
                   E-mail da conta existente
                   <input
-                    className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[#90a7af]"
+                    className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[var(--accent)]"
                     value={inviteEmail}
                     onChange={(event) => setInviteEmail(event.target.value)}
                     placeholder="pessoa@empresa.com"
@@ -1126,7 +1125,7 @@ export function UserManagementContent() {
                 <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
                   Workspace
                   <select
-                    className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors outline-none focus:border-[#90a7af] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors outline-none focus:border-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
                     value={inviteWorkspaceId}
                     onChange={(event) =>
                       setInviteWorkspaceId(event.target.value)
@@ -1154,7 +1153,7 @@ export function UserManagementContent() {
                 <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
                   Nível de acesso
                   <select
-                    className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors outline-none focus:border-[#90a7af]"
+                    className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors outline-none focus:border-[var(--accent)]"
                     value={inviteRole}
                     onChange={(event) =>
                       setInviteRole(event.target.value as WorkspaceRole)
@@ -1237,7 +1236,7 @@ export function UserManagementContent() {
                   </h2>
                 </div>
                 <button
-                  className="inline-flex items-center gap-2 rounded-[11px] border border-[#e1e5e6] px-3 py-2 text-[10px] font-bold text-[#6e7c84] transition-colors hover:border-[#a9b7bc]"
+                  className="inline-flex items-center gap-2 rounded-[11px] border border-[var(--line)] px-3 py-2 text-[10px] font-bold text-[#6e7c84] transition-colors hover:border-[var(--muted)]"
                   type="button"
                   onClick={() => void loadUsers()}
                   disabled={loadingUsers || !isSupabaseConfigured}
@@ -1365,7 +1364,7 @@ export function UserManagementContent() {
                               {canManageTarget(managedUser) ? (
                                 <div className="flex justify-end gap-2">
                                   <button
-                                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#e1e5e6] px-2.5 py-2 text-[10px] font-bold text-[#687780] transition-colors hover:border-[#9eafb5] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[#687780] transition-colors hover:border-[var(--muted)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
                                     type="button"
                                     onClick={() =>
                                       openResetPassword(managedUser)
@@ -1419,7 +1418,7 @@ export function UserManagementContent() {
           }}
         >
           <form
-            className="w-full max-w-[460px] rounded-[24px] border border-[#dfe4e5] bg-white p-6 shadow-[0_24px_70px_rgba(24,32,43,0.18)]"
+            className="w-full max-w-[460px] rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-[0_24px_70px_rgba(24,32,43,0.18)]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="reset-user-password-title"
@@ -1443,7 +1442,7 @@ export function UserManagementContent() {
                 </p>
               </div>
               <button
-                className="grid size-9 flex-none place-items-center rounded-[11px] border border-[#e1e5e6] text-[#7d8990] transition-colors hover:bg-[#f4f6f6]"
+                className="grid size-9 flex-none place-items-center rounded-[11px] border border-[var(--line)] text-[#7d8990] transition-colors hover:bg-[#f4f6f6]"
                 type="button"
                 aria-label="Fechar redefinição de senha"
                 onClick={() => setResetTarget(null)}
@@ -1455,7 +1454,7 @@ export function UserManagementContent() {
             <label className="mt-6 grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
               Nova senha temporária
               <input
-                className="h-12 rounded-[14px] border border-[#e1e5e6] bg-[#f7f8f8] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] outline-none focus:border-[#90a7af]"
+                className="h-12 rounded-[14px] border border-[var(--line)] bg-[#f7f8f8] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                 value={resetPassword}
                 onChange={(event) => setResetPassword(event.target.value)}
                 type="text"
@@ -1477,7 +1476,7 @@ export function UserManagementContent() {
             )}
             <div className="mt-6 flex justify-end gap-2">
               <button
-                className="h-11 rounded-[13px] border border-[#e1e5e6] px-4 text-[12px] font-bold text-[#687780] transition-colors hover:bg-[#f5f7f7]"
+                className="h-11 rounded-[13px] border border-[var(--line)] px-4 text-[12px] font-bold text-[#687780] transition-colors hover:bg-[#f5f7f7]"
                 type="button"
                 onClick={() => setResetTarget(null)}
                 disabled={actionLoading}
@@ -1531,7 +1530,7 @@ export function UserManagementContent() {
                 </p>
               </div>
               <button
-                className="grid size-9 flex-none place-items-center rounded-[11px] border border-[#e1e5e6] text-[#7d8990] transition-colors hover:bg-[#f4f6f6]"
+                className="grid size-9 flex-none place-items-center rounded-[11px] border border-[var(--line)] text-[#7d8990] transition-colors hover:bg-[#f4f6f6]"
                 type="button"
                 aria-label="Fechar exclusão de usuário"
                 onClick={() => setDeleteTarget(null)}
@@ -1564,7 +1563,7 @@ export function UserManagementContent() {
             )}
             <div className="mt-6 flex justify-end gap-2">
               <button
-                className="h-11 rounded-[13px] border border-[#e1e5e6] px-4 text-[12px] font-bold text-[#687780] transition-colors hover:bg-[#f5f7f7]"
+                className="h-11 rounded-[13px] border border-[var(--line)] px-4 text-[12px] font-bold text-[#687780] transition-colors hover:bg-[#f5f7f7]"
                 type="button"
                 onClick={() => setDeleteTarget(null)}
                 disabled={actionLoading}

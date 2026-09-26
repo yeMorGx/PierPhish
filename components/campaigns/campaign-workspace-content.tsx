@@ -563,7 +563,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                   <label className="grid gap-2 text-[11px] font-semibold text-[var(--muted)]">
                     Nome dessa conexão
                     <input
-                      className="h-10 rounded-[11px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal tracking-normal text-[var(--ink)] normal-case outline-none focus:border-[#aab8bd]"
+                      className="h-10 rounded-[11px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal tracking-normal text-[var(--ink)] normal-case outline-none focus:border-[var(--accent)]"
                       value={connectorName}
                       maxLength={80}
                       onChange={(event) => setConnectorName(event.target.value)}
@@ -670,7 +670,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 <label className="mt-4 grid max-w-[420px] gap-1.5 text-[10px] font-bold text-[var(--muted)]">
                   AMBIENTE DE ENVIO
                   <select
-                    className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[#aab8bd]"
+                    className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                     value={campaignConnector?.id ?? ""}
                     onChange={(event) =>
                       setCampaignConnectorId(event.target.value)
@@ -691,7 +691,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                     <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
                       NOME DA CAMPANHA
                       <input
-                        className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[#aab8bd]"
+                        className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                         value={campaignName}
                         maxLength={120}
                         onChange={(event) =>
@@ -703,7 +703,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                     <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
                       MODELO DE E-MAIL
                       <select
-                        className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[#aab8bd]"
+                        className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                         value={templateId}
                         onChange={(event) => setTemplateId(event.target.value)}
                       >
@@ -726,7 +726,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                     <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
                       PÁGINA DE DESTINO
                       <select
-                        className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[#aab8bd]"
+                        className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                         value={pageId}
                         onChange={(event) => setPageId(event.target.value)}
                       >
@@ -763,7 +763,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                     <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
                       PERFIL DE ENVIO
                       <select
-                        className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[#aab8bd]"
+                        className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                         value={sendingProfileId}
                         onChange={(event) =>
                           setSendingProfileId(event.target.value)
@@ -792,7 +792,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                     <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)] md:col-span-2">
                       URL DE DESTINO HTTPS
                       <input
-                        className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[#aab8bd]"
+                        className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                         type="url"
                         inputMode="url"
                         value={destinationUrl}
@@ -906,7 +906,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                     <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
                       QUANDO ENVIAR
                       <select
-                        className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[#aab8bd]"
+                        className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                         value={launchMode}
                         onChange={(event) =>
                           setLaunchMode(
@@ -925,7 +925,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
                           INÍCIO
                           <input
-                            className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[#aab8bd]"
+                            className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                             type="datetime-local"
                             value={launchAtInput}
                             onChange={(event) =>
@@ -936,7 +936,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         <label className="grid gap-1.5 text-[10px] font-bold text-[var(--muted)]">
                           ENVIAR ATÉ · OPCIONAL
                           <input
-                            className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[#aab8bd]"
+                            className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                             type="datetime-local"
                             value={sendByInput}
                             onChange={(event) =>
@@ -1038,7 +1038,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 <label className="mt-4 grid max-w-[520px] gap-1.5 text-[10px] font-bold text-[var(--muted)]">
                   DIGITE O NOME EXATO DA CAMPANHA PARA CONFIRMAR
                   <input
-                    className="h-10 rounded-[10px] border border-[var(--line)] bg-white px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[#aab8bd]"
+                    className="h-10 rounded-[10px] border border-[var(--line)] bg-white px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                     value={confirmationText}
                     maxLength={120}
                     onChange={(event) =>

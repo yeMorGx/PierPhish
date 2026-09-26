@@ -8129,7 +8129,7 @@ html[data-card-style="apple"] .surface-card,
 }
 
 .bento-shell .sidebar-profile-button {
-  border: 1px solid #d9dddb !important;
+  border: 1px solid var(--line) !important;
   border-radius: 999px !important;
   background: #202831 !important;
   box-shadow: none !important;
@@ -8751,7 +8751,7 @@ html[data-theme="dark"] .bento-shell .surface-card {
 }
 
 html[data-theme="dark"] .bento-shell .sidebar-profile-button {
-  border-color: #3b474c !important;
+  border-color: var(--line) !important;
   background: #202831 !important;
 }
 

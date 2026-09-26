@@ -215,7 +215,7 @@ export function DashboardShell({
                   </span>
                 </span>
               </Link>
-              <div className="my-2 h-px bg-[#edf0f1]" />
+              <div className="my-2 h-px bg-[var(--line-soft)]" />
               <button
                 className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#fff5f1] hover:text-[#a5553b] focus-visible:bg-[#fff5f1] focus-visible:text-[#a5553b]"
                 type="button"
@@ -237,7 +237,7 @@ export function DashboardShell({
                   </span>
                 )}
               </button>
-              <div className="my-2 h-px bg-[#edf0f1]" />
+              <div className="my-2 h-px bg-[var(--line-soft)]" />
               <Link
                 className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#edf4f5] hover:text-[#3e6573] focus-visible:bg-[#edf4f5] focus-visible:text-[#3e6573]"
                 role="menuitem"
@@ -247,7 +247,7 @@ export function DashboardShell({
                 <Icon name="layers" size={16} />
                 Workspaces
               </Link>
-              <div className="my-2 h-px bg-[#edf0f1]" />
+              <div className="my-2 h-px bg-[var(--line-soft)]" />
               <button
                 className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#edf4f5] hover:text-[#3e6573] focus-visible:bg-[#edf4f5] focus-visible:text-[#3e6573]"
                 type="button"
@@ -260,7 +260,7 @@ export function DashboardShell({
                 <Icon name="help" size={16} />
                 Ver tour do produto
               </button>
-              <div className="my-2 h-px bg-[#edf0f1]" />
+              <div className="my-2 h-px bg-[var(--line-soft)]" />
               <button
                 className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#fff1ed] hover:text-[#a5553b] focus-visible:bg-[#fff1ed] focus-visible:text-[#a5553b]"
                 type="button"
