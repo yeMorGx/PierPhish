@@ -67,7 +67,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - Ajustados os aliases legados da interface e o modal de gerenciamento de workspace para usar a mesma escala, sem remover as cores semânticas de sucesso e risco.
 - Mantidos os cards com imagens, logos, autenticação, MFA, workspaces, campanhas e permissões sem alteração de comportamento.
 - Validações: Prettier, `pnpm exec tsc --noEmit`, `git diff --check` e detector Impeccable (`[]`) passaram. `pnpm run build` compilou, verificou tipos e gerou 59 páginas; a etapa final local continua bloqueada no Windows por `EPERM` ao criar symlinks para `.next/standalone`.
-- Commit e push desta atualização ainda pendentes. Não houve deploy, alteração remota de banco ou infraestrutura.
+- Commit `18a5ed9` (`Aplica paleta neutra inspirada no ChatGPT`) criado e push para `origin/main` confirmado. Não houve deploy, alteração remota de banco ou infraestrutura.
 
 ### 2026-09-26 — Correção da dependência de resize no build da Vercel
 
