@@ -64,6 +64,23 @@ function formatDateTime(value: string | null) {
   }).format(new Date(value));
 }
 
+function statusTone(value: string) {
+  const normalized = value.toLowerCase();
+  if (normalized.includes("submitted") || normalized.includes("dado")) {
+    return "critical";
+  }
+  if (normalized.includes("click") || normalized.includes("clic")) {
+    return "action";
+  }
+  if (normalized.includes("report")) {
+    return "safe";
+  }
+  if (normalized.includes("open") || normalized.includes("abriu")) {
+    return "info";
+  }
+  return "neutral";
+}
+
 export function PersonDetailsModal({
   person,
   onClose,
@@ -199,17 +216,26 @@ export function PersonDetailsModal({
           <section className="person-modal-score" aria-label="Resumo do risco">
             <div>
               <span className="person-modal-label">LEITURA DE RISCO</span>
-              <strong>
+              <strong className="person-score-value">
                 {person.score}
                 <small>/4</small>
               </strong>
               <p>{riskDescriptions[person.risk]}</p>
             </div>
             <div
-              className={`person-score-orb is-${person.risk}`}
-              aria-hidden="true"
+              className={`person-score-meter is-${person.risk}`}
+              role="img"
+              aria-label={`${riskLabels[person.risk]}: ${person.score} de 4`}
             >
-              <span>{person.score}</span>
+              <div className="person-score-meter-bars" aria-hidden="true">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <span
+                    className={index < person.score ? "is-filled" : ""}
+                    key={index}
+                  />
+                ))}
+              </div>
+              <strong>{riskLabels[person.risk]}</strong>
             </div>
           </section>
 
@@ -228,7 +254,7 @@ export function PersonDetailsModal({
                 const active = person[signal.key];
                 return (
                   <div
-                    className={`person-signal-card ${active ? "is-active" : ""}`}
+                    className={`person-signal-card is-${signal.key} ${active ? "is-active" : ""}`}
                     key={signal.key}
                   >
                     <span className="person-signal-dot" aria-hidden="true" />
@@ -258,7 +284,11 @@ export function PersonDetailsModal({
               </div>
               <div>
                 <span>Status atual</span>
-                <strong>{person.status}</strong>
+                <strong
+                  className={`person-modal-status is-${statusTone(person.status)}`}
+                >
+                  {person.status}
+                </strong>
               </div>
               <div>
                 <span>Envio da campanha</span>
@@ -324,7 +354,7 @@ export function PersonDetailsModal({
         </div>
 
         <footer className="person-modal-footer">
-          <span>Dados sincronizados da BeePhish</span>
+          <span>Dados sincronizados do PierSec</span>
           <button onClick={onClose} type="button">
             Fechar detalhes
           </button>
