@@ -64,7 +64,8 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 ### 2026-09-25 — Ajuste do divisor da página de risco
 
 - Removido o divisor inferior do bloco de filtros da página Pessoas por risco, mantendo o espaçamento e o alinhamento existentes.
-- Validações e commit/push desta alteração pendentes.
+- Validações: Prettier em `components/risk/people-risk-content.tsx` e `git diff --check` passaram.
+- Commit `acc54dd` criado; push para a branch atual pendente.
 
 ### 2026-09-25 — Refinamentos da visão geral, perfil e tour
 
