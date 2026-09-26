@@ -66,7 +66,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - Varredura do site para substituir bordas e divisores neutros hardcoded por `var(--line)`, `var(--line-soft)`, `var(--muted)` ou `var(--accent)` conforme o papel do elemento.
 - Atualizados dashboard, detalhes de campanhas, configurações, usuários, perfil, tooltips e formulários; bordas de erro, aviso, sucesso e superfícies intencionalmente escuras foram preservadas.
 - Validações: Prettier nos arquivos TS/TSX alterados, `tsc --noEmit`, `git diff --check` e detector visual passaram; o detector manteve apenas dois avisos preexistentes fora deste ajuste.
-- Commit/push desta alteração pendentes.
+- Commit `4d35226` criado; push para `origin/main` confirmado.
 
 ### 2026-09-25 — Ajuste das bordas da visão geral e configurações
 
