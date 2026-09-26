@@ -61,6 +61,14 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-26 — Paleta neutra inspirada no ChatGPT
+
+- Aplicados os tokens hexadecimais neutros informados pelo usuário nos temas claro e escuro: fundos `#ffffff`/`#0a0a0a`, superfícies, cartões, bordas, foco, seleção, sidebar e áreas de código.
+- Ajustados os aliases legados da interface e o modal de gerenciamento de workspace para usar a mesma escala, sem remover as cores semânticas de sucesso e risco.
+- Mantidos os cards com imagens, logos, autenticação, MFA, workspaces, campanhas e permissões sem alteração de comportamento.
+- Validações: Prettier, `pnpm exec tsc --noEmit`, `git diff --check` e detector Impeccable (`[]`) passaram. `pnpm run build` compilou, verificou tipos e gerou 59 páginas; a etapa final local continua bloqueada no Windows por `EPERM` ao criar symlinks para `.next/standalone`.
+- Commit e push desta atualização ainda pendentes. Não houve deploy, alteração remota de banco ou infraestrutura.
+
 ### 2026-09-26 — Correção da dependência de resize no build da Vercel
 
 - Analisado o log do deploy no commit `0a85249`: a Vercel não conseguia resolver `react-resizable/css/styles.css` porque `react-resizable` estava disponível apenas de forma transitiva via `react-grid-layout`.
