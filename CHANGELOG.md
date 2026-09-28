@@ -28,6 +28,8 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ### Última alteração registrada
 
+- `2026-09-28` — Suavizado o fundo dos banners com blur de 3 px e escurecimento uniforme de 45%, sem gradiente, para separar melhor o texto branco da arte.
+- Validações e commit/push desta correção serão registrados após a revisão. Nenhuma campanha ou operação foi executada.
 - `2026-09-28` — Ajustado o cabeçalho dos banners: título, descrição e metadados ficam centralizados; removida a camada em gradiente cinza. O texto branco usa uma sombra discreta para se destacar sobre as imagens.
 - Validações: Prettier, `pnpm exec tsc --noEmit` e `git diff --check` passaram. Nenhuma operação ou campanha foi executada. Commit `35011e8` enviado a `origin/main`.
 - `2026-09-28` — Aplicados os seis banners enviados aos cabeçalhos de Campanhas, Atividade, Grupos, Modelos, Páginas e Perfis de envio. Os arquivos foram copiados para `public/campaign-banners/`; um cabeçalho compartilhado usa as artes como fundo decorativo com camada de contraste adaptada ao tema claro/escuro.
