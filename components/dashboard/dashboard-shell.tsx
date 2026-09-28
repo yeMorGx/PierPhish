@@ -26,7 +26,8 @@ type ActiveSection =
   | "campaigns"
   | "workspaces"
   | "settings"
-  | "presentation";
+  | "presentation"
+  | "docs";
 
 type DashboardShellProps = {
   activeSection: ActiveSection;
@@ -246,6 +247,15 @@ export function DashboardShell({
               >
                 <Icon name="layers" size={16} />
                 Workspaces
+              </Link>
+              <Link
+                className={`block w-full rounded-[13px] border-0 px-3 py-2.5 pl-[38px] text-left text-[11px] font-bold transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${activeSection === "docs" ? "text-[var(--ink)]" : "text-[var(--text-muted)] hover:text-[var(--ink)]"}`}
+                role="menuitem"
+                href="/docs"
+                aria-current={activeSection === "docs" ? "page" : undefined}
+                onClick={() => setProfileOpen(false)}
+              >
+                Documentação
               </Link>
               <div className="my-2 h-px bg-[var(--line-soft)]" />
               <button
