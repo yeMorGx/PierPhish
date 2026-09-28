@@ -31,7 +31,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - `2026-09-28` — Incluída no PierSec a ação **Corrigir acesso** em cada perfil de envio. O usuário informa novas credenciais, que seguem cifradas pela fila existente; o conector consulta os demais dados do perfil localmente e atualiza somente a autenticação. A navegação agora identifica claramente **Perfis de envio**, com acesso direto a partir da criação de campanhas.
 - Nenhuma migration foi criada: o comando usa o tipo `sending_profile` já permitido pela tabela e pelas funções existentes. O usuário e a senha não são devolvidos ao navegador pelo conector, não ficam no snapshot nem no histórico, e a alteração de credenciais não envia e-mails.
 - Validações: Prettier, `git diff --check`, `tsc --noEmit`, `node --check connector/bridge.mjs` e detector Impeccable (`[]`) passaram. Não executei testes automatizados. O build Next.js local não foi repetido porque a tentativa anterior falhou ao ler `.next/diagnostics/framework.json` como reparse point do OneDrive.
-- Pendente: enviar este commit para `main`, confirmar o deploy da Vercel e reconstruir a Stack do conector no Portainer para habilitar a atualização pelo PierSec.
+- O commit `f2b08c9` foi enviado para `origin/main`. Confirmar o deploy da Vercel e reconstruir a Stack do conector no Portainer para habilitar a atualização pelo PierSec.
 - `2026-09-28` — Ajustado o diagnóstico de campanhas que foram criadas, mas falharam no envio. O conector resume eventos SMTP em categorias sem persistir endereços ou a mensagem bruta; o endpoint do snapshot valida uma lista fechada de categorias; a tela separa o estado de criação do estado de entrega e informa a causa quando recebida.
 - Não foi criada migration: o resumo categorizado cabe no snapshot JSONB existente. A tela mantém contagens disponíveis enquanto o conector antigo não enviar as categorias.
 - Validações após o rebase em `54adbcd`: Prettier, `git diff --check`, `tsc --noEmit` e `node --check connector/bridge.mjs` passaram. O `next build` não concluiu: o Next.js falhou com `EINVAL` ao executar `readlink` em `.next/diagnostics/framework.json`, que está marcado pelo OneDrive como ponto de nova análise. Antes do rebase, build e script pós-build passaram na base anterior. Nenhum teste automatizado foi executado.
@@ -58,13 +58,13 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ### Git e arquivos locais
 
-- Branch: `main`; a base atual inclui o commit `541e2b5`. A edição de perfis descrita no topo desta passagem ainda precisa ser commitada e enviada.
+- Branch: `main`; o commit `f2b08c9` com a edição de perfis foi enviado para `origin/main`.
 - Havia uma pasta `.impeccable/` não rastreada antes desta tarefa. Ela é preexistente e não deve ser incluída em commits sem relação com ela.
 - O registro histórico de que ainda não havia `CHANGELOG.md` descreve a sessão anterior em que esse arquivo foi criado.
 
 ## Próximos passos
 
-1. Enviar a implementação deste topo em commit para `origin/main` e confirmar a publicação web pela Vercel.
+1. Confirmar a publicação web pela Vercel.
 2. Reconstruir a Stack `piersec-campaign-bridge` no Portainer para habilitar o comando de atualização de perfil, sem publicar portas administrativas.
 3. No PierSec, abrir **Campanhas → Perfis de envio → Corrigir acesso**, inserir usuário e senha SMTP corretos e acompanhar o resultado em **Atividade**. A credencial pode ser uma senha de aplicativo quando o provedor exigir.
 4. Após a atividade indicar **Atualizado**, criar uma nova campanha de teste para destinatário controlado, revisar e confirmar explicitamente. A campanha anterior com 3 falhas não será reenviada automaticamente.
