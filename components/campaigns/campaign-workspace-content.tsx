@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Icon } from "@/components/ui/icon";
+import { SlideToConfirm } from "@/components/lightswind/slide-to-confirm";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveWorkspaceId } from "@/lib/use-active-workspace";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -231,7 +232,6 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
   const [launchAtInput, setLaunchAtInput] = useState("");
   const [sendByInput, setSendByInput] = useState("");
   const [preview, setPreview] = useState<CampaignPreview | null>(null);
-  const [confirmationText, setConfirmationText] = useState("");
   const [confirmationChecked, setConfirmationChecked] = useState(false);
   const [creatingPreview, setCreatingPreview] = useState(false);
   const [confirmingCampaign, setConfirmingCampaign] = useState(false);
@@ -416,7 +416,6 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
         );
       setPreview(body as CampaignPreview);
       setCampaignStep(4);
-      setConfirmationText("");
       setConfirmationChecked(false);
     } catch (cause) {
       const message =
@@ -432,8 +431,8 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
     }
   }
 
-  async function confirmCampaign() {
-    if (!session?.access_token || !preview) return;
+  async function confirmCampaign(): Promise<boolean> {
+    if (!session?.access_token || !preview) return false;
     setConfirmingCampaign(true);
     setError("");
     try {
@@ -446,7 +445,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
         body: JSON.stringify({
           workspaceId: activeWorkspaceId,
           previewId: preview.previewId,
-          confirmation: confirmationText,
+          confirmation: preview.campaignName,
           accepted: confirmationChecked,
         }),
       });
@@ -456,7 +455,6 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
           errorMessage(body, "Não foi possível confirmar a campanha."),
         );
       setPreview(null);
-      setConfirmationText("");
       setConfirmationChecked(false);
       toast.success("Confirmação registrada", {
         description:
@@ -464,12 +462,14 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
       });
       await loadOperations();
       router.push("/campanhas/atividade");
+      return true;
     } catch (cause) {
       setError(
         cause instanceof Error
           ? cause.message
           : "Não foi possível confirmar a campanha.",
       );
+      return false;
     } finally {
       setConfirmingCampaign(false);
     }
@@ -1083,47 +1083,32 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                   no horário agendado. Confira o grupo e o total antes de
                   continuar.
                 </div>
-                <label className="mt-4 grid max-w-[520px] gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
-                  DIGITE O NOME EXATO DA CAMPANHA PARA CONFIRMAR
-                  <input
-                    className="h-10 rounded-[10px] border border-[var(--line)] bg-white px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
-                    value={confirmationText}
-                    maxLength={120}
-                    onChange={(event) =>
-                      setConfirmationText(event.target.value)
-                    }
-                  />
-                </label>
-                <label className="mt-3 flex items-start gap-2 text-[11px] leading-relaxed text-[var(--ink)]">
-                  <input
-                    className="mt-0.5"
-                    type="checkbox"
-                    checked={confirmationChecked}
-                    onChange={(event) =>
-                      setConfirmationChecked(event.target.checked)
-                    }
-                  />
-                  Confirmo que tenho autorização para executar esta campanha
-                  neste ambiente de treinamento.
-                </label>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    className="inline-flex h-10 items-center justify-center rounded-[10px] bg-[#7b3e2d] px-4 text-[11px] font-bold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                    type="button"
-                    onClick={() => void confirmCampaign()}
-                    disabled={
-                      confirmingCampaign ||
-                      !confirmationChecked ||
-                      confirmationText !== preview.campaignName
-                    }
-                  >
-                    {confirmingCampaign
-                      ? "Registrando confirmação…"
-                      : "Confirmar campanha"}
-                  </button>
+                <div className="mt-4 flex max-w-[760px] flex-col gap-3 sm:flex-row sm:items-end">
+                  <div className="grid flex-1 gap-3">
+                    <label className="flex items-start gap-2 text-[11px] leading-relaxed text-[var(--ink)]">
+                      <input
+                        className="mt-0.5"
+                        type="checkbox"
+                        checked={confirmationChecked}
+                        onChange={(event) =>
+                          setConfirmationChecked(event.target.checked)
+                        }
+                      />
+                      Confirmo que tenho autorização para executar esta campanha
+                      neste ambiente de treinamento.
+                    </label>
+                    <SlideToConfirm
+                      className="max-w-[520px]"
+                      text="Deslize para confirmar a campanha"
+                      successText="Confirmação registrada"
+                      disabled={!confirmationChecked || confirmingCampaign}
+                      onConfirm={confirmCampaign}
+                    />
+                  </div>
                   <button
                     className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[var(--line)] px-4 text-[11px] font-bold text-[var(--text-muted)]"
                     type="button"
+                    disabled={confirmingCampaign}
                     onClick={() => {
                       setPreview(null);
                       setCampaignStep(3);
