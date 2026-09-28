@@ -53,6 +53,7 @@ function cleanSnapshot(value: unknown) {
     id: boundedCount(template.id),
     name: boundedText(template.name),
     modifiedDate: boundedText(template.modifiedDate, 50),
+    tracksClicks: template.tracksClicks === true,
   }));
   const pages = sourcePages.filter(isRecord).map((page) => ({
     id: boundedCount(page.id),
@@ -137,6 +138,7 @@ function cleanSnapshot(value: unknown) {
       profileUpdates: sourceCapabilities.profileUpdates === true,
       assetEdits: sourceCapabilities.assetEdits === true,
       individualResults: sourceCapabilities.individualResults === true,
+      clickTrackingCheck: sourceCapabilities.clickTrackingCheck === true,
     },
     groups,
     campaigns,

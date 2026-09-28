@@ -15,8 +15,16 @@ type Connector = {
   name: string;
   online: boolean;
   snapshot?: {
-    capabilities?: { profileUpdates?: boolean };
-    templates?: Array<{ id: number; name: string; modifiedDate: string }>;
+    capabilities?: {
+      profileUpdates?: boolean;
+      clickTrackingCheck?: boolean;
+    };
+    templates?: Array<{
+      id: number;
+      name: string;
+      modifiedDate: string;
+      tracksClicks?: boolean;
+    }>;
     pages?: Array<{
       id: number;
       name: string;
@@ -44,6 +52,7 @@ type AssetSummary = {
   modifiedDate: string;
   captureCredentials?: boolean | null;
   capturePasswords?: boolean | null;
+  tracksClicks?: boolean;
 };
 
 const settings: Record<
@@ -296,7 +305,11 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
               <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
                 {section === "sendingProfiles"
                   ? "Configure o acesso ao servidor de e-mail usado nas campanhas."
-                  : "Ativos disponíveis para montar uma campanha dentro do PierSec."}
+                  : section === "templates"
+                    ? 'Modelo de e-mail é a mensagem enviada. Use href="{{.URL}}" no link para medir cliques.'
+                    : section === "pages"
+                      ? "Página de destino é o conteúdo estático que abre após o clique. Formulários e captura de credenciais são bloqueados."
+                      : "Ativos disponíveis para montar uma campanha dentro do PierSec."}
               </p>
             </div>
             <span
@@ -324,6 +337,22 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
                             asset.capturePasswords === false
                               ? "Sem captura de credenciais"
                               : "Bloqueada para campanhas"}
+                          </span>
+                        )}
+                        {section === "templates" && (
+                          <span
+                            className={
+                              asset.tracksClicks
+                                ? "mt-1 block text-[10px] text-[var(--text-muted)]"
+                                : "mt-1 block text-[10px] text-[var(--danger)]"
+                            }
+                          >
+                            {connected?.snapshot?.capabilities
+                              ?.clickTrackingCheck !== true
+                              ? "Atualize o ambiente para conferir o link"
+                              : asset.tracksClicks
+                                ? "Link rastreável configurado"
+                                : 'Sem link rastreável · use href="{{.URL}}"'}
                           </span>
                         )}
                       </div>

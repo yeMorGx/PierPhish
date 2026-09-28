@@ -113,6 +113,15 @@ export async function POST(request: NextRequest) {
     );
   }
   const snapshot = isRecord(connector.snapshot) ? connector.snapshot : {};
+  const capabilities = isRecord(snapshot.capabilities)
+    ? snapshot.capabilities
+    : {};
+  if (capabilities.clickTrackingCheck !== true) {
+    return gophishError(
+      "Atualize o conector do ambiente para conferir se a campanha registrará cliques.",
+      409,
+    );
+  }
   const groups = Array.isArray(snapshot.groups)
     ? snapshot.groups.filter(isRecord)
     : [];
@@ -140,6 +149,12 @@ export async function POST(request: NextRequest) {
     return gophishError(
       "Um ativo mudou ou não está mais sincronizado. Atualize a lista.",
       409,
+    );
+  }
+  if (template.tracksClicks !== true) {
+    return gophishError(
+      'O modelo não tem um link rastreável. Edite o HTML e use href="{{.URL}}" no link do e-mail; depois aguarde a sincronização do ambiente.',
+      400,
     );
   }
   if (page.captureCredentials !== false || page.capturePasswords !== false) {
@@ -170,6 +185,7 @@ export async function POST(request: NextRequest) {
       id: templateId,
       name: cleanText(template.name, 160),
       modifiedDate: cleanText(template.modifiedDate, 50),
+      tracksClicks: true,
     },
     page: {
       id: pageId,
@@ -227,6 +243,7 @@ export async function POST(request: NextRequest) {
       previewId: preview.id,
       expiresAt,
       campaignName,
+      trackingUrl: destination.toString(),
       groups: selected.groups,
       recipientCount,
       template: selected.template.name,

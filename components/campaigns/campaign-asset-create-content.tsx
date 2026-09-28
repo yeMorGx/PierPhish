@@ -98,6 +98,39 @@ const sampleTemplateHtml =
 const samplePageHtml =
   "<main>\n  <h1>Exercício concluído</h1>\n  <p>Esta página faz parte de uma simulação autorizada de conscientização.</p>\n  <p>Nenhuma senha ou credencial foi solicitada ou armazenada.</p>\n</main>";
 
+function hasTrackedCampaignLink(html: string, text: string) {
+  return (
+    /<a\b[^>]*\bhref\s*=\s*["']\s*\{\{\.URL\}\}\s*["']/i.test(html) ||
+    /\{\{\.URL\}\}/i.test(text)
+  );
+}
+
+function sandboxPreviewDocument(html: string, isTemplate: boolean) {
+  const filled = isTemplate
+    ? html
+        .replaceAll("{{.FirstName}}", "Gabriel")
+        .replaceAll("{{.LastName}}", "Morgado")
+        .replaceAll("{{.Email}}", "gabriel@example.test")
+        .replaceAll("{{.URL}}", "#link-rastreavel")
+        .replaceAll("{{.Tracker}}", "")
+    : html;
+  const body = filled
+    .replace(/<!doctype[^>]*>/gi, "")
+    .replace(/<meta\b[^>]*http-equiv\s*=\s*["']?refresh["']?[^>]*>/gi, "")
+    .replace(/<\/?(html|head|body)\b[^>]*>/gi, "")
+    .replace(/\bhref\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+)/gi, "");
+  const policy =
+    "default-src 'none'; script-src 'none'; object-src 'none'; connect-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src 'none'; form-action 'none'; frame-src 'none'; base-uri 'none'";
+
+  return (
+    '<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="' +
+    policy +
+    '"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html{color-scheme:light}body{margin:0;padding:20px;font:14px/1.6 Arial,sans-serif;color:#202124;background:#fff;overflow-wrap:anywhere}a{color:#315f9b}</style></head><body>' +
+    body +
+    "</body></html>"
+  );
+}
+
 function errorMessage(body: unknown, fallback: string) {
   return typeof body === "object" &&
     body !== null &&
@@ -574,6 +607,10 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
   const targetCount = recipients.filter((recipient) =>
     recipient.email.trim(),
   ).length;
+  const templateHasTrackedLink = hasTrackedCampaignLink(
+    templateHtml,
+    templateText,
+  );
   const canSubmit =
     Boolean(selectedConnector?.snapshot?.commandEncryptionKey) &&
     (!editingId || selectedConnector?.snapshot?.capabilities?.assetEdits) &&
@@ -619,6 +656,18 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
               {editingId ? "atualização" : "criação"} e o histórico registra
               responsável, horário e resultado.
             </p>
+            {type === "template" && (
+              <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[var(--text-muted)]">
+                O modelo é o e-mail: assunto, texto e HTML. O link com{" "}
+                <code>{'href="{{.URL}}"'}</code> registra quem clicou.
+              </p>
+            )}
+            {type === "page" && (
+              <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[var(--text-muted)]">
+                A página é o conteúdo mostrado após o clique no link do e-mail.
+                Ela é separada do modelo e não pode pedir credenciais.
+              </p>
+            )}
           </div>
 
           {onlineConnectors.length > 1 && (
@@ -852,28 +901,72 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       placeholder="Versão em texto simples do e-mail"
                     />
                   </label>
-                  <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
-                    CONTEÚDO HTML
-                    <textarea
-                      required
-                      maxLength={200000}
-                      rows={9}
-                      value={templateHtml}
-                      onChange={(event) => setTemplateHtml(event.target.value)}
-                      className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-3 font-mono text-[11px] leading-relaxed text-[var(--ink)]"
-                    />
-                  </label>
-                  <p className="m-0 text-[10px] leading-relaxed text-[var(--text-muted)] md:col-span-2">
-                    Variáveis disponíveis: <code>{"{{.FirstName}}"}</code>,{" "}
-                    <code>{"{{.LastName}}"}</code> e <code>{"{{.URL}}"}</code>.
-                    Scripts e formulários são removidos; o rastreamento de
-                    abertura é incluído pelo PierSec.
-                  </p>
+                  <div className="grid gap-3 md:col-span-2">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
+                        CONTEÚDO HTML
+                        <textarea
+                          required
+                          maxLength={200000}
+                          rows={12}
+                          value={templateHtml}
+                          onChange={(event) =>
+                            setTemplateHtml(event.target.value)
+                          }
+                          className="min-h-[260px] rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-3 font-mono text-[11px] leading-relaxed text-[var(--ink)]"
+                        />
+                      </label>
+                      <div className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
+                        PRÉVIA HTML · SANDBOX
+                        <iframe
+                          sandbox=""
+                          referrerPolicy="no-referrer"
+                          title="Prévia isolada do modelo de e-mail"
+                          srcDoc={sandboxPreviewDocument(templateHtml, true)}
+                          className="min-h-[260px] w-full rounded-[10px] border border-[var(--line)] bg-white"
+                        />
+                        <span className="leading-relaxed font-normal">
+                          Scripts, formulários, navegação externa e acesso aos
+                          dados do PierSec ficam bloqueados nesta prévia.
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p
+                        className={
+                          templateHasTrackedLink
+                            ? "m-0 text-[10px] leading-relaxed text-[var(--text-muted)]"
+                            : "m-0 text-[10px] leading-relaxed text-[var(--danger)]"
+                        }
+                      >
+                        Variáveis: <code>{"{{.FirstName}}"}</code>,{" "}
+                        <code>{"{{.LastName}}"}</code> e{" "}
+                        <code>{"{{.URL}}"}</code>.
+                        {templateHasTrackedLink
+                          ? " Link rastreável configurado; abertura também é medida."
+                          : " Falta um link rastreável para contar cliques."}
+                      </p>
+                      <button
+                        type="button"
+                        disabled={templateHasTrackedLink}
+                        onClick={() =>
+                          setTemplateHtml(
+                            (current) =>
+                              current.trimEnd() +
+                              '\n<p><a href="{{.URL}}">Acessar material</a></p>',
+                          )
+                        }
+                        className="h-9 rounded-[9px] border border-[var(--line)] px-3 text-[10px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Inserir link rastreável
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {type === "page" && (
-                <div className="grid gap-2">
+                <div className="grid gap-3 md:grid-cols-2">
                   <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                     CONTEÚDO HTML
                     <textarea
@@ -882,9 +975,23 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       rows={18}
                       value={pageHtml}
                       onChange={(event) => setPageHtml(event.target.value)}
-                      className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-3 font-mono text-[11px] leading-relaxed text-[var(--ink)]"
+                      className="min-h-[360px] rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-3 font-mono text-[11px] leading-relaxed text-[var(--ink)]"
                     />
                   </label>
+                  <div className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
+                    PRÉVIA HTML · SANDBOX
+                    <iframe
+                      sandbox=""
+                      referrerPolicy="no-referrer"
+                      title="Prévia isolada da página de destino"
+                      srcDoc={sandboxPreviewDocument(pageHtml, false)}
+                      className="min-h-[360px] w-full rounded-[10px] border border-[var(--line)] bg-white"
+                    />
+                    <span className="leading-relaxed font-normal">
+                      Scripts, formulários, navegação externa e acesso aos dados
+                      do PierSec ficam bloqueados nesta prévia.
+                    </span>
+                  </div>
                   <p className="m-0 text-[10px] leading-relaxed text-[var(--text-muted)]">
                     Formulários, campos de entrada, scripts e captura de
                     credenciais são bloqueados. Crie páginas estáticas para

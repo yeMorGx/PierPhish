@@ -25,6 +25,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - As páginas são configuradas sem captura de credenciais/senhas. O fluxo documentado também bloqueia formulários, entradas e scripts de captura.
 - Conteúdo operacional e listas de destinatários são cifrados para o conector antes de irem para a fila do Supabase e apagados quando o resultado chega ou a ordem expira. O histórico guarda solicitante, horário, seleção, contagem e resultado.
 - A tela de campanhas mostra contagens agregadas e permite pedir atividade individual sob demanda. A resposta com e-mails e horários é cifrada para uma chave temporária da sessão do navegador, e a aplicação descarta IP, navegador e dados submetidos. “Enviado” significa aceito pelo servidor de e-mail e não comprova entrega na caixa de entrada.
+- O novo fluxo valida se o modelo contém `{{.URL}}` e apresenta gráficos de campanhas; esta alteração ainda depende do deploy web e da reconstrução da Stack do conector antes de a validação de cliques estar ativa em produção.
 
 ### Integração de e-mails pelo Resend — 2026-09-28
 
@@ -96,14 +97,23 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Próximos passos
 
-1. Confirmar a publicação Vercel do commit `4e64fa3`.
-2. Validar pela interface a edição de grupos, modelos e páginas, cada qual em sua página, e confirmar que uma atualização de perfil mantém o ID atual.
-3. Consultar os resultados individuais de uma campanha isolada para confirmar abertura/clique/envio; a Stack já anuncia a capacidade e a resposta é cifrada, mas essa leitura não foi feita nesta conferência.
+1. Publicar a versão web desta alteração e reconstruir a Stack `piersec-campaign-bridge` a partir de `main`; confirmar que o conector conectado anuncia `clickTrackingCheck` e que a rota `/campanhas/visao-geral` abre.
+2. Em ambiente isolado, usar destinatário controlado, modelo com `href="{{.URL}}"` e domínio público roteado ao serviço; clicar no link e conferir a contagem e a atividade individual após a sincronização. Campanhas antigas com link direto não registram cliques retroativamente.
+3. Continuar a validação da edição de grupos, modelos e páginas e confirmar que atualização de perfil mantém o ID atual.
 4. Definir e implementar o `PIERSEC_PAIRING_CODE` duradouro solicitado para a infraestrutura, sem exigir Portainer dos usuários do app e sem expor o segredo ao frontend. Não registrar o valor do segredo no changelog.
-5. Para envio real de teste, usar apenas ambiente/destinatário controlado e autorização explícita; campanhas anteriores com falhas não são reenviadas automaticamente.
+5. Deixar para etapa futura a verificação de domínio e a configuração do remetente do Resend; depois configurar as Redirect URLs do Supabase e validar convite, confirmação e redefinição com endereços controlados.
 6. Manter a interface e a documentação voltadas ao PierSec, sem revelar o fornecedor do motor de campanhas aos usuários finais.
 
 ## Histórico
+
+### 2026-09-28 — Rastreamento de cliques, prévia HTML isolada e visão geral
+
+- Corrigida a origem provável da ausência de cliques em campanhas novas: o modelo precisa usar o placeholder `{{.URL}}` e a URL configurada precisa ser o domínio público roteado ao serviço de campanhas. O conector agora anuncia se validou o link no modelo; a API de prévia recusa modelos sem link rastreável ou conexão com essa capacidade, mantendo a confirmação da campanha existente.
+- A lista de modelos informa se há link rastreável. O editor agora distingue modelo de e-mail (assunto, texto e HTML enviados) de página de destino (conteúdo estático após o clique), e mostra uma prévia em `iframe` com sandbox, scripts/forms/acesso externo bloqueados; os atributos `href` também são removidos na prévia para impedir navegação.
+- Adicionada a página `Campanhas/Visão geral` com indicadores agregados e gráficos das oito campanhas mais recentes, taxas de abertura/clique e atualização automática a cada 30 segundos. O menu apresenta os nomes `Modelos de e-mail` e `Páginas de destino`.
+- Adicionado `components/ui/chart.tsx` com o CLI local do shadcn. A dependência Recharts já existente foi mantida; não houve mudança de pacote, migration Supabase, operação Portainer nesta etapa nem lançamento/envio de campanha.
+- Validações: Prettier nos arquivos alterados, TypeScript (`tsc --noEmit`), `node --check connector/bridge.mjs`, `git diff --check` e detector Impeccable (`[]`) passaram. Nenhum teste automatizado foi executado.
+- Pendências: publicar a aplicação web e reconstruir a Stack `piersec-campaign-bridge` para propagar a nova capacidade; validar o clique real em ambiente isolado com destinatário controlado. Cliques de campanhas anteriores não podem ser recuperados retroativamente. Commit/push serão registrados após o versionamento; deploy ainda não verificado.
 
 ### 2026-09-26 — Paleta neutra inspirada no ChatGPT
 

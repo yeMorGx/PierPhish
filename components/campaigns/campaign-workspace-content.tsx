@@ -80,7 +80,12 @@ type CampaignAudienceGroup = {
   numTargets: number;
   modifiedDate: string;
 };
-type CampaignEmailTemplate = { id: number; name: string; modifiedDate: string };
+type CampaignEmailTemplate = {
+  id: number;
+  name: string;
+  modifiedDate: string;
+  tracksClicks?: boolean;
+};
 type CampaignLandingPage = {
   id: number;
   name: string;
@@ -99,6 +104,7 @@ type Snapshot = {
     profileUpdates?: boolean;
     assetEdits?: boolean;
     individualResults?: boolean;
+    clickTrackingCheck?: boolean;
   };
   campaigns: CampaignResult[];
   groups: CampaignAudienceGroup[];
@@ -118,6 +124,7 @@ type CampaignPreview = {
   previewId: string;
   expiresAt: string;
   campaignName: string;
+  trackingUrl: string;
   groups: Array<{ id: number; name: string; numTargets: number }>;
   recipientCount: number;
   template: string;
@@ -378,6 +385,11 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
   const templates = campaignConnector?.snapshot.templates ?? [];
   const pages = campaignConnector?.snapshot.pages ?? [];
   const sendingProfiles = campaignConnector?.snapshot.sendingProfiles ?? [];
+  const selectedTemplate = templates.find(
+    (template) => String(template.id) === templateId,
+  );
+  const clickTrackingCheckAvailable =
+    campaignConnector?.snapshot.capabilities?.clickTrackingCheck === true;
   const campaignPageCount = Math.max(
     1,
     Math.ceil(campaigns.length / campaignPageSize),
@@ -1021,6 +1033,36 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                           </option>
                         ))}
                       </select>
+                      {templateId && !clickTrackingCheckAvailable ? (
+                        <span
+                          role="alert"
+                          className="text-[9px] leading-relaxed text-[var(--danger)]"
+                        >
+                          Atualize a conexão do ambiente para validar o
+                          rastreamento de cliques antes de criar campanhas.
+                        </span>
+                      ) : selectedTemplate?.tracksClicks ? (
+                        <span className="text-[9px] leading-relaxed text-[var(--text-muted)]">
+                          Link rastreável encontrado. Os cliques desta campanha
+                          serão associados aos destinatários.
+                        </span>
+                      ) : templateId ? (
+                        <span className="text-[9px] leading-relaxed text-[var(--danger)]">
+                          Este modelo não tem link rastreável. Use{" "}
+                          <code>{'href="{{.URL}}"'}</code> no HTML.{" "}
+                          <Link
+                            href={"/campanhas/modelos/novo?edit=" + templateId}
+                            className="font-semibold underline underline-offset-2"
+                          >
+                            Corrigir modelo
+                          </Link>
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-normal">
+                          O modelo define a mensagem. O link rastreável registra
+                          quem clicou.
+                        </span>
+                      )}
                       <Link
                         href="/campanhas/modelos/novo"
                         target="_blank"
@@ -1058,6 +1100,10 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                           );
                         })}
                       </select>
+                      <span className="text-[9px] font-normal">
+                        A página estática que abre após o clique. Ela é
+                        diferente do modelo de e-mail, que é a mensagem enviada.
+                      </span>
                       <Link
                         href="/campanhas/paginas/nova"
                         target="_blank"
@@ -1097,7 +1143,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                       </Link>
                     </label>
                     <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)] md:col-span-2">
-                      URL DE DESTINO HTTPS
+                      ENDEREÇO PÚBLICO DE RASTREAMENTO · HTTPS
                       <input
                         className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                         type="url"
@@ -1108,10 +1154,11 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         }
                         placeholder="https://treinamento.sua-empresa.example"
                       />
-                      <span className="text-[9px] font-normal">
-                        Use apenas ambientes de treinamento autorizados. A
-                        página escolhida não pode capturar credenciais ou
-                        senhas.
+                      <span className="text-[9px] leading-relaxed font-normal">
+                        Este domínio precisa receber publicamente os links e
+                        encaminhá-los ao serviço de campanhas para registrar os
+                        cliques. Não use o endereço administrativo nem a porta
+                        3333. A página aberta é selecionada acima.
                       </span>
                     </label>
                   </div>
@@ -1123,6 +1170,8 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                       disabled={
                         !campaignName.trim() ||
                         !templateId ||
+                        !clickTrackingCheckAvailable ||
+                        selectedTemplate?.tracksClicks !== true ||
                         !pageId ||
                         !sendingProfileId ||
                         !destinationUrl.trim() ||
@@ -1273,6 +1322,8 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         !campaignName.trim() ||
                         !selectedGroupIds.length ||
                         !templateId ||
+                        !clickTrackingCheckAvailable ||
+                        selectedTemplate?.tracksClicks !== true ||
                         !pageId ||
                         !sendingProfileId ||
                         !destinationUrl.trim() ||
@@ -1315,6 +1366,10 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                   </p>
                   <p className="m-0">
                     <strong>Modelo:</strong> {preview.template}
+                  </p>
+                  <p className="m-0 break-all">
+                    <strong>Endereço de rastreamento:</strong>{" "}
+                    {preview.trackingUrl}
                   </p>
                   <p className="m-0">
                     <strong>Página:</strong> {preview.page} · sem captura de

@@ -316,6 +316,15 @@ function safeAsset(item, extra = {}) {
   };
 }
 
+function hasTrackedCampaignLink(template) {
+  const html = typeof template?.html === "string" ? template.html : "";
+  const textBody = typeof template?.text === "string" ? template.text : "";
+  return (
+    /<a\b[^>]*\bhref\s*=\s*["']\s*\{\{\.URL\}\}\s*["']/i.test(html) ||
+    /\{\{\.URL\}\}/i.test(textBody)
+  );
+}
+
 async function readSnapshot(apiKey, agent, commandEncryptionKey) {
   const [rawCampaigns, rawGroups, rawTemplates, rawPages, rawProfiles] =
     await Promise.all([
@@ -372,6 +381,7 @@ async function readSnapshot(apiKey, agent, commandEncryptionKey) {
       profileUpdates: true,
       assetEdits: true,
       individualResults: true,
+      clickTrackingCheck: true,
     },
     campaigns,
     groups: groupSummaryItems(rawGroups)
@@ -381,7 +391,9 @@ async function readSnapshot(apiKey, agent, commandEncryptionKey) {
       ),
     templates: (Array.isArray(rawTemplates) ? rawTemplates : [])
       .slice(0, 2000)
-      .map((item) => safeAsset(item)),
+      .map((item) =>
+        safeAsset(item, { tracksClicks: hasTrackedCampaignLink(item) }),
+      ),
     pages: (Array.isArray(rawPages) ? rawPages : [])
       .slice(0, 2000)
       .map((item) =>
@@ -837,6 +849,20 @@ function encryptForBrowser(publicKey, value) {
 
 function campaignRecipientActivity(campaign) {
   const recipients = new Map();
+  const eventKind = (value) => {
+    const normalized = text(value, 100)
+      .toLowerCase()
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (/click.*link|link.*click/.test(normalized)) return "clicked";
+    if (/open.*email|email.*open/.test(normalized)) return "opened";
+    if (/submit.*data|data.*submit/.test(normalized)) return "submitted";
+    if (/report.*email|email.*report/.test(normalized)) return "reported";
+    if (/error|fail|reject/.test(normalized)) return "failed";
+    if (/send.*email|email.*send/.test(normalized)) return "sent";
+    return "";
+  };
   const ensureRecipient = (value) => {
     const email = text(value?.email, 320).toLowerCase();
     if (!email) return null;
@@ -861,13 +887,13 @@ function campaignRecipientActivity(campaign) {
     if (!target.position) target.position = text(value?.position, 120);
     if (value?.status) target.status = text(value.status, 80);
     if (value?.send_date) target.sentAt = text(value.send_date, 50);
-    const status = text(value?.status, 80).toLowerCase();
+    const status = eventKind(value?.status);
     const modifiedAt = text(value?.modified_date, 50);
-    if (status === "email opened") target.openedAt ||= modifiedAt;
-    else if (status === "clicked link") target.clickedAt ||= modifiedAt;
-    else if (status === "submitted data") target.submittedAt ||= modifiedAt;
-    else if (status === "email reported") target.reportedAt ||= modifiedAt;
-    else if (/error|fail|reject/.test(status)) target.failedAt ||= modifiedAt;
+    if (status === "opened") target.openedAt ||= modifiedAt;
+    else if (status === "clicked") target.clickedAt ||= modifiedAt;
+    else if (status === "submitted") target.submittedAt ||= modifiedAt;
+    else if (status === "reported") target.reportedAt ||= modifiedAt;
+    else if (status === "failed") target.failedAt ||= modifiedAt;
     return target;
   };
 
@@ -881,15 +907,14 @@ function campaignRecipientActivity(campaign) {
     : []) {
     const target = ensureRecipient({ email: event?.email });
     if (!target) continue;
-    const message = text(event?.message, 100).toLowerCase();
+    const message = eventKind(event?.message);
     const time = text(event?.time, 50);
-    if (message === "email sent") target.sentAt ||= time;
-    else if (message === "email opened") target.openedAt ||= time;
-    else if (message === "clicked link") target.clickedAt ||= time;
-    else if (message === "submitted data") target.submittedAt ||= time;
-    else if (message === "email reported") target.reportedAt ||= time;
-    else if (message.includes("email") && /error|fail|reject/.test(message))
-      target.failedAt ||= time;
+    if (message === "sent") target.sentAt ||= time;
+    else if (message === "opened") target.openedAt ||= time;
+    else if (message === "clicked") target.clickedAt ||= time;
+    else if (message === "submitted") target.submittedAt ||= time;
+    else if (message === "reported") target.reportedAt ||= time;
+    else if (message === "failed") target.failedAt ||= time;
   }
 
   return {

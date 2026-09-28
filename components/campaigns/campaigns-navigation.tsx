@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 export type CampaignPageView =
+  | "overview"
   | "campaigns"
   | "new"
   | "groups"
@@ -11,10 +12,19 @@ export type CampaignPageView =
   | "connection";
 
 const items = [
+  { view: "overview", href: "/campanhas/visao-geral", label: "Visão geral" },
   { view: "campaigns", href: "/campanhas", label: "Campanhas" },
   { view: "groups", href: "/campanhas/grupos", label: "Grupos" },
-  { view: "templates", href: "/campanhas/modelos", label: "Modelos" },
-  { view: "pages", href: "/campanhas/paginas", label: "Páginas" },
+  {
+    view: "templates",
+    href: "/campanhas/modelos",
+    label: "Modelos de e-mail",
+  },
+  {
+    view: "pages",
+    href: "/campanhas/paginas",
+    label: "Páginas de destino",
+  },
   {
     view: "sendingProfiles",
     href: "/campanhas/envio",
