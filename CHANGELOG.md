@@ -30,8 +30,8 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 - `2026-09-28` — Ajustado o diagnóstico de campanhas que foram criadas, mas falharam no envio. O conector resume eventos SMTP em categorias sem persistir endereços ou a mensagem bruta; o endpoint do snapshot valida uma lista fechada de categorias; a tela separa o estado de criação do estado de entrega e informa a causa quando recebida.
 - Não foi criada migration: o resumo categorizado cabe no snapshot JSONB existente. A tela mantém contagens disponíveis enquanto o conector antigo não enviar as categorias.
-- Validações: Prettier, `git diff --check`, `tsc --noEmit`, `node --check connector/bridge.mjs`, build Next.js e o script pós-build de cópia do firewall passaram. O comando `npm` não está no PATH desta sessão; usei os binários locais e executei o script pós-build diretamente. Nenhum teste automatizado foi executado.
-- O deploy ainda precisa ser feito após o commit: Vercel publica a mudança web pela `main`; a Stack do Portainer precisa ser atualizada para reconstruir o conector. A tentativa de abrir a Stack no navegador excedeu o tempo limite duas vezes, portanto a infraestrutura não foi alterada nesta tarefa.
+- Validações após o rebase em `54adbcd`: Prettier, `git diff --check`, `tsc --noEmit` e `node --check connector/bridge.mjs` passaram. O `next build` não concluiu: o Next.js falhou com `EINVAL` ao executar `readlink` em `.next/diagnostics/framework.json`, que está marcado pelo OneDrive como ponto de nova análise. Antes do rebase, build e script pós-build passaram na base anterior. Nenhum teste automatizado foi executado.
+- A implementação foi rebased sobre os 28 commits que já estavam em `origin/main`; o commit `0dfb7e5` foi enviado com sucesso para `origin/main`. Confirmar o deploy web da Vercel; a Stack do Portainer ainda precisa ser atualizada para reconstruir o conector. A tentativa de abrir a Stack no navegador excedeu o tempo limite duas vezes, portanto a infraestrutura não foi alterada nesta tarefa.
 - `2026-09-25` — Criados `AGENTS.md` e `.impeccable/README.md` para padronizar o trabalho entre computadores e explicar o contexto histórico da auditoria visual. O relatório original `.impeccable/critique/2026-09-24T14-27-00Z__app.md` foi preservado, sem reescrita dos achados antigos.
 - A auditoria de `.impeccable/` encontrou somente esse relatório Markdown (7.141 bytes); não encontrou arquivos adicionais, cache ou segredos. Foi removido um espaço no fim de uma linha do front matter para a checagem do Git passar; os achados não foram reescritos.
 - Início desta tarefa: branch `main` em `e4436b2`, sincronizada com `origin/main`; o arquivo `.impeccable/` estava sem rastreamento.
@@ -53,13 +53,13 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ### Git e arquivos locais
 
-- Branch: `main`; no início da tarefa anterior, `HEAD` e `origin/main` estavam em `e556f70`. Esta alteração ainda precisa ser commitada e enviada ao concluir a tarefa.
+- Branch: `main`; a alteração está no commit `0dfb7e5`, rebased sobre `54adbcd` e enviada para `origin/main`.
 - Havia uma pasta `.impeccable/` não rastreada antes desta tarefa. Ela é preexistente e não deve ser incluída em commits sem relação com ela.
-- Não havia `CHANGELOG.md` no início desta tarefa.
+- O registro histórico de que ainda não havia `CHANGELOG.md` descreve a sessão anterior em que esse arquivo foi criado.
 
 ## Próximos passos
 
-1. Commitar e enviar esta alteração para `main`; confirmar o deploy da Vercel e a exibição do estado **Falha no envio** e do resumo técnico no PierSec.
+1. Confirmar o deploy da Vercel e a exibição do estado **Falha no envio** e do resumo técnico no PierSec.
 2. Atualizar a Stack `piersec-campaign-bridge` no Portainer para reconstruir o conector a partir da `main`; aguardar a próxima sincronização e conferir se a campanha de teste recebeu os motivos categorizados.
 3. Usar o diagnóstico para corrigir o perfil de envio (autenticação, host/porta/TLS, endereço de destinatário, limite temporário ou recusa do provedor, conforme a categoria retornada).
 4. Depois de corrigir a causa, criar novo teste só com destinatários controlados e revisão/confirmação explícitas. Não repetir automaticamente a campanha existente.
@@ -203,4 +203,4 @@ Próximos passos: conferir o deploy automático e a aparência em produção; o 
 - Investigado o teste existente pelo painel do PierSec e pelos registros operacionais do Supabase. A campanha foi criada; 3 destinatários falharam na etapa de envio e nenhum foi aceito pelo servidor SMTP.
 - A causa técnica detalhada não estava no snapshot recebido. Implementado o resumo de categorias de erro baseado nos eventos locais do serviço, com envio apenas de códigos agregados e textos fixos para o PierSec; e-mails e detalhes brutos permanecem locais.
 - A interface agora diferencia campanha criada de falha/resultado parcial de envio e explica quantos envios foram aceitos ou falharam e a causa categorizada quando disponível.
-- Validações passaram: Prettier, `git diff --check`, TypeScript, sintaxe do conector e build Next.js. O deploy do conector no Portainer ainda está pendente.
+- A interface atual foi preservada ao integrar a alteração; `0dfb7e5` está enviado a `origin/main`. Prettier, `git diff --check`, TypeScript e sintaxe do conector passaram. O build foi tentado novamente, mas parou no artefato `.next/diagnostics/framework.json` marcado pelo OneDrive; o build e o script pós-build tinham passado antes do rebase. O deploy do conector no Portainer ainda está pendente.
