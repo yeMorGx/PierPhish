@@ -29,7 +29,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 ### Última alteração registrada
 
 - `2026-09-28` — Ajustado o cabeçalho dos banners: título, descrição e metadados ficam centralizados; removida a camada em gradiente cinza. O texto branco usa uma sombra discreta para se destacar sobre as imagens.
-- Validações: Prettier, `pnpm exec tsc --noEmit` e `git diff --check` passaram. Nenhuma operação ou campanha foi executada. Commit/push desta correção serão registrados após o versionamento.
+- Validações: Prettier, `pnpm exec tsc --noEmit` e `git diff --check` passaram. Nenhuma operação ou campanha foi executada. Commit `35011e8` enviado a `origin/main`.
 - `2026-09-28` — Aplicados os seis banners enviados aos cabeçalhos de Campanhas, Atividade, Grupos, Modelos, Páginas e Perfis de envio. Os arquivos foram copiados para `public/campaign-banners/`; um cabeçalho compartilhado usa as artes como fundo decorativo com camada de contraste adaptada ao tema claro/escuro.
 - Validações: Prettier, `pnpm exec tsc --noEmit` e `git diff --check` passaram. Nenhuma operação ou campanha foi executada. Commit `ab0a93b` enviado a `origin/main`; o deploy automático da Vercel ainda precisa ser conferido.
 - `2026-09-28` — Adicionada paginação à tabela de campanhas: 10 itens por padrão, seletor para 10/20/50/100, intervalo exibido, páginas numeradas e controles anterior/próxima. A navegação “Áreas de campanhas” agora quebra em linhas em telas estreitas, sem rolagem horizontal.
