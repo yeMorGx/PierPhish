@@ -53,6 +53,7 @@ Ao criar ou editar qualquer interface, siga estas regras. Elas têm prioridade s
 ```
 
 - Use uma única cor de acento, definida em `--accent`, somente para foco, link ativo e um CTA principal por tela. Todo o restante fica em tons de cinza.
+- **Exceção restrita à documentação (`/docs`):** guias podem usar uma única cor semântica em `--docs-accent` e tons derivados para navegação ativa e avisos instrutivos. Não introduza cores decorativas nem altere a paleta das demais áreas do produto.
 - Use Geist ou Inter para texto e Geist Mono ou JetBrains Mono para código/dados; mantenha uma única família sans. Títulos devem ser curtos e concretos, com até duas linhas.
 
 ### Tipografia

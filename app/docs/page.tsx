@@ -1,20 +1,11 @@
 import type { Metadata } from "next";
-import { AuthGuard } from "@/components/auth/auth-guard";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { DocsContent } from "@/components/docs/docs-content";
+import { DocsPageView } from "@/components/docs/docs-page-view";
 
 export const metadata: Metadata = {
-  title: "Documentação | PierSec",
-  description:
-    "Guia passo a passo para usar painéis, campanhas, riscos e administração no PierSec.",
+  title: "Guia do produto | PierSec",
+  description: "Guias por assunto para usar o PierSec.",
 };
 
 export default function DocsPage() {
-  return (
-    <AuthGuard>
-      <DashboardShell activeSection="docs" title="Documentação">
-        <DocsContent />
-      </DashboardShell>
-    </AuthGuard>
-  );
+  return <DocsPageView topic="inicio" />;
 }

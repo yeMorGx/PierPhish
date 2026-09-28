@@ -27,6 +27,15 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - A tela de campanhas mostra contagens agregadas e permite pedir atividade individual sob demanda. A resposta com e-mails e horários é cifrada para uma chave temporária da sessão do navegador, e a aplicação descarta IP, navegador e dados submetidos. “Enviado” significa aceito pelo servidor de e-mail e não comprova entrega na caixa de entrada.
 - O novo fluxo valida se o modelo contém `{{.URL}}` e apresenta gráficos de campanhas. O deploy Vercel do commit `0c4bb0b` foi confirmado como **Ready**. O Portainer reporta a Stack `piersec-campaign-bridge` na revisão `00a753b`, contêiner **running**, sem porta publicada; PierSec indica **Conectado** e marca modelos com/sem link rastreável.
 
+### Última alteração registrada — documentação por assunto
+
+- `2026-09-28` — `/docs` agora funciona como índice curto e cada assunto tem uma página própria: `/docs/primeiros-passos`, `/docs/campanhas`, `/docs/resultados`, `/docs/administracao` e `/docs/ajuda`. Todas compartilham um menu lateral por assunto no desktop, que se reorganiza sem rolagem horizontal no mobile.
+- Enxugado o texto e reorganizados os passos. A área de campanhas agora diferencia grupo, modelo de e-mail, página de destino e perfil de envio; explica a sequência de revisão e a confirmação deslizante. Foi incluído um esquema dos campos reais da primeira etapa, sem dados de destinatários, contas ou campanhas.
+- Criada uma exceção visual limitada a `/docs` no `AGENTS.md`: o guia pode usar o token `--docs-accent` para navegação e destaques instrutivos; as demais áreas mantêm a regra monocromática. Não foi alterado o sistema global de cores.
+- Capturas atuais de `/docs`, `/campanhas/grupos` e `/campanhas/nova` foram inspecionadas no navegador para manter a documentação alinhada às telas. Nenhuma captura com avatar ou dados da conta foi adicionada aos assets; o guia usa um esquema textual dos campos em vez de publicar a imagem da sessão autenticada.
+- Validações: Prettier nos arquivos alterados, `pnpm exec tsc --noEmit`, `git diff --check` e detector Impeccable (`[]`) passaram. Nenhum teste automatizado, envio, campanha, migration ou alteração de infraestrutura foi executado.
+- Próximos passos: concluir a revisão visual do novo deploy em desktop e mobile, registrar commit e push para `origin/main` e conferir `/docs` e as cinco páginas com uma sessão autorizada. O deploy ainda não foi verificado.
+
 ### Integração de e-mails pelo Resend — 2026-09-28
 
 - Adicionada a dependência `resend@6.30.0` e o envio server-side em `lib/server-email.ts`. Os modelos de convite/ativação, convite de workspace e redefinição usam o nome PierSec; campos dinâmicos são escapados no HTML e o assunto remove quebras de linha. `RESEND_API_KEY` nunca usa prefixo `NEXT_PUBLIC_`, e a chave não é lida no navegador nem armazenada no Supabase.
@@ -38,7 +47,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - `2026-09-28` — O usuário informou a URL de produção `https://pier-phish.vercel.app/`; `APP_BASE_URL` foi configurada com esse endereço no `.env.local` (arquivo ignorado pelo Git). A presença da chave `RESEND_API_KEY` foi conferida sem ler ou imprimir seu valor; `RESEND_FROM_EMAIL` ainda não está definido.
 - Por decisão do usuário, verificar o domínio remetente no Resend e configurar `RESEND_FROM_EMAIL` ficam para uma etapa futura. Nenhuma mensagem foi enviada e nenhum deploy foi validado. Ao retomar: verificar um domínio no Resend, configurar as variáveis de produção na Vercel e as Redirect URLs no Supabase, depois testar os fluxos com destinatários controlados.
 
-### Última alteração registrada
+### Alterações anteriores
 
 - 2026-09-28 — Corrigida a sanitização das páginas de destino para preservar o documento HTML e os estilos necessários na página publicada pelo serviço de campanhas: mantidos html/head/body, elementos semânticos, viewport, imagens HTTPS e folhas CSS externas HTTPS. O CSS embutido agora aceita propriedades comuns de layout, !important, breakpoints de largura/altura, preferência de tema/movimento e camadas @layer, com limites de tamanho e regras.
 - Folhas e imagens externas ficam restritas a HTTPS com hostname (sem IP literal, credenciais, porta alternativa ou fragmento); o navegador recebe referrerpolicy=no-referrer. Scripts, formulários, campos de entrada e captura de credenciais continuam bloqueados. A prévia sandbox continua bloqueando requisições externas; o texto do editor explica essa diferença.
