@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { useAuth } from "@/components/auth/auth-provider";
 import { CampaignsNavigation } from "@/components/campaigns/campaigns-navigation";
-import { CampaignSectionHeader } from "@/components/campaigns/campaign-section-header";
 import { useActiveWorkspaceId } from "@/lib/use-active-workspace";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
@@ -49,29 +48,26 @@ type AssetSummary = {
 
 const settings: Record<
   AssetSection,
-  { title: string; singular: string; href: string }
+  { title: string; pageTitle: string; singular: string; href: string }
 > = {
   templates: {
     title: "Modelos de e-mail",
+    pageTitle: "Campanhas/Modelos",
     singular: "modelo",
     href: "/campanhas/modelos/novo",
   },
   pages: {
     title: "Páginas de destino",
+    pageTitle: "Campanhas/Páginas",
     singular: "página",
     href: "/campanhas/paginas/nova",
   },
   sendingProfiles: {
     title: "Perfis de envio",
+    pageTitle: "Campanhas/Perfis de envio",
     singular: "perfil",
     href: "/campanhas/envio/novo",
   },
-};
-
-const bannerSources: Record<AssetSection, string> = {
-  templates: "/campaign-banners/templates.png",
-  pages: "/campaign-banners/pages.png",
-  sendingProfiles: "/campaign-banners/sending-profiles.png",
 };
 
 function errorMessage(body: unknown, fallback: string) {
@@ -271,7 +267,7 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
   return (
     <DashboardShell
       activeSection="campaigns"
-      title={config.title}
+      title={config.pageTitle}
       headerAction={
         <Link
           href={config.href}
@@ -292,23 +288,23 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
           </p>
         )}
         <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
-          <CampaignSectionHeader imageSrc={bannerSources[section]}>
-            <div className="w-full max-w-[900px] text-center">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line-soft)] px-5 py-4">
+            <div>
               <h2 className="m-0 text-[16px] font-semibold tracking-[-0.03em]">
                 {config.title}
               </h2>
-              <p className="mt-1 mb-0 text-[11px] text-white/90">
+              <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
                 {section === "sendingProfiles"
                   ? "Configure o acesso ao servidor de e-mail usado nas campanhas."
                   : "Ativos disponíveis para montar uma campanha dentro do PierSec."}
               </p>
             </div>
             <span
-              className={`rounded-full px-3 py-1 text-[10px] font-bold ${connected ? "bg-[#e8f4ed] text-[#28744c]" : "bg-black/40 text-white"}`}
+              className={`rounded-full px-3 py-1 text-[10px] font-bold ${connected ? "bg-[#e8f4ed] text-[#28744c]" : "bg-[var(--surface-soft)] text-[var(--text-muted)]"}`}
             >
               {connected ? "Ambiente conectado" : "Sem conexão ativa"}
             </span>
-          </CampaignSectionHeader>
+          </div>
           {assets.length ? (
             <div className="divide-y divide-[var(--line-soft)]">
               {assets.map((asset) => {

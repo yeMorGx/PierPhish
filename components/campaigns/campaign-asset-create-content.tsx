@@ -54,28 +54,33 @@ type Operation = {
 
 const meta: Record<
   AssetType,
-  { title: string; listHref: string; nav: CampaignPageView; button: string }
+  {
+    pageTitle: string;
+    listHref: string;
+    nav: CampaignPageView;
+    button: string;
+  }
 > = {
   group: {
-    title: "Novo grupo",
+    pageTitle: "Campanhas/Grupos",
     listHref: "/campanhas/grupos",
     nav: "groups",
     button: "Criar grupo",
   },
   template: {
-    title: "Novo modelo",
+    pageTitle: "Campanhas/Modelos",
     listHref: "/campanhas/modelos",
     nav: "templates",
     button: "Salvar modelo",
   },
   page: {
-    title: "Nova página de destino",
+    pageTitle: "Campanhas/Páginas",
     listHref: "/campanhas/paginas",
     nav: "pages",
     button: "Salvar página",
   },
   sending_profile: {
-    title: "Novo perfil de envio",
+    pageTitle: "Campanhas/Perfis de envio",
     listHref: "/campanhas/envio",
     nav: "sendingProfiles",
     button: "Salvar perfil",
@@ -579,15 +584,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
   return (
     <DashboardShell
       activeSection="campaigns"
-      title={
-        editingId
-          ? type === "page"
-            ? "Editar página de destino"
-            : type === "group"
-              ? "Editar grupo"
-              : "Editar modelo"
-          : config.title
-      }
+      title={config.pageTitle}
       headerAction={
         <Link
           href={config.listHref}

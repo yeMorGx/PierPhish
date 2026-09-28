@@ -11,7 +11,6 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveWorkspaceId } from "@/lib/use-active-workspace";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { CampaignPagination } from "@/components/campaigns/campaign-pagination";
-import { CampaignSectionHeader } from "@/components/campaigns/campaign-section-header";
 import {
   CampaignsNavigation,
   type CampaignPageView,
@@ -748,13 +747,13 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
       activeSection="campaigns"
       title={
         view === "new"
-          ? "Nova campanha"
+          ? "Campanhas/Nova campanha"
           : view === "groups"
-            ? "Grupos"
+            ? "Campanhas/Grupos"
             : view === "activity"
-              ? "Atividade"
+              ? "Campanhas/Atividade"
               : view === "connection"
-                ? "Conexão"
+                ? "Campanhas/Conexão"
                 : "Campanhas"
       }
       headerAction={
@@ -1384,24 +1383,24 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
 
         {view === "activity" && (
           <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
-            <CampaignSectionHeader imageSrc="/campaign-banners/activity.png">
-              <div className="text-center">
+            <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line-soft)] px-5 py-4">
+              <div>
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Histórico de solicitações
                 </h3>
-                <p className="mt-1 mb-0 text-[11px] text-white/90">
+                <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
                   Solicitante, grupos, estimativa e resultado de cada ordem
                   confirmada.
                 </p>
               </div>
               <button
-                className="rounded-[8px] border border-white/60 px-3 py-1.5 text-[10px] font-bold text-white"
+                className="rounded-[8px] border border-[var(--line)] px-3 py-1.5 text-[10px] font-bold text-[var(--text-muted)]"
                 type="button"
                 onClick={() => void loadOperations()}
               >
                 Atualizar
               </button>
-            </CampaignSectionHeader>
+            </div>
             {operationsError ? (
               <p className="m-0 px-5 py-5 text-[11px] text-[var(--text-muted)]">
                 {operationsError}
@@ -1460,26 +1459,26 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
 
         {view === "campaigns" && (
           <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
-            <CampaignSectionHeader imageSrc="/campaign-banners/campaigns.png">
-              <div className="w-full max-w-[900px] text-center">
+            <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line-soft)] px-5 py-4">
+              <div>
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Campanhas e resultados
                 </h3>
-                <p className="mt-1 mb-0 text-[11px] text-white/90">
+                <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
                   Enviados foram aceitos pelo servidor de e-mail; isso não
                   garante chegada à caixa de entrada. Falhas mostram rejeições
                   e, quando disponível, a causa técnica.
                 </p>
               </div>
-              <div className="text-center">
-                <span className="block text-[10px] text-white/90">
+              <div className="text-right">
+                <span className="block text-[10px] text-[var(--text-muted)]">
                   {numberFormat(campaigns.length)} campanha(s)
                 </span>
-                <span className="mt-1 block text-[9px] text-white/90">
+                <span className="mt-1 block text-[9px] text-[var(--text-muted)]">
                   Dados de {dateFormat(snapshot?.updatedAt)}
                 </span>
               </div>
-            </CampaignSectionHeader>
+            </div>
             {campaigns.length ? (
               <>
                 <div className="overflow-x-auto">
@@ -1727,19 +1726,19 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
 
         {view === "groups" && (
           <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
-            <CampaignSectionHeader imageSrc="/campaign-banners/groups.png">
-              <div className="text-center">
+            <div className="flex items-end justify-between gap-3 border-b border-[var(--line-soft)] px-5 py-4">
+              <div>
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Grupos disponíveis
                 </h3>
-                <p className="mt-1 mb-0 text-[11px] text-white/90">
+                <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
                   Somente nome e quantidade de destinatários.
                 </p>
               </div>
-              <span className="text-[10px] text-white/90">
+              <span className="text-[10px] text-[var(--text-muted)]">
                 {numberFormat(groups.length)} grupo(s)
               </span>
-            </CampaignSectionHeader>
+            </div>
             {groups.length ? (
               <div className="grid gap-px bg-[var(--line-soft)] sm:grid-cols-2 xl:grid-cols-3">
                 {groups.map((group) => (
