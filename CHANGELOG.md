@@ -25,7 +25,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - As páginas são configuradas sem captura de credenciais/senhas. O fluxo documentado também bloqueia formulários, entradas e scripts de captura.
 - Conteúdo operacional e listas de destinatários são cifrados para o conector antes de irem para a fila do Supabase e apagados quando o resultado chega ou a ordem expira. O histórico guarda solicitante, horário, seleção, contagem e resultado.
 - A tela de campanhas mostra contagens agregadas e permite pedir atividade individual sob demanda. A resposta com e-mails e horários é cifrada para uma chave temporária da sessão do navegador, e a aplicação descarta IP, navegador e dados submetidos. “Enviado” significa aceito pelo servidor de e-mail e não comprova entrega na caixa de entrada.
-- O novo fluxo valida se o modelo contém `{{.URL}}` e apresenta gráficos de campanhas. O deploy Vercel do commit `0c4bb0b` foi confirmado como **Ready**; a validação de cliques ainda depende da reconstrução da Stack do conector no Portainer.
+- O novo fluxo valida se o modelo contém `{{.URL}}` e apresenta gráficos de campanhas. O deploy Vercel do commit `0c4bb0b` foi confirmado como **Ready**. O Portainer reporta a Stack `piersec-campaign-bridge` na revisão `00a753b`, contêiner **running**, sem porta publicada; PierSec indica **Conectado** e marca modelos com/sem link rastreável.
 
 ### Integração de e-mails pelo Resend — 2026-09-28
 
@@ -97,7 +97,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Próximos passos
 
-1. Reconstruir a Stack `piersec-campaign-bridge` a partir de `main`; confirmar que o conector conectado anuncia `clickTrackingCheck` e que a rota `/campanhas/visao-geral` abre. O Portainer não estava aberto e não há URL configurada no repositório; solicitar a abertura da página ou o endereço da instalação.
+1. Confirmar em produção a nova alteração dos gráficos e que o Portainer manteve a Stack atualizada após o push.
 2. Em ambiente isolado, usar destinatário controlado, modelo com `href="{{.URL}}"` e domínio público roteado ao serviço; clicar no link e conferir a contagem e a atividade individual após a sincronização. Campanhas antigas com link direto não registram cliques retroativamente.
 3. Continuar a validação da edição de grupos, modelos e páginas e confirmar que atualização de perfil mantém o ID atual.
 4. Definir e implementar o `PIERSEC_PAIRING_CODE` duradouro solicitado para a infraestrutura, sem exigir Portainer dos usuários do app e sem expor o segredo ao frontend. Não registrar o valor do segredo no changelog.
@@ -110,11 +110,11 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 - Corrigida a origem provável da ausência de cliques em campanhas novas: o modelo precisa usar o placeholder `{{.URL}}` e a URL configurada precisa ser o domínio público roteado ao serviço de campanhas. O conector agora anuncia se validou o link no modelo; a API de prévia recusa modelos sem link rastreável ou conexão com essa capacidade, mantendo a confirmação da campanha existente.
 - A lista de modelos informa se há link rastreável. O editor agora distingue modelo de e-mail (assunto, texto e HTML enviados) de página de destino (conteúdo estático após o clique), e mostra uma prévia em `iframe` com sandbox, scripts/forms/acesso externo bloqueados; os atributos `href` também são removidos na prévia para impedir navegação.
-- Adicionada a página `Campanhas/Visão geral` com indicadores agregados e gráficos das oito campanhas mais recentes, taxas de abertura/clique e atualização automática a cada 30 segundos. O menu apresenta os nomes `Modelos de e-mail` e `Páginas de destino`.
+- Adicionada a página `Campanhas/Visão geral` com indicadores agregados e gráficos das oito campanhas mais recentes: aberturas/cliques, taxas de abertura/clique e envios/falhas. Atualização automática a cada 30 segundos. O menu apresenta os nomes `Modelos de e-mail` e `Páginas de destino`.
 - Adicionado `components/ui/chart.tsx` com o CLI local do shadcn. A dependência Recharts já existente foi mantida; não houve mudança de pacote, migration Supabase, operação Portainer nesta etapa nem lançamento/envio de campanha.
 - Validações: Prettier nos arquivos alterados, TypeScript (`tsc --noEmit`), `node --check connector/bridge.mjs`, `git diff --check` e detector Impeccable (`[]`) passaram. Nenhum teste automatizado foi executado.
-- Commit `0c4bb0b` enviado para `origin/main`; o deploy Vercel correspondente foi conferido no painel e está **Ready** em produção. A Stack `piersec-campaign-bridge` não foi atualizada: não há aba nem endereço do Portainer nesta sessão. Não enviei e-mails, não criei campanhas e não fiz mudanças no Supabase ou no Portainer.
-- Pendências: reconstruir a Stack para propagar `clickTrackingCheck` e validar o clique real em ambiente isolado com destinatário controlado. Cliques de campanhas anteriores não podem ser recuperados retroativamente.
+- Commit `0c4bb0b` enviado para `origin/main`; o deploy Vercel correspondente foi conferido e está **Ready**. O Portainer mostra a Stack `piersec-campaign-bridge` na revisão `00a753b`; o contêiner está **running**, sem porta publicada, e os logs confirmam conexão e sincronização. A tela de modelos mostra um ativo sem link e outro com link rastreável. Não enviei e-mails nem criei campanhas.
+- Pendências: confirmar a publicação dos três gráficos após esta atualização e validar o clique real em ambiente isolado com destinatário controlado. Cliques de campanhas anteriores não podem ser recuperados retroativamente.
 
 ### 2026-09-26 — Paleta neutra inspirada no ChatGPT
 

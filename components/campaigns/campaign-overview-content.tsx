@@ -57,6 +57,11 @@ const rateChartConfig = {
   clickRate: { label: "Taxa de cliques", color: "var(--ink)" },
 } satisfies ChartConfig;
 
+const deliveryChartConfig = {
+  sent: { label: "Enviados", color: "var(--ink)" },
+  errors: { label: "Falhas", color: "var(--danger)" },
+} satisfies ChartConfig;
+
 function numberFormat(value: number) {
   return new Intl.NumberFormat("pt-BR").format(value);
 }
@@ -171,6 +176,8 @@ export function CampaignOverviewContent() {
         .map((campaign) => ({
           id: campaign.id,
           name: chartName(campaign.name),
+          sent: campaign.stats.sent,
+          errors: campaign.stats.error,
           opened: campaign.stats.opened,
           clicked: campaign.stats.clicked,
           openRate:
@@ -413,6 +420,57 @@ export function CampaignOverviewContent() {
                   A taxa de cliques é cliques ÷ e-mails aceitos. A sincronização
                   ocorre em intervalos de até 30 segundos.
                 </p>
+              </section>
+
+              <section className="surface-card min-w-0 rounded-[18px] border border-[var(--card-border)] p-5 xl:col-span-2">
+                <div>
+                  <h2 className="m-0 text-[14px] font-semibold text-[var(--ink)]">
+                    Envios e falhas por campanha
+                  </h2>
+                  <p className="mt-1 mb-0 text-[10px] text-[var(--text-muted)]">
+                    Mensagens aceitas pelo servidor de envio e rejeições
+                  </p>
+                </div>
+                <ChartContainer
+                  config={deliveryChartConfig}
+                  className="mt-4 h-[300px] w-full"
+                >
+                  <BarChart
+                    accessibilityLayer
+                    data={chartData}
+                    layout="vertical"
+                    margin={{ left: 4, right: 12, top: 4, bottom: 4 }}
+                  >
+                    <CartesianGrid horizontal={false} />
+                    <XAxis
+                      type="number"
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => numberFormat(Number(value))}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={110}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Bar
+                      dataKey="sent"
+                      fill="var(--color-sent)"
+                      radius={3}
+                      barSize={12}
+                    />
+                    <Bar
+                      dataKey="errors"
+                      fill="var(--color-errors)"
+                      radius={3}
+                      barSize={12}
+                    />
+                  </BarChart>
+                </ChartContainer>
               </section>
             </div>
 
