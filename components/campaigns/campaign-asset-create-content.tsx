@@ -1023,8 +1023,10 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                       Scripts, formulários, navegação externa e acesso aos dados
                       do PierSec ficam bloqueados nesta prévia. CSS inline e
                       blocos <code>&lt;style&gt;</code> seguros são preservados
-                      ao salvar; estilos externos não são carregados. Se o HTML
-                      salvo já perdeu o CSS, cole novamente o código original.
+                      ao salvar. A página publicada também aceita folhas CSS
+                      externas por HTTPS; a prévia bloqueia essas requisições.
+                      Para visualizar o estilo aqui, cole o CSS em um bloco{" "}
+                      <code>&lt;style&gt;</code>.
                     </span>
                   </div>
                   <p className="m-0 text-[10px] leading-relaxed text-[var(--text-muted)]">

@@ -4,6 +4,7 @@ import {
   publicEncrypt,
   randomBytes,
 } from "node:crypto";
+import { isIP } from "node:net";
 import postcss from "postcss";
 import sanitizeHtml from "sanitize-html";
 import { NextRequest, NextResponse } from "next/server";
@@ -79,11 +80,21 @@ const safeCssProperties = new Set([
   "border-top-style",
   "border-top-width",
   "border-width",
+  "background-position",
+  "background-repeat",
+  "background-size",
+  "bottom",
   "box-shadow",
   "box-sizing",
   "color",
+  "column-count",
   "column-gap",
+  "columns",
+  "content",
+  "cursor",
+  "direction",
   "display",
+  "filter",
   "flex",
   "flex-basis",
   "flex-direction",
@@ -92,6 +103,7 @@ const safeCssProperties = new Set([
   "flex-shrink",
   "flex-wrap",
   "font-family",
+  "font",
   "font-size",
   "font-style",
   "font-variant",
@@ -100,15 +112,25 @@ const safeCssProperties = new Set([
   "grid-auto-columns",
   "grid-auto-flow",
   "grid-auto-rows",
+  "grid-area",
   "grid-column",
   "grid-row",
+  "grid-template-areas",
   "grid-template-columns",
   "grid-template-rows",
   "height",
   "inline-size",
+  "inset",
+  "inset-block",
+  "inset-block-end",
+  "inset-block-start",
+  "inset-inline",
+  "inset-inline-end",
+  "inset-inline-start",
   "justify-content",
   "justify-items",
   "justify-self",
+  "left",
   "letter-spacing",
   "line-height",
   "list-style-position",
@@ -125,8 +147,12 @@ const safeCssProperties = new Set([
   "margin-right",
   "margin-top",
   "max-height",
+  "max-block-size",
+  "max-inline-size",
   "max-width",
   "min-height",
+  "min-block-size",
+  "min-inline-size",
   "min-width",
   "object-fit",
   "opacity",
@@ -149,6 +175,12 @@ const safeCssProperties = new Set([
   "padding-left",
   "padding-right",
   "padding-top",
+  "place-content",
+  "place-items",
+  "place-self",
+  "pointer-events",
+  "position",
+  "right",
   "row-gap",
   "table-layout",
   "text-align",
@@ -156,20 +188,59 @@ const safeCssProperties = new Set([
   "text-decoration-color",
   "text-decoration-line",
   "text-decoration-style",
+  "text-indent",
+  "text-shadow",
+  "text-align-last",
   "text-overflow",
   "text-transform",
+  "top",
+  "transform",
+  "transform-origin",
+  "transition",
+  "transition-delay",
+  "transition-duration",
+  "transition-property",
+  "transition-timing-function",
   "vertical-align",
   "visibility",
   "white-space",
   "width",
   "word-break",
+  "z-index",
 ]);
 
 const safeCssValuePattern =
-  /^(?!.*(?:url|image(?:-set|-rect)?|cross-fade|element|paint|expression|javascript|behavior|binding)\s*\()(?!.*\\)[\w\s#.,%()+\-'\"]{1,500}$/i;
+  /^(?!.*(?:url|image(?:-set|-rect)?|cross-fade|element|paint|expression|javascript|behavior|binding)\s*\()(?!.*\\)[\w\s#.,%():/!+\-'\"]{1,500}$/i;
+
+const safeMediaQueryPattern =
+  /^(?:(?:all|screen|print)\s+and\s+)?\((?:(?:min|max)-(?:width|height):\s*\d{1,4}(?:px|em|rem)|prefers-color-scheme:\s*(?:dark|light)|prefers-reduced-motion:\s*(?:reduce|no-preference)|orientation:\s*(?:portrait|landscape))\)(?:\s+and\s+\((?:(?:min|max)-(?:width|height):\s*\d{1,4}(?:px|em|rem)|prefers-color-scheme:\s*(?:dark|light)|prefers-reduced-motion:\s*(?:reduce|no-preference)|orientation:\s*(?:portrait|landscape))\))*$/i;
+
+function externalStylesheetUrl(value: string | undefined) {
+  if (!value || value.length > 2_048) return null;
+
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    if (
+      url.protocol !== "https:" ||
+      !host.includes(".") ||
+      isIP(host.replace(/^\[|\]$/g, "")) !== 0 ||
+      /\.(?:localhost|local|internal|test|invalid|example)$/i.test(host) ||
+      url.username ||
+      url.password ||
+      (url.port && url.port !== "443") ||
+      url.hash
+    )
+      return null;
+
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
 
 function sanitizeCss(source: string) {
-  if (source.length > 30_000) return "";
+  if (source.length > 100_000) return "";
 
   try {
     const root = postcss.parse(source);
@@ -178,16 +249,17 @@ function sanitizeCss(source: string) {
     root.walkAtRules((rule) => {
       const allowedMedia =
         rule.name.toLowerCase() === "media" &&
-        /^(?:(?:screen|all)\s+and\s+)?\((?:max|min)-width:\s*\d{1,4}(?:px|em|rem)\)$/i.test(
-          rule.params.trim(),
-        );
-      if (!allowedMedia) rule.remove();
+        safeMediaQueryPattern.test(rule.params.trim());
+      const allowedLayer =
+        rule.name.toLowerCase() === "layer" &&
+        /^[-_a-z][\w.-]*(?:\s*,\s*[-_a-z][\w.-]*)*$/i.test(rule.params.trim());
+      if (!allowedMedia && !allowedLayer) rule.remove();
     });
 
     root.walkRules((rule) => {
       ruleCount += 1;
       if (
-        ruleCount > 500 ||
+        ruleCount > 5_000 ||
         rule.selector.length > 1_000 ||
         /[\u0000-\u001f<>]/.test(rule.selector)
       )
@@ -199,8 +271,7 @@ function sanitizeCss(source: string) {
       const isSafeCustomProperty = /^--[a-z_][a-z0-9_-]{0,63}$/i.test(property);
       if (
         (!safeCssProperties.has(property) && !isSafeCustomProperty) ||
-        !safeCssValuePattern.test(declaration.value) ||
-        declaration.important
+        !safeCssValuePattern.test(declaration.value)
       )
         declaration.remove();
     });
@@ -236,6 +307,7 @@ function cleanHtml(value: unknown, allowCampaignUrl: boolean) {
       return styleMarker;
     },
   );
+  const isLandingPage = !allowCampaignUrl;
   const cleaned = sanitizeHtml(sourceWithStylesExtracted, {
     allowedTags: [
       "a",
@@ -248,6 +320,35 @@ function cleanHtml(value: unknown, allowCampaignUrl: boolean) {
       "h3",
       "hr",
       "li",
+      ...(isLandingPage
+        ? [
+            "article",
+            "aside",
+            "body",
+            "code",
+            "dd",
+            "dl",
+            "dt",
+            "figure",
+            "figcaption",
+            "footer",
+            "head",
+            "header",
+            "h4",
+            "h5",
+            "h6",
+            "html",
+            "img",
+            "link",
+            "main",
+            "meta",
+            "nav",
+            "pre",
+            "section",
+            "small",
+            "title",
+          ]
+        : []),
       "ol",
       "p",
       "span",
@@ -264,6 +365,25 @@ function cleanHtml(value: unknown, allowCampaignUrl: boolean) {
     allowedAttributes: {
       "*": ["class", "id", "style"],
       a: ["href", "title", "class", "id", "style"],
+      ...(isLandingPage
+        ? { link: ["href", "media", "referrerpolicy", "rel"] }
+        : {}),
+      ...(isLandingPage
+        ? {
+            img: [
+              "alt",
+              "class",
+              "height",
+              "id",
+              "loading",
+              "referrerpolicy",
+              "src",
+              "style",
+              "width",
+            ],
+            meta: ["charset", "content", "name"],
+          }
+        : {}),
       td: ["colspan", "class", "id", "style"],
       th: ["colspan", "class", "id", "style"],
     },
@@ -279,6 +399,7 @@ function cleanHtml(value: unknown, allowCampaignUrl: boolean) {
       ),
     },
     allowedSchemes: ["http", "https", "mailto"],
+    allowedSchemesByTag: isLandingPage ? { link: ["https"] } : undefined,
     allowProtocolRelative: false,
     transformTags: {
       a: (_tagName, attributes) => ({
@@ -288,6 +409,62 @@ function cleanHtml(value: unknown, allowCampaignUrl: boolean) {
           rel: "noopener noreferrer",
         },
       }),
+      ...(isLandingPage
+        ? {
+            link: (_tagName, attributes) => {
+              const rel = attributes.rel?.trim().toLowerCase().split(/\s+/);
+              const href = rel?.includes("stylesheet")
+                ? externalStylesheetUrl(attributes.href)
+                : null;
+              const media = attributes.media?.trim();
+
+              return {
+                tagName: "link",
+                attribs: href
+                  ? {
+                      rel: "stylesheet",
+                      href,
+                      referrerpolicy: "no-referrer",
+                      ...(media && safeMediaQueryPattern.test(media)
+                        ? { media }
+                        : {}),
+                    }
+                  : {},
+              };
+            },
+            img: (_tagName, attributes) => {
+              const src = externalStylesheetUrl(attributes.src);
+              return {
+                tagName: "img",
+                attribs: src
+                  ? { ...attributes, src, referrerpolicy: "no-referrer" }
+                  : {},
+              };
+            },
+            meta: (_tagName, attributes) => {
+              const name = attributes.name?.trim().toLowerCase();
+              const content = attributes.content?.trim();
+              const attribs: Record<string, string> = {};
+              if (
+                name === "viewport" &&
+                content &&
+                /^[a-z0-9\s=.,;()-]{1,200}$/i.test(content)
+              ) {
+                attribs.name = "viewport";
+                attribs.content = content;
+              } else if (
+                name === "referrer" &&
+                content?.toLowerCase() === "no-referrer"
+              ) {
+                attribs.name = "referrer";
+                attribs.content = "no-referrer";
+              } else if (attributes.charset?.trim().toLowerCase() === "utf-8") {
+                attribs.charset = "utf-8";
+              }
+              return { tagName: "meta", attribs };
+            },
+          }
+        : {}),
     },
   });
   const cleanedWithStyles = styleBlocks.reduce(
@@ -297,7 +474,7 @@ function cleanHtml(value: unknown, allowCampaignUrl: boolean) {
   );
   return allowCampaignUrl
     ? cleanedWithStyles.replaceAll(marker, "{{.URL}}")
-    : cleanedWithStyles;
+    : "<!doctype html>" + cleanedWithStyles;
 }
 
 function normalizeTargets(value: unknown) {
