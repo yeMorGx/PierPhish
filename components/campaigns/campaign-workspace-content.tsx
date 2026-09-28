@@ -24,6 +24,14 @@ type CampaignStats = {
   error: number;
 };
 
+type DeliveryIssueCode =
+  | "smtp_auth"
+  | "invalid_recipient"
+  | "smtp_connection"
+  | "smtp_temporary"
+  | "smtp_rejected"
+  | "other";
+
 type CampaignResult = {
   id: number;
   name: string;
@@ -35,6 +43,7 @@ type CampaignResult = {
   page: string;
   groups: string[];
   stats: CampaignStats;
+  deliveryIssues?: Partial<Record<DeliveryIssueCode, number>>;
 };
 
 type CampaignAudienceGroup = {
@@ -136,7 +145,7 @@ function operationStatus(status: string) {
     case "processing":
       return "Em execução";
     case "succeeded":
-      return "Concluída";
+      return "Campanha criada";
     case "failed":
       return "Bloqueada ou recusada";
     case "uncertain":
@@ -157,6 +166,45 @@ function campaignStatus(status: string) {
   if (normalized.includes("cancel")) return "Cancelada";
   if (normalized.includes("start")) return "Iniciando";
   return status || "—";
+}
+
+const deliveryIssueMessages: Record<DeliveryIssueCode, string> = {
+  smtp_auth:
+    "Autenticação do perfil de envio recusada. Confira usuário e senha.",
+  invalid_recipient:
+    "O servidor recusou destinatário. Confira os endereços do grupo.",
+  smtp_connection:
+    "Não foi possível conectar ao servidor. Confira host, porta e TLS.",
+  smtp_temporary: "O servidor adiou ou limitou o envio temporariamente.",
+  smtp_rejected:
+    "O servidor recusou a mensagem. Confira o remetente e a política do provedor.",
+  other: "O serviço registrou o erro, mas não informou a causa técnica.",
+};
+
+function campaignDeliverySummary(campaign: CampaignResult) {
+  const { sent, error, total } = campaign.stats;
+  if (error <= 0) return null;
+  const deliveryCount = `${numberFormat(error)} erro(s) em ${numberFormat(total)} destinatário(s)`;
+  const status =
+    sent === 0
+      ? `Nenhum e-mail foi aceito; ${deliveryCount}.`
+      : `${numberFormat(sent)} e-mail(s) aceito(s); ${deliveryCount}.`;
+  const causes = Object.entries(campaign.deliveryIssues ?? {})
+    .filter((entry): entry is [DeliveryIssueCode, number] => entry[1] > 0)
+    .map(
+      ([code, count]) =>
+        `${numberFormat(count)}: ${deliveryIssueMessages[code]}`,
+    );
+  const explanation = causes.length
+    ? causes.join(" ")
+    : "O registro atual só tem a contagem. O detalhe aparece após o conector sincronizar o diagnóstico.";
+  return `${status} ${explanation}`;
+}
+
+function campaignDeliveryStatus(campaign: CampaignResult) {
+  if (campaign.stats.error > 0)
+    return campaign.stats.sent > 0 ? "Envio parcial" : "Falha no envio";
+  return campaignStatus(campaign.status);
 }
 
 export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
@@ -1175,7 +1223,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
                   Enviados foram aceitos pelo servidor de e-mail; isso não
                   garante chegada à caixa de entrada. Falhas mostram rejeições
-                  no envio.
+                  e, quando disponível, a causa técnica.
                 </p>
               </div>
               <div className="text-right">
@@ -1235,7 +1283,12 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                           )}
                         </td>
                         <td className="px-4 py-3.5 text-[var(--text-muted)]">
-                          {campaignStatus(campaign.status)}
+                          <span>{campaignDeliveryStatus(campaign)}</span>
+                          {campaignDeliverySummary(campaign) && (
+                            <span className="mt-1 block max-w-[240px] text-[9px] leading-relaxed text-[var(--danger)]">
+                              {campaignDeliverySummary(campaign)}
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3.5 text-right tabular-nums">
                           {numberFormat(campaign.stats.total)}

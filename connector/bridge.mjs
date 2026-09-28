@@ -209,6 +209,84 @@ function count(value) {
     : 0;
 }
 
+function deliveryErrorText(value) {
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed && typeof parsed === "object") {
+        return text(parsed.error || parsed.message, 1000).toLowerCase();
+      }
+    } catch {
+      return text(value, 1000).toLowerCase();
+    }
+  }
+  if (value && typeof value === "object") {
+    return text(value.error || value.message, 1000).toLowerCase();
+  }
+  return "";
+}
+
+function deliveryErrorCode(error) {
+  if (
+    /\b535\b|5\.7\.8|authenticat|invalid credentials|username.*password/.test(
+      error,
+    )
+  ) {
+    return "smtp_auth";
+  }
+  if (
+    /invalid address|unknown recipient|unknown user|mailbox.*(unavailable|unknown|not found)|5\.1\.1/.test(
+      error,
+    )
+  ) {
+    return "invalid_recipient";
+  }
+  if (
+    /timed? ?out|timeout|deadline exceeded|connection refused|dial tcp|no such host|network is unreachable|tls|certificate|broken pipe/.test(
+      error,
+    )
+  ) {
+    return "smtp_connection";
+  }
+  if (/\b4\d\d\b|\b4\.\d\.\d\b|rate.?limit|too many messages/.test(error)) {
+    return "smtp_temporary";
+  }
+  if (/\b5\d\d\b|\b5\.\d\.\d\b/.test(error)) {
+    return "smtp_rejected";
+  }
+  return "other";
+}
+
+function campaignDeliveryIssues(campaign, errorCount) {
+  if (!errorCount) return {};
+  const issueCounts = {};
+  const events = Array.isArray(campaign?.timeline) ? campaign.timeline : [];
+  for (const event of events) {
+    const message = text(event?.message, 120);
+    if (!/email.*(error|fail|reject)|(error|fail|reject).*email/i.test(message))
+      continue;
+    const code = deliveryErrorCode(deliveryErrorText(event?.details));
+    issueCounts[code] = count(issueCounts[code]) + 1;
+  }
+
+  let remaining = errorCount;
+  const bounded = {};
+  for (const code of [
+    "smtp_auth",
+    "invalid_recipient",
+    "smtp_connection",
+    "smtp_temporary",
+    "smtp_rejected",
+    "other",
+  ]) {
+    const observed = Math.min(count(issueCounts[code]), remaining);
+    if (observed) bounded[code] = observed;
+    remaining -= observed;
+  }
+  if (remaining) bounded.other = count(bounded.other) + remaining;
+  return bounded;
+}
+
 function groupSummaryItems(value) {
   if (Array.isArray(value)) return value;
   return value && typeof value === "object" && !Array.isArray(value)
@@ -247,6 +325,7 @@ async function readSnapshot(apiKey, agent, commandEncryptionKey) {
       agent,
     );
     const stats = summary?.stats || {};
+    const deliveryErrors = count(stats.error);
     campaigns.push({
       id: count(item?.id),
       name: text(item?.name),
@@ -269,8 +348,9 @@ async function readSnapshot(apiKey, agent, commandEncryptionKey) {
         clicked: count(stats.clicked),
         submittedData: count(stats.submitted_data),
         emailReported: count(stats.email_reported),
-        error: count(stats.error),
+        error: deliveryErrors,
       },
+      deliveryIssues: campaignDeliveryIssues(item, deliveryErrors),
     });
   }
 

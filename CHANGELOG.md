@@ -8,7 +8,7 @@ Este arquivo registra o estado do projeto para continuar o trabalho em outro com
 
 Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos, endereços de destinatários ou outros segredos. Diferencie claramente código pronto, configuração aplicada em produção e validação ainda não feita.
 
-## Estado atual — 25/09/2026
+## Estado do projeto — atualizado em 28/09/2026
 
 ### Objetivo do produto
 
@@ -28,6 +28,10 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ### Última alteração registrada
 
+- `2026-09-28` — Ajustado o diagnóstico de campanhas que foram criadas, mas falharam no envio. O conector resume eventos SMTP em categorias sem persistir endereços ou a mensagem bruta; o endpoint do snapshot valida uma lista fechada de categorias; a tela separa o estado de criação do estado de entrega e informa a causa quando recebida.
+- Não foi criada migration: o resumo categorizado cabe no snapshot JSONB existente. A tela mantém contagens disponíveis enquanto o conector antigo não enviar as categorias.
+- Validações: Prettier, `git diff --check`, `tsc --noEmit`, `node --check connector/bridge.mjs`, build Next.js e o script pós-build de cópia do firewall passaram. O comando `npm` não está no PATH desta sessão; usei os binários locais e executei o script pós-build diretamente. Nenhum teste automatizado foi executado.
+- O deploy ainda precisa ser feito após o commit: Vercel publica a mudança web pela `main`; a Stack do Portainer precisa ser atualizada para reconstruir o conector. A tentativa de abrir a Stack no navegador excedeu o tempo limite duas vezes, portanto a infraestrutura não foi alterada nesta tarefa.
 - `2026-09-25` — Criados `AGENTS.md` e `.impeccable/README.md` para padronizar o trabalho entre computadores e explicar o contexto histórico da auditoria visual. O relatório original `.impeccable/critique/2026-09-24T14-27-00Z__app.md` foi preservado, sem reescrita dos achados antigos.
 - A auditoria de `.impeccable/` encontrou somente esse relatório Markdown (7.141 bytes); não encontrou arquivos adicionais, cache ou segredos. Foi removido um espaço no fim de uma linha do front matter para a checagem do Git passar; os achados não foram reescritos.
 - Início desta tarefa: branch `main` em `e4436b2`, sincronizada com `origin/main`; o arquivo `.impeccable/` estava sem rastreamento.
@@ -39,6 +43,9 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ### Estado observado na última sessão
 
+- `2026-09-28` — No PierSec em produção, o comando `testetetse` consta como criado com sucesso (3 destinatários, campanha ID 5 no serviço); o painel de campanhas mostra **0 enviados, 3 falhas, 0 aberturas/cliques/dados**. A sincronização estava ativa às 09:40 BRT. Nenhum e-mail foi aceito pelo servidor de envio; isso explica por que não chegou à caixa de entrada.
+- O registro salvo no Supabase contém `result_message = "Campanha registrada."`, estado do comando `succeeded` e somente contagens agregadas da campanha. O motivo SMTP bruto ainda não foi recebido/salvo; a mudança acima permitirá exibir uma categoria segura após o conector novo sincronizar.
+- Não foi criada nem reenviada campanha pelo assistente. Repetir o envio antes de conhecer e corrigir a causa pode fazer mensagens chegarem se a configuração SMTP tiver mudado.
 - O conector apareceu como **Conectado** na tela de conexão; a sincronização mais recente observada foi às 17:17 de 25/09/2026.
 - A campanha de teste `testetetse` aparecia como “Em andamento”, com 3 destinatários, e início às 17:08. A atividade mostrava que a solicitação foi concluída/registrada. Isso não comprova recebimento na caixa de entrada.
 - Na observação anterior, a campanha tinha 0 aberturas, 0 cliques e 0 dados submetidos. A tela ainda não mostrava as métricas de envio; o commit acima adiciona essa informação, mas o novo deploy precisa ser conferido.
@@ -46,18 +53,19 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ### Git e arquivos locais
 
-- Branch: `main`; no início desta tarefa, `HEAD` e `origin/main` estavam em `4dfd070`.
+- Branch: `main`; no início da tarefa anterior, `HEAD` e `origin/main` estavam em `e556f70`. Esta alteração ainda precisa ser commitada e enviada ao concluir a tarefa.
 - Havia uma pasta `.impeccable/` não rastreada antes desta tarefa. Ela é preexistente e não deve ser incluída em commits sem relação com ela.
 - Não havia `CHANGELOG.md` no início desta tarefa.
 
 ## Próximos passos
 
-1. Confirmar no painel da Vercel se o deploy de `4dfd070` concluiu e conferir, dentro do PierSec, as colunas **Enviados** e **Falhas** para a campanha de teste após a sincronização.
-2. Se enviados for zero ou houver falhas, consultar os logs do conector/serviço e a configuração SMTP no Portainer. Não reenviar a campanha automaticamente; um novo disparo precisa ser solicitado pelo usuário e direcionado a caixas de teste controladas.
-3. Resolver a diferença entre o requisito de infraestrutura pedido pelo usuário e o fluxo atualmente implementado para pareamento: o usuário pediu um `PIERSEC_PAIRING_CODE` definitivo configurado pela infraestrutura, enquanto o código/documentação do repositório atualmente geram um código de uso único, válido por 10 minutos, pela interface PierSec e orientam removê-lo da Stack após o pareamento. Definir e implementar um mecanismo duradouro e protegido que não exija acesso de usuários finais ao Portainer, sem expor segredo no frontend. Não registrar o valor do segredo aqui.
-4. Confirmar no Supabase de produção que as migrations da conexão, fila de campanhas e ativos foram aplicadas e que RLS continua habilitada. As migrations correspondentes estão em `supabase/migrations/` com prefixos `2026092412`, `2026092415`, `2026092503`, `20260925185638` e `20260925190540`.
-5. Fazer um teste controlado ponta a ponta com destinatários próprios: criar/revisar campanha no PierSec, confirmar explicitamente, acompanhar fila/histórico, sincronização e contagem aceita pelo SMTP. Usar ambiente isolado e não coletar senhas reais.
-6. Revisar os textos e navegação da interface para garantir que o nome do produto permaneça PierSec e que detalhes do fornecedor do motor de campanhas não apareçam para usuários finais. Há identificadores internos e documentação de infraestrutura com o nome técnico; não os confundir com o texto da interface.
+1. Commitar e enviar esta alteração para `main`; confirmar o deploy da Vercel e a exibição do estado **Falha no envio** e do resumo técnico no PierSec.
+2. Atualizar a Stack `piersec-campaign-bridge` no Portainer para reconstruir o conector a partir da `main`; aguardar a próxima sincronização e conferir se a campanha de teste recebeu os motivos categorizados.
+3. Usar o diagnóstico para corrigir o perfil de envio (autenticação, host/porta/TLS, endereço de destinatário, limite temporário ou recusa do provedor, conforme a categoria retornada).
+4. Depois de corrigir a causa, criar novo teste só com destinatários controlados e revisão/confirmação explícitas. Não repetir automaticamente a campanha existente.
+5. Resolver a diferença entre o requisito de infraestrutura pedido pelo usuário e o fluxo atualmente implementado para pareamento: o usuário pediu um `PIERSEC_PAIRING_CODE` definitivo configurado pela infraestrutura, enquanto o código/documentação do repositório atualmente geram um código de uso único, válido por 10 minutos, pela interface PierSec e orientam removê-lo da Stack após o pareamento. Definir e implementar um mecanismo duradouro e protegido que não exija acesso de usuários finais ao Portainer, sem expor segredo no frontend. Não registrar o valor do segredo aqui.
+6. Confirmar no Supabase de produção que as migrations da conexão, fila de campanhas e ativos foram aplicadas e que RLS continua habilitada. As migrations correspondentes estão em `supabase/migrations/` com prefixos `2026092412`, `2026092415`, `2026092503`, `20260925185638` e `20260925190540`.
+7. Revisar os textos e navegação da interface para garantir que o nome do produto permaneça PierSec e que detalhes do fornecedor do motor de campanhas não apareçam para usuários finais.
 
 ## Histórico
 
@@ -189,3 +197,10 @@ Próximos passos: conferir o deploy automático e a aparência em produção; o 
 - Criado `AGENTS.md` na raiz com instruções para início de sessão, segurança, campanhas, validação, continuidade, commits e atualização obrigatória do change log.
 - Incluída no repositório a pasta `.impeccable/`, que contém uma auditoria visual histórica de 24/09; adicionada uma nota explicando que os achados precisam ser revalidados antes de orientar novas mudanças.
 - A auditoria original foi preservada sem reescrita dos achados; apenas um espaço no fim de uma linha do front matter foi removido. Nenhum arquivo de segredo foi incluído.
+
+### 2026-09-28 — Diagnóstico do envio de campanhas
+
+- Investigado o teste existente pelo painel do PierSec e pelos registros operacionais do Supabase. A campanha foi criada; 3 destinatários falharam na etapa de envio e nenhum foi aceito pelo servidor SMTP.
+- A causa técnica detalhada não estava no snapshot recebido. Implementado o resumo de categorias de erro baseado nos eventos locais do serviço, com envio apenas de códigos agregados e textos fixos para o PierSec; e-mails e detalhes brutos permanecem locais.
+- A interface agora diferencia campanha criada de falha/resultado parcial de envio e explica quantos envios foram aceitos ou falharam e a causa categorizada quando disponível.
+- Validações passaram: Prettier, `git diff --check`, TypeScript, sintaxe do conector e build Next.js. O deploy do conector no Portainer ainda está pendente.

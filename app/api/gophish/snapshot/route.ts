@@ -79,10 +79,26 @@ function cleanSnapshot(value: unknown) {
     "emailReported",
     "error",
   ] as const;
+  const deliveryIssueKeys = [
+    "smtp_auth",
+    "invalid_recipient",
+    "smtp_connection",
+    "smtp_temporary",
+    "smtp_rejected",
+    "other",
+  ] as const;
   const campaigns = sourceCampaigns.filter(isRecord).map((campaign) => {
     const rawStats = isRecord(campaign.stats) ? campaign.stats : {};
     const stats = Object.fromEntries(
       statsKeys.map((key) => [key, boundedCount(rawStats[key])]),
+    );
+    const rawDeliveryIssues = isRecord(campaign.deliveryIssues)
+      ? campaign.deliveryIssues
+      : {};
+    const deliveryIssues = Object.fromEntries(
+      deliveryIssueKeys
+        .map((key) => [key, boundedCount(rawDeliveryIssues[key])] as const)
+        .filter(([, value]) => value > 0),
     );
     const groupNames = Array.isArray(campaign.groups)
       ? campaign.groups
@@ -107,6 +123,7 @@ function cleanSnapshot(value: unknown) {
       page: boundedText(campaign.page, 160),
       groups: groupNames,
       stats,
+      deliveryIssues,
     };
   });
 
