@@ -113,7 +113,8 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - O conector agora reconhece a mensagem de variável desconhecida em respostas JSON ou texto simples. Para esse erro de validação conhecido, registra uma falha definitiva com orientação para corrigir e salvar novamente; outros erros HTTP 5xx continuam exigindo verificação antes de repetir e agora informam o código HTTP. O texto bruto de erro do ambiente não é armazenado nem repassado.
 - Não repeti a criação do modelo ou da página, não alterei os registros do Supabase e não criei nem lancei campanha.
 - Validações: Prettier, `pnpm exec tsc --noEmit`, `node --check connector/bridge.mjs`, `git diff --check` e detector Impeccable no formulário (`[]`) passaram. Nenhum teste automatizado foi executado.
-- Commit/push e implantação web/Portainer: pendentes de conclusão desta tarefa.
+- O commit `7cc342a` foi enviado para `origin/main`. O deploy de produção da Vercel para esse commit está **Ready**.
+- A Stack `piersec-campaign-bridge` foi atualizada no Portainer para `7cc342a`; o contêiner novo está **running**, os logs confirmam o conector ativo e sincronizando 10 campanhas/2 grupos, e a coluna de portas publicadas permanece `-`.
 
 ### 2026-09-28 — Rastreamento de cliques, prévia HTML isolada e visão geral
 
