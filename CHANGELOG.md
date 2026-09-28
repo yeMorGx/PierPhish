@@ -114,7 +114,8 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - Adicionado `components/ui/chart.tsx` com o CLI local do shadcn. A dependência Recharts já existente foi mantida; não houve mudança de pacote, migration Supabase, operação Portainer nesta etapa nem lançamento/envio de campanha.
 - Validações: Prettier nos arquivos alterados, TypeScript (`tsc --noEmit`), `node --check connector/bridge.mjs`, `git diff --check` e detector Impeccable (`[]`) passaram. Nenhum teste automatizado foi executado.
 - Commit `0c4bb0b` enviado para `origin/main`; o deploy Vercel correspondente foi conferido e está **Ready**. O Portainer mostra a Stack `piersec-campaign-bridge` na revisão `00a753b`; o contêiner está **running**, sem porta publicada, e os logs confirmam conexão e sincronização. A tela de modelos mostra um ativo sem link e outro com link rastreável. Não enviei e-mails nem criei campanhas.
-- Pendências: confirmar a publicação dos três gráficos após esta atualização e validar o clique real em ambiente isolado com destinatário controlado. Cliques de campanhas anteriores não podem ser recuperados retroativamente.
+- A atualização `becf225` acrescentou o gráfico de envios/falhas; o deploy de produção foi conferido como **Ready**. Em `https://pier-phish.vercel.app/campanhas/visao-geral`, confirmei os três gráficos e os dados sincronizados: 10 campanhas, 28 destinatários, 15 enviados aceitos, 13 falhas, 0 aberturas e 0 cliques (dados de 28/09/2026, 15:41). A página explica que o modelo precisa de `{{.URL}}` e que campanhas anteriores com link direto não registram cliques retroativamente.
+- Próximo passo: validar o rastreamento com uma campanha isolada e destinatário controlado; nenhuma campanha foi criada nem enviada nesta tarefa. A Stack do Portainer permanece na revisão `00a753b`, conectada e sem porta publicada.
 
 ### 2026-09-26 — Paleta neutra inspirada no ChatGPT
 
