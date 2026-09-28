@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { useAuth } from "@/components/auth/auth-provider";
 import { CampaignsNavigation } from "@/components/campaigns/campaigns-navigation";
+import { CampaignSectionHeader } from "@/components/campaigns/campaign-section-header";
 import { useActiveWorkspaceId } from "@/lib/use-active-workspace";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
@@ -65,6 +66,12 @@ const settings: Record<
     singular: "perfil",
     href: "/campanhas/envio/novo",
   },
+};
+
+const bannerSources: Record<AssetSection, string> = {
+  templates: "/campaign-banners/templates.png",
+  pages: "/campaign-banners/pages.png",
+  sendingProfiles: "/campaign-banners/sending-profiles.png",
 };
 
 function errorMessage(body: unknown, fallback: string) {
@@ -285,7 +292,7 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
           </p>
         )}
         <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
-          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line-soft)] px-5 py-4">
+          <CampaignSectionHeader imageSrc={bannerSources[section]}>
             <div>
               <h2 className="m-0 text-[16px] font-semibold tracking-[-0.03em]">
                 {config.title}
@@ -301,7 +308,7 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
             >
               {connected ? "Ambiente conectado" : "Sem conexão ativa"}
             </span>
-          </div>
+          </CampaignSectionHeader>
           {assets.length ? (
             <div className="divide-y divide-[var(--line-soft)]">
               {assets.map((asset) => {

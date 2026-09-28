@@ -11,6 +11,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveWorkspaceId } from "@/lib/use-active-workspace";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { CampaignPagination } from "@/components/campaigns/campaign-pagination";
+import { CampaignSectionHeader } from "@/components/campaigns/campaign-section-header";
 import {
   CampaignsNavigation,
   type CampaignPageView,
@@ -1383,7 +1384,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
 
         {view === "activity" && (
           <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
-            <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line-soft)] px-5 py-4">
+            <CampaignSectionHeader imageSrc="/campaign-banners/activity.png">
               <div>
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Histórico de solicitações
@@ -1400,7 +1401,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
               >
                 Atualizar
               </button>
-            </div>
+            </CampaignSectionHeader>
             {operationsError ? (
               <p className="m-0 px-5 py-5 text-[11px] text-[var(--text-muted)]">
                 {operationsError}
@@ -1459,7 +1460,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
 
         {view === "campaigns" && (
           <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
-            <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line-soft)] px-5 py-4">
+            <CampaignSectionHeader imageSrc="/campaign-banners/campaigns.png">
               <div>
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Campanhas e resultados
@@ -1478,7 +1479,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                   Dados de {dateFormat(snapshot?.updatedAt)}
                 </span>
               </div>
-            </div>
+            </CampaignSectionHeader>
             {campaigns.length ? (
               <>
                 <div className="overflow-x-auto">
@@ -1726,7 +1727,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
 
         {view === "groups" && (
           <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
-            <div className="flex items-end justify-between gap-3 border-b border-[var(--line-soft)] px-5 py-4">
+            <CampaignSectionHeader imageSrc="/campaign-banners/groups.png">
               <div>
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Grupos disponíveis
@@ -1738,7 +1739,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
               <span className="text-[10px] text-[var(--text-muted)]">
                 {numberFormat(groups.length)} grupo(s)
               </span>
-            </div>
+            </CampaignSectionHeader>
             {groups.length ? (
               <div className="grid gap-px bg-[var(--line-soft)] sm:grid-cols-2 xl:grid-cols-3">
                 {groups.map((group) => (
