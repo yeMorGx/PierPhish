@@ -257,9 +257,14 @@ function buildAsset(body: JsonRecord): {
     const text = cleanBodyText(body.text, 100_000);
     const html = cleanHtml(body.html, true);
     if (!name || !subject || html === null || (!text && !html)) return null;
-    const trackedHtml = html
-      ? `${html}<img src="{{.Tracker}}" alt="" width="1" height="1" />`
-      : "";
+    const hasTrackingPixel =
+      /<img\b[^>]*\bsrc\s*=\s*["'][^"']*\{\{\.Tracker\}\}[^"']*["'][^>]*>/i.test(
+        html,
+      );
+    const trackedHtml =
+      html && !hasTrackingPixel
+        ? `${html}<img src="{{.Tracker}}" alt="" width="1" height="1" />`
+        : html;
     return {
       type,
       name,

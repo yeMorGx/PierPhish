@@ -34,6 +34,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - A migration `20260928142449_add_campaign_asset_secure_reads.sql` foi aplicada ao Supabase de produção após a autorização do usuário. Ela adiciona o envelope de resposta cifrada à fila, permite `campaign_results` e restringe a função de finalização ao `service_role`, sem `SECURITY DEFINER`. A verificação pós-aplicação confirmou `security_definer=false`, execução permitida para `service_role` e negada para `authenticated`.
 - Validações desta alteração: Prettier, `pnpm exec tsc --noEmit`, `node --check connector/bridge.mjs`, `git diff --check` e detector Impeccable (`[]`) passaram. O commit `352cb13` foi enviado para `origin/main`. A Vercel mostra esse commit como produção **Ready**. No Portainer, a Stack `piersec-campaign-bridge` foi atualizada para `352cb13`; o contêiner novo está **running**, sem portas publicadas e com o volume de estado preservado. A tela PierSec voltou a indicar **Conectado** e o snapshot do Supabase confirma `assetEdits`, `profileUpdates` e `individualResults` como ativos.
 - As rotas e controles de edição/atividade foram confirmados nas páginas de produção. Não enviei e-mails nem criei campanhas nesta tarefa e não carreguei uma lista individual real durante a conferência. A solicitação anterior do usuário por um `PIERSEC_PAIRING_CODE` permanente e gerenciado pela infraestrutura continua pendente de definição e implementação segura.
+- Durante a revisão final, corrigi a edição de modelos para detectar e preservar o pixel de abertura que já existe, sem acrescentar cópias duplicadas ao salvar novamente. Prettier e `pnpm exec tsc --noEmit` passaram para essa correção. O commit/push desta correção adicional e a respectiva publicação Vercel ainda estão pendentes; a Stack do Portainer não precisa ser reconstruída porque `connector/bridge.mjs` não mudou depois do commit `352cb13`.
 - `2026-09-28` — Substituído o campo para digitar o nome e o botão de confirmação por um controle deslizante em **Revise antes de confirmar**. A pessoa precisa marcar que tem autorização e deslizar até o fim; por teclado, o controle também pode ser ativado com Enter ou Espaço. Se a solicitação falhar, o controle retorna ao início para nova tentativa; enquanto envia, ele fica bloqueado.
 - O componente `components/lightswind/slide-to-confirm.tsx` foi gerado pelo CLI Lightswind chamado via `pnpm dlx` porque `npx` não está disponível nesta máquina e foi adaptado ao tema claro/escuro do PierSec. Usa `motion/react` já disponível no projeto; nenhuma dependência ou migration foi adicionada. A tela envia o nome da campanha guardado na prévia e mantém a validação exata de nome e aceite no servidor/banco. Nenhuma campanha foi criada ou enviada durante esta alteração.
 - Validações: Prettier, `pnpm exec tsc --noEmit` e `git diff --check` passaram. Não executei testes automatizados nem build. O commit `0f8c466` foi enviado para `origin/main`; a publicação automática na Vercel ainda não foi verificada.
@@ -73,11 +74,12 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Próximos passos
 
-1. Validar pela interface a edição de grupos, modelos e páginas, cada qual em sua página, e confirmar que uma atualização de perfil mantém o ID atual.
-2. Consultar os resultados individuais de uma campanha isolada para confirmar abertura/clique/envio; a Stack já anuncia a capacidade e a resposta é cifrada, mas essa leitura não foi feita nesta conferência.
-3. Definir e implementar o `PIERSEC_PAIRING_CODE` duradouro solicitado para a infraestrutura, sem exigir Portainer dos usuários do app e sem expor o segredo ao frontend. Não registrar o valor do segredo no changelog.
-4. Para envio real de teste, usar apenas ambiente/destinatário controlado e autorização explícita; campanhas anteriores com falhas não são reenviadas automaticamente.
-5. Manter a interface e a documentação voltadas ao PierSec, sem revelar o fornecedor do motor de campanhas aos usuários finais.
+1. Enviar a correção do pixel de abertura duplicado para `origin/main` e confirmar a publicação Vercel desse commit.
+2. Validar pela interface a edição de grupos, modelos e páginas, cada qual em sua página, e confirmar que uma atualização de perfil mantém o ID atual.
+3. Consultar os resultados individuais de uma campanha isolada para confirmar abertura/clique/envio; a Stack já anuncia a capacidade e a resposta é cifrada, mas essa leitura não foi feita nesta conferência.
+4. Definir e implementar o `PIERSEC_PAIRING_CODE` duradouro solicitado para a infraestrutura, sem exigir Portainer dos usuários do app e sem expor o segredo ao frontend. Não registrar o valor do segredo no changelog.
+5. Para envio real de teste, usar apenas ambiente/destinatário controlado e autorização explícita; campanhas anteriores com falhas não são reenviadas automaticamente.
+6. Manter a interface e a documentação voltadas ao PierSec, sem revelar o fornecedor do motor de campanhas aos usuários finais.
 
 ## Histórico
 
