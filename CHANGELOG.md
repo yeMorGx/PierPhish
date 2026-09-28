@@ -28,6 +28,10 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ### Última alteração registrada
 
+- `2026-09-28` — Incluída no PierSec a ação **Corrigir acesso** em cada perfil de envio. O usuário informa novas credenciais, que seguem cifradas pela fila existente; o conector consulta os demais dados do perfil localmente e atualiza somente a autenticação. A navegação agora identifica claramente **Perfis de envio**, com acesso direto a partir da criação de campanhas.
+- Nenhuma migration foi criada: o comando usa o tipo `sending_profile` já permitido pela tabela e pelas funções existentes. O usuário e a senha não são devolvidos ao navegador pelo conector, não ficam no snapshot nem no histórico, e a alteração de credenciais não envia e-mails.
+- Validações: Prettier, `git diff --check`, `tsc --noEmit`, `node --check connector/bridge.mjs` e detector Impeccable (`[]`) passaram. Não executei testes automatizados. O build Next.js local não foi repetido porque a tentativa anterior falhou ao ler `.next/diagnostics/framework.json` como reparse point do OneDrive.
+- Pendente: enviar este commit para `main`, confirmar o deploy da Vercel e reconstruir a Stack do conector no Portainer para habilitar a atualização pelo PierSec.
 - `2026-09-28` — Ajustado o diagnóstico de campanhas que foram criadas, mas falharam no envio. O conector resume eventos SMTP em categorias sem persistir endereços ou a mensagem bruta; o endpoint do snapshot valida uma lista fechada de categorias; a tela separa o estado de criação do estado de entrega e informa a causa quando recebida.
 - Não foi criada migration: o resumo categorizado cabe no snapshot JSONB existente. A tela mantém contagens disponíveis enquanto o conector antigo não enviar as categorias.
 - Validações após o rebase em `54adbcd`: Prettier, `git diff --check`, `tsc --noEmit` e `node --check connector/bridge.mjs` passaram. O `next build` não concluiu: o Next.js falhou com `EINVAL` ao executar `readlink` em `.next/diagnostics/framework.json`, que está marcado pelo OneDrive como ponto de nova análise. Antes do rebase, build e script pós-build passaram na base anterior. Nenhum teste automatizado foi executado.
@@ -44,7 +48,8 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 ### Estado observado na última sessão
 
 - `2026-09-28` — No PierSec em produção, o comando `testetetse` consta como criado com sucesso (3 destinatários, campanha ID 5 no serviço); o painel de campanhas mostra **0 enviados, 3 falhas, 0 aberturas/cliques/dados**. A sincronização estava ativa às 09:40 BRT. Nenhum e-mail foi aceito pelo servidor de envio; isso explica por que não chegou à caixa de entrada.
-- O registro salvo no Supabase contém `result_message = "Campanha registrada."`, estado do comando `succeeded` e somente contagens agregadas da campanha. O motivo SMTP bruto ainda não foi recebido/salvo; a mudança acima permitirá exibir uma categoria segura após o conector novo sincronizar.
+- No registro consultado naquela sessão, o resultado era `Campanha registrada.`, estado `succeeded` e contagens agregadas; o texto bruto do erro SMTP não foi persistido. A alteração de diagnóstico passou a exibir categorias seguras após nova sincronização.
+- Atualização informada pelo usuário: a tela agora mostra `smtp_auth` como **Autenticação do perfil de envio recusada**. Isso confirma que o servidor recusou usuário/senha do perfil; ainda é necessário atualizar essas credenciais e iniciar uma nova campanha revisada, pois a anterior não é reenviada.
 - Não foi criada nem reenviada campanha pelo assistente. Repetir o envio antes de conhecer e corrigir a causa pode fazer mensagens chegarem se a configuração SMTP tiver mudado.
 - O conector apareceu como **Conectado** na tela de conexão; a sincronização mais recente observada foi às 17:17 de 25/09/2026.
 - A campanha de teste `testetetse` aparecia como “Em andamento”, com 3 destinatários, e início às 17:08. A atividade mostrava que a solicitação foi concluída/registrada. Isso não comprova recebimento na caixa de entrada.
@@ -53,16 +58,16 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ### Git e arquivos locais
 
-- Branch: `main`; a alteração está no commit `0dfb7e5`, rebased sobre `54adbcd` e enviada para `origin/main`.
+- Branch: `main`; a base atual inclui o commit `541e2b5`. A edição de perfis descrita no topo desta passagem ainda precisa ser commitada e enviada.
 - Havia uma pasta `.impeccable/` não rastreada antes desta tarefa. Ela é preexistente e não deve ser incluída em commits sem relação com ela.
 - O registro histórico de que ainda não havia `CHANGELOG.md` descreve a sessão anterior em que esse arquivo foi criado.
 
 ## Próximos passos
 
-1. Confirmar o deploy da Vercel e a exibição do estado **Falha no envio** e do resumo técnico no PierSec.
-2. Atualizar a Stack `piersec-campaign-bridge` no Portainer para reconstruir o conector a partir da `main`; aguardar a próxima sincronização e conferir se a campanha de teste recebeu os motivos categorizados.
-3. Usar o diagnóstico para corrigir o perfil de envio (autenticação, host/porta/TLS, endereço de destinatário, limite temporário ou recusa do provedor, conforme a categoria retornada).
-4. Depois de corrigir a causa, criar novo teste só com destinatários controlados e revisão/confirmação explícitas. Não repetir automaticamente a campanha existente.
+1. Enviar a implementação deste topo em commit para `origin/main` e confirmar a publicação web pela Vercel.
+2. Reconstruir a Stack `piersec-campaign-bridge` no Portainer para habilitar o comando de atualização de perfil, sem publicar portas administrativas.
+3. No PierSec, abrir **Campanhas → Perfis de envio → Corrigir acesso**, inserir usuário e senha SMTP corretos e acompanhar o resultado em **Atividade**. A credencial pode ser uma senha de aplicativo quando o provedor exigir.
+4. Após a atividade indicar **Atualizado**, criar uma nova campanha de teste para destinatário controlado, revisar e confirmar explicitamente. A campanha anterior com 3 falhas não será reenviada automaticamente.
 5. Resolver a diferença entre o requisito de infraestrutura pedido pelo usuário e o fluxo atualmente implementado para pareamento: o usuário pediu um `PIERSEC_PAIRING_CODE` definitivo configurado pela infraestrutura, enquanto o código/documentação do repositório atualmente geram um código de uso único, válido por 10 minutos, pela interface PierSec e orientam removê-lo da Stack após o pareamento. Definir e implementar um mecanismo duradouro e protegido que não exija acesso de usuários finais ao Portainer, sem expor segredo no frontend. Não registrar o valor do segredo aqui.
 6. Confirmar no Supabase de produção que as migrations da conexão, fila de campanhas e ativos foram aplicadas e que RLS continua habilitada. As migrations correspondentes estão em `supabase/migrations/` com prefixos `2026092412`, `2026092415`, `2026092503`, `20260925185638` e `20260925190540`.
 7. Revisar os textos e navegação da interface para garantir que o nome do produto permaneça PierSec e que detalhes do fornecedor do motor de campanhas não apareçam para usuários finais.

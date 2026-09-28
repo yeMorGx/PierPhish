@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { toast } from "sonner";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { useAuth } from "@/components/auth/auth-provider";
 import { CampaignsNavigation } from "@/components/campaigns/campaigns-navigation";
@@ -104,6 +105,15 @@ function statusLabel(status: string) {
   }
 }
 
+function operationStatusLabel(operation: Operation) {
+  if (
+    operation.status === "succeeded" &&
+    operation.result === "Acesso do perfil atualizado."
+  )
+    return "Atualizado";
+  return statusLabel(operation.status);
+}
+
 export function CampaignAssetsContent({ section }: { section: AssetSection }) {
   const { session } = useAuth();
   const workspaceId = useActiveWorkspaceId();
@@ -111,6 +121,11 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
   const [operations, setOperations] = useState<Operation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editingProfileId, setEditingProfileId] = useState<number | null>(null);
+  const [profileUsername, setProfileUsername] = useState("");
+  const [profilePassword, setProfilePassword] = useState("");
+  const [profileError, setProfileError] = useState("");
+  const [savingProfileId, setSavingProfileId] = useState<number | null>(null);
   const config = settings[section];
   const refresh = useCallback(async () => {
     if (!session?.access_token || !isSupabaseConfigured) {
@@ -172,6 +187,79 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
         : operation.type === "sending_profile",
   );
 
+  function startProfileUpdate(profile: AssetSummary) {
+    setEditingProfileId(profile.id);
+    setProfileUsername("");
+    setProfilePassword("");
+    setProfileError("");
+  }
+
+  function cancelProfileUpdate() {
+    setEditingProfileId(null);
+    setProfileUsername("");
+    setProfilePassword("");
+    setProfileError("");
+  }
+
+  async function updateProfileCredentials(
+    event: FormEvent<HTMLFormElement>,
+    profile: AssetSummary,
+  ) {
+    event.preventDefault();
+    if (!connected || !session?.access_token) {
+      setProfileError("A conexão de campanhas precisa estar online.");
+      return;
+    }
+    if (!profileUsername.trim() || !profilePassword) {
+      setProfileError(
+        "Informe o usuário e a nova senha do servidor de e-mail.",
+      );
+      return;
+    }
+
+    setSavingProfileId(profile.id);
+    setProfileError("");
+    try {
+      const response = await fetch("/api/campaigns/assets", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          workspaceId,
+          connectorId: connected.id,
+          type: "sending_profile",
+          profileId: profile.id,
+          name: profile.name,
+          username: profileUsername,
+          password: profilePassword,
+        }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok)
+        throw new Error(
+          errorMessage(body, "Não foi possível atualizar o acesso."),
+        );
+
+      cancelProfileUpdate();
+      void refresh();
+      toast.success("Atualização registrada", {
+        description:
+          "O acesso será atualizado pela conexão privada. Isso não envia e-mails.",
+      });
+    } catch (cause) {
+      setProfileError(
+        cause instanceof Error
+          ? cause.message
+          : "Não foi possível atualizar o acesso.",
+      );
+    } finally {
+      setSavingProfileId(null);
+      setProfilePassword("");
+    }
+  }
+
   return (
     <DashboardShell
       activeSection="campaigns"
@@ -202,7 +290,9 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
                 {config.title}
               </h2>
               <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
-                Ativos disponíveis para montar uma campanha dentro do PierSec.
+                {section === "sendingProfiles"
+                  ? "Configure o acesso ao servidor de e-mail usado nas campanhas."
+                  : "Ativos disponíveis para montar uma campanha dentro do PierSec."}
               </p>
             </div>
             <span
@@ -213,29 +303,130 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
           </div>
           {assets.length ? (
             <div className="divide-y divide-[var(--line-soft)]">
-              {assets.map((asset) => (
-                <div
-                  key={asset.id}
-                  className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
-                >
-                  <div className="min-w-0">
-                    <strong className="block truncate text-[12px] text-[var(--ink)]">
-                      {asset.name}
-                    </strong>
-                    {section === "pages" && (
-                      <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
-                        {asset.captureCredentials === false &&
-                        asset.capturePasswords === false
-                          ? "Sem captura de credenciais"
-                          : "Bloqueada para campanhas"}
-                      </span>
+              {assets.map((asset) => {
+                const editing =
+                  section === "sendingProfiles" &&
+                  editingProfileId === asset.id;
+                return (
+                  <div key={asset.id} className="grid gap-4 px-5 py-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <strong className="block truncate text-[12px] text-[var(--ink)]">
+                          {asset.name}
+                        </strong>
+                        {section === "pages" && (
+                          <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
+                            {asset.captureCredentials === false &&
+                            asset.capturePasswords === false
+                              ? "Sem captura de credenciais"
+                              : "Bloqueada para campanhas"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="text-[10px] text-[var(--text-muted)]">
+                          Atualizado {dateFormat(asset.modifiedDate)}
+                        </span>
+                        {section === "sendingProfiles" && (
+                          <button
+                            type="button"
+                            disabled={
+                              savingProfileId !== null ||
+                              (!connected && !editing)
+                            }
+                            aria-expanded={editing}
+                            aria-controls={`profile-update-${asset.id}`}
+                            onClick={() =>
+                              editing
+                                ? cancelProfileUpdate()
+                                : startProfileUpdate(asset)
+                            }
+                            className="inline-flex h-9 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 text-[10px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {editing ? "Cancelar" : "Corrigir acesso"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    {editing && (
+                      <form
+                        id={`profile-update-${asset.id}`}
+                        onSubmit={(event) =>
+                          void updateProfileCredentials(event, asset)
+                        }
+                        className="grid gap-4 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] p-4"
+                      >
+                        <div>
+                          <h3 className="m-0 text-[12px] font-semibold text-[var(--ink)]">
+                            Atualizar acesso de {asset.name}
+                          </h3>
+                          <p className="mt-1 mb-0 max-w-[620px] text-[10px] leading-relaxed text-[var(--text-muted)]">
+                            O usuário e a senha salvos não são exibidos. Informe
+                            as credenciais SMTP corretas; alguns provedores
+                            exigem uma senha de aplicativo. As credenciais são
+                            enviadas cifradas à conexão privada e removidas da
+                            fila após o processamento. Isso não envia e-mails
+                            nem reenvia campanhas anteriores.
+                          </p>
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <label className="grid gap-1.5 text-[10px] font-semibold text-[var(--text-muted)]">
+                            USUÁRIO DO SERVIDOR DE E-MAIL
+                            <input
+                              required
+                              autoComplete="username"
+                              maxLength={255}
+                              value={profileUsername}
+                              onChange={(event) =>
+                                setProfileUsername(event.target.value)
+                              }
+                              className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)]"
+                            />
+                          </label>
+                          <label className="grid gap-1.5 text-[10px] font-semibold text-[var(--text-muted)]">
+                            NOVA SENHA
+                            <input
+                              required
+                              type="password"
+                              autoComplete="new-password"
+                              maxLength={512}
+                              value={profilePassword}
+                              onChange={(event) =>
+                                setProfilePassword(event.target.value)
+                              }
+                              className="h-10 rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 text-[12px] font-normal text-[var(--ink)]"
+                            />
+                          </label>
+                        </div>
+                        {profileError && (
+                          <p
+                            role="alert"
+                            className="m-0 text-[11px] text-[var(--danger)]"
+                          >
+                            {profileError}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="submit"
+                            disabled={savingProfileId === asset.id}
+                            className="campaign-primary-action inline-flex h-9 items-center justify-center rounded-full px-4 text-[10px] font-bold transition-colors disabled:cursor-wait disabled:opacity-60"
+                          >
+                            {savingProfileId === asset.id
+                              ? "Salvando…"
+                              : "Salvar novas credenciais"}
+                          </button>
+                          {!connected && (
+                            <span className="text-[10px] text-[var(--text-muted)]">
+                              Conecte o ambiente para atualizar este perfil.
+                            </span>
+                          )}
+                        </div>
+                      </form>
                     )}
                   </div>
-                  <span className="text-[10px] text-[var(--text-muted)]">
-                    Atualizado {dateFormat(asset.modifiedDate)}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="px-5 py-9 text-center">
@@ -288,7 +479,7 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
                   </div>
                   <div className="text-right">
                     <span className="block text-[10px] font-bold text-[var(--ink)]">
-                      {statusLabel(operation.status)}
+                      {operationStatusLabel(operation)}
                     </span>
                     {operation.result && (
                       <span className="mt-1 block max-w-[320px] text-[10px] text-[var(--text-muted)]">

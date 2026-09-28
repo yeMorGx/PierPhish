@@ -154,6 +154,21 @@ function encryptForConnector(publicKey: string, payload: JsonRecord) {
 
 function profilePayload(body: JsonRecord) {
   const name = cleanText(body.name, 120);
+  const profileId =
+    body.profileId === undefined ? null : Number(body.profileId);
+  if (profileId !== null && (!Number.isSafeInteger(profileId) || profileId < 1))
+    return null;
+  if (profileId !== null) {
+    const username = cleanText(body.username, 255);
+    const password = typeof body.password === "string" ? body.password : "";
+    if (!name || !username || !password || password.length > 512) return null;
+    return {
+      name,
+      payload: { id: profileId, name, username, password },
+      itemCount: 0,
+    };
+  }
+
   const host = cleanText(body.host, 255);
   const fromAddress = cleanText(body.fromAddress, 254);
   const username = cleanText(body.username, 255);
@@ -364,10 +379,37 @@ export async function POST(request: NextRequest) {
     sending_profile: "sendingProfiles",
   };
   const existingAssets = snapshot[assetListField[asset.type]];
+  const updateProfileId =
+    asset.type === "sending_profile" &&
+    isRecord(asset.payload) &&
+    Number.isSafeInteger(asset.payload.id)
+      ? Number(asset.payload.id)
+      : null;
+  const existingProfiles = Array.isArray(existingAssets)
+    ? existingAssets.filter(isRecord)
+    : [];
+  if (
+    updateProfileId !== null &&
+    !existingProfiles.some((profile) => Number(profile.id) === updateProfileId)
+  )
+    return gophishError(
+      "O perfil não está mais disponível. Atualize a lista e tente novamente.",
+      409,
+    );
+  if (updateProfileId !== null) {
+    const currentProfile = existingProfiles.find(
+      (profile) => Number(profile.id) === updateProfileId,
+    );
+    if (currentProfile) {
+      asset.name = cleanText(currentProfile.name, 120);
+      if (isRecord(asset.payload)) asset.payload.name = asset.name;
+    }
+  }
   const duplicateName = Array.isArray(existingAssets)
     ? existingAssets.some(
         (item) =>
           isRecord(item) &&
+          Number(item.id) !== updateProfileId &&
           cleanText(item.name, 120).toLowerCase() === asset.name.toLowerCase(),
       )
     : false;

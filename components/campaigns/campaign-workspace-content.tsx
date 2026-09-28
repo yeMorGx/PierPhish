@@ -829,12 +829,12 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         ambiente conectado.
                       </span>
                       <Link
-                        href="/campanhas/envio/novo"
+                        href="/campanhas/envio"
                         target="_blank"
                         rel="noreferrer"
                         className="w-fit text-[9px] font-semibold text-[var(--ink)] underline underline-offset-4"
                       >
-                        Criar perfil no PierSec
+                        Gerenciar perfis de envio
                       </Link>
                     </label>
                     <label className="grid gap-1.5 text-[10px] font-bold text-[var(--text-muted)] md:col-span-2">

@@ -15,7 +15,11 @@ const items = [
   { view: "groups", href: "/campanhas/grupos", label: "Grupos" },
   { view: "templates", href: "/campanhas/modelos", label: "Modelos" },
   { view: "pages", href: "/campanhas/paginas", label: "Páginas" },
-  { view: "sendingProfiles", href: "/campanhas/envio", label: "Envio" },
+  {
+    view: "sendingProfiles",
+    href: "/campanhas/envio",
+    label: "Perfis de envio",
+  },
   { view: "activity", href: "/campanhas/atividade", label: "Atividade" },
   { view: "connection", href: "/campanhas/conexao", label: "Conexão" },
 ] as const;

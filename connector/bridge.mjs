@@ -152,10 +152,13 @@ function piersecRequest(pathname, options = {}) {
 function apiPathAllowed(method, pathname) {
   if (method === "POST")
     return /^api\/(campaigns|groups|templates|pages|smtp)\/?$/.test(pathname);
+  if (method === "PUT") return /^api\/smtp\/[1-9][0-9]*\/?$/.test(pathname);
   return (
     /^api\/(campaigns|groups|templates|pages|smtp)(\/summary)?\/?$/.test(
       pathname,
-    ) || /^api\/campaigns\/[0-9]+\/summary\/?$/.test(pathname)
+    ) ||
+    /^api\/campaigns\/[0-9]+\/summary\/?$/.test(pathname) ||
+    /^api\/smtp\/[1-9][0-9]*\/?$/.test(pathname)
   );
 }
 
@@ -717,6 +720,29 @@ function validateAssetCommand(type, payload) {
   }
 
   if (type === "sending_profile") {
+    const profileId = payload.id === undefined ? null : Number(payload.id);
+    if (profileId !== null) {
+      const username = text(payload.username, 255);
+      const password =
+        typeof payload.password === "string" ? payload.password : "";
+      if (
+        !Number.isSafeInteger(profileId) ||
+        profileId < 1 ||
+        !username ||
+        !password ||
+        password.length > 512
+      )
+        throw new Error("Informe o usuário e a senha do perfil de envio.");
+      return {
+        name,
+        method: "PUT",
+        profileId,
+        username,
+        password,
+        endpoint: "api/smtp/" + profileId,
+      };
+    }
+
     const host = text(payload.host, 255);
     const fromAddress = text(payload.from_address, 254);
     const username = text(payload.username, 255);
@@ -746,6 +772,7 @@ function validateAssetCommand(type, payload) {
         password,
         ignore_cert_errors: false,
       },
+      method: "POST",
       endpoint: "api/smtp/",
     };
   }
@@ -757,22 +784,73 @@ async function createCampaignAsset(apiKey, agent, type, encryptedPayload) {
     type,
     decryptCommandPayload(encryptedPayload, commandPrivateKey),
   );
-  if (!apiPathAllowed("POST", payload.endpoint))
+  const method = payload.method || "POST";
+  if (!apiPathAllowed(method, payload.endpoint))
     throw new Error("Endpoint não permitido pelo conector.");
+
+  let body = payload.body;
+  if (method === "PUT") {
+    let current;
+    try {
+      current = await requestJson(campaignServiceUrl, payload.endpoint, {
+        method: "GET",
+        apiKey,
+        agent,
+      });
+    } catch {
+      return {
+        status: "failed",
+        assetId: null,
+        message:
+          "Não foi possível consultar o perfil atual. Nenhuma alteração foi aplicada.",
+      };
+    }
+    const profile = current.body;
+    if (
+      current.status < 200 ||
+      current.status >= 300 ||
+      !isRecord(profile) ||
+      count(profile.id) !== payload.profileId ||
+      !text(profile.name, 120) ||
+      !text(profile.host, 255) ||
+      !text(profile.from_address, 254)
+    )
+      return {
+        status: "failed",
+        assetId: null,
+        message:
+          "Não foi possível validar o perfil atual. Nenhuma alteração foi aplicada.",
+      };
+
+    body = {
+      id: payload.profileId,
+      name: text(profile.name, 120),
+      host: text(profile.host, 255),
+      from_address: text(profile.from_address, 254),
+      interface_type: "SMTP",
+      username: payload.username,
+      password: payload.password,
+      ignore_cert_errors: profile.ignore_cert_errors === true,
+      ...(Array.isArray(profile.headers) ? { headers: profile.headers } : {}),
+    };
+  }
+
   let response;
   try {
     response = await requestJson(campaignServiceUrl, payload.endpoint, {
-      method: "POST",
+      method,
       apiKey,
       agent,
-      body: payload.body,
+      body,
     });
   } catch {
     return {
       status: "uncertain",
       assetId: null,
       message:
-        "A resposta foi interrompida. Confira o ativo no ambiente antes de repetir.",
+        method === "PUT"
+          ? "Não foi possível confirmar a atualização. Confira o perfil antes de tentar novamente."
+          : "A resposta foi interrompida. Confira o ativo no ambiente antes de repetir.",
     };
   }
   if (response.status >= 500)
@@ -780,7 +858,9 @@ async function createCampaignAsset(apiKey, agent, type, encryptedPayload) {
       status: "uncertain",
       assetId: null,
       message:
-        "O ambiente retornou erro. Confira se o ativo foi criado antes de repetir.",
+        method === "PUT"
+          ? "O ambiente retornou erro. Confira se o perfil foi atualizado antes de repetir."
+          : "O ambiente retornou erro. Confira se o ativo foi criado antes de repetir.",
     };
   if (response.status < 200 || response.status >= 300)
     return {
@@ -789,9 +869,17 @@ async function createCampaignAsset(apiKey, agent, type, encryptedPayload) {
       message:
         response.status === 409 && type === "group"
           ? "Já existe um grupo com esse nome no ambiente conectado. Atualize a lista e escolha outro nome."
-          : response.status === 409
-            ? "O ambiente encontrou um conflito ao criar este ativo. Confira se já existe um item com esse nome."
-            : "O ambiente recusou o ativo com HTTP " + response.status + ".",
+          : response.status === 404 && method === "PUT"
+            ? "O perfil não foi encontrado no ambiente. Atualize a lista antes de tentar novamente."
+            : response.status === 409
+              ? "O ambiente encontrou um conflito ao criar este ativo. Confira se já existe um item com esse nome."
+              : method === "PUT"
+                ? "O ambiente recusou a atualização do perfil com HTTP " +
+                  response.status +
+                  "."
+                : "O ambiente recusou o ativo com HTTP " +
+                  response.status +
+                  ".",
     };
   const assetId = count(response.body?.id);
   if (!assetId)
@@ -801,7 +889,12 @@ async function createCampaignAsset(apiKey, agent, type, encryptedPayload) {
       message:
         "A resposta não trouxe um recibo válido. Confira o ambiente antes de repetir.",
     };
-  return { status: "succeeded", assetId, message: "Ativo criado." };
+  return {
+    status: "succeeded",
+    assetId,
+    message:
+      method === "PUT" ? "Acesso do perfil atualizado." : "Ativo criado.",
+  };
 }
 
 async function postSnapshot(configuration, snapshot) {
@@ -941,7 +1034,7 @@ async function run() {
                 await postSnapshot(configuration, refreshed);
               } catch (error) {
                 console.warn(
-                  "Ativo criado; atualização da lista será repetida.",
+                  "Operação concluída; atualização da lista será repetida.",
                   error.message,
                 );
               }
