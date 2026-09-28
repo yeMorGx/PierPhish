@@ -34,6 +34,7 @@
     "motion": "^13.4.0",
     "next": "15.5.24",
     "next-themes": "^0.4.6",
+    "postcss": "8.5.28",
     "react": "19.1.2",
     "react-dom": "19.1.2",
     "react-grid-layout": "^2.2.4",

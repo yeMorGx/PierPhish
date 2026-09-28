@@ -106,6 +106,15 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-28 — CSS do HTML, personalização do nome e entrega no spam
+
+- Corrigido o sanitizador do PierSec: ele agora mantém CSS inline e blocos `<style>` após validar regras e propriedades com PostCSS. Scripts, formulários, importações e recursos externos continuam bloqueados. O editor explica esse comportamento para modelos e páginas.
+- O conteúdo atual da página de treinamento já foi salvo sem CSS; os estilos descartados anteriormente não existem no registro para recuperação. Depois que a versão corrigida for implantada, será necessário colar novamente o HTML/CSS original no editor e salvar. Nenhum ativo remoto foi alterado nesta tarefa.
+- Causa observada do nome: o modelo usa `{{.FirstName}} {{.LastName}}`, enquanto o grupo selecionado tem `Pessoal` cadastrado literalmente como sobrenome. A correspondência dos campos está correta; atualizar os sobrenomes exige os valores reais e não foi feito automaticamente.
+- Entrega no spam: o servidor SMTP aceitar a mensagem não informa se a caixa colocou o e-mail na entrada ou no spam. O envio testado usa Gmail pessoal e um link público temporário `trycloudflare.com`; reputação do remetente, URL e conteúdo de simulação também podem influenciar, sem que os dados disponíveis identifiquem uma causa única. As diretrizes atuais do Gmail recomendam autenticação de domínio e esclarecem que autenticação sozinha não garante entrega. Usar domínio próprio verificado, remetente estável e coordenação com o administrador de e-mail da organização são próximos passos; não tentei contornar filtros.
+- Validações: Prettier, `pnpm exec tsc --noEmit`, `pnpm install --lockfile-only --frozen-lockfile --ignore-scripts --offline` e `git diff --check` passaram. Não executei testes automatizados. O detector Impeccable apontou um falso positivo de imagem em uma expressão regular que reconhece o pixel de rastreamento já existente; não há imagem quebrada na interface.
+- Nenhuma campanha ou mensagem foi enviada, e nenhuma lista, grupo ou perfil remoto foi modificada. O commit/push seguirá nesta tarefa; a publicação automática da Vercel ainda precisa ser conferida.
+
 ### 2026-09-28 — Diagnóstico de modelo e página recusados
 
 - Os logs do ambiente mostraram HTTP 500 ao salvar o modelo e a página `BancoExemplo`: o parser recusou `{{nome_cliente}}` porque `nome_cliente` não é uma variável disponível. A consulta de leitura ao snapshot confirmou que nenhum dos dois ativos apareceu no ambiente; os registros antigos da fila foram preservados como estavam.

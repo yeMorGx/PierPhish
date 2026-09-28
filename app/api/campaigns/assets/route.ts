@@ -4,6 +4,7 @@ import {
   publicEncrypt,
   randomBytes,
 } from "node:crypto";
+import postcss from "postcss";
 import sanitizeHtml from "sanitize-html";
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -42,6 +43,177 @@ function cleanBodyText(value: unknown, limit: number) {
     : "";
 }
 
+const safeCssProperties = new Set([
+  "align-content",
+  "align-items",
+  "align-self",
+  "aspect-ratio",
+  "background",
+  "background-color",
+  "background-image",
+  "block-size",
+  "border",
+  "border-bottom",
+  "border-bottom-color",
+  "border-bottom-left-radius",
+  "border-bottom-right-radius",
+  "border-bottom-style",
+  "border-bottom-width",
+  "border-collapse",
+  "border-color",
+  "border-left",
+  "border-left-color",
+  "border-left-style",
+  "border-left-width",
+  "border-radius",
+  "border-right",
+  "border-right-color",
+  "border-right-style",
+  "border-right-width",
+  "border-spacing",
+  "border-style",
+  "border-top",
+  "border-top-color",
+  "border-top-left-radius",
+  "border-top-right-radius",
+  "border-top-style",
+  "border-top-width",
+  "border-width",
+  "box-shadow",
+  "box-sizing",
+  "color",
+  "column-gap",
+  "display",
+  "flex",
+  "flex-basis",
+  "flex-direction",
+  "flex-flow",
+  "flex-grow",
+  "flex-shrink",
+  "flex-wrap",
+  "font-family",
+  "font-size",
+  "font-style",
+  "font-variant",
+  "font-weight",
+  "gap",
+  "grid-auto-columns",
+  "grid-auto-flow",
+  "grid-auto-rows",
+  "grid-column",
+  "grid-row",
+  "grid-template-columns",
+  "grid-template-rows",
+  "height",
+  "inline-size",
+  "justify-content",
+  "justify-items",
+  "justify-self",
+  "letter-spacing",
+  "line-height",
+  "list-style-position",
+  "list-style-type",
+  "margin",
+  "margin-block",
+  "margin-block-end",
+  "margin-block-start",
+  "margin-bottom",
+  "margin-inline",
+  "margin-inline-end",
+  "margin-inline-start",
+  "margin-left",
+  "margin-right",
+  "margin-top",
+  "max-height",
+  "max-width",
+  "min-height",
+  "min-width",
+  "object-fit",
+  "opacity",
+  "outline",
+  "outline-color",
+  "outline-style",
+  "outline-width",
+  "overflow",
+  "overflow-wrap",
+  "overflow-x",
+  "overflow-y",
+  "padding",
+  "padding-block",
+  "padding-block-end",
+  "padding-block-start",
+  "padding-bottom",
+  "padding-inline",
+  "padding-inline-end",
+  "padding-inline-start",
+  "padding-left",
+  "padding-right",
+  "padding-top",
+  "row-gap",
+  "table-layout",
+  "text-align",
+  "text-decoration",
+  "text-decoration-color",
+  "text-decoration-line",
+  "text-decoration-style",
+  "text-overflow",
+  "text-transform",
+  "vertical-align",
+  "visibility",
+  "white-space",
+  "width",
+  "word-break",
+]);
+
+const safeCssValuePattern =
+  /^(?!.*(?:url|image(?:-set|-rect)?|cross-fade|element|paint|expression|javascript|behavior|binding)\s*\()(?!.*\\)[\w\s#.,%()+\-'\"]{1,500}$/i;
+
+function sanitizeCss(source: string) {
+  if (source.length > 30_000) return "";
+
+  try {
+    const root = postcss.parse(source);
+    let ruleCount = 0;
+
+    root.walkAtRules((rule) => {
+      const allowedMedia =
+        rule.name.toLowerCase() === "media" &&
+        /^(?:(?:screen|all)\s+and\s+)?\((?:max|min)-width:\s*\d{1,4}(?:px|em|rem)\)$/i.test(
+          rule.params.trim(),
+        );
+      if (!allowedMedia) rule.remove();
+    });
+
+    root.walkRules((rule) => {
+      ruleCount += 1;
+      if (
+        ruleCount > 500 ||
+        rule.selector.length > 1_000 ||
+        /[\u0000-\u001f<>]/.test(rule.selector)
+      )
+        rule.remove();
+    });
+
+    root.walkDecls((declaration) => {
+      const property = declaration.prop.toLowerCase();
+      const isSafeCustomProperty = /^--[a-z_][a-z0-9_-]{0,63}$/i.test(property);
+      if (
+        (!safeCssProperties.has(property) && !isSafeCustomProperty) ||
+        !safeCssValuePattern.test(declaration.value) ||
+        declaration.important
+      )
+        declaration.remove();
+    });
+
+    root.walkComments((comment) => {
+      comment.remove();
+    });
+    return root.toString().trim();
+  } catch {
+    return "";
+  }
+}
+
 function cleanHtml(value: unknown, allowCampaignUrl: boolean) {
   const source = typeof value === "string" ? value : "";
   if (source.length > 200_000) return null;
@@ -52,10 +224,19 @@ function cleanHtml(value: unknown, allowCampaignUrl: boolean) {
     return null;
 
   const marker = "https://piersec.invalid/__campaign_destination__";
-  const safeSource = allowCampaignUrl
+  const sourceWithMarkers = allowCampaignUrl
     ? source.replaceAll("{{.URL}}", marker)
     : source;
-  const cleaned = sanitizeHtml(safeSource, {
+  const styleBlocks: Array<{ marker: string; css: string }> = [];
+  const sourceWithStylesExtracted = sourceWithMarkers.replace(
+    /<style\b[^>]*>([\s\S]*?)(?:<\/style\s*>|$)/gi,
+    (_match, css: string) => {
+      const styleMarker = `PIERSEC_STYLE_${randomBytes(12).toString("hex")}__`;
+      styleBlocks.push({ marker: styleMarker, css: sanitizeCss(css) });
+      return styleMarker;
+    },
+  );
+  const cleaned = sanitizeHtml(sourceWithStylesExtracted, {
     allowedTags: [
       "a",
       "blockquote",
@@ -81,9 +262,21 @@ function cleanHtml(value: unknown, allowCampaignUrl: boolean) {
       "ul",
     ],
     allowedAttributes: {
-      a: ["href", "title"],
-      td: ["colspan"],
-      th: ["colspan"],
+      "*": ["class", "id", "style"],
+      a: ["href", "title", "class", "id", "style"],
+      td: ["colspan", "class", "id", "style"],
+      th: ["colspan", "class", "id", "style"],
+    },
+    allowedClasses: {
+      "*": [/^[A-Za-z_][A-Za-z0-9_-]{0,63}$/],
+    },
+    allowedStyles: {
+      "*": Object.fromEntries(
+        [...safeCssProperties].map((property) => [
+          property,
+          [safeCssValuePattern],
+        ]),
+      ),
     },
     allowedSchemes: ["http", "https", "mailto"],
     allowProtocolRelative: false,
@@ -97,7 +290,14 @@ function cleanHtml(value: unknown, allowCampaignUrl: boolean) {
       }),
     },
   });
-  return allowCampaignUrl ? cleaned.replaceAll(marker, "{{.URL}}") : cleaned;
+  const cleanedWithStyles = styleBlocks.reduce(
+    (html, { marker: styleMarker, css }) =>
+      html.replaceAll(styleMarker, css ? `<style>${css}</style>` : ""),
+    cleaned,
+  );
+  return allowCampaignUrl
+    ? cleanedWithStyles.replaceAll(marker, "{{.URL}}")
+    : cleanedWithStyles;
 }
 
 function normalizeTargets(value: unknown) {
