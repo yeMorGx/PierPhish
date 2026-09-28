@@ -502,7 +502,7 @@ export function WorkspaceManagePanel({
       }),
     });
     const body = (await response.json().catch(() => ({}))) as {
-      invitation?: { name?: string };
+      invitation?: { name?: string; emailSent?: boolean };
       error?: string;
     };
     if (!response.ok) {
@@ -513,7 +513,9 @@ export function WorkspaceManagePanel({
     setInviteEmail("");
     setInviteExcludeFromStatistics(false);
     setNotice(
-      `${body.invitation?.name || email} agora pode acessar este workspace.`,
+      body.invitation?.emailSent
+        ? `${body.invitation.name || email} agora pode acessar este workspace. Enviamos um e-mail com os detalhes.`
+        : `${body.invitation?.name || email} agora pode acessar este workspace, mas o e-mail não foi enviado. Confira a configuração do Resend.`,
     );
     setInviting(false);
     await loadPeople();

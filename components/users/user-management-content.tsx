@@ -167,43 +167,6 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
-function generatePassword() {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-  const symbols = "!@#$%&*";
-  const values = new Uint32Array(16);
-  window.crypto.getRandomValues(values);
-  const password = Array.from(
-    values,
-    (value) => alphabet[value % alphabet.length],
-  );
-  password[2] = symbols[values[2] % symbols.length];
-  password[7] = String(values[7] % 10);
-  return password.join("");
-}
-
-function validatePassword(password: string, email: string) {
-  if (password.length < 12)
-    return "A senha precisa ter pelo menos 12 caracteres.";
-  const groups = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z\d]/].filter((pattern) =>
-    pattern.test(password),
-  ).length;
-  if (groups < 3) {
-    return "Use pelo menos 3 grupos: maiúsculas, minúsculas, números ou símbolos.";
-  }
-  const normalizedPassword = password.toLowerCase();
-  const normalizedEmail = email.toLowerCase().split("@")[0];
-  if (
-    ["password", "senha", "pierphish", "be phish"].some((value) =>
-      normalizedPassword.includes(value),
-    ) ||
-    (normalizedEmail.length >= 4 &&
-      normalizedPassword.includes(normalizedEmail))
-  ) {
-    return "Evite senhas previsíveis ou relacionadas ao usuário.";
-  }
-  return null;
-}
-
 function isGlobalAdminUser(user: ReturnType<typeof useAuth>["user"]) {
   if (!isSupabaseConfigured) return true;
   if (user?.email?.toLowerCase() === superAdminEmail) return true;
@@ -231,8 +194,6 @@ export function UserManagementContent() {
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [workspaceOptions, setWorkspaceOptions] = useState<WorkspaceOption[]>(
     [],
   );
@@ -254,7 +215,6 @@ export function UserManagementContent() {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [resetTarget, setResetTarget] = useState<ManagedUser | null>(null);
-  const [resetPassword, setResetPassword] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
@@ -477,10 +437,8 @@ export function UserManagementContent() {
     setError(null);
     setNotice(null);
 
-    if (!name.trim() || !email.trim() || password.length < 12) {
-      setError(
-        "Preencha nome, e-mail e uma senha inicial de pelo menos 12 caracteres.",
-      );
+    if (!name.trim() || !email.trim()) {
+      setError("Preencha o nome e o e-mail da pessoa.");
       setSubmitting(false);
       return;
     }
@@ -540,7 +498,6 @@ export function UserManagementContent() {
       body: JSON.stringify({
         name,
         email,
-        password,
         workspaceId: selectedWorkspaceId,
         role: selectedRole,
         excludeFromStatistics: selectedExcludeFromStatistics,
@@ -559,9 +516,8 @@ export function UserManagementContent() {
     setUsers((current) => [body.user as ManagedUser, ...current]);
     setName("");
     setEmail("");
-    setPassword("");
     setSelectedExcludeFromStatistics(false);
-    setNotice("Usuário criado. Compartilhe a senha inicial com segurança.");
+    setNotice("Usuário criado. Enviamos um convite para definir a senha.");
     setSubmitting(false);
   }
 
@@ -656,7 +612,11 @@ export function UserManagementContent() {
       }),
     });
     const body = (await response.json().catch(() => ({}))) as {
-      invitation?: { name?: string; workspaceName?: string };
+      invitation?: {
+        name?: string;
+        workspaceName?: string;
+        emailSent?: boolean;
+      };
       error?: string;
     };
     if (!response.ok || !body.invitation) {
@@ -668,7 +628,9 @@ export function UserManagementContent() {
     setInviteEmail("");
     setInviteExcludeFromStatistics(false);
     setInviteNotice(
-      `Acesso liberado${body.invitation.name ? ` para ${body.invitation.name}` : ""}. Uma notificação foi enviada.`,
+      body.invitation.emailSent
+        ? `Acesso liberado${body.invitation.name ? ` para ${body.invitation.name}` : ""}. Enviamos um e-mail com os detalhes.`
+        : `Acesso liberado${body.invitation.name ? ` para ${body.invitation.name}` : ""}, mas o e-mail não foi enviado. Confira a configuração do Resend.`,
     );
     await loadUsers();
     setInviting(false);
@@ -700,7 +662,6 @@ export function UserManagementContent() {
     setError(null);
     setNotice(null);
     setResetTarget(managedUser);
-    setResetPassword(generatePassword());
   }
 
   async function handleResetPassword(event: FormEvent<HTMLFormElement>) {
@@ -709,13 +670,6 @@ export function UserManagementContent() {
     setActionLoading(true);
     setError(null);
     setNotice(null);
-    const nextPassword = resetPassword.trim();
-    const passwordError = validatePassword(nextPassword, resetTarget.email);
-    if (passwordError) {
-      setError(passwordError);
-      setActionLoading(false);
-      return;
-    }
 
     if (!isSupabaseConfigured) {
       setUsers((current) =>
@@ -725,9 +679,7 @@ export function UserManagementContent() {
             : managedUser,
         ),
       );
-      setNotice(
-        `A senha de ${resetTarget.name || resetTarget.email} foi redefinida.`,
-      );
+      setNotice(`Link de redefinição preparado para ${resetTarget.email}.`);
       setResetTarget(null);
       setActionLoading(false);
       return;
@@ -748,7 +700,6 @@ export function UserManagementContent() {
       body: JSON.stringify({
         action: "reset-password",
         userId: resetTarget.id,
-        password: nextPassword,
       }),
     });
     const body = (await response.json().catch(() => ({}))) as {
@@ -759,15 +710,8 @@ export function UserManagementContent() {
       setActionLoading(false);
       return;
     }
-    setUsers((current) =>
-      current.map((managedUser) =>
-        managedUser.id === resetTarget.id
-          ? { ...managedUser, passwordRotationRequired: true }
-          : managedUser,
-      ),
-    );
     setNotice(
-      `A senha de ${resetTarget.name || resetTarget.email} foi redefinida. Compartilhe a nova senha com segurança.`,
+      `Enviamos um link para redefinir a senha de ${resetTarget.email}.`,
     );
     setResetTarget(null);
     setActionLoading(false);
@@ -841,8 +785,8 @@ export function UserManagementContent() {
                 Gerenciar usuários
               </h1>
               <p className="mt-3 mb-0 max-w-[620px] text-[13px] leading-relaxed text-[var(--text-muted)]">
-                Crie acessos internos para o time e entregue uma senha inicial
-                que deverá ser trocada no primeiro acesso.
+                Crie acessos internos e envie convites para confirmar o e-mail e
+                definir uma senha pessoal.
               </p>
             </div>
             <span className="grid size-12 flex-none place-items-center rounded-[16px] bg-[var(--surface-soft)] text-[var(--aqua)]">
@@ -994,31 +938,6 @@ export function UserManagementContent() {
                       </span>
                     </span>
                   </label>
-                  <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
-                    Senha inicial
-                    <div className="flex gap-2">
-                      <input
-                        className="h-12 min-w-0 flex-1 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[var(--accent)]"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        placeholder="Mínimo de 12 caracteres"
-                        type={showPassword ? "text" : "password"}
-                        autoComplete="new-password"
-                        minLength={12}
-                        required
-                      />
-                      <button
-                        className="h-12 rounded-[14px] border border-[var(--line)] px-3 text-[10px] font-bold tracking-normal text-[#6e7c84] normal-case transition-colors hover:border-[var(--text-muted)]"
-                        type="button"
-                        onClick={() => setShowPassword((current) => !current)}
-                      >
-                        {showPassword ? "Ocultar" : "Ver"}
-                      </button>
-                    </div>
-                    <span className="font-normal tracking-normal text-[#a0a8ad] normal-case">
-                      Use letras maiúsculas, minúsculas, números e símbolos.
-                    </span>
-                  </label>
                 </div>
 
                 {(error || notice) && (
@@ -1036,15 +955,8 @@ export function UserManagementContent() {
                     type="submit"
                     disabled={submitting}
                   >
-                    {submitting ? "Criando…" : "Criar usuário"}
+                    {submitting ? "Enviando convite…" : "Criar e convidar"}
                     <Icon name="arrow" size={15} />
-                  </button>
-                  <button
-                    className="text-left text-[11px] font-bold text-[var(--aqua)] underline decoration-[#c9d4d7] underline-offset-4 hover:text-[var(--ink)]"
-                    type="button"
-                    onClick={() => setPassword(generatePassword())}
-                  >
-                    Gerar senha segura
                   </button>
                 </div>
               </form>
@@ -1062,8 +974,8 @@ export function UserManagementContent() {
                 <div className="mt-8 grid gap-4">
                   {[
                     "Sem cadastro público",
-                    "E-mail confirmado pelo administrador",
-                    "Troca da senha no primeiro acesso",
+                    "Confirmação do e-mail por convite",
+                    "A própria pessoa define a senha",
                   ].map((item) => (
                     <div className="flex items-start gap-3" key={item}>
                       <span className="mt-0.5 grid size-5 flex-none place-items-center rounded-full border border-[var(--contrast-line)] text-[#d9e2e2]">
@@ -1076,8 +988,8 @@ export function UserManagementContent() {
                   ))}
                 </div>
                 <div className="mt-8 border-t border-white/15 pt-4 text-[10px] leading-relaxed text-[#8f9da1]">
-                  Compartilhe a senha inicial por um canal seguro. Ela não é
-                  enviada automaticamente por este painel.
+                  O convite leva a pessoa a confirmar o endereço e definir a
+                  própria senha.
                 </div>
               </aside>
             </section>
@@ -1096,9 +1008,8 @@ export function UserManagementContent() {
                     Chamar usuário para este ambiente
                   </h2>
                   <p className="mt-2 mb-0 max-w-[650px] text-[11px] leading-relaxed text-[#87919a]">
-                    Libere uma conta já cadastrada em um workspace e envie uma
-                    notificação para ela. Nenhum e-mail externo é enviado por
-                    este painel.
+                    Libere uma conta já cadastrada em um workspace e envie um
+                    e-mail com as informações de acesso.
                   </p>
                 </div>
                 <span className="grid size-11 flex-none place-items-center rounded-[14px] bg-[#fff1eb] text-[var(--accent)]">
@@ -1372,7 +1283,7 @@ export function UserManagementContent() {
                                     disabled={actionLoading}
                                   >
                                     <Icon name="settings" size={12} />
-                                    Senha
+                                    Redefinir
                                   </button>
                                   <button
                                     className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#efc6bc] px-2.5 py-2 text-[10px] font-bold text-[#a14e3d] transition-colors hover:bg-[#fff2ef] disabled:cursor-not-allowed disabled:opacity-50"
@@ -1434,11 +1345,12 @@ export function UserManagementContent() {
                   className="m-0 text-[24px] font-bold tracking-[-0.05em] text-[var(--ink)]"
                   id="reset-user-password-title"
                 >
-                  Redefinir senha
+                  Enviar link de redefinição
                 </h2>
                 <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[#7f8991]">
-                  A senha de {resetTarget.name || resetTarget.email} será
-                  substituída e a troca será exigida no próximo acesso.
+                  Enviaremos para {resetTarget.email} um link individual para
+                  criar uma nova senha. A senha atual só muda quando a pessoa
+                  concluir o processo.
                 </p>
               </div>
               <button
@@ -1451,21 +1363,6 @@ export function UserManagementContent() {
                 <Icon name="close" size={15} />
               </button>
             </div>
-            <label className="mt-6 grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
-              Nova senha temporária
-              <input
-                className="h-12 rounded-[14px] border border-[var(--line)] bg-[#f7f8f8] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] outline-none focus:border-[var(--accent)]"
-                value={resetPassword}
-                onChange={(event) => setResetPassword(event.target.value)}
-                type="text"
-                autoComplete="new-password"
-                minLength={12}
-                required
-              />
-              <span className="font-normal tracking-normal text-[#a0a8ad] normal-case">
-                Use letras maiúsculas, minúsculas, números e símbolos.
-              </span>
-            </label>
             {error && (
               <p
                 className="mt-4 rounded-[12px] bg-[#fff0ed] px-3.5 py-3 text-[11px] text-[#984f3f]"
@@ -1488,7 +1385,7 @@ export function UserManagementContent() {
                 type="submit"
                 disabled={actionLoading}
               >
-                {actionLoading ? "Salvando…" : "Redefinir senha"}
+                {actionLoading ? "Enviando…" : "Enviar link"}
                 <Icon name="arrow" size={14} />
               </button>
             </div>

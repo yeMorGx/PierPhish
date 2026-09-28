@@ -112,6 +112,9 @@ export function LoginForm() {
               required
             />
           </Label>
+          <p className="login-forgot-link">
+            <Link href="/esqueci-senha">Esqueceu sua senha?</Link>
+          </p>
           {error && (
             <p className="login-error" role="alert">
               {error}

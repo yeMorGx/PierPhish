@@ -7879,6 +7879,42 @@ html[data-theme="dark"] .workspace-modal-backdrop {
   line-height: 1.45;
 }
 
+.login-forgot-link {
+  margin: -7px 0 0;
+  text-align: right;
+  font-size: 11px;
+}
+
+.login-forgot-link a,
+.login-success a {
+  color: var(--aqua);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.login-success {
+  margin: 24px 0 0;
+  border: 1px solid #cfe4d0;
+  border-radius: 12px;
+  padding: 13px 15px;
+  color: #426d4b;
+  background: #edf7ee;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.login-success p {
+  margin: 0;
+}
+
+.login-success a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
 .login-demo-card {
   margin-top: 42px;
   border: 1px solid var(--line-soft);
@@ -8130,6 +8166,12 @@ html[data-theme="dark"] .login-artwork-caption p {
 html[data-theme="dark"] .login-error {
   color: #ffd0be;
   background: rgba(143, 69, 43, 0.28);
+}
+
+html[data-theme="dark"] .login-success {
+  border-color: rgba(112, 166, 120, 0.36);
+  color: #c0e3c4;
+  background: rgba(46, 104, 56, 0.24);
 }
 
 /* Cookie notice and policy */

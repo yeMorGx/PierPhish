@@ -26,6 +26,15 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - Conteúdo operacional e listas de destinatários são cifrados para o conector antes de irem para a fila do Supabase e apagados quando o resultado chega ou a ordem expira. O histórico guarda solicitante, horário, seleção, contagem e resultado.
 - A tela de campanhas mostra contagens agregadas e permite pedir atividade individual sob demanda. A resposta com e-mails e horários é cifrada para uma chave temporária da sessão do navegador, e a aplicação descarta IP, navegador e dados submetidos. “Enviado” significa aceito pelo servidor de e-mail e não comprova entrega na caixa de entrada.
 
+### Integração de e-mails pelo Resend — 2026-09-28
+
+- Adicionada a dependência `resend@6.30.0` e o envio server-side em `lib/server-email.ts`. Os modelos de convite/ativação, convite de workspace e redefinição usam o nome PierSec; campos dinâmicos são escapados no HTML e o assunto remove quebras de linha. `RESEND_API_KEY` nunca usa prefixo `NEXT_PUBLIC_`, e a chave não é lida no navegador nem armazenada no Supabase.
+- A criação de usuário deixou de pedir/armazenar uma senha temporária. Ela gera um link de convite do Supabase Auth, vincula a conta ao workspace e manda por Resend uma mensagem para confirmar o e-mail e definir a primeira senha. Convites para contas já existentes agora também mandam os dados de acesso por e-mail e mantêm o aviso interno.
+- A ação administrativa de senha envia um link individual em vez de trocar a senha diretamente. Adicionadas as páginas `/esqueci-senha` e `/redefinir-senha`; a solicitação pública responde genericamente para contas inexistentes e aplica limites de frequência por e-mail/IP em cada instância da aplicação.
+- Configuração esperada no servidor local e na Vercel: `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (remetente de domínio verificado) e `APP_BASE_URL` (URL HTTPS do site em produção). O `.env.local.example` contém somente um placeholder `re_xxxxxxxxx`; nenhum segredo foi adicionado ao repositório. As URLs `/alterar-senha` e `/redefinir-senha` precisam estar na allowlist de Redirect URLs do Supabase Auth.
+- Validações: Prettier nos arquivos TS/TSX/CSS/MD/JSON, TypeScript (`pnpm exec tsc --noEmit`), `pnpm install --lockfile-only --frozen-lockfile --ignore-scripts --offline` e `git diff --check` passaram. Nenhum e-mail foi enviado, nenhuma migration/configuração remota foi aplicada e a publicação na Vercel ainda não foi conferida.
+- Próximos passos: commit/push para `main`; configurar a chave Resend e um remetente verificado nos ambientes local/Vercel, configurar `APP_BASE_URL` e Redirect URLs no Supabase, depois implantar e testar os três fluxos com endereços controlados. Consultar os logs do Resend para confirmar aceitação e entrega.
+
 ### Última alteração registrada
 
 - `2026-09-28` — Removidos os seis banners, o componente visual compartilhado e os estilos sobrepostos; restaurados os cabeçalhos de campanhas sem imagem.

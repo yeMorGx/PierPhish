@@ -43,9 +43,15 @@ Cada workspace começa isolado. As telas de visão geral, risco, apresentação,
 
 Na área `/usuarios`, um administrador pode criar o acesso já vinculado a um workspace. Os níveis são Proprietário, Administrador, Analista e Visualizador. Proprietários e administradores só conseguem gerenciar usuários dos workspaces que administram; os demais níveis ficam em modo de consulta.
 
+### E-mails de acesso pelo Resend
+
+Convites para novas contas, avisos de acesso a workspaces e redefinições de senha são enviados pelo Resend no servidor. O navegador nunca recebe a chave da API. Configure `RESEND_API_KEY`, `RESEND_FROM_EMAIL` e `APP_BASE_URL` no ambiente local e nas variáveis da Vercel. Substitua `re_xxxxxxxxx` no exemplo por uma chave de envio real e use um remetente de domínio verificado no Resend. `APP_BASE_URL` deve ser a URL HTTPS pública do PierSec em produção e `http://localhost:3000` em desenvolvimento.
+
+No Supabase, inclua as URLs completas `${APP_BASE_URL}/alterar-senha` e `${APP_BASE_URL}/redefinir-senha` na lista de Redirect URLs de Authentication, substituindo `APP_BASE_URL` pela URL do ambiente. A criação de conta envia um convite para confirmar o e-mail e definir a primeira senha; o link **Esqueceu sua senha?** envia o fluxo de recuperação. O link de redefinição expira de acordo com o tempo configurado no Supabase Auth. A redefinição pública responde de forma genérica para não revelar se o e-mail está cadastrado; há limitação de frequência por e-mail e IP em cada instância da aplicação.
+
 ## MFA obrigatório
 
-Todo acesso autenticado precisa concluir MFA com um aplicativo TOTP. Usuários novos entram no fluxo `/mfa` depois de trocar a senha inicial; usuários existentes sem um fator verificado são encaminhados para o mesmo fluxo antes de acessar o painel. Sessões sem `aal2` também são rejeitadas pelas rotas API protegidas.
+Todo acesso autenticado precisa concluir MFA com um aplicativo TOTP. Usuários novos entram no fluxo `/mfa` depois de aceitar o convite e definir a própria senha; usuários existentes sem um fator verificado são encaminhados para o mesmo fluxo antes de acessar o painel. Sessões sem `aal2` também são rejeitadas pelas rotas API protegidas.
 
 No Supabase Dashboard, habilite o fator **TOTP** em Authentication → Multi-Factor. Para aplicar a regra a outros clientes além deste site, configure também o nível global de garantia como **AAL2 obrigatório**. O usuário pode usar Google Authenticator, Microsoft Authenticator, 1Password ou outro aplicativo compatível.
 

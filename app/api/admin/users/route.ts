@@ -3,6 +3,14 @@ import { createClient, type User } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
 import { identifyAikidoUser, requireMfa } from "@/lib/server-auth";
 import { recalculateWorkspaceCampaignStats } from "@/lib/server-statistics";
+import {
+  getAppBaseUrl,
+  isResendConfigured,
+  makeAccountInviteEmail,
+  makePasswordResetEmail,
+  makeWorkspaceInviteEmail,
+  sendPierSecEmail,
+} from "@/lib/server-email";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -17,7 +25,6 @@ type CreateUserPayload = {
   mode?: unknown;
   name?: unknown;
   email?: unknown;
-  password?: unknown;
   workspaceId?: unknown;
   role?: unknown;
   excludeFromStatistics?: unknown;
@@ -26,7 +33,6 @@ type CreateUserPayload = {
 type UserActionPayload = {
   action?: unknown;
   userId?: unknown;
-  password?: unknown;
   workspaceId?: unknown;
   role?: unknown;
   excludeFromStatistics?: unknown;
@@ -47,8 +53,7 @@ function responseError(message: string, status: number) {
 
 function userDisplayName(user: User) {
   const metadata = user.user_metadata as
-    | { display_name?: unknown; name?: unknown }
-    | undefined;
+    { display_name?: unknown; name?: unknown } | undefined;
   return typeof metadata?.display_name === "string"
     ? metadata.display_name
     : typeof metadata?.name === "string"
@@ -327,30 +332,6 @@ function safeUser(
   };
 }
 
-function validatePassword(password: string, email: string) {
-  if (password.length < 12) return "A senha inicial precisa ter 12 caracteres.";
-
-  const groups = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z\d]/].filter((pattern) =>
-    pattern.test(password),
-  ).length;
-  if (groups < 3) {
-    return "Use pelo menos 3 grupos: maiúsculas, minúsculas, números ou símbolos.";
-  }
-
-  const normalizedPassword = password.toLowerCase();
-  const normalizedEmail = email.toLowerCase().split("@")[0];
-  const commonPasswords = ["password", "senha", "pierphish", "be phish"];
-  if (
-    commonPasswords.some((value) => normalizedPassword.includes(value)) ||
-    (normalizedEmail.length >= 4 &&
-      normalizedPassword.includes(normalizedEmail))
-  ) {
-    return "Evite senhas previsíveis ou relacionadas ao usuário e ao produto.";
-  }
-
-  return null;
-}
-
 export async function GET(request: NextRequest) {
   const { client, error, managedWorkspaceIds } = await requireAdmin(request);
   if (error || !client) return error;
@@ -447,7 +428,6 @@ export async function POST(request: NextRequest) {
   const mode = payload.mode === "invite" ? "invite" : "create";
   const name = typeof payload.name === "string" ? payload.name.trim() : "";
   const email = typeof payload.email === "string" ? payload.email.trim() : "";
-  const password = typeof payload.password === "string" ? payload.password : "";
   const workspaceId =
     typeof payload.workspaceId === "string" ? payload.workspaceId.trim() : "";
   const role = typeof payload.role === "string" ? payload.role : "";
@@ -460,9 +440,12 @@ export async function POST(request: NextRequest) {
     return responseError("Informe um e-mail válido.", 400);
   }
 
-  if (mode === "create") {
-    const passwordError = validatePassword(password, email);
-    if (passwordError) return responseError(passwordError, 400);
+  const appBaseUrl = getAppBaseUrl(request.nextUrl.origin);
+  if (!isResendConfigured() || !appBaseUrl) {
+    return responseError(
+      "O envio de e-mails ainda não está configurado no servidor.",
+      503,
+    );
   }
   if (!workspaceId) return responseError("Escolha um workspace.", 400);
   if (!workspaceRoles.has(role as WorkspaceRole)) {
@@ -597,6 +580,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const emailResult = await sendPierSecEmail(
+      makeWorkspaceInviteEmail({
+        to: invitedUser.email ?? email,
+        name: userDisplayName(invitedUser),
+        workspaceName: workspace.name,
+        role: roleLabel(role as WorkspaceRole),
+        inviterName,
+        actionUrl: `${appBaseUrl}/login`,
+      }),
+    );
+
     return NextResponse.json(
       {
         invitation: {
@@ -604,44 +598,77 @@ export async function POST(request: NextRequest) {
           name: userDisplayName(invitedUser),
           workspaceName: workspace.name,
           role,
+          emailSent: emailResult.sent,
         },
       },
       { status: 201 },
     );
   }
 
-  const { data, error: createError } = await client.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { display_name: name },
-    app_metadata: {
-      role: "member",
-      password_rotation_required: true,
-    },
-  });
+  const { data: inviteData, error: createError } =
+    await client.auth.admin.generateLink({
+      type: "invite",
+      email,
+      options: {
+        redirectTo: `${appBaseUrl}/alterar-senha`,
+        data: { display_name: name },
+      },
+    });
 
-  if (createError || !data.user) {
+  if (createError || !inviteData.user || !inviteData.properties?.action_link) {
     const message = createError?.message.toLowerCase().includes("already")
       ? "Já existe um usuário com este e-mail."
       : "Não foi possível criar o usuário.";
     return responseError(message, 400);
   }
 
+  const { data: updatedUserData, error: metadataError } =
+    await client.auth.admin.updateUserById(inviteData.user.id, {
+      app_metadata: {
+        ...(inviteData.user.app_metadata as Record<string, unknown>),
+        role: "member",
+        password_rotation_required: true,
+      },
+    });
+  if (metadataError || !updatedUserData.user) {
+    await client.auth.admin.deleteUser(inviteData.user.id);
+    return responseError("Não foi possível preparar o convite.", 502);
+  }
+
   const { error: membershipError } = await client
     .from("pierphish_workspace_members")
     .insert({
       workspace_id: workspace.id,
-      user_id: data.user.id,
+      user_id: updatedUserData.user.id,
       role,
       status: "active",
       exclude_from_statistics: excludeFromStatistics,
     });
   if (membershipError) {
-    await client.auth.admin.deleteUser(data.user.id);
+    await client.auth.admin.deleteUser(updatedUserData.user.id);
     return responseError(
       "Não foi possível vincular o usuário ao workspace.",
       400,
+    );
+  }
+
+  const emailResult = await sendPierSecEmail(
+    makeAccountInviteEmail({
+      to: email,
+      name,
+      actionUrl: inviteData.properties.action_link,
+    }),
+  );
+  if (!emailResult.sent) {
+    await client
+      .from("pierphish_workspace_members")
+      .delete()
+      .eq("workspace_id", workspace.id)
+      .eq("user_id", updatedUserData.user.id);
+    await client.auth.admin.deleteUser(updatedUserData.user.id);
+    return responseError(
+      "Não foi possível enviar o convite. A conta não foi criada; confira a configuração de e-mail e tente novamente.",
+      502,
     );
   }
 
@@ -674,7 +701,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json(
-    { user: safeUser(data.user, workspaceMemberships) },
+    { user: safeUser(updatedUserData.user, workspaceMemberships) },
     { status: 201 },
   );
 }
@@ -782,7 +809,6 @@ export async function PATCH(request: NextRequest) {
   }
 
   const targetId = typeof payload.userId === "string" ? payload.userId : "";
-  const password = typeof payload.password === "string" ? payload.password : "";
   if (!targetId) return responseError("Usuário não informado.", 400);
 
   const permission = await canOwnerManageUser(
@@ -803,31 +829,68 @@ export async function PATCH(request: NextRequest) {
   if (targetError || !targetData.user) {
     return responseError("Usuário não encontrado.", 404);
   }
-  const passwordError = validatePassword(
-    password,
-    targetData.user.email ?? "usuario",
-  );
-  if (passwordError) return responseError(passwordError, 400);
-
-  const targetMetadata = (targetData.user.app_metadata ?? {}) as Record<
-    string,
-    unknown
-  >;
-  const { error: updateError } = await client.auth.admin.updateUserById(
-    targetId,
-    {
-      password,
-      app_metadata: {
-        ...targetMetadata,
-        password_rotation_required: true,
-      },
-    },
-  );
-  if (updateError) {
-    return responseError("Não foi possível redefinir a senha.", 502);
+  const targetEmail = targetData.user.email;
+  const appBaseUrl = getAppBaseUrl(request.nextUrl.origin);
+  if (!targetEmail || !isResendConfigured() || !appBaseUrl) {
+    return responseError(
+      "O envio de e-mails ainda não está configurado no servidor.",
+      503,
+    );
   }
 
-  return NextResponse.json({ ok: true });
+  const emailConfirmed = Boolean(targetData.user.email_confirmed_at);
+  const { data: linkData, error: linkError } =
+    await client.auth.admin.generateLink({
+      type: emailConfirmed ? "recovery" : "invite",
+      email: targetEmail,
+      options: {
+        redirectTo: `${appBaseUrl}${emailConfirmed ? "/redefinir-senha" : "/alterar-senha"}`,
+      },
+    });
+  if (linkError || !linkData.user || !linkData.properties?.action_link) {
+    return responseError("Não foi possível gerar o link de acesso.", 502);
+  }
+
+  if (!emailConfirmed) {
+    const targetMetadata = (targetData.user.app_metadata ?? {}) as Record<
+      string,
+      unknown
+    >;
+    const { error: metadataError } = await client.auth.admin.updateUserById(
+      targetId,
+      {
+        app_metadata: {
+          ...targetMetadata,
+          password_rotation_required: true,
+        },
+      },
+    );
+    if (metadataError) {
+      return responseError(
+        "Não foi possível preparar o convite de acesso.",
+        502,
+      );
+    }
+  }
+
+  const emailResult = await sendPierSecEmail(
+    emailConfirmed
+      ? makePasswordResetEmail({
+          to: targetEmail,
+          name: userDisplayName(targetData.user),
+          actionUrl: linkData.properties.action_link,
+        })
+      : makeAccountInviteEmail({
+          to: targetEmail,
+          name: userDisplayName(targetData.user),
+          actionUrl: linkData.properties.action_link,
+        }),
+  );
+  if (!emailResult.sent) {
+    return responseError("Não foi possível enviar o e-mail de acesso.", 502);
+  }
+
+  return NextResponse.json({ ok: true, emailSent: true });
 }
 
 export async function DELETE(request: NextRequest) {
