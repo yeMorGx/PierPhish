@@ -34,7 +34,7 @@ export function CampaignsNavigation({
   return (
     <nav
       aria-label="Áreas de campanhas"
-      className="flex min-w-0 gap-1 overflow-x-auto border-b border-[var(--line-soft)] px-1"
+      className="flex min-w-0 flex-wrap gap-x-1 border-b border-[var(--line-soft)] px-1"
     >
       {items.map((item) => {
         const active = item.view === activeView;

@@ -10,6 +10,7 @@ import { SlideToConfirm } from "@/components/lightswind/slide-to-confirm";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveWorkspaceId } from "@/lib/use-active-workspace";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { CampaignPagination } from "@/components/campaigns/campaign-pagination";
 import {
   CampaignsNavigation,
   type CampaignPageView,
@@ -270,6 +271,8 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
   const [operationsError, setOperationsError] = useState("");
   const [campaignConnectorId, setCampaignConnectorId] = useState("");
   const [campaignStep, setCampaignStep] = useState(1);
+  const [campaignPage, setCampaignPage] = useState(1);
+  const [campaignPageSize, setCampaignPageSize] = useState(10);
   const [pendingCampaignActivity, setPendingCampaignActivity] = useState<{
     commandId: string;
     campaignId: number;
@@ -375,9 +378,21 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
   const templates = campaignConnector?.snapshot.templates ?? [];
   const pages = campaignConnector?.snapshot.pages ?? [];
   const sendingProfiles = campaignConnector?.snapshot.sendingProfiles ?? [];
+  const campaignPageCount = Math.max(
+    1,
+    Math.ceil(campaigns.length / campaignPageSize),
+  );
+  const paginatedCampaigns = campaigns.slice(
+    (campaignPage - 1) * campaignPageSize,
+    campaignPage * campaignPageSize,
+  );
   const estimatedRecipientCount = groups
     .filter((group) => selectedGroupIds.includes(group.id))
     .reduce((total, group) => total + group.numTargets, 0);
+
+  useEffect(() => {
+    setCampaignPage((currentPage) => Math.min(currentPage, campaignPageCount));
+  }, [campaignPageCount]);
 
   async function requestCampaignActivity(campaign: CampaignResult) {
     if (!session?.access_token || !campaignConnector) {
@@ -1465,98 +1480,114 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
               </div>
             </div>
             {campaigns.length ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[1020px] border-collapse text-left text-[11px]">
-                  <thead className="bg-[var(--surface-soft)] text-[9px] font-extrabold tracking-[0.1em] text-[var(--text-muted)] uppercase">
-                    <tr>
-                      <th className="px-5 py-3">Campanha</th>
-                      <th className="px-4 py-3">Estado</th>
-                      <th className="px-4 py-3 text-right">Destinatários</th>
-                      <th
-                        className="px-4 py-3 text-right"
-                        title="E-mails que o servidor de envio aceitou. Isso não confirma chegada à caixa de entrada."
-                      >
-                        Enviados
-                      </th>
-                      <th
-                        className="px-4 py-3 text-right"
-                        title="E-mails que tiveram erro durante o envio."
-                      >
-                        Falhas
-                      </th>
-                      <th className="px-4 py-3 text-right">Abertos</th>
-                      <th className="px-4 py-3 text-right">Cliques</th>
-                      <th className="px-4 py-3 text-right">Dados</th>
-                      <th className="px-5 py-3">Início</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {campaigns.map((campaign) => (
-                      <tr
-                        className="border-t border-[var(--line-soft)]"
-                        key={campaign.id}
-                      >
-                        <td className="px-5 py-3.5">
-                          <strong className="block text-[11px] text-[var(--ink)]">
-                            {campaign.name}
-                          </strong>
-                          <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
-                            {[campaign.template, campaign.page]
-                              .filter(Boolean)
-                              .join(" · ") || "Modelo e página não informados"}
-                          </span>
-                          {campaign.groups.length > 0 && (
-                            <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
-                              Grupos: {campaign.groups.join(", ")}
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            disabled={loadingActivityCampaignId === campaign.id}
-                            onClick={() =>
-                              void requestCampaignActivity(campaign)
-                            }
-                            className="mt-2 inline-flex h-8 items-center justify-center rounded-full border border-[var(--line)] px-3 text-[10px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-wait disabled:opacity-60"
-                          >
-                            {loadingActivityCampaignId === campaign.id
-                              ? "Atualizando…"
-                              : "Ver atividade individual"}
-                          </button>
-                        </td>
-                        <td className="px-4 py-3.5 text-[var(--text-muted)]">
-                          <span>{campaignDeliveryStatus(campaign)}</span>
-                          {campaignDeliverySummary(campaign) && (
-                            <span className="mt-1 block max-w-[240px] text-[9px] leading-relaxed text-[var(--danger)]">
-                              {campaignDeliverySummary(campaign)}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3.5 text-right tabular-nums">
-                          {numberFormat(campaign.stats.total)}
-                        </td>
-                        <td className="px-4 py-3.5 text-right tabular-nums">
-                          {numberFormat(campaign.stats.sent)}
-                        </td>
-                        <td className="px-4 py-3.5 text-right tabular-nums">
-                          {numberFormat(campaign.stats.error)}
-                        </td>
-                        <td className="px-4 py-3.5 text-right tabular-nums">
-                          {numberFormat(campaign.stats.opened)}
-                        </td>
-                        <td className="px-4 py-3.5 text-right tabular-nums">
-                          {numberFormat(campaign.stats.clicked)}
-                        </td>
-                        <td className="px-4 py-3.5 text-right tabular-nums">
-                          {numberFormat(campaign.stats.submittedData)}
-                        </td>
-                        <td className="px-5 py-3.5 text-[var(--text-muted)]">
-                          {dateFormat(campaign.launchAt)}
-                        </td>
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1020px] border-collapse text-left text-[11px]">
+                    <thead className="bg-[var(--surface-soft)] text-[9px] font-extrabold tracking-[0.1em] text-[var(--text-muted)] uppercase">
+                      <tr>
+                        <th className="px-5 py-3">Campanha</th>
+                        <th className="px-4 py-3">Estado</th>
+                        <th className="px-4 py-3 text-right">Destinatários</th>
+                        <th
+                          className="px-4 py-3 text-right"
+                          title="E-mails que o servidor de envio aceitou. Isso não confirma chegada à caixa de entrada."
+                        >
+                          Enviados
+                        </th>
+                        <th
+                          className="px-4 py-3 text-right"
+                          title="E-mails que tiveram erro durante o envio."
+                        >
+                          Falhas
+                        </th>
+                        <th className="px-4 py-3 text-right">Abertos</th>
+                        <th className="px-4 py-3 text-right">Cliques</th>
+                        <th className="px-4 py-3 text-right">Dados</th>
+                        <th className="px-5 py-3">Início</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {paginatedCampaigns.map((campaign) => (
+                        <tr
+                          className="border-t border-[var(--line-soft)]"
+                          key={campaign.id}
+                        >
+                          <td className="px-5 py-3.5">
+                            <strong className="block text-[11px] text-[var(--ink)]">
+                              {campaign.name}
+                            </strong>
+                            <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
+                              {[campaign.template, campaign.page]
+                                .filter(Boolean)
+                                .join(" · ") ||
+                                "Modelo e página não informados"}
+                            </span>
+                            {campaign.groups.length > 0 && (
+                              <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
+                                Grupos: {campaign.groups.join(", ")}
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              disabled={
+                                loadingActivityCampaignId === campaign.id
+                              }
+                              onClick={() =>
+                                void requestCampaignActivity(campaign)
+                              }
+                              className="mt-2 inline-flex h-8 items-center justify-center rounded-full border border-[var(--line)] px-3 text-[10px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-wait disabled:opacity-60"
+                            >
+                              {loadingActivityCampaignId === campaign.id
+                                ? "Atualizando…"
+                                : "Ver atividade individual"}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3.5 text-[var(--text-muted)]">
+                            <span>{campaignDeliveryStatus(campaign)}</span>
+                            {campaignDeliverySummary(campaign) && (
+                              <span className="mt-1 block max-w-[240px] text-[9px] leading-relaxed text-[var(--danger)]">
+                                {campaignDeliverySummary(campaign)}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3.5 text-right tabular-nums">
+                            {numberFormat(campaign.stats.total)}
+                          </td>
+                          <td className="px-4 py-3.5 text-right tabular-nums">
+                            {numberFormat(campaign.stats.sent)}
+                          </td>
+                          <td className="px-4 py-3.5 text-right tabular-nums">
+                            {numberFormat(campaign.stats.error)}
+                          </td>
+                          <td className="px-4 py-3.5 text-right tabular-nums">
+                            {numberFormat(campaign.stats.opened)}
+                          </td>
+                          <td className="px-4 py-3.5 text-right tabular-nums">
+                            {numberFormat(campaign.stats.clicked)}
+                          </td>
+                          <td className="px-4 py-3.5 text-right tabular-nums">
+                            {numberFormat(campaign.stats.submittedData)}
+                          </td>
+                          <td className="px-5 py-3.5 text-[var(--text-muted)]">
+                            {dateFormat(campaign.launchAt)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <CampaignPagination
+                  currentPage={campaignPage}
+                  pageSize={campaignPageSize}
+                  totalItems={campaigns.length}
+                  totalPages={campaignPageCount}
+                  onPageChange={setCampaignPage}
+                  onPageSizeChange={(size) => {
+                    setCampaignPageSize(size);
+                    setCampaignPage(1);
+                  }}
+                />
+              </>
             ) : (
               <div className="px-5 py-10 text-center">
                 <strong className="block text-[12px] text-[var(--ink)]">
