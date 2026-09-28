@@ -105,6 +105,21 @@ function hasTrackedCampaignLink(html: string, text: string) {
   );
 }
 
+function findUnsupportedTemplateVariable(sources: string[]) {
+  const actions = new Set(["else", "end", "break", "continue"]);
+  const expression = /\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}/g;
+  for (const source of sources) {
+    for (const match of source.matchAll(expression)) {
+      if (!actions.has(match[1].toLowerCase())) return match[1];
+    }
+  }
+  return null;
+}
+
+function templateVariableError(variable: string) {
+  return `A variável "{{${variable}}}" não é reconhecida. Use campos disponíveis como "{{.FirstName}}", "{{.LastName}}" ou "{{.Email}}".`;
+}
+
 function sandboxPreviewDocument(html: string, isTemplate: boolean) {
   const filled = isTemplate
     ? html
@@ -543,6 +558,20 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedConnector || !session?.access_token) return;
+    const unsupportedVariable =
+      type === "template"
+        ? findUnsupportedTemplateVariable([
+            templateSubject,
+            templateText,
+            templateHtml,
+          ])
+        : type === "page"
+          ? findUnsupportedTemplateVariable([pageHtml])
+          : null;
+    if (unsupportedVariable) {
+      setError(templateVariableError(unsupportedVariable));
+      return;
+    }
     setSaving(true);
     setError("");
     setOperation(null);
@@ -940,8 +969,8 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                         }
                       >
                         Variáveis: <code>{"{{.FirstName}}"}</code>,{" "}
-                        <code>{"{{.LastName}}"}</code> e{" "}
-                        <code>{"{{.URL}}"}</code>.
+                        <code>{"{{.LastName}}"}</code>,{" "}
+                        <code>{"{{.Email}}"}</code> e <code>{"{{.URL}}"}</code>.
                         {templateHasTrackedLink
                           ? " Link rastreável configurado; abertura também é medida."
                           : " Falta um link rastreável para contar cliques."}
@@ -995,7 +1024,10 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                   <p className="m-0 text-[10px] leading-relaxed text-[var(--text-muted)]">
                     Formulários, campos de entrada, scripts e captura de
                     credenciais são bloqueados. Crie páginas estáticas para
-                    treinamento.
+                    treinamento. Se usar dados de destinatários, selecione
+                    campos reconhecidos, como <code>{"{{.FirstName}}"}</code>,{" "}
+                    <code>{"{{.LastName}}"}</code> e <code>{"{{.Email}}"}</code>
+                    .
                   </p>
                 </div>
               )}

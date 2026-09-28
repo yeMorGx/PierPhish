@@ -104,6 +104,20 @@ function requestJson(baseUrl, pathname, options = {}) {
           try {
             body = raw ? JSON.parse(raw) : null;
           } catch {
+            const status = res.statusCode || 0;
+            if (options.captureTemplateParseError && status >= 500) {
+              const match =
+                /function\s+["']([A-Za-z_][A-Za-z0-9_]*)["']\s+not defined/i.exec(
+                  raw,
+                );
+              resolve({
+                status,
+                body: match
+                  ? { message: `function "${match[1]}" not defined` }
+                  : null,
+              });
+              return;
+            }
             const contentType = String(
               res.headers["content-type"] || "desconhecido",
             ).slice(0, 100);
@@ -471,6 +485,16 @@ async function pairIfNeeded(agent, apiKey, commandEncryptionKey) {
 
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function unrecognizedTemplateVariable(body) {
+  if (!isRecord(body)) return null;
+  const message = [body.message, body.error, body.detail]
+    .filter((value) => typeof value === "string")
+    .join(" ");
+  const match =
+    /function\s+["']([A-Za-z_][A-Za-z0-9_]*)["']\s+not defined/i.exec(message);
+  return match?.[1] ?? null;
 }
 
 function sameAsset(current, expected, label) {
@@ -1092,6 +1116,7 @@ async function createCampaignAsset(apiKey, agent, type, encryptedPayload) {
       apiKey,
       agent,
       body,
+      captureTemplateParseError: type === "template" || type === "page",
     });
   } catch {
     return {
@@ -1103,15 +1128,33 @@ async function createCampaignAsset(apiKey, agent, type, encryptedPayload) {
           : "A resposta foi interrompida. Confira o ativo no ambiente antes de repetir.",
     };
   }
-  if (response.status >= 500)
+  if (response.status >= 500) {
+    const invalidVariable =
+      type === "template" || type === "page"
+        ? unrecognizedTemplateVariable(response.body)
+        : null;
+    if (invalidVariable)
+      return {
+        status: "failed",
+        assetId: null,
+        message:
+          'A variável "{{' +
+          invalidVariable +
+          '}}" não é reconhecida. Use campos disponíveis como "{{.FirstName}}", "{{.LastName}}" ou "{{.Email}}" e salve novamente.',
+      };
     return {
       status: "uncertain",
       assetId: null,
       message:
         method === "PUT"
-          ? "O ambiente retornou erro. Confira se o perfil foi atualizado antes de repetir."
-          : "O ambiente retornou erro. Confira se o ativo foi criado antes de repetir.",
+          ? "O ambiente retornou HTTP " +
+            response.status +
+            ". Confira se o perfil foi atualizado antes de repetir."
+          : "O ambiente retornou HTTP " +
+            response.status +
+            ". Confira se o ativo foi criado antes de repetir.",
     };
+  }
   if (response.status < 200 || response.status >= 300)
     return {
       status: "failed",

@@ -106,6 +106,15 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-09-28 — Diagnóstico de modelo e página recusados
+
+- Os logs do ambiente mostraram HTTP 500 ao salvar o modelo e a página `BancoExemplo`: o parser recusou `{{nome_cliente}}` porque `nome_cliente` não é uma variável disponível. A consulta de leitura ao snapshot confirmou que nenhum dos dois ativos apareceu no ambiente; os registros antigos da fila foram preservados como estavam.
+- O formulário agora barra variáveis no formato `{{nome_cliente}}` antes de criar uma solicitação e sugere campos aceitos, como `{{.FirstName}}`, `{{.LastName}}` e `{{.Email}}`. A lista de variáveis do modelo também passou a incluir `.Email`.
+- O conector agora reconhece a mensagem de variável desconhecida em respostas JSON ou texto simples. Para esse erro de validação conhecido, registra uma falha definitiva com orientação para corrigir e salvar novamente; outros erros HTTP 5xx continuam exigindo verificação antes de repetir e agora informam o código HTTP. O texto bruto de erro do ambiente não é armazenado nem repassado.
+- Não repeti a criação do modelo ou da página, não alterei os registros do Supabase e não criei nem lancei campanha.
+- Validações: Prettier, `pnpm exec tsc --noEmit`, `node --check connector/bridge.mjs`, `git diff --check` e detector Impeccable no formulário (`[]`) passaram. Nenhum teste automatizado foi executado.
+- Commit/push e implantação web/Portainer: pendentes de conclusão desta tarefa.
+
 ### 2026-09-28 — Rastreamento de cliques, prévia HTML isolada e visão geral
 
 - Corrigida a origem provável da ausência de cliques em campanhas novas: o modelo precisa usar o placeholder `{{.URL}}` e a URL configurada precisa ser o domínio público roteado ao serviço de campanhas. O conector agora anuncia se validou o link no modelo; a API de prévia recusa modelos sem link rastreável ou conexão com essa capacidade, mantendo a confirmação da campanha existente.
