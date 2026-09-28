@@ -1385,17 +1385,17 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
         {view === "activity" && (
           <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
             <CampaignSectionHeader imageSrc="/campaign-banners/activity.png">
-              <div>
+              <div className="text-center">
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Histórico de solicitações
                 </h3>
-                <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
+                <p className="mt-1 mb-0 text-[11px] text-white/90">
                   Solicitante, grupos, estimativa e resultado de cada ordem
                   confirmada.
                 </p>
               </div>
               <button
-                className="rounded-[8px] border border-[var(--line)] px-3 py-1.5 text-[10px] font-bold text-[var(--text-muted)]"
+                className="rounded-[8px] border border-white/60 px-3 py-1.5 text-[10px] font-bold text-white"
                 type="button"
                 onClick={() => void loadOperations()}
               >
@@ -1461,21 +1461,21 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
         {view === "campaigns" && (
           <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
             <CampaignSectionHeader imageSrc="/campaign-banners/campaigns.png">
-              <div>
+              <div className="w-full max-w-[900px] text-center">
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Campanhas e resultados
                 </h3>
-                <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
+                <p className="mt-1 mb-0 text-[11px] text-white/90">
                   Enviados foram aceitos pelo servidor de e-mail; isso não
                   garante chegada à caixa de entrada. Falhas mostram rejeições
                   e, quando disponível, a causa técnica.
                 </p>
               </div>
-              <div className="text-right">
-                <span className="block text-[10px] text-[var(--text-muted)]">
+              <div className="text-center">
+                <span className="block text-[10px] text-white/90">
                   {numberFormat(campaigns.length)} campanha(s)
                 </span>
-                <span className="mt-1 block text-[9px] text-[var(--text-muted)]">
+                <span className="mt-1 block text-[9px] text-white/90">
                   Dados de {dateFormat(snapshot?.updatedAt)}
                 </span>
               </div>
@@ -1728,15 +1728,15 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
         {view === "groups" && (
           <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
             <CampaignSectionHeader imageSrc="/campaign-banners/groups.png">
-              <div>
+              <div className="text-center">
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Grupos disponíveis
                 </h3>
-                <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
+                <p className="mt-1 mb-0 text-[11px] text-white/90">
                   Somente nome e quantidade de destinatários.
                 </p>
               </div>
-              <span className="text-[10px] text-[var(--text-muted)]">
+              <span className="text-[10px] text-white/90">
                 {numberFormat(groups.length)} grupo(s)
               </span>
             </CampaignSectionHeader>

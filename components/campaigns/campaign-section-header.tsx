@@ -27,14 +27,9 @@ export function CampaignSectionHeader({
         className="object-cover object-center"
       />
       <div
-        aria-hidden="true"
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(90deg, var(--surface) 0%, color-mix(in srgb, var(--surface) 92%, transparent) 48%, color-mix(in srgb, var(--surface) 78%, transparent) 100%)",
-        }}
-      />
-      <div className="relative z-10 flex min-h-[92px] w-full flex-wrap items-end justify-between gap-3 px-5 py-4">
+        className="relative z-10 flex min-h-[92px] w-full flex-col items-center justify-center gap-1 px-5 py-4 text-center text-white"
+        style={{ textShadow: "0 1px 3px rgba(0, 0, 0, 0.9)" }}
+      >
         {children}
       </div>
     </div>
