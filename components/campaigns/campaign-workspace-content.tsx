@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Icon } from "@/components/ui/icon";
@@ -14,6 +14,11 @@ import {
   CampaignsNavigation,
   type CampaignPageView,
 } from "@/components/campaigns/campaigns-navigation";
+import {
+  createSecureReturnKey,
+  decryptSecureReturn,
+  type EncryptedReturn,
+} from "@/lib/campaigns/secure-return";
 
 type CampaignStats = {
   total: number;
@@ -46,6 +51,27 @@ type CampaignResult = {
   stats: CampaignStats;
   deliveryIssues?: Partial<Record<DeliveryIssueCode, number>>;
 };
+type CampaignRecipientActivity = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  position: string;
+  status: string;
+  sentAt: string;
+  openedAt: string;
+  clickedAt: string;
+  submittedAt: string;
+  reportedAt: string;
+  failedAt: string;
+};
+type AssetOperation = {
+  id: string;
+  type: string;
+  name: string;
+  status: string;
+  result: string | null;
+  encryptedResult?: EncryptedReturn | null;
+};
 
 type CampaignAudienceGroup = {
   id: number;
@@ -68,6 +94,11 @@ type CampaignSendingProfile = {
 };
 type Snapshot = {
   updatedAt: string;
+  capabilities?: {
+    profileUpdates?: boolean;
+    assetEdits?: boolean;
+    individualResults?: boolean;
+  };
   campaigns: CampaignResult[];
   groups: CampaignAudienceGroup[];
   templates: CampaignEmailTemplate[];
@@ -239,6 +270,25 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
   const [operationsError, setOperationsError] = useState("");
   const [campaignConnectorId, setCampaignConnectorId] = useState("");
   const [campaignStep, setCampaignStep] = useState(1);
+  const [pendingCampaignActivity, setPendingCampaignActivity] = useState<{
+    commandId: string;
+    campaignId: number;
+    campaignName: string;
+    privateKey: CryptoKey;
+  } | null>(null);
+  const [campaignActivity, setCampaignActivity] = useState<{
+    campaignId: number;
+    campaignName: string;
+    status: string;
+    recipients: CampaignRecipientActivity[];
+    truncated: boolean;
+  } | null>(null);
+  const [campaignActivityError, setCampaignActivityError] = useState("");
+  const [loadingActivityCampaignId, setLoadingActivityCampaignId] = useState<
+    number | null
+  >(null);
+  const activityHandledRef = useRef("");
+  const activityPollInFlightRef = useRef(false);
 
   const loadConnectors = useCallback(
     async (quiet = false) => {
@@ -328,6 +378,200 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
   const estimatedRecipientCount = groups
     .filter((group) => selectedGroupIds.includes(group.id))
     .reduce((total, group) => total + group.numTargets, 0);
+
+  async function requestCampaignActivity(campaign: CampaignResult) {
+    if (!session?.access_token || !campaignConnector) {
+      setCampaignActivityError(
+        "Conecte o ambiente antes de carregar os resultados.",
+      );
+      return;
+    }
+    if (campaignConnector.snapshot?.capabilities?.individualResults !== true) {
+      setCampaignActivityError(
+        "Atualize a Stack do conector no Portainer para consultar resultados individuais.",
+      );
+      return;
+    }
+    setLoadingActivityCampaignId(campaign.id);
+    setCampaignActivityError("");
+    setCampaignActivity(null);
+    try {
+      const returnKey = await createSecureReturnKey();
+      const response = await fetch("/api/campaigns/assets", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          workspaceId: activeWorkspaceId,
+          connectorId: campaignConnector.id,
+          type: "campaign_results",
+          action: "read",
+          assetId: campaign.id,
+          responsePublicKey: returnKey.publicKey,
+        }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok)
+        throw new Error(
+          errorMessage(
+            body,
+            "Não foi possível solicitar a atividade da campanha.",
+          ),
+        );
+      setPendingCampaignActivity({
+        commandId: body.commandId,
+        campaignId: campaign.id,
+        campaignName: campaign.name,
+        privateKey: returnKey.privateKey,
+      });
+    } catch (cause) {
+      setLoadingActivityCampaignId(null);
+      setCampaignActivityError(
+        cause instanceof Error
+          ? cause.message
+          : "Não foi possível solicitar a atividade da campanha.",
+      );
+    }
+  }
+
+  useEffect(() => {
+    if (!pendingCampaignActivity || !session?.access_token) return;
+    const pending = pendingCampaignActivity;
+    const timer = window.setInterval(async () => {
+      if (activityPollInFlightRef.current) return;
+      activityPollInFlightRef.current = true;
+      try {
+        const response = await fetch(
+          `/api/campaigns/assets?workspaceId=${encodeURIComponent(activeWorkspaceId)}`,
+          {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+            cache: "no-store",
+          },
+        );
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) return;
+        const operation = (body.operations ?? []).find(
+          (item: AssetOperation) => item.id === pending.commandId,
+        ) as AssetOperation | undefined;
+        if (!operation) return;
+        if (operation.status === "succeeded" && operation.encryptedResult) {
+          if (activityHandledRef.current === operation.id) return;
+          activityHandledRef.current = operation.id;
+          const result = await decryptSecureReturn<{
+            status?: string;
+            recipients?: CampaignRecipientActivity[];
+            truncated?: boolean;
+          }>(operation.encryptedResult, pending.privateKey);
+          const recipients = Array.isArray(result.recipients)
+            ? result.recipients
+            : [];
+          const truncated = result.truncated === true;
+          setCampaignActivity({
+            campaignId: pending.campaignId,
+            campaignName: pending.campaignName,
+            status: typeof result.status === "string" ? result.status : "",
+            recipients,
+            truncated,
+          });
+          let responseCleared = false;
+          try {
+            const acknowledgment = await fetch("/api/campaigns/assets", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                workspaceId: activeWorkspaceId,
+                action: "ack",
+                commandId: operation.id,
+              }),
+            });
+            responseCleared = acknowledgment.ok;
+          } catch {
+            responseCleared = false;
+          }
+          if (!truncated) {
+            const opened = recipients.filter((item) => item.openedAt).length;
+            const clicked = recipients.filter((item) => item.clickedAt).length;
+            const submittedData = recipients.filter(
+              (item) => item.submittedAt,
+            ).length;
+            const sent = recipients.filter((item) => item.sentAt).length;
+            const reported = recipients.filter(
+              (item) => item.reportedAt,
+            ).length;
+            const failed = recipients.filter((item) => item.failedAt).length;
+            setConnectors((current) =>
+              current.map((connector) =>
+                connector.id !== campaignConnector?.id
+                  ? connector
+                  : {
+                      ...connector,
+                      snapshot: {
+                        ...connector.snapshot,
+                        campaigns: connector.snapshot.campaigns.map((item) =>
+                          item.id !== pending.campaignId
+                            ? item
+                            : {
+                                ...item,
+                                stats: {
+                                  ...item.stats,
+                                  total: Math.max(
+                                    item.stats.total,
+                                    recipients.length,
+                                  ),
+                                  sent,
+                                  opened,
+                                  clicked,
+                                  submittedData,
+                                  emailReported: reported,
+                                  error: failed,
+                                },
+                              },
+                        ),
+                      },
+                    },
+              ),
+            );
+          }
+          setPendingCampaignActivity(null);
+          setLoadingActivityCampaignId(null);
+          toast.success("Atividade atualizada", {
+            description: responseCleared
+              ? "Os resultados foram consultados pela conexão privada e a resposta cifrada foi removida."
+              : "Os resultados foram consultados pela conexão privada. A resposta continua cifrada e será removida automaticamente.",
+          });
+        } else if (
+          ["failed", "uncertain", "expired"].includes(operation.status)
+        ) {
+          setCampaignActivityError(
+            operation.result ?? "Não foi possível carregar os resultados.",
+          );
+          setPendingCampaignActivity(null);
+          setLoadingActivityCampaignId(null);
+        }
+      } catch (cause) {
+        setCampaignActivityError(
+          cause instanceof Error
+            ? cause.message
+            : "Não foi possível abrir os resultados protegidos.",
+        );
+        setPendingCampaignActivity(null);
+        setLoadingActivityCampaignId(null);
+      } finally {
+        activityPollInFlightRef.current = false;
+      }
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [
+    activeWorkspaceId,
+    campaignConnector?.id,
+    pendingCampaignActivity,
+    session?.access_token,
+  ]);
   async function createPairing() {
     if (!session?.access_token) {
       setError("Entre novamente para parear o conector.");
@@ -1266,6 +1510,18 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                               Grupos: {campaign.groups.join(", ")}
                             </span>
                           )}
+                          <button
+                            type="button"
+                            disabled={loadingActivityCampaignId === campaign.id}
+                            onClick={() =>
+                              void requestCampaignActivity(campaign)
+                            }
+                            className="mt-2 inline-flex h-8 items-center justify-center rounded-full border border-[var(--line)] px-3 text-[10px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-wait disabled:opacity-60"
+                          >
+                            {loadingActivityCampaignId === campaign.id
+                              ? "Atualizando…"
+                              : "Ver atividade individual"}
+                          </button>
                         </td>
                         <td className="px-4 py-3.5 text-[var(--text-muted)]">
                           <span>{campaignDeliveryStatus(campaign)}</span>
@@ -1318,6 +1574,125 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
           </section>
         )}
 
+        {view === "campaigns" && campaignActivityError && (
+          <p
+            role="alert"
+            className="m-0 rounded-[12px] border border-[#ead5d5] bg-[#fff7f7] px-4 py-3 text-[11px] text-[#8b3d3d]"
+          >
+            {campaignActivityError}
+          </p>
+        )}
+
+        {view === "campaigns" && campaignActivity && (
+          <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--line-soft)] px-5 py-4">
+              <div>
+                <h3 className="m-0 text-[14px] font-semibold text-[var(--ink)]">
+                  Atividade individual · {campaignActivity.campaignName}
+                </h3>
+                <p className="mt-1 mb-0 max-w-[720px] text-[10px] leading-relaxed text-[var(--text-muted)]">
+                  Consultado agora no ambiente conectado. Mostramos somente
+                  eventos de envio, abertura, clique, envio de dados e denúncia;
+                  IP, navegador e conteúdo enviado não são exibidos nem
+                  armazenados em texto aberto.
+                </p>
+                {campaignActivity.truncated && (
+                  <p className="mt-2 mb-0 text-[10px] text-[var(--text-muted)]">
+                    Exibindo os primeiros 500 destinatários. Os totais agregados
+                    da campanha continuam completos.
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setCampaignActivity(null)}
+                className="inline-flex h-8 items-center justify-center rounded-full border border-[var(--line)] px-3 text-[10px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+              >
+                Fechar
+              </button>
+            </div>
+            {campaignActivity.recipients.length ? (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1000px] border-collapse text-left text-[10px]">
+                  <thead className="bg-[var(--surface-soft)] text-[9px] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase">
+                    <tr>
+                      <th className="px-5 py-3">Destinatário</th>
+                      <th className="px-3 py-3">Envio</th>
+                      <th className="px-3 py-3">Abertura</th>
+                      <th className="px-3 py-3">Clique</th>
+                      <th className="px-3 py-3">Dados enviados</th>
+                      <th className="px-5 py-3">Denúncia / falha</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {campaignActivity.recipients.map((recipient) => {
+                      const personName = [
+                        recipient.firstName,
+                        recipient.lastName,
+                      ]
+                        .filter(Boolean)
+                        .join(" ");
+                      return (
+                        <tr
+                          key={`${campaignActivity.campaignId}:${recipient.email}`}
+                          className="border-t border-[var(--line-soft)]"
+                        >
+                          <td className="px-5 py-3">
+                            <strong className="block font-semibold text-[var(--ink)]">
+                              {recipient.email}
+                            </strong>
+                            {personName && (
+                              <span className="mt-0.5 block text-[var(--text-muted)]">
+                                {personName}
+                                {recipient.position
+                                  ? ` · ${recipient.position}`
+                                  : ""}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-[var(--text-muted)]">
+                            {recipient.failedAt
+                              ? "Falhou"
+                              : recipient.sentAt
+                                ? dateFormat(recipient.sentAt)
+                                : "Pendente"}
+                          </td>
+                          <td className="px-3 py-3 text-[var(--text-muted)]">
+                            {recipient.openedAt
+                              ? dateFormat(recipient.openedAt)
+                              : "—"}
+                          </td>
+                          <td className="px-3 py-3 text-[var(--text-muted)]">
+                            {recipient.clickedAt
+                              ? dateFormat(recipient.clickedAt)
+                              : "—"}
+                          </td>
+                          <td className="px-3 py-3 text-[var(--text-muted)]">
+                            {recipient.submittedAt
+                              ? dateFormat(recipient.submittedAt)
+                              : "—"}
+                          </td>
+                          <td className="px-5 py-3 text-[var(--text-muted)]">
+                            {recipient.reportedAt
+                              ? `Denunciado · ${dateFormat(recipient.reportedAt)}`
+                              : recipient.failedAt
+                                ? dateFormat(recipient.failedAt)
+                                : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="m-0 px-5 py-7 text-center text-[11px] text-[var(--text-muted)]">
+                Nenhum evento individual registrado até agora.
+              </p>
+            )}
+          </section>
+        )}
+
         {view === "groups" && (
           <section className="surface-card overflow-hidden rounded-[22px] border border-[var(--card-border)]">
             <div className="flex items-end justify-between gap-3 border-b border-[var(--line-soft)] px-5 py-4">
@@ -1345,9 +1720,17 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                         {group.name}
                       </strong>
                     </div>
-                    <span className="flex-none rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[10px] font-bold text-[var(--text-muted)]">
-                      {numberFormat(group.numTargets)} pessoas
-                    </span>
+                    <div className="flex flex-none items-center gap-2">
+                      <span className="rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[10px] font-bold text-[var(--text-muted)]">
+                        {numberFormat(group.numTargets)} pessoas
+                      </span>
+                      <Link
+                        href={`/campanhas/grupos/nova?edit=${group.id}`}
+                        className="inline-flex h-8 items-center justify-center rounded-full border border-[var(--line)] px-3 text-[10px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+                      >
+                        Editar
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1363,9 +1746,10 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
 
         {snapshot && (view === "campaigns" || view === "groups") && (
           <p className="m-0 px-1 text-[10px] leading-relaxed text-[var(--text-muted)]">
-            A nuvem recebe apenas nomes de campanhas, grupos e modelos, datas e
-            estatísticas agregadas. A lista de pessoas, e-mails, IPs, eventos
-            brutos e dados submetidos nunca é enviada pelo conector.
+            A lista de pessoas e os resultados individuais só são carregados
+            quando solicitados e trafegam cifrados para esta sessão. IPs,
+            navegadores e dados submetidos não são exibidos nem armazenados em
+            texto aberto.
           </p>
         )}
       </div>

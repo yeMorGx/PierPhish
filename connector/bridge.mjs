@@ -1,9 +1,12 @@
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import {
   constants,
+  createCipheriv,
   createDecipheriv,
   generateKeyPairSync,
   privateDecrypt,
+  publicEncrypt,
+  randomBytes,
 } from "node:crypto";
 import https from "node:https";
 import tls from "node:tls";
@@ -152,12 +155,17 @@ function piersecRequest(pathname, options = {}) {
 function apiPathAllowed(method, pathname) {
   if (method === "POST")
     return /^api\/(campaigns|groups|templates|pages|smtp)\/?$/.test(pathname);
-  if (method === "PUT") return /^api\/smtp\/[1-9][0-9]*\/?$/.test(pathname);
+  if (method === "PUT")
+    return /^api\/(groups|templates|pages|smtp)\/[1-9][0-9]*\/?$/.test(
+      pathname,
+    );
   return (
     /^api\/(campaigns|groups|templates|pages|smtp)(\/summary)?\/?$/.test(
       pathname,
     ) ||
     /^api\/campaigns\/[0-9]+\/summary\/?$/.test(pathname) ||
+    /^api\/campaigns\/[1-9][0-9]*\/results\/?$/.test(pathname) ||
+    /^api\/(groups|templates|pages)\/[1-9][0-9]*\/?$/.test(pathname) ||
     /^api\/smtp\/[1-9][0-9]*\/?$/.test(pathname)
   );
 }
@@ -360,6 +368,11 @@ async function readSnapshot(apiKey, agent, commandEncryptionKey) {
   return {
     updatedAt: new Date().toISOString(),
     commandEncryptionKey,
+    capabilities: {
+      profileUpdates: true,
+      assetEdits: true,
+      individualResults: true,
+    },
     campaigns,
     groups: groupSummaryItems(rawGroups)
       .slice(0, 2000)
@@ -675,7 +688,15 @@ function validateAssetCommand(type, payload) {
         position: text(target.position, 120),
       };
     });
-    return { name, body: { name, targets }, endpoint: "api/groups/" };
+    const id = payload.id === undefined ? null : Number(payload.id);
+    if (id !== null && (!Number.isSafeInteger(id) || id < 1))
+      throw new Error("O grupo selecionado está inválido.");
+    return {
+      name,
+      body: { ...(id ? { id } : {}), name, targets },
+      method: id ? "PUT" : "POST",
+      endpoint: id ? "api/groups/" + id : "api/groups/",
+    };
   }
 
   if (type === "template") {
@@ -690,10 +711,14 @@ function validateAssetCommand(type, payload) {
       /<\s*(script|form|input|iframe)\b/i.test(html)
     )
       throw new Error("O modelo está incompleto ou contém conteúdo bloqueado.");
+    const id = payload.id === undefined ? null : Number(payload.id);
+    if (id !== null && (!Number.isSafeInteger(id) || id < 1))
+      throw new Error("O modelo selecionado está inválido.");
     return {
       name,
-      body: { name, subject, text: textBody, html },
-      endpoint: "api/templates/",
+      body: { ...(id ? { id } : {}), name, subject, text: textBody, html },
+      method: id ? "PUT" : "POST",
+      endpoint: id ? "api/templates/" + id : "api/templates/",
     };
   }
 
@@ -707,15 +732,20 @@ function validateAssetCommand(type, payload) {
       throw new Error(
         "A página está vazia ou contém campos de entrada bloqueados.",
       );
+    const id = payload.id === undefined ? null : Number(payload.id);
+    if (id !== null && (!Number.isSafeInteger(id) || id < 1))
+      throw new Error("A página selecionada está inválida.");
     return {
       name,
       body: {
+        ...(id ? { id } : {}),
         name,
         html,
         capture_credentials: false,
         capture_passwords: false,
       },
-      endpoint: "api/pages/",
+      method: id ? "PUT" : "POST",
+      endpoint: id ? "api/pages/" + id : "api/pages/",
     };
   }
 
@@ -779,11 +809,175 @@ function validateAssetCommand(type, payload) {
   throw new Error("Tipo de ativo não permitido.");
 }
 
-async function createCampaignAsset(apiKey, agent, type, encryptedPayload) {
-  const payload = validateAssetCommand(
-    type,
-    decryptCommandPayload(encryptedPayload, commandPrivateKey),
+function encryptForBrowser(publicKey, value) {
+  const key = randomBytes(32);
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const ciphertext = Buffer.concat([
+    cipher.update(JSON.stringify(value), "utf8"),
+    cipher.final(),
+    cipher.getAuthTag(),
+  ]);
+  const wrappedKey = publicEncrypt(
+    {
+      key: publicKey,
+      padding: constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: "sha256",
+    },
+    key,
   );
+  key.fill(0);
+  return {
+    version: 1,
+    wrappedKey: wrappedKey.toString("base64"),
+    iv: iv.toString("base64"),
+    ciphertext: ciphertext.toString("base64"),
+  };
+}
+
+function campaignRecipientActivity(campaign) {
+  const recipients = new Map();
+  const ensureRecipient = (value) => {
+    const email = text(value?.email, 320).toLowerCase();
+    if (!email) return null;
+    if (!recipients.has(email)) {
+      recipients.set(email, {
+        email,
+        firstName: text(value?.first_name, 100),
+        lastName: text(value?.last_name, 100),
+        position: text(value?.position, 120),
+        status: text(value?.status, 80),
+        sentAt: text(value?.send_date, 50),
+        openedAt: "",
+        clickedAt: "",
+        submittedAt: "",
+        reportedAt: "",
+        failedAt: "",
+      });
+    }
+    const target = recipients.get(email);
+    if (!target.firstName) target.firstName = text(value?.first_name, 100);
+    if (!target.lastName) target.lastName = text(value?.last_name, 100);
+    if (!target.position) target.position = text(value?.position, 120);
+    if (value?.status) target.status = text(value.status, 80);
+    if (value?.send_date) target.sentAt = text(value.send_date, 50);
+    const status = text(value?.status, 80).toLowerCase();
+    const modifiedAt = text(value?.modified_date, 50);
+    if (status === "email opened") target.openedAt ||= modifiedAt;
+    else if (status === "clicked link") target.clickedAt ||= modifiedAt;
+    else if (status === "submitted data") target.submittedAt ||= modifiedAt;
+    else if (status === "email reported") target.reportedAt ||= modifiedAt;
+    else if (/error|fail|reject/.test(status)) target.failedAt ||= modifiedAt;
+    return target;
+  };
+
+  for (const item of Array.isArray(campaign?.results)
+    ? campaign.results.slice(0, 1000)
+    : [])
+    ensureRecipient(item);
+
+  for (const event of Array.isArray(campaign?.timeline)
+    ? campaign.timeline.slice(0, 10_000)
+    : []) {
+    const target = ensureRecipient({ email: event?.email });
+    if (!target) continue;
+    const message = text(event?.message, 100).toLowerCase();
+    const time = text(event?.time, 50);
+    if (message === "email sent") target.sentAt ||= time;
+    else if (message === "email opened") target.openedAt ||= time;
+    else if (message === "clicked link") target.clickedAt ||= time;
+    else if (message === "submitted data") target.submittedAt ||= time;
+    else if (message === "email reported") target.reportedAt ||= time;
+    else if (message.includes("email") && /error|fail|reject/.test(message))
+      target.failedAt ||= time;
+  }
+
+  return {
+    recipients: [...recipients.values()].slice(0, 500),
+    truncated: recipients.size > 500,
+  };
+}
+
+async function readCampaignAsset(apiKey, agent, type, payload) {
+  const id = Number(payload.id);
+  const responsePublicKey = text(payload.responsePublicKey, 2048);
+  if (
+    !Number.isSafeInteger(id) ||
+    id < 1 ||
+    !responsePublicKey.startsWith("-----BEGIN PUBLIC KEY-----") ||
+    !responsePublicKey.includes("-----END PUBLIC KEY-----")
+  )
+    throw new Error("A solicitação de leitura protegida está inválida.");
+
+  const endpoints = {
+    group: "api/groups/" + id,
+    template: "api/templates/" + id,
+    page: "api/pages/" + id,
+    campaign_results: "api/campaigns/" + id + "/results",
+  };
+  if (!endpoints[type]) throw new Error("Tipo de leitura não permitido.");
+  const remote = await serviceRequest(endpoints[type], apiKey, agent);
+  let result;
+
+  if (type === "group") {
+    if (!Array.isArray(remote?.targets) || remote.targets.length > 500)
+      throw new Error(
+        "Este grupo excede o limite de 500 destinatários para edição no PierSec.",
+      );
+    result = {
+      id,
+      name: text(remote.name, 120),
+      targets: remote.targets.map((target) => ({
+        email: text(target?.email, 320),
+        firstName: text(target?.first_name, 100),
+        lastName: text(target?.last_name, 100),
+        position: text(target?.position, 120),
+      })),
+    };
+  } else if (type === "template") {
+    result = {
+      id,
+      name: text(remote?.name, 120),
+      subject: text(remote?.subject, 200),
+      text:
+        typeof remote?.text === "string" ? remote.text.slice(0, 100_000) : "",
+      html:
+        typeof remote?.html === "string" ? remote.html.slice(0, 200_000) : "",
+    };
+  } else if (type === "page") {
+    result = {
+      id,
+      name: text(remote?.name, 120),
+      html:
+        typeof remote?.html === "string" ? remote.html.slice(0, 200_000) : "",
+    };
+  } else {
+    const activity = campaignRecipientActivity(remote);
+    result = {
+      id,
+      name: text(remote?.name, 120),
+      status: text(remote?.status, 80),
+      recipients: activity.recipients,
+      truncated: activity.truncated,
+    };
+  }
+
+  return {
+    status: "succeeded",
+    assetId: id,
+    message:
+      type === "campaign_results"
+        ? "Atividade individual atualizada."
+        : "Conteúdo carregado para edição.",
+    encryptedResult: encryptForBrowser(responsePublicKey, result),
+  };
+}
+
+async function createCampaignAsset(apiKey, agent, type, encryptedPayload) {
+  const requested = decryptCommandPayload(encryptedPayload, commandPrivateKey);
+  if (isRecord(requested) && requested.action === "read")
+    return await readCampaignAsset(apiKey, agent, type, requested);
+  const payload = validateAssetCommand(type, requested);
   const method = payload.method || "POST";
   if (!apiPathAllowed(method, payload.endpoint))
     throw new Error("Endpoint não permitido pelo conector.");
@@ -802,37 +996,68 @@ async function createCampaignAsset(apiKey, agent, type, encryptedPayload) {
         status: "failed",
         assetId: null,
         message:
-          "Não foi possível consultar o perfil atual. Nenhuma alteração foi aplicada.",
+          "Não foi possível consultar o ativo atual. Nenhuma alteração foi aplicada.",
       };
     }
-    const profile = current.body;
+    const currentAsset = current.body;
     if (
       current.status < 200 ||
       current.status >= 300 ||
-      !isRecord(profile) ||
-      count(profile.id) !== payload.profileId ||
-      !text(profile.name, 120) ||
-      !text(profile.host, 255) ||
-      !text(profile.from_address, 254)
+      !isRecord(currentAsset) ||
+      count(currentAsset.id) !== count(payload.profileId ?? payload.body?.id) ||
+      !text(currentAsset.name, 120)
     )
       return {
         status: "failed",
         assetId: null,
         message:
-          "Não foi possível validar o perfil atual. Nenhuma alteração foi aplicada.",
+          "Não foi possível validar o ativo atual. Nenhuma alteração foi aplicada.",
       };
 
-    body = {
-      id: payload.profileId,
-      name: text(profile.name, 120),
-      host: text(profile.host, 255),
-      from_address: text(profile.from_address, 254),
-      interface_type: "SMTP",
-      username: payload.username,
-      password: payload.password,
-      ignore_cert_errors: profile.ignore_cert_errors === true,
-      ...(Array.isArray(profile.headers) ? { headers: profile.headers } : {}),
-    };
+    if (type === "sending_profile") {
+      if (
+        !text(currentAsset.host, 255) ||
+        !text(currentAsset.from_address, 254)
+      )
+        return {
+          status: "failed",
+          assetId: null,
+          message:
+            "Não foi possível validar o ativo atual. Nenhuma alteração foi aplicada.",
+        };
+      body = {
+        id: payload.profileId,
+        name: text(currentAsset.name, 120),
+        host: text(currentAsset.host, 255),
+        from_address: text(currentAsset.from_address, 254),
+        interface_type: "SMTP",
+        username: payload.username,
+        password: payload.password,
+        ignore_cert_errors: currentAsset.ignore_cert_errors === true,
+        ...(Array.isArray(currentAsset.headers)
+          ? { headers: currentAsset.headers }
+          : {}),
+      };
+    } else if (type === "template") {
+      body = {
+        ...currentAsset,
+        ...payload.body,
+        id: count(payload.body?.id),
+        attachments: Array.isArray(currentAsset.attachments)
+          ? currentAsset.attachments
+          : [],
+      };
+    } else if (type === "page") {
+      body = {
+        ...currentAsset,
+        ...payload.body,
+        id: count(payload.body?.id),
+        capture_credentials: false,
+        capture_passwords: false,
+      };
+    } else {
+      body = { ...payload.body, id: count(payload.body?.id) };
+    }
   }
 
   let response;
@@ -936,6 +1161,7 @@ async function sendAssetCommandResult(configuration, commandId, result) {
         status: result.status,
         assetId: result.assetId,
         message: text(result.message, 500),
+        encryptedResult: result.encryptedResult ?? null,
       },
     },
   );

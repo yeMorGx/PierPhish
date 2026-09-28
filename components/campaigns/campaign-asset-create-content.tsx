@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
 } from "react";
@@ -18,6 +19,11 @@ import {
 } from "@/components/campaigns/campaigns-navigation";
 import { useActiveWorkspaceId } from "@/lib/use-active-workspace";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import {
+  createSecureReturnKey,
+  decryptSecureReturn,
+  type EncryptedReturn,
+} from "@/lib/campaigns/secure-return";
 
 type AssetType = "group" | "template" | "page" | "sending_profile";
 type Recipient = {
@@ -30,7 +36,10 @@ type Connector = {
   id: string;
   name: string;
   online: boolean;
-  snapshot?: { commandEncryptionKey?: string };
+  snapshot?: {
+    commandEncryptionKey?: string;
+    capabilities?: { assetEdits?: boolean };
+  };
 };
 type Operation = {
   id: string;
@@ -39,6 +48,8 @@ type Operation = {
   status: string;
   result: string | null;
   assetId: number | null;
+  encryptedResult?: EncryptedReturn | null;
+  isRead?: boolean;
 };
 
 const meta: Record<
@@ -193,6 +204,13 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
   const [fromAddress, setFromAddress] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [replyPrivateKey, setReplyPrivateKey] = useState<CryptoKey | null>(
+    null,
+  );
+  const requestedReadRef = useRef("");
+  const handledResultRef = useRef("");
   const onlineConnectors = useMemo(
     () => connectors.filter((connector) => connector.online),
     [connectors],
@@ -201,6 +219,14 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
     onlineConnectors.find((connector) => connector.id === connectorId) ??
     onlineConnectors[0] ??
     null;
+
+  useEffect(() => {
+    const requestedId = Number(
+      new URLSearchParams(window.location.search).get("edit"),
+    );
+    if (Number.isSafeInteger(requestedId) && requestedId > 0)
+      setEditingId(requestedId);
+  }, []);
 
   const loadConnectors = useCallback(async () => {
     if (!session?.access_token || !isSupabaseConfigured) {
@@ -247,6 +273,74 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
   }, [loadConnectors]);
 
   useEffect(() => {
+    if (!editingId || !selectedConnector || !session?.access_token) return;
+    if (selectedConnector.snapshot?.capabilities?.assetEdits !== true) {
+      setError(
+        "Atualize a Stack do conector no Portainer para editar ativos. Nenhuma alteração foi enviada.",
+      );
+      return;
+    }
+    const requestKey = `${selectedConnector.id}:${type}:${editingId}`;
+    if (requestedReadRef.current === requestKey) return;
+    requestedReadRef.current = requestKey;
+    void (async () => {
+      setDetailLoading(true);
+      setError("");
+      try {
+        const returnKey = await createSecureReturnKey();
+        setReplyPrivateKey(returnKey.privateKey);
+        const response = await fetch("/api/campaigns/assets", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            workspaceId,
+            connectorId: selectedConnector.id,
+            type,
+            action: "read",
+            assetId: editingId,
+            responsePublicKey: returnKey.publicKey,
+          }),
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok)
+          throw new Error(
+            errorMessage(
+              body,
+              "Não foi possível carregar o ativo para edição.",
+            ),
+          );
+        setOperation({
+          id: body.commandId,
+          type,
+          name: "",
+          status: body.status ?? "queued",
+          result: null,
+          assetId: editingId,
+          isRead: true,
+        });
+      } catch (cause) {
+        requestedReadRef.current = "";
+        setDetailLoading(false);
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Não foi possível carregar o ativo para edição.",
+        );
+      }
+    })();
+  }, [
+    editingId,
+    selectedConnector?.id,
+    selectedConnector?.snapshot?.capabilities?.assetEdits,
+    session?.access_token,
+    type,
+    workspaceId,
+  ]);
+
+  useEffect(() => {
     const commandId = operation?.id;
     const commandStatus = operation?.status;
     if (!commandId || terminal(commandStatus ?? "") || !session?.access_token)
@@ -266,11 +360,94 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
           (item: Operation) => item.id === commandId,
         );
         if (!latest) return;
-        setOperation(latest);
+        if (
+          operation?.isRead &&
+          latest.status === "succeeded" &&
+          latest.encryptedResult &&
+          replyPrivateKey &&
+          handledResultRef.current !== commandId
+        ) {
+          handledResultRef.current = commandId;
+          try {
+            const result = await decryptSecureReturn<Record<string, unknown>>(
+              latest.encryptedResult,
+              replyPrivateKey,
+            );
+            setName(typeof result.name === "string" ? result.name : "");
+            if (type === "group" && Array.isArray(result.targets))
+              setRecipients(
+                result.targets.map((target) => ({
+                  email: typeof target.email === "string" ? target.email : "",
+                  firstName:
+                    typeof target.firstName === "string"
+                      ? target.firstName
+                      : "",
+                  lastName:
+                    typeof target.lastName === "string" ? target.lastName : "",
+                  position:
+                    typeof target.position === "string" ? target.position : "",
+                })),
+              );
+            if (type === "template") {
+              setTemplateSubject(
+                typeof result.subject === "string" ? result.subject : "",
+              );
+              setTemplateText(
+                typeof result.text === "string" ? result.text : "",
+              );
+              setTemplateHtml(
+                typeof result.html === "string" ? result.html : "",
+              );
+            }
+            if (type === "page")
+              setPageHtml(typeof result.html === "string" ? result.html : "");
+            setOperation({ ...latest, encryptedResult: null, isRead: true });
+            setDetailLoading(false);
+            let responseCleared = false;
+            try {
+              const acknowledgment = await fetch("/api/campaigns/assets", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  workspaceId,
+                  action: "ack",
+                  commandId,
+                }),
+              });
+              responseCleared = acknowledgment.ok;
+            } catch {
+              responseCleared = false;
+            }
+            toast.success("Ativo carregado", {
+              description: responseCleared
+                ? "O conteúdo foi aberto nesta sessão e a resposta cifrada foi removida da fila."
+                : "O conteúdo foi aberto nesta sessão. A resposta continua cifrada e será removida automaticamente.",
+            });
+          } catch {
+            setDetailLoading(false);
+            setError(
+              "Não foi possível abrir a resposta protegida. Atualize a página para tentar novamente.",
+            );
+          }
+          return;
+        }
+        setOperation({ ...latest, isRead: operation?.isRead });
         if (terminal(latest.status)) {
-          if (latest.status === "succeeded")
-            toast.success("Ativo criado", {
-              description: "Ele já está disponível para montar uma campanha.",
+          if (operation?.isRead) {
+            if (latest.status !== "succeeded") {
+              setDetailLoading(false);
+              toast.error(statusLabel(latest.status), {
+                description: latest.result ?? "Não foi possível abrir o ativo.",
+              });
+            }
+          } else if (latest.status === "succeeded")
+            toast.success(editingId ? "Ativo atualizado" : "Ativo criado", {
+              description: editingId
+                ? "As alterações já estão disponíveis no ambiente conectado."
+                : "Ele já está disponível para montar uma campanha.",
             });
           else
             toast.error(statusLabel(latest.status), {
@@ -282,7 +459,16 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
       }
     }, 3000);
     return () => window.clearInterval(timer);
-  }, [operation?.id, operation?.status, session?.access_token, workspaceId]);
+  }, [
+    editingId,
+    operation?.id,
+    operation?.isRead,
+    operation?.status,
+    replyPrivateKey,
+    session?.access_token,
+    type,
+    workspaceId,
+  ]);
 
   function updateRecipient(
     index: number,
@@ -327,6 +513,7 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
       connectorId: selectedConnector.id,
       type,
       name,
+      ...(editingId ? { assetId: editingId } : {}),
     };
     if (type === "group") payload.targets = recipients;
     if (type === "template")
@@ -364,7 +551,9 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
         setUsername("");
       }
       toast.success("Pedido registrado", {
-        description: "A conexão privada vai processar a criação.",
+        description: editingId
+          ? "A conexão privada vai processar a atualização."
+          : "A conexão privada vai processar a criação.",
       });
     } catch (cause) {
       setError(
@@ -382,13 +571,23 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
   ).length;
   const canSubmit =
     Boolean(selectedConnector?.snapshot?.commandEncryptionKey) &&
+    (!editingId || selectedConnector?.snapshot?.capabilities?.assetEdits) &&
+    !detailLoading &&
     !saving &&
     (type !== "group" || targetCount > 0);
 
   return (
     <DashboardShell
       activeSection="campaigns"
-      title={config.title}
+      title={
+        editingId
+          ? type === "page"
+            ? "Editar página de destino"
+            : type === "group"
+              ? "Editar grupo"
+              : "Editar modelo"
+          : config.title
+      }
       headerAction={
         <Link
           href={config.listHref}
@@ -404,16 +603,23 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
           <div className="max-w-[720px]">
             <h2 className="m-0 text-[20px] font-semibold tracking-[-0.04em]">
               {type === "group"
-                ? "Dados do público"
+                ? editingId
+                  ? "Editar público"
+                  : "Dados do público"
                 : type === "template"
-                  ? "Conteúdo do modelo"
+                  ? editingId
+                    ? "Editar modelo"
+                    : "Conteúdo do modelo"
                   : type === "page"
-                    ? "Conteúdo da página"
+                    ? editingId
+                      ? "Editar página"
+                      : "Conteúdo da página"
                     : "Configuração de envio"}
             </h2>
             <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[var(--text-muted)]">
               O PierSec envia este pedido de forma protegida pela conexão
-              privada. O ambiente confirma a criação e o histórico registra
+              privada. O ambiente confirma a{" "}
+              {editingId ? "atualização" : "criação"} e o histórico registra
               responsável, horário e resultado.
             </p>
           </div>
@@ -472,6 +678,14 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
 
           {selectedConnector && (
             <form className="mt-5 grid max-w-[960px] gap-5" onSubmit={submit}>
+              {detailLoading && (
+                <p
+                  aria-live="polite"
+                  className="m-0 rounded-[12px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 py-3 text-[11px] text-[var(--text-muted)]"
+                >
+                  Carregando o conteúdo pela conexão privada…
+                </p>
+              )}
               <label className="grid max-w-[600px] gap-1.5 text-[10px] font-bold text-[var(--text-muted)]">
                 NOME
                 <input
@@ -609,9 +823,9 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                     Adicionar destinatário
                   </button>
                   <p className="m-0 text-[10px] leading-relaxed text-[var(--text-muted)]">
-                    Os endereços ficam cifrados somente na fila e são removidos
-                    após o processamento. O ambiente conectado mantém o grupo
-                    para uso em campanhas.
+                    Os endereços ficam cifrados na fila e na resposta
+                    temporária. O conteúdo só é aberto nesta sessão e é removido
+                    da fila após 30 minutos. Não inclua senhas.
                   </p>
                 </div>
               )}
@@ -751,7 +965,11 @@ export function CampaignAssetCreateContent({ type }: { type: AssetType }) {
                   }
                   className="inline-flex h-10 items-center justify-center rounded-[10px] bg-[var(--ink)] px-4 text-[11px] font-bold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {saving ? "Enviando…" : config.button}
+                  {saving
+                    ? "Enviando…"
+                    : editingId
+                      ? "Salvar alterações"
+                      : config.button}
                 </button>
               </div>
             </form>

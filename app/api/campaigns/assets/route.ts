@@ -17,7 +17,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type JsonRecord = Record<string, unknown>;
-type AssetType = "group" | "template" | "page" | "sending_profile";
+type AssetType =
+  "group" | "template" | "page" | "sending_profile" | "campaign_results";
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -207,6 +208,38 @@ function buildAsset(body: JsonRecord): {
   payload: JsonRecord;
 } | null {
   const type = body.type;
+  if (body.action === "read") {
+    if (
+      type !== "group" &&
+      type !== "template" &&
+      type !== "page" &&
+      type !== "campaign_results"
+    )
+      return null;
+    const id = Number(body.assetId);
+    const responsePublicKey =
+      typeof body.responsePublicKey === "string"
+        ? body.responsePublicKey.trim().slice(0, 2048)
+        : "";
+    if (
+      !Number.isSafeInteger(id) ||
+      id < 1 ||
+      !/^-----BEGIN PUBLIC KEY-----\s+[A-Za-z0-9+/=\s]+-----END PUBLIC KEY-----$/.test(
+        responsePublicKey,
+      )
+    )
+      return null;
+    return {
+      type,
+      name: "",
+      itemCount: 0,
+      payload: { action: "read", id, responsePublicKey },
+    };
+  }
+  const assetId = body.assetId === undefined ? null : Number(body.assetId);
+  if (assetId !== null && (!Number.isSafeInteger(assetId) || assetId < 1))
+    return null;
+  const id = assetId ?? undefined;
   if (type === "group") {
     const name = cleanText(body.name, 120);
     const targets = normalizeTargets(body.targets);
@@ -215,7 +248,7 @@ function buildAsset(body: JsonRecord): {
       type,
       name,
       itemCount: targets.length,
-      payload: { name, targets },
+      payload: { ...(id ? { id } : {}), name, targets },
     };
   }
   if (type === "template") {
@@ -231,7 +264,13 @@ function buildAsset(body: JsonRecord): {
       type,
       name,
       itemCount: 0,
-      payload: { name, subject, text, html: trackedHtml },
+      payload: {
+        ...(id ? { id } : {}),
+        name,
+        subject,
+        text,
+        html: trackedHtml,
+      },
     };
   }
   if (type === "page") {
@@ -243,6 +282,7 @@ function buildAsset(body: JsonRecord): {
       name,
       itemCount: 0,
       payload: {
+        ...(id ? { id } : {}),
         name,
         html,
         capture_credentials: false,
@@ -268,7 +308,10 @@ export async function GET(request: NextRequest) {
   const workspaceKey = databaseWorkspaceId(workspaceId);
   const now = new Date();
   const staleBefore = new Date(now.getTime() - 15 * 60_000).toISOString();
-  const [expired, stale] = await Promise.all([
+  const encryptedResultBefore = new Date(
+    now.getTime() - 30 * 60_000,
+  ).toISOString();
+  const [expired, stale, expiredEncryptedResults] = await Promise.all([
     access.client
       .from("pierphish_campaign_asset_commands")
       .update({
@@ -292,14 +335,22 @@ export async function GET(request: NextRequest) {
       .eq("workspace_id", workspaceKey)
       .eq("status", "processing")
       .lt("claimed_at", staleBefore),
+    access.client
+      .from("pierphish_campaign_asset_commands")
+      .update({ encrypted_result: {} })
+      .eq("workspace_id", workspaceKey)
+      .eq("status", "succeeded")
+      .lt("finished_at", encryptedResultBefore)
+      .not("encrypted_result", "is", null)
+      .neq("encrypted_result", "{}"),
   ]);
-  if (expired.error || stale.error)
+  if (expired.error || stale.error || expiredEncryptedResults.error)
     return gophishError("Não foi possível limpar as operações expiradas.", 502);
 
   const { data, error } = await access.client
     .from("pierphish_campaign_asset_commands")
     .select(
-      "id,asset_type,asset_name,item_count,requested_by_name,status,queued_at,finished_at,remote_asset_id,result_message",
+      "id,asset_type,asset_name,item_count,requested_by_name,status,queued_at,finished_at,remote_asset_id,result_message,encrypted_result",
     )
     .eq("workspace_id", workspaceKey)
     .order("queued_at", { ascending: false })
@@ -323,6 +374,11 @@ export async function GET(request: NextRequest) {
         finishedAt: row.finished_at,
         assetId: row.remote_asset_id,
         result: row.result_message,
+        encryptedResult:
+          isRecord(row.encrypted_result) &&
+          typeof row.encrypted_result.ciphertext === "string"
+            ? row.encrypted_result
+            : null,
       })),
     },
     { headers: { "Cache-Control": "private, no-store, max-age=0" } },
@@ -347,6 +403,25 @@ export async function POST(request: NextRequest) {
     true,
   );
   if (access.error) return access.error;
+
+  if (body.action === "ack") {
+    const commandId = cleanText(body.commandId, 36);
+    if (!/^[0-9a-f-]{36}$/i.test(commandId))
+      return gophishError("Operação inválida.", 400);
+    const { error } = await access.client
+      .from("pierphish_campaign_asset_commands")
+      .update({ encrypted_result: {} })
+      .eq("id", commandId)
+      .eq("workspace_id", databaseWorkspaceId(body.workspaceId))
+      .eq("requested_by", access.userId)
+      .eq("status", "succeeded");
+    if (error)
+      return gophishError("Não foi possível limpar a resposta protegida.", 502);
+    return NextResponse.json(
+      { accepted: true },
+      { headers: { "Cache-Control": "private, no-store, max-age=0" } },
+    );
+  }
 
   const asset = buildAsset(body);
   const connectorId = cleanText(body.connectorId, 50);
@@ -377,8 +452,16 @@ export async function POST(request: NextRequest) {
     template: "templates",
     page: "pages",
     sending_profile: "sendingProfiles",
+    campaign_results: "campaigns",
   };
   const existingAssets = snapshot[assetListField[asset.type]];
+  const isRead = asset.payload.action === "read";
+  const targetAssetId =
+    asset.type !== "sending_profile" &&
+    asset.type !== "campaign_results" &&
+    Number.isSafeInteger(asset.payload.id)
+      ? Number(asset.payload.id)
+      : null;
   const updateProfileId =
     asset.type === "sending_profile" &&
     isRecord(asset.payload) &&
@@ -388,6 +471,35 @@ export async function POST(request: NextRequest) {
   const existingProfiles = Array.isArray(existingAssets)
     ? existingAssets.filter(isRecord)
     : [];
+  if (isRead) {
+    const selected = existingProfiles.find(
+      (item) => Number(item.id) === Number(asset.payload.id),
+    );
+    if (selected) asset.name = cleanText(selected.name, 120);
+  }
+  const features = isRecord(snapshot.capabilities) ? snapshot.capabilities : {};
+  if (
+    (updateProfileId !== null && features.profileUpdates !== true) ||
+    (targetAssetId !== null && !isRead && features.assetEdits !== true) ||
+    (isRead &&
+      asset.type !== "campaign_results" &&
+      features.assetEdits !== true) ||
+    (asset.type === "campaign_results" && features.individualResults !== true)
+  )
+    return gophishError(
+      "Atualize a Stack do conector no Portainer para habilitar esta operação. Nenhuma alteração foi enviada.",
+      409,
+    );
+  if (
+    (targetAssetId !== null || isRead) &&
+    !existingProfiles.some(
+      (item) => Number(item.id) === Number(asset.payload.id),
+    )
+  )
+    return gophishError(
+      "O item não está mais disponível. Atualize a lista e tente novamente.",
+      409,
+    );
   if (
     updateProfileId !== null &&
     !existingProfiles.some((profile) => Number(profile.id) === updateProfileId)
@@ -405,14 +517,16 @@ export async function POST(request: NextRequest) {
       if (isRecord(asset.payload)) asset.payload.name = asset.name;
     }
   }
-  const duplicateName = Array.isArray(existingAssets)
-    ? existingAssets.some(
-        (item) =>
-          isRecord(item) &&
-          Number(item.id) !== updateProfileId &&
-          cleanText(item.name, 120).toLowerCase() === asset.name.toLowerCase(),
-      )
-    : false;
+  const duplicateName =
+    !isRead && Array.isArray(existingAssets)
+      ? existingAssets.some(
+          (item) =>
+            isRecord(item) &&
+            Number(item.id) !== (updateProfileId ?? targetAssetId) &&
+            cleanText(item.name, 120).toLowerCase() ===
+              asset.name.toLowerCase(),
+        )
+      : false;
   if (duplicateName) {
     const assetLabel = asset.type === "group" ? "grupo" : "ativo";
     return gophishError(

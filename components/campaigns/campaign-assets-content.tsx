@@ -15,6 +15,7 @@ type Connector = {
   name: string;
   online: boolean;
   snapshot?: {
+    capabilities?: { profileUpdates?: boolean };
     templates?: Array<{ id: number; name: string; modifiedDate: string }>;
     pages?: Array<{
       id: number;
@@ -327,11 +328,21 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
                         <span className="text-[10px] text-[var(--text-muted)]">
                           Atualizado {dateFormat(asset.modifiedDate)}
                         </span>
+                        {section !== "sendingProfiles" && connected && (
+                          <Link
+                            href={`${config.href}?edit=${asset.id}`}
+                            className="inline-flex h-9 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 text-[10px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+                          >
+                            Editar
+                          </Link>
+                        )}
                         {section === "sendingProfiles" && (
                           <button
                             type="button"
                             disabled={
                               savingProfileId !== null ||
+                              connected?.snapshot?.capabilities
+                                ?.profileUpdates !== true ||
                               (!connected && !editing)
                             }
                             aria-expanded={editing}
@@ -348,6 +359,15 @@ export function CampaignAssetsContent({ section }: { section: AssetSection }) {
                         )}
                       </div>
                     </div>
+                    {section === "sendingProfiles" &&
+                      connected &&
+                      connected.snapshot?.capabilities?.profileUpdates !==
+                        true && (
+                        <p className="m-0 text-[10px] leading-relaxed text-[var(--text-muted)]">
+                          Atualize a Stack do conector no Portainer para editar
+                          este perfil com segurança.
+                        </p>
+                      )}
                     {editing && (
                       <form
                         id={`profile-update-${asset.id}`}

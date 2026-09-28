@@ -12,11 +12,17 @@ export async function POST(request: NextRequest) {
   if (!auth.client || !auth.connectorId)
     return gophishError("Credencial do conector inválida.", 401);
 
-  const body = (await request.json().catch(() => null)) as {
+  const rawBody = await request.text();
+  if (rawBody.length > 1_100_000)
+    return gophishError("Resposta protegida acima do limite permitido.", 413);
+  const body = (await Promise.resolve()
+    .then(() => JSON.parse(rawBody))
+    .catch(() => null)) as {
     commandId?: unknown;
     status?: unknown;
     assetId?: unknown;
     message?: unknown;
+    encryptedResult?: unknown;
   } | null;
   if (
     !body ||
@@ -29,6 +35,36 @@ export async function POST(request: NextRequest) {
   )
     return gophishError("Resultado do conector inválido.", 400);
 
+  let encryptedResult: {
+    version: 1;
+    wrappedKey: string;
+    iv: string;
+    ciphertext: string;
+  } | null = null;
+  if (body.encryptedResult !== undefined && body.encryptedResult !== null) {
+    const envelope = body.encryptedResult as Record<string, unknown>;
+    if (
+      typeof envelope !== "object" ||
+      envelope === null ||
+      Array.isArray(envelope) ||
+      envelope.version !== 1 ||
+      typeof envelope.wrappedKey !== "string" ||
+      envelope.wrappedKey.length > 4096 ||
+      typeof envelope.iv !== "string" ||
+      envelope.iv.length > 128 ||
+      typeof envelope.ciphertext !== "string" ||
+      envelope.ciphertext.length > 1_000_000 ||
+      body.status !== "succeeded"
+    )
+      return gophishError("Resposta protegida do conector inválida.", 400);
+    encryptedResult = {
+      version: 1,
+      wrappedKey: envelope.wrappedKey,
+      iv: envelope.iv,
+      ciphertext: envelope.ciphertext,
+    };
+  }
+
   const message =
     typeof body.message === "string" ? body.message.trim().slice(0, 500) : "";
   const { data, error } = await auth.client.rpc(
@@ -39,6 +75,7 @@ export async function POST(request: NextRequest) {
       p_status: body.status,
       p_asset_id: body.assetId ? Number(body.assetId) : null,
       p_result_message: message,
+      p_encrypted_result: encryptedResult,
     },
   );
   if (error)

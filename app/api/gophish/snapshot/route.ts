@@ -31,6 +31,9 @@ function cleanSnapshot(value: unknown) {
   const sourceSendingProfiles = Array.isArray(value.sendingProfiles)
     ? value.sendingProfiles
     : [];
+  const sourceCapabilities = isRecord(value.capabilities)
+    ? value.capabilities
+    : {};
   if (
     sourceGroups.length > 2000 ||
     sourceCampaigns.length > 2000 ||
@@ -130,6 +133,11 @@ function cleanSnapshot(value: unknown) {
   return {
     updatedAt: boundedText(value.updatedAt, 50),
     commandEncryptionKey: boundedText(value.commandEncryptionKey, 4096),
+    capabilities: {
+      profileUpdates: sourceCapabilities.profileUpdates === true,
+      assetEdits: sourceCapabilities.assetEdits === true,
+      individualResults: sourceCapabilities.individualResults === true,
+    },
     groups,
     campaigns,
     templates,
