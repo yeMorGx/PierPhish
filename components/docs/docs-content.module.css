@@ -3,7 +3,7 @@
   --docs-surface: var(--surface, #fafafa);
   --docs-border: var(--line, #eaeaea);
   --docs-text: var(--ink, #171717);
-  --docs-muted: var(--text-muted, #666666);
+  --docs-muted: #666666;
   --docs-subtle: var(--muted-soft, #737373);
   --docs-accent: #1764c0;
   --docs-accent-soft: color-mix(
@@ -24,6 +24,7 @@
 }
 
 :global(html[data-theme="dark"]) .frame {
+  --docs-muted: #a1a1a1;
   --docs-accent: #9dc4ff;
   --docs-accent-soft: color-mix(
     in srgb,
