@@ -12,12 +12,12 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 
 ### Contraste e espaçamento da gestão do workspace — 2026-09-29
 
-- O modal de gestão passou a usar uma paleta monocromática via tokens também nos campos, prévia do logo, navegação, convite, resumo de acesso e lista de pessoas. O texto auxiliar ganhou mais contraste.
+- O modal de gestão passou a usar uma paleta monocromática via tokens também nos campos, prévia do logo, navegação, convite, resumo de acesso e lista de pessoas. O texto auxiliar ganhou mais contraste; removi o desfoque do fundo, a sombra do modal e o gradiente sobre a imagem.
 - A largura útil, o padding e a hierarquia foram reorganizados: resumo do time, formulário de convite e lista agora têm separação consistente; os controles têm altura e alinhamento uniformes. Em telas estreitas, os campos e o resumo refluem em uma coluna.
 - Nenhum dado do workspace foi alterado.
 - Validações: Prettier aprovado; `tsc --noEmit` aprovado; detector Impeccable de layout sem achados; `git diff --check` aprovado (apenas aviso de conversão LF/CRLF do Git no Windows).
-- Entrega: `d3cc67b` foi enviado para `main`; a Vercel publicou essa revisão com status **Ready**. Conferi no site o formulário de workspace e a aba Pessoas. Não salvei nem alterei dados.
-- Próximos passos: conferir a aparência no seu tamanho de tela. Nenhuma pendência de código ou publicação ficou aberta nesta etapa.
+- Entrega: `d3cc67b` foi enviado para `main` e publicado com status **Ready**. A remoção final de efeitos visuais está em revisão local e será enviada após as validações; os dados não foram alterados.
+- Próximos passos: publicar e conferir novamente o formulário e a aba Pessoas na Vercel.
 
 ### Correção de cores do resumo de campanhas — 2026-09-29
 

@@ -5711,6 +5711,7 @@ html[data-theme="dark"] .campaign-logo-error {
   width: min(640px, calc(100vw - 32px));
   max-height: min(820px, calc(100dvh - 32px));
   overflow: hidden;
+  box-shadow: none;
 }
 
 .workspace-modal:has(> .workspace-manage-header) .workspace-manage-header {
@@ -5722,20 +5723,10 @@ html[data-theme="dark"] .campaign-logo-error {
 
 .workspace-modal:has(> .workspace-manage-header) .workspace-manage-header-art {
   inset: 0 0 68px;
-  background-image:
-    linear-gradient(
-      180deg,
-      rgba(8, 14, 17, 0.12) 0%,
-      rgba(8, 14, 17, 0.04) 55%,
-      var(--surface) 100%
-    ),
-    url("/workspace-temple-hero.png");
-  background-position:
-    center,
-    center 44%;
-  background-size:
-    100% 100%,
-    cover;
+  border-bottom: 1px solid var(--line-soft);
+  background-image: url("/workspace-temple-hero.png");
+  background-position: center 44%;
+  background-size: cover;
 }
 
 .workspace-modal:has(> .workspace-manage-header) .workspace-manage-header-top {
@@ -6310,8 +6301,6 @@ html[data-theme="dark"] .campaign-logo-error {
   place-items: center;
   padding: 24px;
   background: rgba(11, 18, 23, 0.48);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
   animation: workspace-modal-fade-in 160ms ease both;
 }
 
