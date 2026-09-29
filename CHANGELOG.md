@@ -16,8 +16,8 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 - A largura útil, o padding e a hierarquia foram reorganizados: resumo do time, formulário de convite e lista agora têm separação consistente; os controles têm altura e alinhamento uniformes. Em telas estreitas, os campos e o resumo refluem em uma coluna.
 - Nenhum dado do workspace foi alterado.
 - Validações: Prettier aprovado; `tsc --noEmit` aprovado; detector Impeccable de layout sem achados; `git diff --check` aprovado (apenas aviso de conversão LF/CRLF do Git no Windows).
-- Entrega: `d3cc67b` foi enviado para `main` e publicado com status **Ready**. A remoção final de efeitos visuais está em revisão local e será enviada após as validações; os dados não foram alterados.
-- Próximos passos: publicar e conferir novamente o formulário e a aba Pessoas na Vercel.
+- Entrega: `2136de2` foi enviado para `main` e publicado na Vercel com status **Ready**. Conferi no site o formulário e a aba Pessoas; os três membros carregaram. Nenhum dado foi alterado.
+- Próximos passos: revisar a aparência no tamanho de tela usado pela equipe. Não há pendências de código ou publicação.
 
 ### Correção de cores do resumo de campanhas — 2026-09-29
 
