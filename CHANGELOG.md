@@ -10,6 +10,15 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 
 ## Estado do projeto — atualizado em 29/09/2026
 
+### Contraste e espaçamento da gestão do workspace — 2026-09-29
+
+- O modal de gestão passou a usar uma paleta monocromática via tokens também nos campos, prévia do logo, navegação, convite, resumo de acesso e lista de pessoas. O texto auxiliar ganhou mais contraste.
+- A largura útil, o padding e a hierarquia foram reorganizados: resumo do time, formulário de convite e lista agora têm separação consistente; os controles têm altura e alinhamento uniformes. Em telas estreitas, os campos e o resumo refluem em uma coluna.
+- Nenhum dado do workspace foi alterado.
+- Validações: Prettier aprovado; `tsc --noEmit` aprovado; detector Impeccable de layout sem achados; `git diff --check` aprovado (apenas aviso de conversão LF/CRLF do Git no Windows).
+- Entrega: commit/push para `main` e conferência visual da publicação serão registrados após a etapa final.
+- Próximos passos: confirmar a publicação na Vercel e conferir o modal de equipe e o formulário de workspace.
+
 ### Correção de cores do resumo de campanhas — 2026-09-29
 
 - Removidos os valores azul-petróleo fixos que ainda eram aplicados no tema escuro ao cabeçalho e às linhas da tabela, cartões de métricas, indicadores, avatares e status do resumo de campanhas.
