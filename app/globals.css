@@ -3326,70 +3326,73 @@ html[data-theme="dark"] .header-sync-button:disabled {
 }
 
 html[data-theme="dark"] .campaign-overview-table-wrap {
-  border-color: #223842 !important;
-  background: #111d23 !important;
+  border-color: var(--line) !important;
+  background: var(--surface) !important;
 }
 
 html[data-theme="dark"] .campaign-overview-table-head {
-  border-color: #2a424b !important;
-  color: #a9c0c8 !important;
-  background: #1b2d35 !important;
+  border-color: var(--line-soft) !important;
+  color: var(--text-muted) !important;
+  background: var(--surface-soft) !important;
 }
 
 html[data-theme="dark"] .campaign-overview-table-row {
-  border-color: #243a43 !important;
-  color: #aec0c9 !important;
-  background: #132329 !important;
+  border-color: var(--line-soft) !important;
+  color: var(--text-muted) !important;
+  background: var(--surface) !important;
 }
 
 html[data-theme="dark"] .campaign-overview-table-row:hover {
-  background: #1a313a !important;
+  background: var(--surface-soft) !important;
 }
 
 html[data-theme="dark"] .campaign-overview-metric {
-  background: #1a2d35 !important;
+  background: var(--surface-soft) !important;
 }
 
 html[data-theme="dark"] .campaign-count-pill {
-  color: #c2d6dc !important;
-  background: #213942 !important;
+  color: var(--text-muted) !important;
+  background: var(--surface-soft) !important;
 }
 
 html[data-theme="dark"] .campaign-reach-pill {
-  color: #b9d4dc !important;
-  background: #2b424c !important;
+  color: var(--text-muted) !important;
+  background: var(--surface-soft) !important;
 }
 
 html[data-theme="dark"] .campaign-avatar {
-  color: #f2fafb !important;
-  background: #40616c !important;
+  color: var(--ink) !important;
+  background: var(--surface-soft) !important;
 }
 
 html[data-theme="dark"] .campaign-name {
-  color: #eaf4f6 !important;
+  color: var(--ink) !important;
 }
 
 html[data-theme="dark"] .campaign-id {
-  color: #91a9b2 !important;
+  color: var(--text-muted) !important;
 }
 
 html[data-theme="dark"] .campaign-open-rate {
-  color: #afd1b0 !important;
+  color: var(--text-muted) !important;
 }
 
 html[data-theme="dark"] .campaign-status-completed {
-  color: #b8dca9 !important;
-  background: #294333 !important;
+  border: 1px solid var(--line) !important;
+  color: var(--text-muted) !important;
+  background: var(--surface-soft) !important;
 }
 
 html[data-theme="dark"] .campaign-status-progress {
-  color: #f1c88f !important;
-  background: #4a3d2a !important;
+  border: 1px solid var(--line) !important;
+  color: var(--text-muted) !important;
+  background: var(--surface-soft) !important;
 }
 
 html[data-theme="dark"] .campaign-status-neutral {
-  color: #b9c9ce !important;
-  background: #2b3a42 !important;
+  border: 1px solid var(--line) !important;
+  color: var(--text-muted) !important;
+  background: var(--surface-soft) !important;
 }
 
 .risk-error {

@@ -8,7 +8,14 @@ Este arquivo registra o estado do projeto para continuar o trabalho em outro com
 
 Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos, endereços de destinatários ou outros segredos. Diferencie claramente código pronto, configuração aplicada em produção e validação ainda não feita.
 
-## Estado do projeto — atualizado em 28/09/2026
+## Estado do projeto — atualizado em 29/09/2026
+
+### Correção de cores do resumo de campanhas — 2026-09-29
+
+- Removidos os valores azul-petróleo fixos que ainda eram aplicados no tema escuro ao cabeçalho e às linhas da tabela, cartões de métricas, indicadores, avatares e status do resumo de campanhas.
+- A seção agora usa `--surface`, `--surface-soft`, `--line`, `--line-soft`, `--ink` e `--text-muted`, alinhando os fundos e textos à paleta monocromática do PierSec.
+- Validações: Prettier, `pnpm exec tsc --noEmit` e `git diff --check` passaram. O detector Impeccable sinalizou dois padrões em outras regras do CSS (borda lateral decorativa e transição de largura), ambos fora da área alterada. Nenhuma campanha ou envio foi executado.
+- O commit e o push serão registrados após a conferência final; próximo passo: confirmar o deploy da correção visual na Vercel.
 
 ### Objetivo do produto
 
