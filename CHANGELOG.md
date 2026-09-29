@@ -35,7 +35,8 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - Capturas atuais de `/docs`, `/campanhas/grupos` e `/campanhas/nova` foram inspecionadas no navegador para manter a documentação alinhada às telas. Nenhuma captura com avatar ou dados da conta foi adicionada aos assets; o guia usa um esquema textual dos campos em vez de publicar a imagem da sessão autenticada.
 - Validações: Prettier nos arquivos alterados, `pnpm exec tsc --noEmit`, `git diff --check` e detector Impeccable (`[]`) passaram. O commit `78f91dc` foi enviado para `origin/main`; a Vercel mostrou o deployment de produção como **Ready** às 18:08 BRT. Com a sessão autorizada, abri `/docs` e `/docs/campanhas` e conferi menu, links, esquema de formulário e captura de desktop. A versão mobile foi revisada pelos breakpoints do CSS, sem uma captura dedicada. Nenhum teste automatizado, envio, campanha, migration ou alteração de infraestrutura foi executado.
 - A revisão de contraste encontrou texto secundário insuficiente sobre a superfície levemente azul do item ativo no tema claro. `--docs-muted` agora usa tons próprios para cada tema; no ativo claro a relação calculada é 4,82:1, e no ativo escuro é 5,36:1.
-- Próximos passos: se o menu em duas colunas no celular ficar apertado em aparelhos menores, ajustar o breakpoint e a descrição dos assuntos. Não há operação de campanha pendente nesta entrega.
+- O ajuste está no commit `33f6200`, enviado para `origin/main`. `pnpm exec tsc --noEmit`, Prettier e `git diff --check` passaram. A leitura da aba Vercel foi interrompida antes de confirmar esse novo deployment; o deploy `78f91dc` continua confirmado como **Ready**.
+- Próximos passos: confirmar a publicação de `33f6200`; se o menu em duas colunas no celular ficar apertado em aparelhos menores, ajustar o breakpoint e a descrição dos assuntos. Não há operação de campanha pendente nesta entrega.
 
 ### Integração de e-mails pelo Resend — 2026-09-28
 
