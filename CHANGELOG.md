@@ -15,7 +15,8 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 - Removidos os valores azul-petróleo fixos que ainda eram aplicados no tema escuro ao cabeçalho e às linhas da tabela, cartões de métricas, indicadores, avatares e status do resumo de campanhas.
 - A seção agora usa `--surface`, `--surface-soft`, `--line`, `--line-soft`, `--ink` e `--text-muted`, alinhando os fundos e textos à paleta monocromática do PierSec.
 - Validações: Prettier, `pnpm exec tsc --noEmit` e `git diff --check` passaram. O detector Impeccable sinalizou dois padrões em outras regras do CSS (borda lateral decorativa e transição de largura), ambos fora da área alterada. Nenhuma campanha ou envio foi executado.
-- O commit e o push serão registrados após a conferência final; próximo passo: confirmar o deploy da correção visual na Vercel.
+- O commit `2d1009c` foi enviado para `origin/main`. O deployment de produção da Vercel apontou para esse commit e ficou **Ready**. A conferência na tela confirmou cartões/cabeçalho em cinza e linhas/status neutros, sem os fundos azul-petróleo.
+- Próximos passos: nenhum para esta correção visual.
 
 ### Objetivo do produto
 
