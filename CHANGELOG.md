@@ -151,7 +151,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - Se a consulta individual estiver truncada nos primeiros 500 destinatários, a exportação é desabilitada para não apresentar uma lista parcial como completa. A atividade em memória é limpa ao trocar de workspace.
 - O guia `/docs/resultados` recebeu o passo de extração e explica os campos ausentes e o limite de consulta.
 - Dependência `exceljs` adicionada para gerar o arquivo no cliente sob demanda; locks do pnpm e npm atualizados.
-- Validações: `pnpm exec tsc --noEmit`, `pnpm exec prettier --check` nos arquivos editados, `git diff --check` e `pnpm build` concluídos sem erro. Não foi feita consulta a dados reais, envio de campanha, migration nem operação no Portainer. Publicação do código: em andamento.
+- Validações: `pnpm exec tsc --noEmit`, `pnpm exec prettier --check` nos arquivos editados, `git diff --check` e `pnpm build` concluídos sem erro. Commit `5080605` enviado para `origin/main`; o deploy não foi verificado. Não foi feita consulta a dados reais, envio de campanha, migration nem operação no Portainer.
 - Próximos passos: validar o download com uma campanha de teste e ampliar a consulta paginada caso seja preciso extrair campanhas acima do limite atual de 500 destinatários.
 
 ### 2026-10-08 — Filtro de datas na visão geral
