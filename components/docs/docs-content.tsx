@@ -499,6 +499,17 @@ function ResultsContent() {
           </li>
           <li>
             <span>
+              Para campanhas importadas da BeePhish, abra o detalhe da campanha
+              na visão geral e use <strong>Extrair clicados · Excel</strong> no
+              cabeçalho. A extração consulta todos os resultados e eventos da
+              campanha, mesmo que a lista na tela mostre só os primeiros 500.
+              Nome, sobrenome, e-mail, cargo e departamento vêm da
+              sincronização; gestor e e-mail do gestor ficam em branco porque
+              não são sincronizados atualmente.
+            </span>
+          </li>
+          <li>
+            <span>
               Em <Link href="/campanhas/atividade">Atividade</Link>, consulte
               quem solicitou cada operação, o grupo, a quantidade, o agendamento
               e o resultado.

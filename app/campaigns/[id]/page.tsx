@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { CampaignLogoPicker } from "@/components/campaigns/campaign-logo";
 import { EmailSampleCard } from "@/components/campaigns/email-sample-card";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
@@ -13,6 +14,7 @@ import {
 } from "@/components/people/person-details-modal";
 import { PersonAvatar } from "@/components/people/person-avatar";
 import { VisualCampaignContent } from "@/components/campaigns/visual-campaign-content";
+import { exportClickedRecipients } from "@/lib/campaigns/export-clicked-recipients";
 import { useTheme } from "@/components/theme/theme-provider";
 import {
   readPersonAvatars,
@@ -346,6 +348,7 @@ export default function CampaignPeoplePage() {
   const [excludedEmails, setExcludedEmails] = useState<Set<string>>(
     () => new Set(),
   );
+  const [exportingClicked, setExportingClicked] = useState(false);
 
   useEffect(() => {
     setSelectedPerson(null);
@@ -468,6 +471,114 @@ export default function CampaignPeoplePage() {
     setResults((resultData ?? []) as RawResult[]);
     setEvents((eventData ?? []) as RawEvent[]);
     setLoading(false);
+  }
+
+  async function downloadClickedRecipients() {
+    if (!supabase || !campaign || exportingClicked || !workspaceHasBeephishData)
+      return;
+
+    const workspaceId = activeWorkspaceId;
+    const scopedWorkspaceId = databaseWorkspaceId(workspaceId);
+    const campaignName = campaign.name;
+    const pagePath = window.location.pathname;
+    const isCurrentContext = () =>
+      readActiveWorkspaceId() === workspaceId &&
+      window.location.pathname === pagePath;
+    const pageSize = 500;
+    setExportingClicked(true);
+
+    try {
+      const clickedEmails = new Set<string>();
+      for (let start = 0; ; start += pageSize) {
+        const { data, error: queryError } = await supabase
+          .from("beephish_events")
+          .select("email,event_type")
+          .eq("campaign_id", campaignId)
+          .eq("workspace_id", scopedWorkspaceId)
+          .order("beephish_event_id", { ascending: true })
+          .range(start, start + pageSize - 1);
+        if (queryError) throw queryError;
+        if (!isCurrentContext()) return;
+        const batch = (data ?? []) as Pick<RawEvent, "email" | "event_type">[];
+        for (const event of batch) {
+          if (containsSignal(event.event_type, ["click", "link"])) {
+            const email = normalizeWorkspaceEmail(event.email);
+            if (email) clickedEmails.add(email);
+          }
+        }
+        if (batch.length < pageSize) break;
+      }
+
+      const excluded = await loadWorkspaceExcludedEmails(scopedWorkspaceId);
+      if (!isCurrentContext()) return;
+      const clickedRecipients = [] as Array<{
+        email: string;
+        firstName: string;
+        lastName: string;
+        position: string;
+        department: string;
+        clicked: boolean;
+      }>;
+      for (let start = 0; ; start += pageSize) {
+        const { data, error: queryError } = await supabase
+          .from("beephish_results")
+          .select("email,first_name,last_name,position,department,status")
+          .eq("campaign_id", campaignId)
+          .eq("workspace_id", scopedWorkspaceId)
+          .order("beephish_id", { ascending: true })
+          .range(start, start + pageSize - 1);
+        if (queryError) throw queryError;
+        if (!isCurrentContext()) return;
+        const batch = (data ?? []) as Pick<
+          RawResult,
+          | "email"
+          | "first_name"
+          | "last_name"
+          | "position"
+          | "department"
+          | "status"
+        >[];
+        for (const result of batch) {
+          const email = normalizeWorkspaceEmail(result.email);
+          if (
+            !email ||
+            excluded.has(email) ||
+            (!clickedEmails.has(email) &&
+              !containsSignal(result.status, ["click", "link"]))
+          )
+            continue;
+          clickedRecipients.push({
+            email: result.email?.trim() ?? email,
+            firstName: result.first_name ?? "",
+            lastName: result.last_name ?? "",
+            position: result.position ?? "",
+            department: result.department ?? "",
+            clicked: true,
+          });
+        }
+        if (batch.length < pageSize) break;
+      }
+
+      if (!isCurrentContext()) return;
+      const count = await exportClickedRecipients(
+        campaignName,
+        campaignId,
+        clickedRecipients,
+        isCurrentContext,
+      );
+      if (!isCurrentContext()) return;
+      if (count === 0) {
+        toast.info("Nenhum clique registrado nesta campanha.");
+      } else {
+        toast.success("Planilha pronta", {
+          description: `${count} pessoa(s) com clique registrado.`,
+        });
+      }
+    } catch {
+      toast.error("Não foi possível extrair os clicados. Tente novamente.");
+    } finally {
+      setExportingClicked(false);
+    }
   }
 
   const people = useMemo<Person[]>(() => {
@@ -640,7 +751,17 @@ export default function CampaignPeoplePage() {
       activeSection="overview"
       title="Campanha"
       headerAction={
-        <div className="flex flex-none items-center gap-3 max-[720px]:w-full max-[720px]:justify-between">
+        <div className="flex flex-none flex-wrap items-center gap-3 max-[720px]:w-full max-[720px]:justify-between">
+          <button
+            className="inline-flex h-10 items-center justify-center rounded-[var(--radius-control)] border border-[var(--line)] bg-transparent px-3 text-[12px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
+            type="button"
+            disabled={
+              exportingClicked || !workspaceHasBeephishData || !supabase
+            }
+            onClick={() => void downloadClickedRecipients()}
+          >
+            {exportingClicked ? "Extraindo…" : "Extrair clicados · Excel"}
+          </button>
           <span className="inline-flex items-center gap-2 text-[11px] text-[#69717d]">
             <span className="size-2 rounded-full bg-[var(--success)] shadow-[0_0_0_4px_rgba(159,197,45,0.14)]" />
             {sessionEmail ?? "Modo demonstração"}

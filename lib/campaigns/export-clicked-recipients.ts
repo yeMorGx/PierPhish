@@ -3,7 +3,11 @@ type ClickedRecipient = {
   firstName: string;
   lastName: string;
   position: string;
-  clickedAt: string;
+  department?: string;
+  manager?: string;
+  managerEmail?: string;
+  clickedAt?: string;
+  clicked?: boolean;
 };
 
 const columns = [
@@ -32,11 +36,16 @@ export async function exportClickedRecipients(
   campaignName: string,
   campaignId: number,
   recipients: ClickedRecipient[],
+  canDownload: () => boolean = () => true,
 ) {
   const uniqueClicked = new Map<string, ClickedRecipient>();
   for (const recipient of recipients) {
     const email = recipient.email.trim().toLowerCase();
-    if (email && recipient.clickedAt && !uniqueClicked.has(email)) {
+    if (
+      email &&
+      (recipient.clickedAt || recipient.clicked) &&
+      !uniqueClicked.has(email)
+    ) {
       uniqueClicked.set(email, recipient);
     }
   }
@@ -67,9 +76,9 @@ export async function exportClickedRecipients(
       lastName: recipient.lastName,
       email: recipient.email,
       position: recipient.position,
-      department: "",
-      manager: "",
-      managerEmail: "",
+      department: recipient.department ?? "",
+      manager: recipient.manager ?? "",
+      managerEmail: recipient.managerEmail ?? "",
     });
     row.eachCell({ includeEmpty: true }, (cell) => {
       cell.numFmt = "@";
@@ -78,6 +87,7 @@ export async function exportClickedRecipients(
   }
 
   const buffer = await workbook.xlsx.writeBuffer();
+  if (!canDownload()) return 0;
   const fileBytes = new Uint8Array(buffer as unknown as ArrayBuffer);
   const file = new Blob([fileBytes], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

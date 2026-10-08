@@ -144,6 +144,14 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-10-08 — Extração de clicados das campanhas BeePhish
+
+- O detalhe de campanhas sincronizadas (`/campaigns/[id]`) agora oferece “Extrair clicados · Excel” nos dois modos de visualização. A extração usa os resultados e eventos do workspace ativo, percorre todas as páginas de 500 registros e considera clique no status ou no histórico de eventos, sem depender do recorte exibido na tela.
+- A planilha usa o mesmo modelo de sete colunas da entrega anterior. Nome, sobrenome, e-mail, cargo e departamento vêm dos resultados sincronizados; gestor e e-mail do gestor ficam vazios porque a integração atual não os fornece. Um e-mail aparece uma vez, e os endereços excluídos das estatísticas do workspace não entram no arquivo.
+- A geração permanece no navegador, sem nova persistência de dados pessoais. A mudança de workspace durante a extração impede o download do workspace anterior. O guia `/docs/resultados` foi atualizado.
+- Validações: `pnpm exec tsc --noEmit`, Prettier e `git diff --check` passaram. `pnpm build` parou antes da compilação com `EINVAL` no arquivo ignorado `.next/diagnostics/framework.json`, marcado pelo OneDrive como ponto de nova análise; a remoção pontual desse cache foi recusada pela revisão automática de comandos (`blocked by policy`). Não foi feita consulta a dados reais, migration ou alteração na integração remota. Commit/push: em andamento.
+- Próximos passos: verificar o download numa campanha BeePhish autorizada e confirmar se os campos de gestor existem na origem antes de propor sua sincronização.
+
 ### 2026-10-08 — Extração de pessoas que clicaram
 
 - Na lista de campanhas, “Ver atividade e extrair clicados” carrega a atividade individual pela conexão privada. O painel passa a oferecer “Extrair clicados · Excel”, com contagem de pessoas únicas que tiveram clique registrado.
