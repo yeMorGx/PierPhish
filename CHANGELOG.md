@@ -8,7 +8,7 @@ Este arquivo registra o estado do projeto para continuar o trabalho em outro com
 
 Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos, endereços de destinatários ou outros segredos. Diferencie claramente código pronto, configuração aplicada em produção e validação ainda não feita.
 
-## Estado do projeto — atualizado em 29/09/2026
+## Estado do projeto — atualizado em 08/10/2026
 
 ### Contraste e espaçamento da gestão do workspace — 2026-09-29
 
@@ -143,6 +143,14 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 6. Manter a interface e a documentação voltadas ao PierSec, sem revelar o fornecedor do motor de campanhas aos usuários finais.
 
 ## Histórico
+
+### 2026-10-08 — Filtro de datas na visão geral
+
+- A visão geral agora filtra campanhas iniciadas no dia, na semana (segunda a domingo), no mês ou no ano da data de referência. A opção “Todo o período” preserva a visão completa; a pessoa pode escolher uma data no calendário HeroUI e avançar ou voltar um período. O próximo período é desabilitado quando ainda não começou.
+- O recorte é aplicado à lista, aos gráficos e às métricas dos dois modos do dashboard, além das contagens no filtro de empresas. Campanhas sem data de início só aparecem na visão completa. A interface explica que os resultados são totais acumulados até a última sincronização, e não eventos que ocorreram dentro do período escolhido.
+- Foram adicionadas as dependências HeroUI v3 e seus estilos, com controles adaptados aos tokens claro/escuro do PierSec. O texto secundário do filtro ganhou token próprio para manter contraste no tema claro. Os arquivos de lock do pnpm e do npm foram atualizados; o lock do npm também precisava absorver dependências já presentes no manifesto antes desta tarefa, por isso o diff é maior.
+- Validações: `pnpm build`, `pnpm exec tsc --noEmit`, Prettier nos arquivos alterados e `git diff --check` passaram. Não executei testes automatizados, campanha ou operação remota. A interface ainda não foi conferida manualmente com dados reais após publicação.
+- Próximos passos: conferir o filtro na interface com campanhas reais em ambos os temas após a publicação.
 
 ### 2026-09-28 — CSS do HTML, personalização do nome e entrega no spam
 

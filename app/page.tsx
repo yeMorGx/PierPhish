@@ -4,6 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
+import {
+  DashboardDateFilter,
+  getDashboardDateRange,
+  type DashboardPeriod,
+} from "@/components/dashboard/dashboard-date-filter";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { VisualDashboardContent } from "@/components/dashboard/visual-dashboard-content";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -29,6 +34,7 @@ import {
   useActiveWorkspaceId,
 } from "@/lib/use-active-workspace";
 import { readActiveWorkspaceId } from "@/lib/company-data";
+import type { CalendarDate } from "@internationalized/date";
 import {
   loadWorkspaceExcludedEmails,
   normalizeWorkspaceEmail,
@@ -77,12 +83,21 @@ function pct(value: number, total: number) {
   return total ? Math.round((value / total) * 100) : 0;
 }
 
+function startedInRange(
+  campaign: Campaign,
+  range: ReturnType<typeof getDashboardDateRange>,
+) {
+  if (!range) return true;
+  if (!campaign.launch_date) return false;
+  const startedAt = Date.parse(campaign.launch_date);
+  return startedAt >= range.start.getTime() && startedAt < range.end.getTime();
+}
+
 function isGlobalAdmin(user: ReturnType<typeof useAuth>["user"]) {
   if (!isSupabaseConfigured) return true;
   if (user?.email?.toLowerCase() === "admin@teste.com") return true;
   const metadata = user?.app_metadata as
-    | { role?: unknown; is_admin?: unknown }
-    | undefined;
+    { role?: unknown; is_admin?: unknown } | undefined;
   return (
     metadata?.is_admin === true ||
     metadata?.role === "admin" ||
@@ -124,6 +139,8 @@ export default function Home() {
         })),
   );
   const [selectedCompanyId, setSelectedCompanyId] = useState("all");
+  const [selectedPeriod, setSelectedPeriod] = useState<DashboardPeriod>("all");
+  const [referenceDate, setReferenceDate] = useState<CalendarDate | null>(null);
   const initialSyncStartedRef = useRef(false);
   const canSyncWorkspace =
     isGlobalAdmin(user) ||
@@ -131,14 +148,21 @@ export default function Home() {
     activeWorkspaceRole === "admin" ||
     activeWorkspaceRole === "analyst";
 
+  const dateRange = useMemo(
+    () => getDashboardDateRange(selectedPeriod, referenceDate),
+    [selectedPeriod, referenceDate],
+  );
   const filteredCampaigns = useMemo(
     () =>
-      selectedCompanyId === "all"
-        ? campaigns
-        : campaigns.filter(
-            (campaign) => campaign.company_id === selectedCompanyId,
-          ),
-    [campaigns, selectedCompanyId],
+      campaigns.filter((campaign) => {
+        if (
+          selectedCompanyId !== "all" &&
+          campaign.company_id !== selectedCompanyId
+        )
+          return false;
+        return startedInRange(campaign, dateRange);
+      }),
+    [campaigns, dateRange, selectedCompanyId],
   );
 
   const companyFilters = useMemo<DashboardCompanyFilterOption[]>(
@@ -151,10 +175,12 @@ export default function Home() {
           name: company.name,
           logoUrl: company.logoUrl,
           campaignCount: campaigns.filter(
-            (campaign) => campaign.company_id === company.id,
+            (campaign) =>
+              campaign.company_id === company.id &&
+              startedInRange(campaign, dateRange),
           ).length,
         })),
-    [activeWorkspaceId, campaigns, companies],
+    [activeWorkspaceId, campaigns, companies, dateRange],
   );
 
   const campaignBars = useMemo<CampaignBar[]>(
@@ -554,6 +580,13 @@ export default function Home() {
         selectedCompanyId={selectedCompanyId}
         onChange={setSelectedCompanyId}
         showLayoutControl={themePreferences.dashboardMode === "visual"}
+      />
+      <DashboardDateFilter
+        period={selectedPeriod}
+        reference={referenceDate}
+        onPeriodChange={setSelectedPeriod}
+        onReferenceChange={setReferenceDate}
+        campaignCount={filteredCampaigns.length}
       />
       {themePreferences.dashboardMode === "visual" ? (
         <div data-tour="dashboard-content">

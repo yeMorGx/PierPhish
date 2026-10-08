@@ -1,6 +1,7 @@
 @import "react-grid-layout/css/styles.css";
 @import "react-resizable/css/styles.css";
 @import "tailwindcss";
+@import "@heroui/styles";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -19,6 +20,7 @@
   --muted: #f6f6f6;
   --muted-soft: #a1a1a1;
   --text-muted: #767676;
+  --dashboard-date-muted: #666666;
   --chart-series: #737373;
   --line: #e8e8e8;
   --line-soft: #f0f0f0;
@@ -111,6 +113,7 @@ html[data-theme="dark"] {
   --muted: #262626;
   --muted-soft: #737373;
   --text-muted: #a1a1a1;
+  --dashboard-date-muted: #a1a1a1;
   --chart-series: #a1a1a1;
   --line: #ffffff1a;
   --line-soft: #ffffff12;
@@ -14730,6 +14733,186 @@ html[data-theme][data-card-style] .companies-security-note svg {
 }
 
 /* Report controls: compact enough to sit directly under the header. */
+.dashboard-date-filter {
+  display: grid;
+  gap: 12px;
+  margin: 0 4px 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.dashboard-date-filter-top,
+.dashboard-date-filter-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dashboard-date-filter h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dashboard-date-filter-top p,
+.dashboard-date-filter-note {
+  margin: 4px 0 0;
+  color: var(--dashboard-date-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dashboard-date-periods {
+  flex: none;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface-soft);
+}
+
+.dashboard-date-period {
+  min-height: 34px;
+  padding: 0 11px;
+  border-radius: 7px;
+  color: var(--dashboard-date-muted);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  transition:
+    background-color 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.dashboard-date-period[data-selected="true"] {
+  color: var(--surface);
+  background: var(--ink);
+}
+
+.dashboard-date-current {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.dashboard-date-current strong {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.dashboard-date-current span {
+  color: var(--dashboard-date-muted);
+  font-size: 12px;
+}
+
+.dashboard-date-controls {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+
+.dashboard-date-nav,
+.dashboard-date-today {
+  display: inline-grid;
+  min-width: 36px;
+  height: 36px;
+  place-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: transparent;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dashboard-date-nav:disabled {
+  color: var(--text-muted);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dashboard-date-picker {
+  display: grid;
+  gap: 3px;
+  min-width: 180px;
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.dashboard-date-picker .date-input-group {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.dashboard-date-picker .date-input-group__segment {
+  color: var(--ink);
+}
+
+.dashboard-date-popover {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.dashboard-date-period:focus-visible,
+.dashboard-date-nav:focus-visible,
+.dashboard-date-today:focus-visible,
+.dashboard-date-picker :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.dashboard-date-nav:not(:disabled):hover,
+.dashboard-date-today:hover,
+.dashboard-date-picker .date-input-group:hover {
+  border-color: var(--border-hover, var(--ink));
+}
+
+@media (max-width: 920px) {
+  .dashboard-date-filter-top,
+  .dashboard-date-filter-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 580px) {
+  .dashboard-date-filter {
+    padding: 16px;
+  }
+
+  .dashboard-date-periods {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .dashboard-date-period {
+    flex: 1 0 auto;
+  }
+
+  .dashboard-date-controls {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-date-period {
+    transition: none;
+  }
+}
+
 .dashboard-toolbar {
   display: flex;
   align-items: center;
