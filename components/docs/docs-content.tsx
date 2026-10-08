@@ -489,6 +489,16 @@ function ResultsContent() {
           </li>
           <li>
             <span>
+              Na atividade da campanha, use{" "}
+              <strong>Extrair clicados · Excel</strong>
+              para baixar uma pessoa por e-mail com clique registrado. As
+              colunas de departamento e gestor ficam vazias quando esses dados
+              não são fornecidos. A extração não é oferecida se a consulta
+              estiver limitada aos primeiros 500 destinatários.
+            </span>
+          </li>
+          <li>
+            <span>
               Em <Link href="/campanhas/atividade">Atividade</Link>, consulte
               quem solicitou cada operação, o grupo, a quantidade, o agendamento
               e o resultado.

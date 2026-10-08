@@ -144,6 +144,16 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-10-08 — Extração de pessoas que clicaram
+
+- Na lista de campanhas, “Ver atividade e extrair clicados” carrega a atividade individual pela conexão privada. O painel passa a oferecer “Extrair clicados · Excel”, com contagem de pessoas únicas que tiveram clique registrado.
+- O arquivo `.xlsx` é criado no navegador depois da descriptografia da resposta, sem nova cópia de dados pessoais no servidor. Ele mantém a aba “Clicados únicos” e as sete colunas do exemplo fornecido: Nome, Sobrenome, E-mail, Cargo, Departamento, Gestor e E-mail do Gestor. Os três últimos campos ficam vazios porque não são fornecidos pelo serviço atual; o aviso aparece no painel. A planilha de exemplo foi inspecionada apenas para estrutura e não foi adicionada ao repositório.
+- Se a consulta individual estiver truncada nos primeiros 500 destinatários, a exportação é desabilitada para não apresentar uma lista parcial como completa. A atividade em memória é limpa ao trocar de workspace.
+- O guia `/docs/resultados` recebeu o passo de extração e explica os campos ausentes e o limite de consulta.
+- Dependência `exceljs` adicionada para gerar o arquivo no cliente sob demanda; locks do pnpm e npm atualizados.
+- Validações: `pnpm exec tsc --noEmit`, `pnpm exec prettier --check` nos arquivos editados, `git diff --check` e `pnpm build` concluídos sem erro. Não foi feita consulta a dados reais, envio de campanha, migration nem operação no Portainer. Publicação do código: em andamento.
+- Próximos passos: validar o download com uma campanha de teste e ampliar a consulta paginada caso seja preciso extrair campanhas acima do limite atual de 500 destinatários.
+
 ### 2026-10-08 — Filtro de datas na visão geral
 
 - A visão geral agora filtra campanhas iniciadas no dia, na semana (segunda a domingo), no mês ou no ano da data de referência. A opção “Todo o período” preserva a visão completa; a pessoa pode escolher uma data no calendário HeroUI e avançar ou voltar um período. O próximo período é desabilitado quando ainda não começou.

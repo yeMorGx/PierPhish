@@ -20,6 +20,7 @@ import {
   decryptSecureReturn,
   type EncryptedReturn,
 } from "@/lib/campaigns/secure-return";
+import { exportClickedRecipients } from "@/lib/campaigns/export-clicked-recipients";
 
 type CampaignStats = {
   total: number;
@@ -294,11 +295,41 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
     truncated: boolean;
   } | null>(null);
   const [campaignActivityError, setCampaignActivityError] = useState("");
+  const [exportingClicked, setExportingClicked] = useState(false);
   const [loadingActivityCampaignId, setLoadingActivityCampaignId] = useState<
     number | null
   >(null);
   const activityHandledRef = useRef("");
   const activityPollInFlightRef = useRef(false);
+
+  useEffect(() => {
+    setCampaignActivity(null);
+    setPendingCampaignActivity(null);
+    setCampaignActivityError("");
+    setLoadingActivityCampaignId(null);
+  }, [activeWorkspaceId]);
+
+  async function downloadClickedRecipients() {
+    if (!campaignActivity || campaignActivity.truncated || exportingClicked)
+      return;
+    setExportingClicked(true);
+    try {
+      const count = await exportClickedRecipients(
+        campaignActivity.campaignName,
+        campaignActivity.campaignId,
+        campaignActivity.recipients,
+      );
+      if (count > 0) {
+        toast.success("Planilha pronta", {
+          description: `${numberFormat(count)} pessoa(s) com clique registrado.`,
+        });
+      }
+    } catch {
+      toast.error("Não foi possível gerar a planilha de clicados.");
+    } finally {
+      setExportingClicked(false);
+    }
+  }
 
   const loadConnectors = useCallback(
     async (quiet = false) => {
@@ -390,6 +421,9 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
   );
   const clickTrackingCheckAvailable =
     campaignConnector?.snapshot.capabilities?.clickTrackingCheck === true;
+  const clickedRecipientCount =
+    campaignActivity?.recipients.filter((recipient) => recipient.clickedAt)
+      .length ?? 0;
   const campaignPageCount = Math.max(
     1,
     Math.ceil(campaigns.length / campaignPageSize),
@@ -1594,7 +1628,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                             >
                               {loadingActivityCampaignId === campaign.id
                                 ? "Atualizando…"
-                                : "Ver atividade individual"}
+                                : "Ver atividade e extrair clicados"}
                             </button>
                           </td>
                           <td className="px-4 py-3.5 text-[var(--text-muted)]">
@@ -1683,19 +1717,46 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                   armazenados em texto aberto.
                 </p>
                 {campaignActivity.truncated && (
-                  <p className="mt-2 mb-0 text-[10px] text-[var(--text-muted)]">
+                  <p className="mt-2 mb-0 text-[11px] leading-relaxed text-[var(--ink)]">
                     Exibindo os primeiros 500 destinatários. Os totais agregados
-                    da campanha continuam completos.
+                    da campanha continuam completos. A exportação fica
+                    indisponível para evitar uma lista parcial.
+                  </p>
+                )}
+                <p className="mt-2 mb-0 text-[11px] leading-relaxed text-[var(--ink)]">
+                  A planilha segue as colunas do modelo enviado. Departamento,
+                  gestor e e-mail do gestor ficam em branco porque a conexão não
+                  fornece esses campos.
+                </p>
+                {clickedRecipientCount === 0 && !campaignActivity.truncated && (
+                  <p className="mt-2 mb-0 text-[11px] leading-relaxed text-[var(--ink)]">
+                    Nenhum clique registrado para extrair nesta campanha.
                   </p>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => setCampaignActivity(null)}
-                className="inline-flex h-8 items-center justify-center rounded-full border border-[var(--line)] px-3 text-[10px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
-              >
-                Fechar
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={
+                    exportingClicked ||
+                    campaignActivity.truncated ||
+                    clickedRecipientCount === 0
+                  }
+                  onClick={() => void downloadClickedRecipients()}
+                  className="inline-flex h-9 items-center justify-center rounded-[var(--radius-control)] border border-[var(--line)] px-3 text-[11px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {exportingClicked
+                    ? "Gerando planilha…"
+                    : `Extrair clicados · Excel (${clickedRecipientCount})`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCampaignActivity(null)}
+                  className="inline-flex h-9 items-center justify-center rounded-[var(--radius-control)] border border-[var(--line)] px-3 text-[11px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+                >
+                  Fechar
+                </button>
+              </div>
             </div>
             {campaignActivity.recipients.length ? (
               <div className="overflow-x-auto">
