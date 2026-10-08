@@ -144,6 +144,14 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-10-08 — Auditoria UI/UX Impeccable
+
+- Feita auditoria de design e técnica em duas avaliações independentes, com inspeção de código e das telas de produção do dashboard, campanhas, criação, detalhe, documentação e workspaces. A revisão mobile cobriu `/campanhas` em 390 px; não foi feita validação exaustiva em todos os aparelhos.
+- Resultado: 25/40 nas heurísticas de Nielsen. Prioridades: tipografia e contraste na tabela operacional, tradução dos status no detalhe, agrupamento da navegação de campanhas, localização da exportação junto aos resultados e indicação da rolagem móvel/alvos de toque. O detector Impeccable retornou zero alertas nos nove componentes de campanhas examinados; os problemas listados vieram da inspeção visual e do código.
+- O relatório foi salvo em `.impeccable/critique/2026-10-08T18-09-35Z__app.md`; a auditoria histórica de 24/09/2026 foi preservada. A série 22/40 → 25/40 é apenas indicativa porque as telas e condições de avaliação mudaram.
+- Nenhuma interface, dado, campanha ou configuração remota foi alterada. O navegador não permitiu injetar o overlay do detector; a inspeção usou capturas e código. Commit/push: em andamento.
+- Próximos passos: escolher se a primeira rodada corrige apenas os itens P1 ou também a navegação, a exportação e a experiência móvel; reavaliar contraste e foco após as alterações.
+
 ### 2026-10-08 — Extração de clicados das campanhas BeePhish
 
 - O detalhe de campanhas sincronizadas (`/campaigns/[id]`) agora oferece “Extrair clicados · Excel” nos dois modos de visualização. A extração usa os resultados e eventos do workspace ativo, percorre todas as páginas de 500 registros e considera clique no status ou no histórico de eventos, sem depender do recorte exibido na tela.
