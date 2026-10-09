@@ -192,6 +192,8 @@ function WorkspacePageContent() {
     useState<WorkspaceDraft>(emptyWorkspace);
   const [createError, setCreateError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [workspacesLoading, setWorkspacesLoading] = useState(true);
+  const [workspaceLoadError, setWorkspaceLoadError] = useState(false);
 
   const canCreateWorkspace = isGlobalAdmin(user);
   const selectedWorkspace = selectedWorkspaceId
@@ -228,37 +230,49 @@ function WorkspacePageContent() {
     const local = readLocalWorkspaces().map(localWorkspaceSummary);
     if (!isSupabaseConfigured) {
       mapWorkspaces(local, true);
+      setWorkspacesLoading(false);
+      setWorkspaceLoadError(false);
       return;
     }
     if (!ready || !user || !supabase) return;
-    const accessToken = await getAccessToken();
-    if (!accessToken) return;
-    const response = await fetch("/api/workspaces", {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    const body = (await response.json().catch(() => ({}))) as {
-      workspaces?: Array<{
-        description?: string;
-        environment?: WorkspaceEnvironment;
-        id: string;
-        logoUrl?: string | null;
-        name: string;
-        role?: WorkspaceSummary["role"];
-      }>;
-    };
-    if (!response.ok) return;
-    mapWorkspaces(
-      (body.workspaces ?? []).map((workspace) => ({
-        description: workspace.description ?? "",
-        environment:
-          workspace.environment === "production" ? "production" : "test",
-        id: workspace.id,
-        initial: workspace.name.slice(0, 1).toUpperCase(),
-        logoUrl: workspace.logoUrl,
-        name: workspace.name,
-        role: workspace.role,
-      })),
-    );
+    try {
+      const accessToken = await getAccessToken();
+      if (!accessToken) throw new Error("Sessão não encontrada");
+      const response = await fetch("/api/workspaces", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!response.ok) throw new Error("Falha ao carregar workspaces");
+      const body = (await response.json()) as {
+        workspaces?: Array<{
+          description?: string;
+          environment?: WorkspaceEnvironment;
+          id: string;
+          logoUrl?: string | null;
+          name: string;
+          role?: WorkspaceSummary["role"];
+        }>;
+      };
+      if (!Array.isArray(body.workspaces)) {
+        throw new Error("Resposta de workspaces incompleta");
+      }
+      mapWorkspaces(
+        body.workspaces.map((workspace) => ({
+          description: workspace.description ?? "",
+          environment:
+            workspace.environment === "production" ? "production" : "test",
+          id: workspace.id,
+          initial: workspace.name.slice(0, 1).toUpperCase(),
+          logoUrl: workspace.logoUrl,
+          name: workspace.name,
+          role: workspace.role,
+        })),
+      );
+      setWorkspaceLoadError(false);
+    } catch {
+      setWorkspaceLoadError(true);
+    } finally {
+      setWorkspacesLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -361,13 +375,37 @@ function WorkspacePageContent() {
     setCreating(false);
   }
 
-  if (!ready || (isSupabaseConfigured && !user)) {
-    return <div className="workspace-page-loading">Carregando workspaces…</div>;
+  if (!ready || (isSupabaseConfigured && !user) || workspacesLoading) {
+    return (
+      <div className="workspace-page-loading" role="status">
+        Carregando workspaces…
+      </div>
+    );
   }
 
   return (
     <DashboardShell activeSection="workspaces" title="Workspaces">
       <div className="workspace-page" data-tour="workspaces-content">
+        {workspaceLoadError && (
+          <div
+            className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink)]"
+            role="alert"
+          >
+            <span>
+              Não foi possível carregar os workspaces. Tente novamente.
+            </span>
+            <button
+              className="min-h-10 rounded-[var(--radius-control)] border border-[var(--line)] px-4 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+              type="button"
+              onClick={() => {
+                setWorkspacesLoading(true);
+                void syncWorkspaces();
+              }}
+            >
+              Tentar novamente
+            </button>
+          </div>
+        )}
         <header className="workspace-page-intro">
           <div>
             <h1>Gerenciar workspaces</h1>
@@ -460,7 +498,7 @@ function WorkspacePageContent() {
                   <Icon name="arrow" size={15} />
                 </button>
               ))}
-              {!workspaces.length && (
+              {!workspaces.length && !workspaceLoadError && (
                 <div className="workspace-page-empty">
                   <Icon name="layers" size={18} />
                   <strong>Nenhum workspace atribuído</strong>

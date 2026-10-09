@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { ClickedExportAction } from "@/components/campaigns/clicked-export-action";
 import { CampaignLogoPicker } from "@/components/campaigns/campaign-logo";
 import { EmailSampleCard } from "@/components/campaigns/email-sample-card";
 import { PersonAvatar } from "@/components/people/person-avatar";
+import { campaignSignalLabel } from "@/lib/campaigns/campaign-signal-label";
 import type { PersonDetails } from "@/components/people/person-details-modal";
 import { Icon } from "@/components/ui/icon";
 
 type CampaignFilter = "all" | "opened" | "clicked" | "reported";
 
 type VisualCampaignContentProps = {
+  canExportClicked: boolean;
   campaign: {
     id: number;
     name: string;
@@ -26,6 +29,8 @@ type VisualCampaignContentProps = {
     occurred_at: string | null;
   }>;
   filter: CampaignFilter;
+  exportingClicked: boolean;
+  onExportClicked: () => void;
   onFilterChange: (value: CampaignFilter) => void;
   onSearchChange: (value: string) => void;
   onSelectPerson: (person: PersonDetails) => void;
@@ -57,35 +62,36 @@ function formatDateTime(value: string | null) {
   }).format(new Date(value));
 }
 
-function signalLabel(value: string | null) {
-  const normalized = value?.toLowerCase() ?? "";
-  if (normalized.includes("click") || normalized.includes("link"))
-    return "Clicou";
-  if (normalized.includes("report")) return "Reportou";
-  if (normalized.includes("open")) return "Abriu";
-  if (normalized.includes("deliver")) return "Entregue";
-  return value || "Evento";
-}
-
 function percent(value: number, total: number) {
   return total ? Math.round((value / total) * 100) : 0;
 }
 
 function SignalDots({ person }: { person: PersonDetails }) {
   const signals = [
-    person.opened,
-    person.clicked,
-    person.reported,
-    person.submitted,
+    { active: person.opened, label: "Abriu" },
+    { active: person.clicked, label: "Clicou" },
+    { active: person.reported, label: "Reportou" },
+    { active: person.submitted, label: "Enviou dados" },
   ];
 
   return (
     <span
       className="visual-campaign-signal-dots"
-      aria-label="Sinais observados"
+      role="img"
+      aria-label={`Sinais: ${
+        signals
+          .filter((signal) => signal.active)
+          .map((signal) => signal.label)
+          .join(", ") || "nenhum"
+      }`}
     >
-      {signals.map((active, index) => (
-        <i className={active ? `is-active signal-${index}` : ""} key={index} />
+      {signals.map((signal) => (
+        <i
+          aria-hidden="true"
+          className={signal.active ? "is-active" : ""}
+          key={signal.label}
+          title={signal.label}
+        />
       ))}
     </span>
   );
@@ -115,9 +121,12 @@ function Ring({ value }: { value: number }) {
 }
 
 export function VisualCampaignContent({
+  canExportClicked,
   campaign,
   events,
+  exportingClicked,
   filter,
+  onExportClicked,
   onFilterChange,
   onSearchChange,
   onSelectPerson,
@@ -237,7 +246,7 @@ export function VisualCampaignContent({
           </div>
           <div
             className="visual-campaign-filter-row"
-            role="tablist"
+            role="group"
             aria-label="Filtrar sinais"
           >
             {filterItems.map(([value, label]) => (
@@ -245,13 +254,19 @@ export function VisualCampaignContent({
                 className={filter === value ? "is-selected" : ""}
                 key={value}
                 onClick={() => onFilterChange(value)}
-                role="tab"
-                aria-selected={filter === value}
+                aria-pressed={filter === value}
                 type="button"
               >
                 {label}
               </button>
             ))}
+          </div>
+          <div className="mt-4">
+            <ClickedExportAction
+              available={canExportClicked}
+              busy={exportingClicked}
+              onExport={onExportClicked}
+            />
           </div>
           <div className="visual-campaign-person-list">
             {visiblePeople.map((person) => (
@@ -309,7 +324,7 @@ export function VisualCampaignContent({
               >
                 <i
                   className={
-                    signalLabel(event.event_type)
+                    campaignSignalLabel(event.event_type)
                       .toLowerCase()
                       .includes("clicou")
                       ? "is-click"
@@ -317,7 +332,7 @@ export function VisualCampaignContent({
                   }
                 />
                 <div>
-                  <strong>{signalLabel(event.event_type)}</strong>
+                  <strong>{campaignSignalLabel(event.event_type)}</strong>
                   <small>{event.email ?? "Pessoa não identificada"}</small>
                   <time>{formatDateTime(event.occurred_at)}</time>
                 </div>

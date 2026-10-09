@@ -144,6 +144,17 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-10-09 — Correções da auditoria UI/UX
+
+- A lista de campanhas ganhou tipografia operacional maior, causa de falha legível, botão por linha com alvo de 44 px e instrução visível de rolagem horizontal em telas estreitas. O painel de atividade individual também teve texto e controles ampliados. `--text-muted` do tema claro passou a `#666666` para superar a meta de contraste nas superfícies claras.
+- Os estados conhecidos do detalhe das campanhas importadas agora recebem rótulos em português, incluindo envio de dados e falha; sinais e filtros continuam com a classificação correta. A exportação de clicados foi colocada junto da lista de pessoas nos dois modos, com explicação de que ignora o filtro visual. A documentação acompanha a mudança.
+- O menu de campanhas agrupa as oito rotas em Acompanhar, Preparar e Configurar. A paginação ganhou rótulos acessíveis em português e alvos maiores. O detalhe visual passou a ter filtros com estado acessível, foco visível e texto maior.
+- O gráfico de abertura mantém nomes completos nos dados e no tooltip, mesmo com eixo abreviado; foi removido um link que apontava para a própria seção. A página de workspaces evita mostrar “nenhum” enquanto carrega e apresenta uma recuperação para falha de leitura.
+- O registro da auditoria de 08/10 foi encerrado após tratar os cinco itens priorizados P1/P2.
+- Validações: `pnpm exec tsc --noEmit`, Prettier nos arquivos alterados, `pnpm build`, detector Impeccable (zero alertas nos componentes revisados) e `git diff --check` concluídos. O texto muted do tema claro agora mede entre 5,31:1 e 5,74:1 nas superfícies verificadas. Nenhuma campanha, destinatário, configuração remota ou migration foi alterada.
+- Entrega: commit e push pendentes; a publicação e a revisão das telas em desktop/mobile serão registradas depois da verificação no ambiente publicado.
+- Próximos passos: conferir o deploy em produção, revisar campanhas e dashboard em desktop/mobile e verificar contraste/interações nos temas claro e escuro.
+
 ### 2026-10-08 — Auditoria UI/UX Impeccable
 
 - Feita auditoria de design e técnica em duas avaliações independentes, com inspeção de código e das telas de produção do dashboard, campanhas, criação, detalhe, documentação e workspaces. A revisão mobile cobriu `/campanhas` em 390 px; não foi feita validação exaustiva em todos os aparelhos.

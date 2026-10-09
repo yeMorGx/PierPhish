@@ -139,7 +139,8 @@ function Ring({ value }: { value: number }) {
 
 function CampaignOpeningsChart({ campaigns }: { campaigns: CampaignBar[] }) {
   const data = campaigns.slice(0, 8).map((campaign) => ({
-    name: campaign.name.split(" ").slice(0, 2).join(" "),
+    id: campaign.id,
+    name: campaign.name,
     rate: campaign.rate,
   }));
 
@@ -161,6 +162,9 @@ function CampaignOpeningsChart({ campaigns }: { campaigns: CampaignBar[] }) {
           <XAxis
             axisLine={false}
             dataKey="name"
+            tickFormatter={(name: string) =>
+              name.split(" ").slice(0, 2).join(" ")
+            }
             tick={{ fill: "var(--text-muted)", fontSize: 11 }}
             tickLine={false}
           />
@@ -190,6 +194,13 @@ function CampaignOpeningsChart({ campaigns }: { campaigns: CampaignBar[] }) {
           />
         </BarChart>
       </ResponsiveContainer>
+      <ul className="sr-only">
+        {data.map((campaign) => (
+          <li key={campaign.id}>
+            {campaign.name}: {campaign.rate}% de abertura
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -381,9 +392,6 @@ export function VisualDashboardContent({
             </span>
             <strong>{totals.campaigns}</strong>
           </div>
-          <Link href="#campaign-overview" aria-label="Ver todas as campanhas">
-            <Icon name="arrow" size={18} />
-          </Link>
         </div>
         <div className="visual-dashboard-campaign-tiles">
           {campaignTiles.map((campaign) => (
@@ -392,6 +400,7 @@ export function VisualDashboardContent({
               href={`/campaigns/${campaign.id}`}
               key={campaign.id}
               aria-label={`${campaign.name}, ${campaign.openRate}% de abertura`}
+              title={campaign.name}
             >
               <div className="visual-dashboard-campaign-tile-top">
                 <CampaignLogo

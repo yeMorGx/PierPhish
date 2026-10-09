@@ -19,7 +19,7 @@
   --ink-strong: #000000;
   --muted: #f6f6f6;
   --muted-soft: #a1a1a1;
-  --text-muted: #767676;
+  --text-muted: #666666;
   --dashboard-date-muted: #666666;
   --chart-series: #737373;
   --line: #e8e8e8;
@@ -12873,13 +12873,13 @@ html[data-theme="dark"] .settings-page {
   font-size: 25px;
   font-weight: 400;
   line-height: 1;
-  letter-spacing: -0.08em;
+  letter-spacing: -0.03em;
 }
 
 .visual-campaign-card-head > span {
   color: var(--text-muted);
   font-family: var(--font-data);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .visual-campaign-card-head > svg {
@@ -12892,7 +12892,7 @@ html[data-theme="dark"] .settings-page {
 
 .visual-campaign-controls label {
   display: flex;
-  height: 38px;
+  min-height: 44px;
   align-items: center;
   gap: 8px;
   border: 1px solid var(--line-soft);
@@ -12904,6 +12904,8 @@ html[data-theme="dark"] .settings-page {
 
 .visual-campaign-controls label:focus-within {
   border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .visual-campaign-controls input {
@@ -12914,11 +12916,11 @@ html[data-theme="dark"] .settings-page {
   color: var(--ink);
   background: transparent;
   font-family: var(--font-data);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .visual-campaign-controls input::placeholder {
-  color: var(--muted-soft);
+  color: var(--text-muted);
 }
 
 .visual-campaign-filter-row {
@@ -12931,14 +12933,14 @@ html[data-theme="dark"] .settings-page {
 }
 
 .visual-campaign-filter-row button {
-  min-height: 28px;
+  min-height: 44px;
   border: 1px solid var(--line-soft);
-  border-radius: 999px;
+  border-radius: var(--radius-control);
   padding: 0 11px;
   color: var(--text-muted);
   background: transparent;
   font-family: var(--font-data);
-  font-size: 10px;
+  font-size: 13px;
   cursor: pointer;
   transition:
     border-color 160ms ease,
@@ -12950,8 +12952,13 @@ html[data-theme="dark"] .settings-page {
 .visual-campaign-filter-row button:focus-visible,
 .visual-campaign-filter-row button.is-selected {
   border-color: var(--ink);
-  color: #ffffff;
+  color: var(--background);
   background: var(--ink);
+}
+
+.visual-campaign-filter-row button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .visual-campaign-person-list {
@@ -12982,7 +12989,11 @@ html[data-theme="dark"] .settings-page {
 .visual-campaign-person:focus-visible {
   border-color: var(--line);
   background: var(--surface);
-  outline: 0;
+}
+
+.visual-campaign-person:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .visual-campaign-person-name {
@@ -13002,7 +13013,7 @@ html[data-theme="dark"] .settings-page {
 .visual-campaign-person-name strong {
   color: var(--ink);
   font-family: var(--font-data);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -13010,11 +13021,11 @@ html[data-theme="dark"] .settings-page {
 .visual-campaign-person-status {
   color: var(--text-muted);
   font-family: var(--font-data);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .visual-campaign-person-status {
-  color: var(--muted-soft);
+  color: var(--text-muted);
   text-align: right;
 }
 
@@ -13031,19 +13042,7 @@ html[data-theme="dark"] .settings-page {
 }
 
 .visual-campaign-signal-dots i.is-active {
-  background: var(--accent);
-}
-
-.visual-campaign-signal-dots i.signal-1.is-active {
-  background: #e69b6a;
-}
-
-.visual-campaign-signal-dots i.signal-2.is-active {
-  background: #91a9b3;
-}
-
-.visual-campaign-signal-dots i.signal-3.is-active {
-  background: #9dbd47;
+  background: var(--ink);
 }
 
 .visual-campaign-person-arrow {
@@ -13056,7 +13055,7 @@ html[data-theme="dark"] .settings-page {
 .visual-campaign-empty-text {
   color: var(--text-muted);
   font-family: var(--font-data);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .visual-campaign-empty {
@@ -13100,7 +13099,7 @@ html[data-theme="dark"] .settings-page {
 }
 
 .visual-campaign-event > i.is-click {
-  background: #e69b6a;
+  background: var(--ink);
 }
 
 .visual-campaign-event > div {
@@ -13114,7 +13113,7 @@ html[data-theme="dark"] .settings-page {
 .visual-campaign-event strong {
   color: var(--ink);
   font-family: var(--font-data);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -13123,13 +13122,13 @@ html[data-theme="dark"] .settings-page {
   overflow: hidden;
   color: var(--text-muted);
   font-family: var(--font-data);
-  font-size: 10px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .visual-campaign-event time {
-  color: var(--muted-soft);
+  color: var(--text-muted);
 }
 
 @media (max-width: 980px) {

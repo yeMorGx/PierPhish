@@ -1477,7 +1477,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 <h3 className="m-0 text-[15px] font-semibold tracking-[-0.03em]">
                   Histórico de solicitações
                 </h3>
-                <p className="mt-1 mb-0 text-[11px] text-[var(--text-muted)]">
+                <p className="mt-1 mb-0 text-[13px] leading-relaxed text-[var(--text-muted)]">
                   Solicitante, grupos, estimativa e resultado de cada ordem
                   confirmada.
                 </p>
@@ -1560,19 +1560,31 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 </p>
               </div>
               <div className="text-right">
-                <span className="block text-[10px] text-[var(--text-muted)]">
+                <span className="block text-[12px] text-[var(--text-muted)]">
                   {numberFormat(campaigns.length)} campanha(s)
                 </span>
-                <span className="mt-1 block text-[9px] text-[var(--text-muted)]">
+                <span className="mt-1 block text-[12px] text-[var(--text-muted)]">
                   Dados de {dateFormat(snapshot?.updatedAt)}
                 </span>
               </div>
             </div>
             {campaigns.length ? (
               <>
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[1020px] border-collapse text-left text-[11px]">
-                    <thead className="bg-[var(--surface-soft)] text-[9px] font-extrabold tracking-[0.1em] text-[var(--text-muted)] uppercase">
+                <p
+                  id="campaigns-scroll-hint"
+                  className="mb-0 px-5 pt-3 text-[12px] text-[var(--text-muted)] xl:sr-only"
+                >
+                  Role horizontalmente para ver todas as colunas.
+                </p>
+                <div
+                  aria-label="Tabela de campanhas e resultados"
+                  aria-describedby="campaigns-scroll-hint"
+                  className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--accent)]"
+                  role="region"
+                  tabIndex={0}
+                >
+                  <table className="w-full min-w-[1020px] border-collapse text-left text-[13px]">
+                    <thead className="bg-[var(--surface-soft)] text-[12px] font-semibold tracking-[0.04em] text-[var(--text-muted)] uppercase">
                       <tr>
                         <th className="px-5 py-3">Campanha</th>
                         <th className="px-4 py-3">Estado</th>
@@ -1602,17 +1614,17 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                           key={campaign.id}
                         >
                           <td className="px-5 py-3.5">
-                            <strong className="block text-[11px] text-[var(--ink)]">
+                            <strong className="block text-[13px] text-[var(--ink)]">
                               {campaign.name}
                             </strong>
-                            <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
+                            <span className="mt-1 block text-[12px] text-[var(--text-muted)]">
                               {[campaign.template, campaign.page]
                                 .filter(Boolean)
                                 .join(" · ") ||
                                 "Modelo e página não informados"}
                             </span>
                             {campaign.groups.length > 0 && (
-                              <span className="mt-1 block text-[10px] text-[var(--text-muted)]">
+                              <span className="mt-1 block text-[12px] text-[var(--text-muted)]">
                                 Grupos: {campaign.groups.join(", ")}
                               </span>
                             )}
@@ -1624,7 +1636,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                               onClick={() =>
                                 void requestCampaignActivity(campaign)
                               }
-                              className="mt-2 inline-flex h-8 items-center justify-center rounded-full border border-[var(--line)] px-3 text-[10px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-wait disabled:opacity-60"
+                              className="mt-2 inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--line)] px-3 text-[12px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-wait disabled:opacity-60"
                             >
                               {loadingActivityCampaignId === campaign.id
                                 ? "Atualizando…"
@@ -1634,7 +1646,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                           <td className="px-4 py-3.5 text-[var(--text-muted)]">
                             <span>{campaignDeliveryStatus(campaign)}</span>
                             {campaignDeliverySummary(campaign) && (
-                              <span className="mt-1 block max-w-[240px] text-[9px] leading-relaxed text-[var(--danger)]">
+                              <span className="mt-1 block max-w-[240px] text-[12px] leading-relaxed text-[var(--campaign-status-critical)]">
                                 {campaignDeliverySummary(campaign)}
                               </span>
                             )}
@@ -1710,26 +1722,26 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 <h3 className="m-0 text-[14px] font-semibold text-[var(--ink)]">
                   Atividade individual · {campaignActivity.campaignName}
                 </h3>
-                <p className="mt-1 mb-0 max-w-[720px] text-[10px] leading-relaxed text-[var(--text-muted)]">
+                <p className="mt-1 mb-0 max-w-[720px] text-[13px] leading-relaxed text-[var(--text-muted)]">
                   Consultado agora no ambiente conectado. Mostramos somente
                   eventos de envio, abertura, clique, envio de dados e denúncia;
                   IP, navegador e conteúdo enviado não são exibidos nem
                   armazenados em texto aberto.
                 </p>
                 {campaignActivity.truncated && (
-                  <p className="mt-2 mb-0 text-[11px] leading-relaxed text-[var(--ink)]">
+                  <p className="mt-2 mb-0 text-[13px] leading-relaxed text-[var(--ink)]">
                     Exibindo os primeiros 500 destinatários. Os totais agregados
                     da campanha continuam completos. A exportação fica
                     indisponível para evitar uma lista parcial.
                   </p>
                 )}
-                <p className="mt-2 mb-0 text-[11px] leading-relaxed text-[var(--ink)]">
+                <p className="mt-2 mb-0 text-[13px] leading-relaxed text-[var(--ink)]">
                   A planilha segue as colunas do modelo enviado. Departamento,
                   gestor e e-mail do gestor ficam em branco porque a conexão não
                   fornece esses campos.
                 </p>
                 {clickedRecipientCount === 0 && !campaignActivity.truncated && (
-                  <p className="mt-2 mb-0 text-[11px] leading-relaxed text-[var(--ink)]">
+                  <p className="mt-2 mb-0 text-[13px] leading-relaxed text-[var(--ink)]">
                     Nenhum clique registrado para extrair nesta campanha.
                   </p>
                 )}
@@ -1743,7 +1755,7 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                     clickedRecipientCount === 0
                   }
                   onClick={() => void downloadClickedRecipients()}
-                  className="inline-flex h-9 items-center justify-center rounded-[var(--radius-control)] border border-[var(--line)] px-3 text-[11px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--line)] px-3 text-[13px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {exportingClicked
                     ? "Gerando planilha…"
@@ -1752,16 +1764,21 @@ export function CampaignWorkspaceContent({ view }: { view: CampaignPageView }) {
                 <button
                   type="button"
                   onClick={() => setCampaignActivity(null)}
-                  className="inline-flex h-9 items-center justify-center rounded-[var(--radius-control)] border border-[var(--line)] px-3 text-[11px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+                  className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--line)] px-3 text-[13px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                 >
                   Fechar
                 </button>
               </div>
             </div>
             {campaignActivity.recipients.length ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[1000px] border-collapse text-left text-[10px]">
-                  <thead className="bg-[var(--surface-soft)] text-[9px] font-bold tracking-[0.08em] text-[var(--text-muted)] uppercase">
+              <div
+                aria-label="Tabela de atividade individual"
+                className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--accent)]"
+                role="region"
+                tabIndex={0}
+              >
+                <table className="w-full min-w-[1000px] border-collapse text-left text-[13px]">
+                  <thead className="bg-[var(--surface-soft)] text-[12px] font-semibold tracking-[0.04em] text-[var(--text-muted)] uppercase">
                     <tr>
                       <th className="px-5 py-3">Destinatário</th>
                       <th className="px-3 py-3">Envio</th>

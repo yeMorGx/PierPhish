@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CampaignLogoPicker } from "@/components/campaigns/campaign-logo";
+import { ClickedExportAction } from "@/components/campaigns/clicked-export-action";
 import { EmailSampleCard } from "@/components/campaigns/email-sample-card";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import {
@@ -15,6 +16,7 @@ import {
 import { PersonAvatar } from "@/components/people/person-avatar";
 import { VisualCampaignContent } from "@/components/campaigns/visual-campaign-content";
 import { exportClickedRecipients } from "@/lib/campaigns/export-clicked-recipients";
+import { campaignSignalLabel } from "@/lib/campaigns/campaign-signal-label";
 import { useTheme } from "@/components/theme/theme-provider";
 import {
   readPersonAvatars,
@@ -269,23 +271,15 @@ function containsSignal(value: string | null | undefined, terms: string[]) {
   return terms.some((term) => normalized.includes(term));
 }
 
-function statusLabel(value: string | null) {
-  if (!value) return "Sem status";
-  if (containsSignal(value, ["click", "link"])) return "Clicou";
-  if (containsSignal(value, ["report"])) return "Reportou";
-  if (containsSignal(value, ["open"])) return "Abriu";
-  if (containsSignal(value, ["deliver"])) return "Entregue";
-  if (containsSignal(value, ["send"])) return "Enviado";
-  return value;
-}
-
 function statusTone(value: string | null) {
-  if (containsSignal(value, ["submitted", "submit", "data"])) {
+  if (
+    containsSignal(value, ["submitted", "submit", "data", "dados", "falhou"])
+  ) {
     return "critical";
   }
-  if (containsSignal(value, ["click", "link"])) return "action";
+  if (containsSignal(value, ["click", "link", "clicou"])) return "action";
   if (containsSignal(value, ["report"])) return "safe";
-  if (containsSignal(value, ["open"])) return "info";
+  if (containsSignal(value, ["open", "abriu"])) return "info";
   return "neutral";
 }
 
@@ -628,7 +622,7 @@ export default function CampaignPeoplePage() {
           email: result.email ?? "E-mail não informado",
           position: result.position ?? "—",
           department: result.department ?? "—",
-          status: statusLabel(result.status),
+          status: campaignSignalLabel(result.status),
           campaigns: campaign ? [{ id: campaign.id, name: campaign.name }] : [],
           opened,
           clicked,
@@ -641,7 +635,7 @@ export default function CampaignPeoplePage() {
           events: relatedEvents
             .map((event) => ({
               id: event.beephish_event_id,
-              label: statusLabel(event.event_type),
+              label: campaignSignalLabel(event.event_type),
               occurredAt: event.occurred_at,
             }))
             .sort(
@@ -752,16 +746,6 @@ export default function CampaignPeoplePage() {
       title="Campanha"
       headerAction={
         <div className="flex flex-none flex-wrap items-center gap-3 max-[720px]:w-full max-[720px]:justify-between">
-          <button
-            className="inline-flex h-10 items-center justify-center rounded-[var(--radius-control)] border border-[var(--line)] bg-transparent px-3 text-[12px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
-            type="button"
-            disabled={
-              exportingClicked || !workspaceHasBeephishData || !supabase
-            }
-            onClick={() => void downloadClickedRecipients()}
-          >
-            {exportingClicked ? "Extraindo…" : "Extrair clicados · Excel"}
-          </button>
           <span className="inline-flex items-center gap-2 text-[11px] text-[#69717d]">
             <span className="size-2 rounded-full bg-[var(--success)] shadow-[0_0_0_4px_rgba(159,197,45,0.14)]" />
             {sessionEmail ?? "Modo demonstração"}
@@ -796,9 +780,12 @@ export default function CampaignPeoplePage() {
 
         {themePreferences.dashboardMode === "visual" ? (
           <VisualCampaignContent
+            canExportClicked={Boolean(supabase && workspaceHasBeephishData)}
             campaign={campaign}
             events={events}
+            exportingClicked={exportingClicked}
             filter={filter}
+            onExportClicked={() => void downloadClickedRecipients()}
             onFilterChange={setFilter}
             onSearchChange={setSearch}
             onSelectPerson={setSelectedPerson}
@@ -899,30 +886,34 @@ export default function CampaignPeoplePage() {
               <article className="surface-card min-w-0 overflow-hidden rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px] max-[720px]:p-5">
                 <div className="flex items-start justify-between gap-4 max-[720px]:flex-col">
                   <div>
-                    <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                    <p className="mb-2 text-[12px] font-semibold tracking-[0.06em] text-[var(--text-muted)] uppercase">
                       PESSOAS IMPACTADAS
                     </p>
                     <h2 className="m-0 text-[20px] font-bold tracking-[-0.04em]">
                       Quem recebeu e interagiu
                     </h2>
-                    <p className="mt-2 mb-0 text-[12px] text-[#87919a]">
+                    <p className="mt-2 mb-0 text-[13px] text-[var(--text-muted)]">
                       Use os filtros para investigar cada sinal da campanha.
                     </p>
                   </div>
                   <label className="relative block w-[220px] max-[720px]:w-full">
                     <span className="sr-only">Buscar pessoa</span>
-                    <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[#7d8790]">
+                    <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[var(--text-muted)]">
                       <Icon name="search" size={15} />
                     </span>
                     <input
-                      className="h-10 w-full rounded-[var(--radius-control)] border border-[var(--line)] bg-[#fbfcfc] pr-3 pl-9 text-[11px] text-[var(--ink)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[#e6edef]"
+                      className="min-h-11 w-full rounded-[var(--radius-control)] border border-[var(--line)] bg-[var(--surface)] pr-3 pl-9 text-[13px] text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                       placeholder="Buscar nome ou e-mail"
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
                     />
                   </label>
                 </div>
-                <div className="mt-6 flex flex-wrap gap-2 border-b border-[var(--line-soft)] pb-4">
+                <div
+                  aria-label="Filtrar pessoas"
+                  className="mt-6 flex flex-wrap gap-2 border-b border-[var(--line-soft)] pb-4"
+                  role="group"
+                >
                   {(
                     [
                       ["all", "Todas"],
@@ -932,19 +923,32 @@ export default function CampaignPeoplePage() {
                     ] as [Filter, string][]
                   ).map(([value, label]) => (
                     <button
-                      className={`rounded-full border px-3 py-2 text-[10px] font-bold transition-colors ${filter === value ? "border-[var(--ink)] bg-[var(--ink)] text-white" : "border-[var(--line)] bg-transparent text-[#7d8790] hover:border-[var(--text-muted)]"}`}
+                      className={`min-h-11 rounded-[var(--radius-control)] border px-3 text-[13px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${filter === value ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--background)]" : "border-[var(--line)] bg-transparent text-[var(--text-muted)] hover:border-[var(--text-muted)]"}`}
                       type="button"
                       key={value}
+                      aria-pressed={filter === value}
                       onClick={() => setFilter(value)}
                     >
                       {label}
                     </button>
                   ))}
                 </div>
-                <div className="mt-2 overflow-x-auto">
+                <div className="mt-4">
+                  <ClickedExportAction
+                    available={Boolean(supabase && workspaceHasBeephishData)}
+                    busy={exportingClicked}
+                    onExport={() => void downloadClickedRecipients()}
+                  />
+                </div>
+                <div
+                  aria-label="Pessoas e sinais da campanha"
+                  className="mt-4 overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--accent)]"
+                  role="region"
+                  tabIndex={0}
+                >
                   <table className="w-full min-w-[700px] border-collapse text-left">
                     <thead>
-                      <tr className="border-b border-[var(--line-soft)] text-[10px] font-extrabold tracking-[0.12em] text-[#9aa2a8] uppercase">
+                      <tr className="border-b border-[var(--line-soft)] text-[12px] font-semibold tracking-[0.04em] text-[var(--text-muted)] uppercase">
                         <th className="px-2 py-4 font-extrabold">Pessoa</th>
                         <th className="px-2 py-4 font-extrabold">Área</th>
                         <th className="px-2 py-4 font-extrabold">Status</th>
@@ -973,20 +977,20 @@ export default function CampaignPeoplePage() {
                                 size="sm"
                               />
                               <span className="min-w-0">
-                                <strong className="block text-[12px] text-[#34404a]">
+                                <strong className="block text-[13px] text-[var(--ink)]">
                                   {person.name}
                                 </strong>
-                                <span className="mt-1 block max-w-[230px] overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-[#9aa2a8]">
+                                <span className="mt-1 block max-w-[230px] overflow-hidden text-[12px] text-ellipsis whitespace-nowrap text-[var(--text-muted)]">
                                   {person.email}
                                 </span>
                               </span>
                             </button>
                           </td>
                           <td className="px-2 py-4">
-                            <span className="block text-[11px] text-[#65717b]">
+                            <span className="block text-[13px] text-[var(--ink)]">
                               {person.department}
                             </span>
-                            <span className="mt-1 block text-[10px] text-[#a2a9ae]">
+                            <span className="mt-1 block text-[12px] text-[var(--text-muted)]">
                               {person.position}
                             </span>
                           </td>
@@ -1017,7 +1021,7 @@ export default function CampaignPeoplePage() {
                               />
                             </div>
                           </td>
-                          <td className="px-2 py-4 text-right text-[10px] text-[#9aa2a8]">
+                          <td className="px-2 py-4 text-right text-[12px] text-[var(--text-muted)]">
                             {formatDateTime(person.lastActivity)}
                           </td>
                         </tr>
@@ -1050,7 +1054,7 @@ export default function CampaignPeoplePage() {
                       />
                       <div className="min-w-0">
                         <strong className="block text-[11px] text-[#4f5963]">
-                          {statusLabel(event.event_type)}
+                          {campaignSignalLabel(event.event_type)}
                         </strong>
                         <span className="mt-1 block max-w-[190px] overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-[#a0a7ad]">
                           {event.email ?? "Pessoa não identificada"}

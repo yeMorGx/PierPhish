@@ -68,7 +68,7 @@ export function CampaignPagination({
       <Pagination aria-label="Paginação de campanhas" className="mx-0">
         <PaginationContent className="w-full flex-wrap justify-between gap-3">
           <PaginationItem>
-            <span className="text-[10px] text-[var(--text-muted)]">
+            <span className="text-[12px] text-[var(--text-muted)]">
               Exibindo{" "}
               <strong className="font-semibold text-[var(--ink)]">
                 {firstItem}–{lastItem}
@@ -84,7 +84,9 @@ export function CampaignPagination({
               aria-disabled={!hasPreviousPage}
               tabIndex={hasPreviousPage ? 0 : -1}
               className={
-                hasPreviousPage ? "" : "pointer-events-none opacity-45"
+                hasPreviousPage
+                  ? "min-h-11"
+                  : "pointer-events-none min-h-11 opacity-45"
               }
               onClick={(event) =>
                 changePage(event, Math.max(1, currentPage - 1))
@@ -100,6 +102,7 @@ export function CampaignPagination({
                   <PaginationLink
                     href={`#campaigns-page-${page}`}
                     isActive={page === currentPage}
+                    className="min-h-11 min-w-11"
                     aria-label={`Página ${page}`}
                     onClick={(event) => changePage(event, page)}
                   >
@@ -113,7 +116,11 @@ export function CampaignPagination({
               text="Próxima"
               aria-disabled={!hasNextPage}
               tabIndex={hasNextPage ? 0 : -1}
-              className={hasNextPage ? "" : "pointer-events-none opacity-45"}
+              className={
+                hasNextPage
+                  ? "min-h-11"
+                  : "pointer-events-none min-h-11 opacity-45"
+              }
               onClick={(event) =>
                 changePage(event, Math.min(totalPages, currentPage + 1))
               }
@@ -121,12 +128,12 @@ export function CampaignPagination({
           </PaginationItem>
 
           <PaginationItem className="flex items-center gap-2">
-            <span className="text-[10px] text-[var(--text-muted)]">
+            <span className="text-[12px] text-[var(--text-muted)]">
               Por página
             </span>
             <NativeSelect
               aria-label="Campanhas por página"
-              className="w-[88px]"
+              className="min-h-11 w-[88px]"
               size="sm"
               value={pageSize}
               onChange={(event) =>
