@@ -152,8 +152,8 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - O gráfico de abertura mantém nomes completos nos dados e no tooltip, mesmo com eixo abreviado; foi removido um link que apontava para a própria seção. A página de workspaces evita mostrar “nenhum” enquanto carrega e apresenta uma recuperação para falha de leitura.
 - O registro da auditoria de 08/10 foi encerrado após tratar os cinco itens priorizados P1/P2.
 - Validações: `pnpm exec tsc --noEmit`, Prettier nos arquivos alterados, `pnpm build`, detector Impeccable (zero alertas nos componentes revisados) e `git diff --check` concluídos. O texto muted do tema claro agora mede entre 5,31:1 e 5,74:1 nas superfícies verificadas. Nenhuma campanha, destinatário, configuração remota ou migration foi alterada.
-- Entrega: commit e push pendentes; a publicação e a revisão das telas em desktop/mobile serão registradas depois da verificação no ambiente publicado.
-- Próximos passos: conferir o deploy em produção, revisar campanhas e dashboard em desktop/mobile e verificar contraste/interações nos temas claro e escuro.
+- Entrega: commit `b7364d3` enviado para `main`. A rota de produção `/campanhas` foi recarregada e confirmou o menu agrupado, os rótulos traduzidos da paginação e a tabela com a pista de rolagem disponível no breakpoint estreito. A inspeção visual em desktop confirmou a hierarquia do menu. Nenhuma operação de campanha foi executada.
+- Próximos passos: validar visualmente em viewport móvel estreito e conferir os dois temas; revisar a ação de exportação no detalhe da campanha durante a próxima sessão de QA com dados de teste controlados.
 
 ### 2026-10-08 — Auditoria UI/UX Impeccable
 
