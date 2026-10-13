@@ -144,6 +144,14 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-10-13 — Empresas e taxas no resumo de campanhas
+
+- Corrigido o formato do avatar de campanha: imagem e fallback herdam o mesmo raio do contêiner, com borda de 1 px e fundo por tokens, eliminando os cantos pretos causados pela combinação de círculo e quadrado.
+- A tabela do dashboard padrão passou a mostrar Empresa com nome e logo cadastrados, usando a associação real `company_id`. Sem logo, usa a inicial; sem associação reconhecida, informa “Empresa não informada”. A lista já carregada de empresas do workspace fornece os dados, incluindo empresas inativas vinculadas a campanhas antigas, sem nova consulta ou alteração de banco.
+- Abertura e taxa de cliques agora têm roscas SVG com percentual central e descrição acessível. A contagem de cliques continua ao lado. Status em andamento usa fundo de alto contraste; concluída usa superfície neutra e outros estados usam borda fina, em ambos os temas.
+- Validações: Prettier nos cinco arquivos alterados, `pnpm build` (69 páginas geradas), `pnpm exec tsc --noEmit` após o build e `git diff --check` passaram. O detector Impeccable nos componentes revisados retornou zero alertas. A primeira execução isolada de TypeScript coincidiu com a recriação de `.next/types` pelo build e apontou arquivos gerados ausentes; a repetição após o build terminou sem erros. Nenhum teste automatizado ou operação remota foi executado.
+- Entrega: código pronto para commit e push em `main`; publicação e inspeção visual em navegador ainda não confirmadas nesta sessão. Próximos passos: conferir a tabela publicada com logos reais, nos temas claro/escuro e em viewport estreito.
+
 ### 2026-10-09 — Correções da auditoria UI/UX
 
 - A lista de campanhas ganhou tipografia operacional maior, causa de falha legível, botão por linha com alvo de 44 px e instrução visível de rolagem horizontal em telas estreitas. O painel de atividade individual também teve texto e controles ampliados. `--text-muted` do tema claro passou a `#666666` para superar a meta de contraste nas superfícies claras.

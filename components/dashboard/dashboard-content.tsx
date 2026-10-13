@@ -11,8 +11,10 @@ import type {
   OverviewTotals,
 } from "@/components/dashboard/types";
 import type { PersonAvatarMap } from "@/lib/person-avatars";
+import type { DashboardCompanyFilterOption } from "./dashboard-company-filter";
 
 type DashboardContentProps = {
+  companies: Pick<DashboardCompanyFilterOption, "id" | "name" | "logoUrl">[];
   campaignBars: CampaignBar[];
   campaigns: Campaign[];
   personAvatars: PersonAvatarMap;
@@ -22,6 +24,7 @@ type DashboardContentProps = {
 };
 
 export function DashboardContent({
+  companies,
   campaignBars,
   campaigns,
   personAvatars,
@@ -62,6 +65,7 @@ export function DashboardContent({
         total={totals.people}
       />
       <CampaignOverviewCard
+        companies={companies}
         campaigns={campaignSummary}
         personAvatars={personAvatars}
         participantsByCampaign={participantsByCampaign}

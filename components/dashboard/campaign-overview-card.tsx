@@ -16,8 +16,11 @@ import type {
   OverviewTotals,
 } from "@/components/dashboard/types";
 import type { PersonAvatarMap } from "@/lib/person-avatars";
+import type { DashboardCompanyFilterOption } from "./dashboard-company-filter";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type CampaignOverviewCardProps = {
+  companies?: Pick<DashboardCompanyFilterOption, "id" | "name" | "logoUrl">[];
   campaigns: CampaignSummary[];
   personAvatars?: PersonAvatarMap;
   participantsByCampaign?: CampaignParticipants;
@@ -95,14 +98,43 @@ function statusLabel(status: string | null) {
 }
 
 function statusClass(status: string | null) {
-  if (status === "Completed")
-    return "campaign-status campaign-status-completed bg-[#edf5ee] text-[#5d7161]";
-  if (status === "In progress")
-    return "campaign-status campaign-status-progress bg-[#fff6e7] text-[#926f35]";
-  return "campaign-status campaign-status-neutral bg-[#f4f6f7] text-[#7c8795]";
+  if (status === "Completed") return "campaign-overview-status is-completed";
+  if (status === "In progress") return "campaign-overview-status is-progress";
+  return "campaign-overview-status is-neutral";
+}
+
+function CampaignRate({ value, label }: { value: number; label: string }) {
+  const rate = Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
+  return (
+    <span
+      className="campaign-overview-rate"
+      role="img"
+      aria-label={`${label}: ${rate}%`}
+    >
+      <svg viewBox="0 0 44 44" aria-hidden="true">
+        <circle
+          className="campaign-overview-rate-track"
+          cx="22"
+          cy="22"
+          r="19"
+        />
+        <circle
+          className="campaign-overview-rate-value"
+          cx="22"
+          cy="22"
+          r="19"
+          pathLength="100"
+          strokeDasharray={`${rate} 100`}
+          transform="rotate(-90 22 22)"
+        />
+      </svg>
+      <span aria-hidden="true">{rate}%</span>
+    </span>
+  );
 }
 
 export function CampaignOverviewCard({
+  companies = [],
   campaigns,
   personAvatars = {},
   participantsByCampaign = {},
@@ -214,15 +246,24 @@ export function CampaignOverviewCard({
         })}
       </div>
 
-      <div className="campaign-overview-table-wrap mt-5 overflow-x-auto rounded-[18px] border border-[var(--line-soft)]">
+      <p className="mt-5 mb-2 text-[12px] text-[var(--text-muted)] xl:sr-only">
+        Role horizontalmente para ver todas as colunas.
+      </p>
+      <div
+        role="region"
+        aria-label="Tabela de campanhas"
+        tabIndex={0}
+        className="campaign-overview-table-wrap mt-5 overflow-x-auto rounded-[18px] border border-[var(--line-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+      >
         <table
-          className="campaign-overview-table w-full min-w-[820px] border-collapse text-left"
+          className="campaign-overview-table w-full min-w-[1040px] border-collapse text-left"
           aria-label="Resumo de todas as campanhas"
         >
           <thead>
             <tr className="campaign-overview-table-head border-b border-[var(--line-soft)] bg-[#fafbfb] text-[11px] tracking-[0.1em] text-[var(--text-muted)] uppercase">
               <th className="w-[48px] px-4 py-3 font-extrabold">#</th>
               <th className="px-4 py-3 font-extrabold">Campanha</th>
+              <th className="px-4 py-3 font-extrabold">Empresa</th>
               <th className="px-4 py-3 font-extrabold">Participações</th>
               <th className="px-4 py-3 font-extrabold">Entregues</th>
               <th className="px-4 py-3 font-extrabold">Abertura</th>
@@ -232,82 +273,115 @@ export function CampaignOverviewCard({
             </tr>
           </thead>
           <tbody>
-            {campaigns.map((campaign, index) => (
-              <tr
-                className="campaign-overview-table-row border-b border-[var(--line-soft)] text-[11px] text-[#69737d] last:border-0 hover:bg-[#fcfdfd]"
-                key={campaign.id}
-              >
-                <td className="px-4 py-3.5 font-bold text-[var(--text-muted)]">
-                  {String(index + 1).padStart(2, "0")}
-                </td>
-                <td className="px-4 py-3.5">
-                  <Link
-                    className="campaign-link flex min-w-0 items-center gap-3 hover:text-[#18202b]"
-                    href={`/campaigns/${campaign.id}`}
-                  >
-                    <CampaignLogo
-                      fallback={campaign.name.charAt(0).toUpperCase()}
-                      src={logos[String(campaign.id)]}
-                    />
-                    <span className="flex min-w-0 flex-col">
-                      <strong className="campaign-name overflow-hidden text-[12px] text-ellipsis whitespace-nowrap text-[#35414d]">
-                        {campaign.name}
-                      </strong>
-                      <span className="campaign-id mt-0.5 text-[11px] text-[var(--text-muted)]">
-                        ID {campaign.id}
+            {campaigns.map((campaign, index) => {
+              const company = companies.find(
+                (item) => item.id === campaign.company_id,
+              );
+              return (
+                <tr
+                  className="campaign-overview-table-row border-b border-[var(--line-soft)] text-[11px] text-[#69737d] last:border-0 hover:bg-[#fcfdfd]"
+                  key={campaign.id}
+                >
+                  <td className="px-4 py-3.5 font-bold text-[var(--text-muted)]">
+                    {String(index + 1).padStart(2, "0")}
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <Link
+                      className="campaign-link flex min-w-0 items-center gap-3 hover:text-[#18202b]"
+                      href={`/campaigns/${campaign.id}`}
+                    >
+                      <CampaignLogo
+                        fallback={campaign.name.charAt(0).toUpperCase()}
+                        src={logos[String(campaign.id)]}
+                      />
+                      <span className="flex min-w-0 flex-col">
+                        <strong className="campaign-name overflow-hidden text-[12px] text-ellipsis whitespace-nowrap text-[#35414d]">
+                          {campaign.name}
+                        </strong>
+                        <span className="campaign-id mt-0.5 text-[11px] text-[var(--text-muted)]">
+                          ID {campaign.id}
+                        </span>
                       </span>
-                    </span>
-                  </Link>
-                </td>
-                <td className="px-4 py-3.5">
-                  <div className="flex min-w-[170px] items-center gap-3">
-                    <CampaignPeopleAvatars
-                      campaignId={campaign.id}
-                      peopleCount={campaign.people}
-                      participants={
-                        participantsByCampaign[String(campaign.id)] ?? []
-                      }
-                      personAvatars={personAvatars}
-                    />
-                    {index === 0 && (
-                      <span className="inline-flex rounded-full bg-[#edf2f3] px-2 py-1 text-[10px] font-bold text-[#5f7681]">
-                        maior alcance
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    {company ? (
+                      <div className="flex min-w-[140px] items-center gap-3">
+                        <Avatar
+                          className="campaign-company-logo after:hidden"
+                          aria-hidden="true"
+                        >
+                          {company.logoUrl && (
+                            <AvatarImage src={company.logoUrl} alt="" />
+                          )}
+                          <AvatarFallback>
+                            {company.name.trim().charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-[12px] font-medium text-[var(--ink)]">
+                          {company.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-[12px] text-[var(--text-muted)]">
+                        Empresa não informada
                       </span>
                     )}
-                  </div>
-                </td>
-                <td className="px-4 py-3.5">
-                  <AnimatedNumber value={campaign.deliveredPeople} />/
-                  <AnimatedNumber value={campaign.people} />
-                </td>
-                <td className="campaign-open-rate px-4 py-3.5 font-bold text-[#5d7161]">
-                  <AnimatedNumber value={campaign.openRate} suffix="%" />
-                </td>
-                <td className="px-4 py-3.5">
-                  <span className="block">
-                    <AnimatedNumber value={campaign.clickedPeople} />
-                  </span>
-                  <small className="campaign-click-rate">
-                    <AnimatedNumber value={campaign.clickRate} suffix="%" />
-                  </small>
-                </td>
-                <td className="px-4 py-3.5">
-                  <AnimatedNumber value={campaign.reportedPeople} />
-                </td>
-                <td className="px-4 py-3.5">
-                  <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${statusClass(campaign.status)}`}
-                  >
-                    {statusLabel(campaign.status)}
-                  </span>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <div className="flex min-w-[170px] items-center gap-3">
+                      <CampaignPeopleAvatars
+                        campaignId={campaign.id}
+                        peopleCount={campaign.people}
+                        participants={
+                          participantsByCampaign[String(campaign.id)] ?? []
+                        }
+                        personAvatars={personAvatars}
+                      />
+                      {index === 0 && (
+                        <span className="inline-flex rounded-full bg-[#edf2f3] px-2 py-1 text-[10px] font-bold text-[#5f7681]">
+                          maior alcance
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <AnimatedNumber value={campaign.deliveredPeople} />/
+                    <AnimatedNumber value={campaign.people} />
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <CampaignRate
+                      value={campaign.openRate}
+                      label="Taxa de abertura"
+                    />
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <CampaignRate
+                        value={campaign.clickRate}
+                        label="Taxa de cliques"
+                      />
+                      <span title="Quantidade de pessoas que clicaram">
+                        <AnimatedNumber value={campaign.clickedPeople} />
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <AnimatedNumber value={campaign.reportedPeople} />
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <span className={statusClass(campaign.status)}>
+                      {statusLabel(campaign.status)}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
             {!campaigns.length && (
               <tr>
                 <td
                   className="px-4 py-8 text-center text-[11px] text-[var(--text-muted)]"
-                  colSpan={8}
+                  colSpan={9}
                 >
                   Nenhuma campanha encontrada.
                 </td>

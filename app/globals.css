@@ -4460,15 +4460,23 @@ html[data-theme="dark"] .status-signal-icon.is-orange {
   flex: none;
   place-items: center;
   overflow: hidden;
-  color: var(--contrast-text);
-  background: var(--contrast-block);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-soft);
   font-weight: 800;
   object-fit: cover;
 }
 
+.campaign-logo > [data-slot="avatar-image"],
+.campaign-logo > [data-slot="avatar-fallback"] {
+  border-radius: inherit;
+  color: inherit;
+  background: transparent;
+}
+
 .campaign-logo-compact {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   font-size: 11px;
 }
@@ -4481,6 +4489,83 @@ html[data-theme="dark"] .status-signal-icon.is-orange {
   color: var(--ink);
   background: var(--surface-muted);
   font-size: 20px;
+}
+
+.campaign-company-logo {
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--surface-soft);
+}
+
+.campaign-company-logo > [data-slot="avatar-image"] {
+  padding: 4px;
+  border-radius: inherit;
+  object-fit: contain;
+}
+
+.campaign-company-logo > [data-slot="avatar-fallback"] {
+  border-radius: inherit;
+  color: inherit;
+  background: transparent;
+}
+
+.campaign-overview-rate {
+  position: relative;
+  display: inline-grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.campaign-overview-rate svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke-width: 3;
+}
+
+.campaign-overview-rate-track {
+  stroke: var(--line);
+}
+
+.campaign-overview-rate-value {
+  stroke: var(--ink);
+}
+
+.campaign-overview-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.campaign-overview-status.is-progress {
+  border-color: var(--ink);
+  color: var(--background);
+  background: var(--ink);
+}
+
+.campaign-overview-status.is-completed {
+  color: var(--ink);
+  background: var(--surface-soft);
 }
 
 .campaign-detail-title-row {
@@ -4585,8 +4670,8 @@ html[data-theme="dark"] .status-signal-icon.is-orange {
 }
 
 html[data-theme="dark"] .campaign-logo {
-  color: var(--contrast-text);
-  background: var(--contrast-block);
+  color: var(--ink);
+  background: var(--surface-soft);
 }
 
 html[data-theme="dark"] .campaign-logo-hero {

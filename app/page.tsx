@@ -601,6 +601,9 @@ export default function Home() {
       ) : (
         <div data-tour="dashboard-content">
           <DashboardContent
+            companies={(companies ?? []).filter(
+              (company) => company.workspaceId === activeWorkspaceId,
+            )}
             campaignBars={campaignBars}
             campaigns={filteredCampaigns}
             campaignSummary={campaignSummary}
