@@ -144,6 +144,13 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-10-13 — Avatares circulares e cliques simplificados
+
+- Na tabela de resumo, o ícone da campanha e a logo da empresa agora são totalmente circulares; imagens e iniciais continuam herdando o raio do contêiner. A alteração do ícone da campanha está limitada à tabela.
+- Removida a contagem ao lado da rosca de cliques, conforme a captura anotada. O percentual e sua descrição acessível permanecem; os dados e o cálculo não foram alterados.
+- Validações: Prettier, `pnpm exec tsc --noEmit` e `git diff --check` passaram; detector Impeccable do componente retornou zero alertas. Nenhum teste automatizado foi executado.
+- Entrega: commit/push pendentes; publicação ainda não verificada. Próximo passo: conferir os dois ícones circulares e a coluna de cliques publicada.
+
 ### 2026-10-13 — Empresas e taxas no resumo de campanhas
 
 - Corrigido o formato do avatar de campanha: imagem e fallback herdam o mesmo raio do contêiner, com borda de 1 px e fundo por tokens, eliminando os cantos pretos causados pela combinação de círculo e quadrado.

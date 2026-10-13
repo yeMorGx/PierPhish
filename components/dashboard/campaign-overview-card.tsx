@@ -356,15 +356,10 @@ export function CampaignOverviewCard({
                     />
                   </td>
                   <td className="px-4 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <CampaignRate
-                        value={campaign.clickRate}
-                        label="Taxa de cliques"
-                      />
-                      <span title="Quantidade de pessoas que clicaram">
-                        <AnimatedNumber value={campaign.clickedPeople} />
-                      </span>
-                    </div>
+                    <CampaignRate
+                      value={campaign.clickRate}
+                      label="Taxa de cliques"
+                    />
                   </td>
                   <td className="px-4 py-3.5">
                     <AnimatedNumber value={campaign.reportedPeople} />

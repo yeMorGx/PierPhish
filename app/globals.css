@@ -4481,6 +4481,10 @@ html[data-theme="dark"] .status-signal-icon.is-orange {
   font-size: 11px;
 }
 
+.campaign-overview-table .campaign-logo-compact {
+  border-radius: 999px;
+}
+
 .campaign-logo-hero {
   width: 64px;
   height: 64px;
@@ -4496,7 +4500,7 @@ html[data-theme="dark"] .status-signal-icon.is-orange {
   height: 36px;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 999px;
   color: var(--ink);
   background: var(--surface-soft);
 }
