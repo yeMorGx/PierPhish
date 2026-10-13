@@ -144,6 +144,14 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-10-13 — Resumo sem scroll horizontal e status coloridos
+
+- Removidos a largura mínima de 1040 px e o scroll horizontal da tabela. No desktop, as nove colunas dividem a largura disponível; nomes quebram linha e participações refluem. Abaixo de 1000 px, cada campanha reorganiza os campos em duas colunas com rótulos, preservando todos os dados.
+- Retirado o padding da imagem da empresa, mantendo o formato circular e a proporção da logo.
+- Conforme o pedido explícito por cor nos status, “Em andamento” usa âmbar e “Concluída” usa verde. A exceção fica restrita a esses status, com tokens próprios para os temas claro e escuro e rótulos textuais preservados.
+- Validações: `pnpm exec tsc --noEmit`, Prettier e `git diff --check` passaram; detector Impeccable do componente retornou zero alertas. Contraste dos status: 6,02:1 e 6,74:1 no claro, 9,52:1 e 8,31:1 no escuro. Nenhum teste automatizado foi executado.
+- Entrega: commit/push pendentes. Inspeção visual e deploy ainda não confirmados nesta sessão. Próximo passo: conferir o layout publicado em desktop/mobile com nomes longos e logos reais.
+
 ### 2026-10-13 — Avatares circulares e cliques simplificados
 
 - Na tabela de resumo, o ícone da campanha e a logo da empresa agora são totalmente circulares; imagens e iniciais continuam herdando o raio do contêiner. A alteração do ícone da campanha está limitada à tabela.

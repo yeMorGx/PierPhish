@@ -246,21 +246,26 @@ export function CampaignOverviewCard({
         })}
       </div>
 
-      <p className="mt-5 mb-2 text-[12px] text-[var(--text-muted)] xl:sr-only">
-        Role horizontalmente para ver todas as colunas.
-      </p>
       <div
         role="region"
         aria-label="Tabela de campanhas"
-        tabIndex={0}
-        className="campaign-overview-table-wrap mt-5 overflow-x-auto rounded-[18px] border border-[var(--line-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+        className="campaign-overview-table-wrap mt-5 rounded-[18px] border border-[var(--line-soft)]"
       >
         <table
-          className="campaign-overview-table w-full min-w-[1040px] border-collapse text-left"
+          role="table"
+          className="campaign-overview-table w-full table-fixed border-collapse text-left"
           aria-label="Resumo de todas as campanhas"
         >
-          <thead>
-            <tr className="campaign-overview-table-head border-b border-[var(--line-soft)] bg-[#fafbfb] text-[11px] tracking-[0.1em] text-[var(--text-muted)] uppercase">
+          <colgroup>
+            {[3, 25, 13, 17, 10, 8, 8, 7, 9].map((width, index) => (
+              <col key={index} style={{ width: `${width}%` }} />
+            ))}
+          </colgroup>
+          <thead role="rowgroup">
+            <tr
+              role="row"
+              className="campaign-overview-table-head border-b border-[var(--line-soft)] bg-[#fafbfb] text-[11px] tracking-[0.1em] text-[var(--text-muted)] uppercase"
+            >
               <th className="w-[48px] px-4 py-3 font-extrabold">#</th>
               <th className="px-4 py-3 font-extrabold">Campanha</th>
               <th className="px-4 py-3 font-extrabold">Empresa</th>
@@ -272,20 +277,25 @@ export function CampaignOverviewCard({
               <th className="px-4 py-3 font-extrabold">Status</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody role="rowgroup">
             {campaigns.map((campaign, index) => {
               const company = companies.find(
                 (item) => item.id === campaign.company_id,
               );
               return (
                 <tr
+                  role="row"
                   className="campaign-overview-table-row border-b border-[var(--line-soft)] text-[11px] text-[#69737d] last:border-0 hover:bg-[#fcfdfd]"
                   key={campaign.id}
                 >
-                  <td className="px-4 py-3.5 font-bold text-[var(--text-muted)]">
+                  <td
+                    role="cell"
+                    data-label="Posição"
+                    className="px-4 py-3.5 font-bold text-[var(--text-muted)]"
+                  >
                     {String(index + 1).padStart(2, "0")}
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td role="cell" data-label="Campanha" className="px-4 py-3.5">
                     <Link
                       className="campaign-link flex min-w-0 items-center gap-3 hover:text-[#18202b]"
                       href={`/campaigns/${campaign.id}`}
@@ -295,7 +305,7 @@ export function CampaignOverviewCard({
                         src={logos[String(campaign.id)]}
                       />
                       <span className="flex min-w-0 flex-col">
-                        <strong className="campaign-name overflow-hidden text-[12px] text-ellipsis whitespace-nowrap text-[#35414d]">
+                        <strong className="campaign-name text-[12px] break-words text-[var(--ink)]">
                           {campaign.name}
                         </strong>
                         <span className="campaign-id mt-0.5 text-[11px] text-[var(--text-muted)]">
@@ -304,9 +314,9 @@ export function CampaignOverviewCard({
                       </span>
                     </Link>
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td role="cell" data-label="Empresa" className="px-4 py-3.5">
                     {company ? (
-                      <div className="flex min-w-[140px] items-center gap-3">
+                      <div className="flex min-w-0 items-center gap-2">
                         <Avatar
                           className="campaign-company-logo after:hidden"
                           aria-hidden="true"
@@ -318,7 +328,7 @@ export function CampaignOverviewCard({
                             {company.name.trim().charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-[12px] font-medium text-[var(--ink)]">
+                        <span className="min-w-0 text-[12px] font-medium break-words text-[var(--ink)]">
                           {company.name}
                         </span>
                       </div>
@@ -328,8 +338,12 @@ export function CampaignOverviewCard({
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3.5">
-                    <div className="flex min-w-[170px] items-center gap-3">
+                  <td
+                    role="cell"
+                    data-label="Participações"
+                    className="px-4 py-3.5"
+                  >
+                    <div className="flex min-w-0 flex-wrap items-center gap-3">
                       <CampaignPeopleAvatars
                         campaignId={campaign.id}
                         peopleCount={campaign.people}
@@ -345,26 +359,32 @@ export function CampaignOverviewCard({
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-3.5">
-                    <AnimatedNumber value={campaign.deliveredPeople} />/
-                    <AnimatedNumber value={campaign.people} />
+                  <td
+                    role="cell"
+                    data-label="Entregues"
+                    className="px-4 py-3.5"
+                  >
+                    <span>
+                      <AnimatedNumber value={campaign.deliveredPeople} />/
+                      <AnimatedNumber value={campaign.people} />
+                    </span>
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td role="cell" data-label="Abertura" className="px-4 py-3.5">
                     <CampaignRate
                       value={campaign.openRate}
                       label="Taxa de abertura"
                     />
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td role="cell" data-label="Cliques" className="px-4 py-3.5">
                     <CampaignRate
                       value={campaign.clickRate}
                       label="Taxa de cliques"
                     />
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td role="cell" data-label="Reportes" className="px-4 py-3.5">
                     <AnimatedNumber value={campaign.reportedPeople} />
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td role="cell" data-label="Status" className="px-4 py-3.5">
                     <span className={statusClass(campaign.status)}>
                       {statusLabel(campaign.status)}
                     </span>
@@ -373,8 +393,9 @@ export function CampaignOverviewCard({
               );
             })}
             {!campaigns.length && (
-              <tr>
+              <tr role="row">
                 <td
+                  role="cell"
                   className="px-4 py-8 text-center text-[11px] text-[var(--text-muted)]"
                   colSpan={9}
                 >
