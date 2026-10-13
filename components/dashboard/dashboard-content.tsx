@@ -6,19 +6,15 @@ import { SignalSummaryCard } from "@/components/dashboard/signal-summary-card";
 import type {
   Campaign,
   CampaignBar,
-  CampaignParticipants,
   CampaignSummary,
   OverviewTotals,
 } from "@/components/dashboard/types";
-import type { PersonAvatarMap } from "@/lib/person-avatars";
 import type { DashboardCompanyFilterOption } from "./dashboard-company-filter";
 
 type DashboardContentProps = {
   companies: Pick<DashboardCompanyFilterOption, "id" | "name" | "logoUrl">[];
   campaignBars: CampaignBar[];
   campaigns: Campaign[];
-  personAvatars: PersonAvatarMap;
-  participantsByCampaign: CampaignParticipants;
   campaignSummary: CampaignSummary[];
   totals: OverviewTotals;
 };
@@ -27,8 +23,6 @@ export function DashboardContent({
   companies,
   campaignBars,
   campaigns,
-  personAvatars,
-  participantsByCampaign,
   campaignSummary,
   totals,
 }: DashboardContentProps) {
@@ -67,8 +61,6 @@ export function DashboardContent({
       <CampaignOverviewCard
         companies={companies}
         campaigns={campaignSummary}
-        personAvatars={personAvatars}
-        participantsByCampaign={participantsByCampaign}
         totals={totals}
       />
     </div>

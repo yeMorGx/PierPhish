@@ -607,8 +607,6 @@ export default function Home() {
             campaignBars={campaignBars}
             campaigns={filteredCampaigns}
             campaignSummary={campaignSummary}
-            personAvatars={personAvatars}
-            participantsByCampaign={participantsByCampaign}
             totals={totals}
           />
         </div>

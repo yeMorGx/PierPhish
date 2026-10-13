@@ -4,91 +4,20 @@ import {
   useCampaignLogos,
 } from "@/components/campaigns/campaign-logo";
 import { AnimatedNumber } from "@/components/dashboard/animated-number";
-import {
-  AnimatedTooltip,
-  type AnimatedTooltipItem,
-} from "@/components/ui/animated-tooltip";
 import { Icon } from "@/components/ui/icon";
 import { Card } from "@/components/ui/card";
 import type {
-  CampaignParticipants,
   CampaignSummary,
   OverviewTotals,
 } from "@/components/dashboard/types";
-import type { PersonAvatarMap } from "@/lib/person-avatars";
 import type { DashboardCompanyFilterOption } from "./dashboard-company-filter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type CampaignOverviewCardProps = {
   companies?: Pick<DashboardCompanyFilterOption, "id" | "name" | "logoUrl">[];
   campaigns: CampaignSummary[];
-  personAvatars?: PersonAvatarMap;
-  participantsByCampaign?: CampaignParticipants;
   totals: OverviewTotals;
 };
-
-function avatarUrl(
-  name: string,
-  index: number,
-  avatar: string | null | undefined,
-) {
-  if (avatar) return avatar;
-
-  const initials = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-  const fills = ["#202831", "#66737b", "#9aa3a6", "#c9cfcc"];
-  const fill = fills[index % fills.length];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="40" cy="40" r="40" fill="${fill}"/><text x="40" y="44" fill="#ffffff" font-family="Arial,sans-serif" font-size="24" text-anchor="middle">${initials}</text></svg>`;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-}
-
-function tooltipPeople(
-  campaignId: number,
-  participants: CampaignParticipants[string],
-  personAvatars: PersonAvatarMap,
-): AnimatedTooltipItem[] {
-  return participants.map((participant, index) => ({
-    id: campaignId * 10 + index,
-    name: participant.name,
-    designation: participant.id.includes("@")
-      ? participant.id
-      : "Pessoa participante",
-    image: avatarUrl(participant.name, index, personAvatars[participant.id]),
-  }));
-}
-
-function CampaignPeopleAvatars({
-  campaignId,
-  peopleCount,
-  participants,
-  personAvatars,
-}: {
-  campaignId: number;
-  peopleCount: number;
-  participants: CampaignParticipants[string];
-  personAvatars: PersonAvatarMap;
-}) {
-  const allPeople = tooltipPeople(campaignId, participants, personAvatars);
-  const visiblePeople = allPeople.slice(0, 4);
-  const remainingPeople = allPeople.slice(4);
-  const remainingCount = Math.max(
-    peopleCount - visiblePeople.length,
-    remainingPeople.length,
-    0,
-  );
-
-  return (
-    <AnimatedTooltip
-      items={visiblePeople}
-      numPeople={remainingCount}
-      remainingItems={remainingPeople}
-    />
-  );
-}
 
 function statusLabel(status: string | null) {
   if (!status) return "Sem status";
@@ -136,8 +65,6 @@ function CampaignRate({ value, label }: { value: number; label: string }) {
 export function CampaignOverviewCard({
   companies = [],
   campaigns,
-  personAvatars = {},
-  participantsByCampaign = {},
   totals,
 }: CampaignOverviewCardProps) {
   const { logos } = useCampaignLogos();
@@ -257,7 +184,7 @@ export function CampaignOverviewCard({
           aria-label="Resumo de todas as campanhas"
         >
           <colgroup>
-            {[3, 25, 13, 17, 10, 8, 8, 7, 9].map((width, index) => (
+            {[3, 34, 16, 11, 9, 9, 7, 11].map((width, index) => (
               <col key={index} style={{ width: `${width}%` }} />
             ))}
           </colgroup>
@@ -269,7 +196,6 @@ export function CampaignOverviewCard({
               <th className="w-[48px] px-4 py-3 font-extrabold">#</th>
               <th className="px-4 py-3 font-extrabold">Campanha</th>
               <th className="px-4 py-3 font-extrabold">Empresa</th>
-              <th className="px-4 py-3 font-extrabold">Participações</th>
               <th className="px-4 py-3 font-extrabold">Entregues</th>
               <th className="px-4 py-3 font-extrabold">Abertura</th>
               <th className="px-4 py-3 font-extrabold">Cliques</th>
@@ -340,27 +266,6 @@ export function CampaignOverviewCard({
                   </td>
                   <td
                     role="cell"
-                    data-label="Participações"
-                    className="px-4 py-3.5"
-                  >
-                    <div className="flex min-w-0 flex-wrap items-center gap-3">
-                      <CampaignPeopleAvatars
-                        campaignId={campaign.id}
-                        peopleCount={campaign.people}
-                        participants={
-                          participantsByCampaign[String(campaign.id)] ?? []
-                        }
-                        personAvatars={personAvatars}
-                      />
-                      {index === 0 && (
-                        <span className="inline-flex rounded-full bg-[#edf2f3] px-2 py-1 text-[10px] font-bold text-[#5f7681]">
-                          maior alcance
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td
-                    role="cell"
                     data-label="Entregues"
                     className="px-4 py-3.5"
                   >
@@ -397,7 +302,7 @@ export function CampaignOverviewCard({
                 <td
                   role="cell"
                   className="px-4 py-8 text-center text-[11px] text-[var(--text-muted)]"
-                  colSpan={9}
+                  colSpan={8}
                 >
                   Nenhuma campanha encontrada.
                 </td>

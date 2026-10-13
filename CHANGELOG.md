@@ -144,6 +144,13 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-10-13 — Remoção da coluna Participações
+
+- Removida a coluna Participações da tabela do dashboard, incluindo os avatares e o destaque por linha. As oito colunas restantes receberam novas larguras, com mais espaço para campanha, empresa e status; o estado vazio foi ajustado para oito colunas.
+- Removidos os helpers e props de avatares que ficaram sem uso nesse componente. O indicador agregado de participações acima da tabela e os dados usados pelo modo visual continuam funcionando.
+- Validações: `pnpm exec tsc --noEmit`, Prettier e `git diff --check` passaram. Detector Impeccable do componente: zero alertas. Nenhum teste automatizado foi executado.
+- Entrega: commit/push pendentes; deploy ainda não confirmado. Próximo passo: conferir a tabela publicada com oito colunas.
+
 ### 2026-10-13 — Resumo sem scroll horizontal e status coloridos
 
 - Removidos a largura mínima de 1040 px e o scroll horizontal da tabela. No desktop, as nove colunas dividem a largura disponível; nomes quebram linha e participações refluem. Abaixo de 1000 px, cada campanha reorganiza os campos em duas colunas com rótulos, preservando todos os dados.
