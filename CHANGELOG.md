@@ -150,7 +150,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - Retirado o padding da imagem da empresa, mantendo o formato circular e a proporção da logo.
 - Conforme o pedido explícito por cor nos status, “Em andamento” usa âmbar e “Concluída” usa verde. A exceção fica restrita a esses status, com tokens próprios para os temas claro e escuro e rótulos textuais preservados.
 - Validações: `pnpm exec tsc --noEmit`, Prettier e `git diff --check` passaram; detector Impeccable do componente retornou zero alertas. Contraste dos status: 6,02:1 e 6,74:1 no claro, 9,52:1 e 8,31:1 no escuro. Nenhum teste automatizado foi executado.
-- Entrega: commit/push pendentes. Inspeção visual e deploy ainda não confirmados nesta sessão. Próximo passo: conferir o layout publicado em desktop/mobile com nomes longos e logos reais.
+- Entrega: commit `66511f5` enviado para `origin/main`. Inspeção visual e deploy ainda não confirmados nesta sessão. Próximo passo: conferir o layout publicado em desktop/mobile com nomes longos e logos reais.
 
 ### 2026-10-13 — Avatares circulares e cliques simplificados
 
