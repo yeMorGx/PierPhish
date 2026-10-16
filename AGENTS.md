@@ -67,11 +67,13 @@ Ao criar ou editar qualquer interface, siga estas regras. Elas têm prioridade s
 
 ### Componentes
 
+- **Regra obrigatória: nunca usar outline**, inclusive no foco de teclado. Não simule outline com ring ou sombra. Preserve o foco visível por mudança de fundo, texto ou sublinhado, com contraste adequado.
+
 - Card: borda `1px solid var(--border)`, raio de 10–12 px, padding de 20 px e fundo `--surface` ou transparente. Hover muda discretamente a borda e o fundo (3–5%), com `transition-colors` de 150 ms. Quando a navegação pedir um card, use título, descrição curta e link “Ver mais”; o indicador do link pode avançar 2–4 px no hover.
 - Botão primário: fundo `var(--text)`, texto `var(--bg)`, raio de 8 px, altura de 36–40 px e peso 500; no hover reduza levemente a opacidade.
 - Botão secundário: transparente, borda de 1 px e texto `var(--text)`; hover usa `--surface`.
 - Badge: pill de 11–12 px, borda fina ou fundo cinza translúcido, sem cores fortes.
-- Input: altura de 40 px, borda de 1 px, raio de 8 px e fundo `--bg`; foco com `outline: 2px solid var(--accent)` e `outline-offset: 2px`.
+- Input: altura de 40 px, borda de 1 px, raio de 8 px e fundo `--bg`; foco indicado por mudança de fundo e texto, sem outline.
 - Header fixo, quando fizer sentido: altura de 56–64 px, borda inferior e fundo semitransparente; blur de até 8 px somente para legibilidade do conteúdo atrás, nunca como decoração.
 - Feed/lista: linhas separadas por bordas finas, sem cartões repetidos. Data pequena em cinza, título em destaque e descrição abaixo.
 - Código/dado técnico: fundo levemente diferente, borda de 1 px, raio de 8 px, fonte mono de 13 px e botão de copiar quando houver conteúdo copiável.

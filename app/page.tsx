@@ -580,14 +580,15 @@ export default function Home() {
         selectedCompanyId={selectedCompanyId}
         onChange={setSelectedCompanyId}
         showLayoutControl={themePreferences.dashboardMode === "visual"}
-      />
-      <DashboardDateFilter
-        period={selectedPeriod}
-        reference={referenceDate}
-        onPeriodChange={setSelectedPeriod}
-        onReferenceChange={setReferenceDate}
-        campaignCount={filteredCampaigns.length}
-      />
+      >
+        <DashboardDateFilter
+          period={selectedPeriod}
+          reference={referenceDate}
+          onPeriodChange={setSelectedPeriod}
+          onReferenceChange={setReferenceDate}
+          campaignCount={filteredCampaigns.length}
+        />
+      </DashboardCompanyFilter>
       {themePreferences.dashboardMode === "visual" ? (
         <div data-tour="dashboard-content">
           <VisualDashboardContent

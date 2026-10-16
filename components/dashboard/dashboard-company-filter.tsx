@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { Icon } from "@/components/ui/icon";
 import { useUiStore } from "@/lib/ui-store";
 
@@ -15,6 +17,7 @@ type DashboardCompanyFilterProps = {
   selectedCompanyId: string;
   onChange: (companyId: string) => void;
   showLayoutControl?: boolean;
+  children?: ReactNode;
 };
 
 function initial(name: string) {
@@ -26,6 +29,7 @@ export function DashboardCompanyFilter({
   selectedCompanyId,
   onChange,
   showLayoutControl = false,
+  children,
 }: DashboardCompanyFilterProps) {
   const dashboardEditMode = useUiStore((state) => state.dashboardEditMode);
   const setDashboardEditMode = useUiStore(
@@ -79,28 +83,31 @@ export function DashboardCompanyFilter({
         </div>
       </div>
 
-      {showLayoutControl && (
-        <div className="dashboard-toolbar-actions">
-          {dashboardEditMode && (
+      <div className="dashboard-toolbar-trailing">
+        {children}
+        {showLayoutControl && (
+          <div className="dashboard-toolbar-actions">
+            {dashboardEditMode && (
+              <button
+                className="visual-dashboard-editor-reset"
+                type="button"
+                onClick={resetDashboardLayout}
+              >
+                Restaurar
+              </button>
+            )}
             <button
-              className="visual-dashboard-editor-reset"
+              className={`visual-dashboard-editor-toggle ${dashboardEditMode ? "is-active" : ""}`}
               type="button"
-              onClick={resetDashboardLayout}
+              aria-pressed={dashboardEditMode}
+              onClick={() => setDashboardEditMode(!dashboardEditMode)}
             >
-              Restaurar
+              <Icon name="tune" size={14} />
+              {dashboardEditMode ? "Concluir" : "Personalizar"}
             </button>
-          )}
-          <button
-            className={`visual-dashboard-editor-toggle ${dashboardEditMode ? "is-active" : ""}`}
-            type="button"
-            aria-pressed={dashboardEditMode}
-            onClick={() => setDashboardEditMode(!dashboardEditMode)}
-          >
-            <Icon name="tune" size={14} />
-            {dashboardEditMode ? "Concluir" : "Personalizar"}
-          </button>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

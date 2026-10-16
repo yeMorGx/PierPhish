@@ -144,6 +144,13 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-10-16 — Período compacto na barra de empresas
+
+- Removido o card de período abaixo das empresas. O filtro agora compartilha a barra das empresas, com botão arredondado que mostra o intervalo aplicado e abre um Popover HeroUI. Os seletores de dia, semana, mês e ano, navegação, contagem e aviso sobre métricas acumuladas ficam dentro do popover; alterações continuam aplicadas imediatamente.
+- Mantidos os controles HeroUI de calendário, mês e ano e os limites de datas existentes. O painel tem largura limitada à tela e os controles refluem em telas estreitas. O botão Personalizar do modo visual continua acessível na mesma barra.
+- Registrada no AGENTS.md a regra obrigatória de nunca usar outline ou simulá-lo com ring/sombra. O foco por teclado usa preenchimento e sublinhado; a política global remove outline e sombras de foco, inclusive nos controles HeroUI.
+- Validações: TypeScript (`pnpm exec tsc --noEmit`), Prettier e `git diff --check` passaram. Build em execução no momento deste registro; entrega será registrada após a conclusão. Nenhum teste automatizado, envio de campanha ou operação remota de banco/infraestrutura foi executado. Próximo passo: conferir a aparência e interação no site publicado, nos dois temas e em tela estreita.
+
 ### 2026-10-16 — Filtro de período com controles HeroUI
 
 - Reorganizado o filtro do dashboard: intervalo aplicado e contagem aparecem juntos, navegação usa botões HeroUI com ícones e alvos de 44 px; o atalho contextual mostra Hoje, Esta semana, Este mês ou Este ano e fica desabilitado no período atual.

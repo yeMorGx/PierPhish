@@ -9,13 +9,19 @@ import {
   Label,
   ListBox,
   NumberField,
+  Popover,
   Select,
   FieldError,
   ToggleButton,
   ToggleButtonGroup,
 } from "@heroui/react";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 export type DashboardPeriod = "all" | "day" | "week" | "month" | "year";
 
@@ -136,243 +142,269 @@ export function DashboardDateFilter({
 
   return (
     <I18nProvider locale="pt-BR">
-      <section
-        className="dashboard-date-filter"
-        data-period={period}
-        aria-label="Filtrar campanhas pela data de início"
-      >
-        <div className="dashboard-date-filter-top">
-          <div>
-            <h2>Período das campanhas</h2>
-            <p>Filtra campanhas pela data em que começaram.</p>
-          </div>
-          <ToggleButtonGroup
-            aria-label="Selecionar período"
-            className="dashboard-date-periods"
-            selectionMode="single"
-            disallowEmptySelection
-            selectedKeys={new Set([period])}
-            onSelectionChange={(keys) => {
-              const selected = [...keys][0] as DashboardPeriod | undefined;
-              if (!selected) return;
-              if (selected !== "all" && !reference)
-                onReferenceChange(today(getLocalTimeZone()));
-              onPeriodChange(selected);
-            }}
+      <Popover>
+        <Popover.Trigger<"button">
+          render={(props) => <button {...props} type="button" />}
+          className="dashboard-date-trigger"
+          aria-label={`Filtrar campanhas por período: ${rangeLabel(period, reference)}`}
+          title={rangeLabel(period, reference)}
+        >
+          <CalendarDays size={14} aria-hidden="true" />
+          <span>
+            {period === "all"
+              ? "Todo o período"
+              : rangeLabel(period, reference)}
+          </span>
+          <ChevronDown size={12} aria-hidden="true" />
+        </Popover.Trigger>
+        <Popover.Content
+          className="dashboard-date-panel"
+          placement="bottom end"
+          offset={8}
+        >
+          <Popover.Dialog
+            className="dashboard-date-filter"
+            data-period={period}
           >
-            {periodOptions.map((option) => (
-              <ToggleButton
-                className="dashboard-date-period"
-                id={option.id}
-                key={option.id}
-              >
-                {option.label}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-        </div>
-
-        <div className="dashboard-date-filter-bottom">
-          <div
-            className="dashboard-date-current"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            <strong>{rangeLabel(period, reference)}</strong>
-            <span>
-              {new Intl.NumberFormat("pt-BR").format(campaignCount)} campanha
-              {campaignCount === 1 ? "" : "s"} no período
-            </span>
-          </div>
-          {period !== "all" && reference && (
-            <div className="dashboard-date-controls">
-              <div
-                className="dashboard-date-navigation"
-                role="group"
-                aria-label="Navegar entre períodos"
-              >
-                <Button
-                  aria-label="Período anterior"
-                  className="dashboard-date-nav"
-                  variant="secondary"
-                  onPress={() =>
-                    onReferenceChange(moveReference(reference, period, -1))
-                  }
-                  type="button"
-                >
-                  <ChevronLeft size={16} aria-hidden="true" />
-                </Button>
-                <Button
-                  aria-label="Próximo período"
-                  className="dashboard-date-nav"
-                  variant="secondary"
-                  isDisabled={!canAdvance}
-                  onPress={() =>
-                    onReferenceChange(moveReference(reference, period, 1))
-                  }
-                  type="button"
-                >
-                  <ChevronRight size={16} aria-hidden="true" />
-                </Button>
+            <div className="dashboard-date-filter-top">
+              <div>
+                <Popover.Heading>Período das campanhas</Popover.Heading>
+                <p>Filtra campanhas pela data em que começaram.</p>
               </div>
-              {(period === "day" || period === "week") && (
-                <DatePicker
-                  key={period}
-                  className="dashboard-date-picker"
-                  isRequired
-                  shouldForceLeadingZeros
-                  value={reference}
-                  maxValue={currentDate}
-                  onChange={(value) => {
-                    if (value && value.compare(currentDate) <= 0)
-                      onReferenceChange(
-                        new CalendarDate(value.year, value.month, value.day),
-                      );
-                  }}
-                >
-                  <Label>
-                    {period === "week"
-                      ? "Dia da semana desejada"
-                      : "Escolher dia"}
-                  </Label>
-                  <DateField.Group>
-                    <DateField.Input>
-                      {(segment) => <DateField.Segment segment={segment} />}
-                    </DateField.Input>
-                    <DateField.Suffix>
-                      <DatePicker.Trigger aria-label="Abrir calendário">
-                        <DatePicker.TriggerIndicator />
-                      </DatePicker.Trigger>
-                    </DateField.Suffix>
-                  </DateField.Group>
-                  <FieldError className="dashboard-date-error">
-                    Informe uma data válida até hoje.
-                  </FieldError>
-                  <DatePicker.Popover
-                    className="dashboard-date-popover"
-                    placement="bottom end"
-                  >
-                    <Calendar
-                      aria-label="Escolher data de referência"
-                      maxValue={currentDate}
-                      firstDayOfWeek="mon"
-                    >
-                      <Calendar.Header>
-                        <Calendar.Heading />
-                        <Calendar.NavButton slot="previous" />
-                        <Calendar.NavButton slot="next" />
-                      </Calendar.Header>
-                      <Calendar.Grid>
-                        <Calendar.GridHeader>
-                          {(day) => (
-                            <Calendar.HeaderCell>{day}</Calendar.HeaderCell>
-                          )}
-                        </Calendar.GridHeader>
-                        <Calendar.GridBody>
-                          {(date) => <Calendar.Cell date={date} />}
-                        </Calendar.GridBody>
-                      </Calendar.Grid>
-                    </Calendar>
-                  </DatePicker.Popover>
-                </DatePicker>
-              )}
-              {period === "month" && (
-                <Select
-                  aria-label="Escolher mês"
-                  className="dashboard-date-month"
-                  variant="secondary"
-                  value={String(reference.month)}
-                  disabledKeys={
-                    reference.year === currentDate.year
-                      ? monthOptions
-                          .filter(
-                            (month) => Number(month.id) > currentDate.month,
-                          )
-                          .map((month) => month.id)
-                      : []
-                  }
-                  onChange={(value) => {
-                    if (typeof value === "string")
-                      onReferenceChange(
-                        new CalendarDate(reference.year, Number(value), 1),
-                      );
-                  }}
-                >
-                  <Label>Mês</Label>
-                  <Select.Trigger>
-                    <Select.Value />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                  <Select.Popover className="dashboard-date-month-popover">
-                    <ListBox aria-label="Meses">
-                      {monthOptions.map((month) => (
-                        <ListBox.Item
-                          id={month.id}
-                          key={month.id}
-                          textValue={month.label}
-                        >
-                          <Label>{month.label}</Label>
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                      ))}
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
-              )}
-              {(period === "month" || period === "year") && (
-                <NumberField
-                  className="dashboard-date-year"
-                  variant="secondary"
-                  value={reference.year}
-                  minValue={1}
-                  maxValue={currentDate.year}
-                  step={1}
-                  formatOptions={{ useGrouping: false }}
-                  onChange={(year) => {
-                    if (
-                      !Number.isInteger(year) ||
-                      year < 1 ||
-                      year > currentDate.year
-                    )
-                      return;
-                    const month =
-                      period === "year"
-                        ? 1
-                        : year === currentDate.year
-                          ? Math.min(reference.month, currentDate.month)
-                          : reference.month;
-                    onReferenceChange(new CalendarDate(year, month, 1));
-                  }}
-                >
-                  <Label>Ano</Label>
-                  <NumberField.Group>
-                    <NumberField.DecrementButton aria-label="Ano anterior" />
-                    <NumberField.Input />
-                    <NumberField.IncrementButton aria-label="Próximo ano" />
-                  </NumberField.Group>
-                  <FieldError className="dashboard-date-error">
-                    Informe um ano válido até {currentDate.year}.
-                  </FieldError>
-                </NumberField>
-              )}
-              <Button
-                className="dashboard-date-today"
-                variant="secondary"
-                isDisabled={isCurrentPeriod}
-                onPress={() => onReferenceChange(today(getLocalTimeZone()))}
-                type="button"
+              <ToggleButtonGroup
+                aria-label="Selecionar período"
+                className="dashboard-date-periods"
+                selectionMode="single"
+                disallowEmptySelection
+                selectedKeys={new Set([period])}
+                onSelectionChange={(keys) => {
+                  const selected = [...keys][0] as DashboardPeriod | undefined;
+                  if (!selected) return;
+                  if (selected !== "all" && !reference)
+                    onReferenceChange(today(getLocalTimeZone()));
+                  onPeriodChange(selected);
+                }}
               >
-                {currentPeriodLabels[period]}
-              </Button>
+                {periodOptions.map((option) => (
+                  <ToggleButton
+                    className="dashboard-date-period"
+                    id={option.id}
+                    key={option.id}
+                  >
+                    {option.label}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
             </div>
-          )}
-        </div>
-        <p className="dashboard-date-filter-note">
-          {period === "week" && "Semanas de segunda a domingo. "}
-          As métricas mostram o total acumulado das campanhas selecionadas até a
-          última sincronização.
-        </p>
-      </section>
+
+            <div className="dashboard-date-filter-bottom">
+              <div
+                className="dashboard-date-current"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <strong>{rangeLabel(period, reference)}</strong>
+                <span>
+                  {new Intl.NumberFormat("pt-BR").format(campaignCount)}{" "}
+                  campanha
+                  {campaignCount === 1 ? "" : "s"} no período
+                </span>
+              </div>
+              {period !== "all" && reference && (
+                <div className="dashboard-date-controls">
+                  <div
+                    className="dashboard-date-navigation"
+                    role="group"
+                    aria-label="Navegar entre períodos"
+                  >
+                    <Button
+                      aria-label="Período anterior"
+                      className="dashboard-date-nav"
+                      variant="secondary"
+                      onPress={() =>
+                        onReferenceChange(moveReference(reference, period, -1))
+                      }
+                      type="button"
+                    >
+                      <ChevronLeft size={16} aria-hidden="true" />
+                    </Button>
+                    <Button
+                      aria-label="Próximo período"
+                      className="dashboard-date-nav"
+                      variant="secondary"
+                      isDisabled={!canAdvance}
+                      onPress={() =>
+                        onReferenceChange(moveReference(reference, period, 1))
+                      }
+                      type="button"
+                    >
+                      <ChevronRight size={16} aria-hidden="true" />
+                    </Button>
+                  </div>
+                  {(period === "day" || period === "week") && (
+                    <DatePicker
+                      key={period}
+                      className="dashboard-date-picker"
+                      isRequired
+                      shouldForceLeadingZeros
+                      value={reference}
+                      maxValue={currentDate}
+                      onChange={(value) => {
+                        if (value && value.compare(currentDate) <= 0)
+                          onReferenceChange(
+                            new CalendarDate(
+                              value.year,
+                              value.month,
+                              value.day,
+                            ),
+                          );
+                      }}
+                    >
+                      <Label>
+                        {period === "week"
+                          ? "Dia da semana desejada"
+                          : "Escolher dia"}
+                      </Label>
+                      <DateField.Group>
+                        <DateField.Input>
+                          {(segment) => <DateField.Segment segment={segment} />}
+                        </DateField.Input>
+                        <DateField.Suffix>
+                          <DatePicker.Trigger aria-label="Abrir calendário">
+                            <DatePicker.TriggerIndicator />
+                          </DatePicker.Trigger>
+                        </DateField.Suffix>
+                      </DateField.Group>
+                      <FieldError className="dashboard-date-error">
+                        Informe uma data válida até hoje.
+                      </FieldError>
+                      <DatePicker.Popover
+                        className="dashboard-date-popover"
+                        placement="bottom end"
+                      >
+                        <Calendar
+                          aria-label="Escolher data de referência"
+                          maxValue={currentDate}
+                          firstDayOfWeek="mon"
+                        >
+                          <Calendar.Header>
+                            <Calendar.Heading />
+                            <Calendar.NavButton slot="previous" />
+                            <Calendar.NavButton slot="next" />
+                          </Calendar.Header>
+                          <Calendar.Grid>
+                            <Calendar.GridHeader>
+                              {(day) => (
+                                <Calendar.HeaderCell>{day}</Calendar.HeaderCell>
+                              )}
+                            </Calendar.GridHeader>
+                            <Calendar.GridBody>
+                              {(date) => <Calendar.Cell date={date} />}
+                            </Calendar.GridBody>
+                          </Calendar.Grid>
+                        </Calendar>
+                      </DatePicker.Popover>
+                    </DatePicker>
+                  )}
+                  {period === "month" && (
+                    <Select
+                      aria-label="Escolher mês"
+                      className="dashboard-date-month"
+                      variant="secondary"
+                      value={String(reference.month)}
+                      disabledKeys={
+                        reference.year === currentDate.year
+                          ? monthOptions
+                              .filter(
+                                (month) => Number(month.id) > currentDate.month,
+                              )
+                              .map((month) => month.id)
+                          : []
+                      }
+                      onChange={(value) => {
+                        if (typeof value === "string")
+                          onReferenceChange(
+                            new CalendarDate(reference.year, Number(value), 1),
+                          );
+                      }}
+                    >
+                      <Label>Mês</Label>
+                      <Select.Trigger>
+                        <Select.Value />
+                        <Select.Indicator />
+                      </Select.Trigger>
+                      <Select.Popover className="dashboard-date-month-popover">
+                        <ListBox aria-label="Meses">
+                          {monthOptions.map((month) => (
+                            <ListBox.Item
+                              id={month.id}
+                              key={month.id}
+                              textValue={month.label}
+                            >
+                              <Label>{month.label}</Label>
+                              <ListBox.ItemIndicator />
+                            </ListBox.Item>
+                          ))}
+                        </ListBox>
+                      </Select.Popover>
+                    </Select>
+                  )}
+                  {(period === "month" || period === "year") && (
+                    <NumberField
+                      className="dashboard-date-year"
+                      variant="secondary"
+                      value={reference.year}
+                      minValue={1}
+                      maxValue={currentDate.year}
+                      step={1}
+                      formatOptions={{ useGrouping: false }}
+                      onChange={(year) => {
+                        if (
+                          !Number.isInteger(year) ||
+                          year < 1 ||
+                          year > currentDate.year
+                        )
+                          return;
+                        const month =
+                          period === "year"
+                            ? 1
+                            : year === currentDate.year
+                              ? Math.min(reference.month, currentDate.month)
+                              : reference.month;
+                        onReferenceChange(new CalendarDate(year, month, 1));
+                      }}
+                    >
+                      <Label>Ano</Label>
+                      <NumberField.Group>
+                        <NumberField.DecrementButton aria-label="Ano anterior" />
+                        <NumberField.Input />
+                        <NumberField.IncrementButton aria-label="Próximo ano" />
+                      </NumberField.Group>
+                      <FieldError className="dashboard-date-error">
+                        Informe um ano válido até {currentDate.year}.
+                      </FieldError>
+                    </NumberField>
+                  )}
+                  <Button
+                    className="dashboard-date-today"
+                    variant="secondary"
+                    isDisabled={isCurrentPeriod}
+                    onPress={() => onReferenceChange(today(getLocalTimeZone()))}
+                    type="button"
+                  >
+                    {currentPeriodLabels[period]}
+                  </Button>
+                </div>
+              )}
+            </div>
+            <p className="dashboard-date-filter-note">
+              {period === "week" && "Semanas de segunda a domingo. "}
+              As métricas mostram o total acumulado das campanhas selecionadas
+              até a última sincronização.
+            </p>
+          </Popover.Dialog>
+        </Popover.Content>
+      </Popover>
     </I18nProvider>
   );
 }
