@@ -144,6 +144,15 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 
 ## Histórico
 
+### 2026-10-16 — Filtro de período com controles HeroUI
+
+- Reorganizado o filtro do dashboard: intervalo aplicado e contagem aparecem juntos, navegação usa botões HeroUI com ícones e alvos de 44 px; o atalho contextual mostra Hoje, Esta semana, Este mês ou Este ano e fica desabilitado no período atual.
+- Dia e semana usam DatePicker/Calendar em português, com semanas iniciando na segunda-feira e validação até hoje. Mês usa Select de meses e NumberField para ano; ano usa somente NumberField. Meses futuros do ano atual ficam desabilitados; ao voltar ao ano atual, o mês é ajustado caso necessário.
+- Cálculo dos limites usa CalendarDate e o fuso local; o fim continua exclusivo para preservar o filtro por início da campanha. Não se trata de filtrar a data dos eventos: as métricas continuam acumuladas por campanha, conforme o aviso da interface.
+- O layout móvel quebra os atalhos em linhas, sem scroll horizontal, e reorganiza os campos em telas estreitas. Novos estilos usam tokens, foco visível e superfícies sem sombras; sem novas dependências.
+- Validações: `pnpm exec tsc --noEmit`, `pnpm build` (69 páginas), Prettier e `git diff --check` passaram. Detector Impeccable do componente: zero alertas. Nenhum teste automatizado ou operação de campanha foi executado.
+- Entrega: commit/push pendentes; deploy e interação visual em navegador ainda não confirmados. Próximo passo: conferir calendário, seleção de mês/ano, navegação e foco no site publicado, nos dois temas e em telas estreitas.
+
 ### 2026-10-13 — Remoção da coluna Participações
 
 - Removida a coluna Participações da tabela do dashboard, incluindo os avatares e o destaque por linha. As oito colunas restantes receberam novas larguras, com mais espaço para campanha, empresa e status; o estado vazio foi ajustado para oito colunas.

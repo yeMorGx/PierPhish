@@ -14905,9 +14905,9 @@ html[data-theme][data-card-style] .companies-security-note svg {
 /* Report controls: compact enough to sit directly under the header. */
 .dashboard-date-filter {
   display: grid;
-  gap: 12px;
+  gap: 20px;
   margin: 0 4px 16px;
-  padding: 16px 20px;
+  padding: 20px;
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
   color: var(--ink);
@@ -14920,6 +14920,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .dashboard-date-filter h2 {
@@ -14932,11 +14933,14 @@ html[data-theme][data-card-style] .companies-security-note svg {
 .dashboard-date-filter-note {
   margin: 4px 0 0;
   color: var(--dashboard-date-muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
 .dashboard-date-periods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
   flex: none;
   padding: 3px;
   border: 1px solid var(--line);
@@ -14945,7 +14949,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
 }
 
 .dashboard-date-period {
-  min-height: 34px;
+  min-height: 44px;
   padding: 0 11px;
   border-radius: 7px;
   color: var(--dashboard-date-muted);
@@ -14964,32 +14968,39 @@ html[data-theme][data-card-style] .companies-security-note svg {
 
 .dashboard-date-current {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
 }
 
 .dashboard-date-current strong {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
-  text-transform: capitalize;
+  letter-spacing: -0.02em;
 }
 
 .dashboard-date-current span {
   color: var(--dashboard-date-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .dashboard-date-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
   gap: 8px;
+}
+
+.dashboard-date-navigation {
+  display: flex;
+  gap: 4px;
 }
 
 .dashboard-date-nav,
 .dashboard-date-today {
   display: inline-grid;
-  min-width: 36px;
-  height: 36px;
+  min-width: 44px;
+  height: 44px;
   place-items: center;
   padding: 0 10px;
   border: 1px solid var(--line);
@@ -14997,37 +15008,83 @@ html[data-theme][data-card-style] .companies-security-note svg {
   color: var(--ink);
   background: transparent;
   font-size: 13px;
+  font-weight: 500;
+  box-shadow: none;
   cursor: pointer;
 }
 
-.dashboard-date-nav:disabled {
+.dashboard-date-nav:disabled,
+.dashboard-date-today:disabled {
   color: var(--text-muted);
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.dashboard-date-picker {
+.dashboard-date-picker,
+.dashboard-date-month,
+.dashboard-date-year {
   display: grid;
-  gap: 3px;
-  min-width: 180px;
+  gap: 6px;
+  min-width: 0;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 13px;
 }
 
-.dashboard-date-picker .date-input-group {
-  min-height: 36px;
+.dashboard-date-picker {
+  width: 196px;
+}
+.dashboard-date-month {
+  width: 148px;
+}
+.dashboard-date-year {
+  width: 160px;
+}
+
+.dashboard-date-controls [data-slot="label"] {
+  color: var(--dashboard-date-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.dashboard-date-picker .date-input-group,
+.dashboard-date-month .select__trigger,
+.dashboard-date-year .number-field__group {
+  min-height: 44px;
+  height: 44px;
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--ink);
-  background: var(--surface);
+  background: var(--background);
   box-shadow: none;
 }
 
-.dashboard-date-picker .date-input-group__segment {
+.dashboard-date-picker .date-input-group__segment,
+.dashboard-date-month .select__value,
+.dashboard-date-year .number-field__input {
   color: var(--ink);
+  font-size: 14px;
 }
 
-.dashboard-date-popover {
+.dashboard-date-year .number-field__input {
+  min-width: 0;
+  width: 100%;
+}
+
+.dashboard-date-year button {
+  color: var(--ink);
+  background: transparent;
+  min-height: 44px;
+}
+
+.dashboard-date-error {
+  max-width: 196px;
+  color: var(--campaign-status-critical);
+  font-size: 12px;
+}
+
+.dashboard-date-popover,
+.dashboard-date-month-popover {
+  max-width: calc(100vw - 32px);
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
   color: var(--ink);
@@ -15035,17 +15092,68 @@ html[data-theme][data-card-style] .companies-security-note svg {
   box-shadow: none;
 }
 
+.dashboard-date-popover {
+  padding: 12px;
+}
+
+.dashboard-date-popover .calendar {
+  width: min(280px, calc(100vw - 64px));
+  max-width: 100%;
+}
+
+.dashboard-date-popover .calendar__cell,
+.dashboard-date-popover .calendar__nav-button {
+  color: var(--ink);
+}
+
+.dashboard-date-popover .calendar__cell[data-selected="true"] {
+  color: var(--background);
+  background: var(--ink);
+}
+
+.dashboard-date-month-popover {
+  padding: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.dashboard-date-month-popover [role="option"] {
+  min-height: 40px;
+  color: var(--ink);
+}
+
+.dashboard-date-month-popover [data-slot="label"] {
+  color: inherit;
+}
+
+.dashboard-date-month-popover [role="option"][data-selected="true"] {
+  color: var(--background);
+  background: var(--ink);
+}
+
+.dashboard-date-picker .date-input-group:focus-within,
+.dashboard-date-year .number-field__group:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .dashboard-date-period:focus-visible,
 .dashboard-date-nav:focus-visible,
 .dashboard-date-today:focus-visible,
-.dashboard-date-picker :focus-visible {
+.dashboard-date-picker :focus-visible,
+.dashboard-date-month :focus-visible,
+.dashboard-date-year :focus-visible,
+.dashboard-date-popover :focus-visible,
+.dashboard-date-month-popover :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
 .dashboard-date-nav:not(:disabled):hover,
-.dashboard-date-today:hover,
-.dashboard-date-picker .date-input-group:hover {
+.dashboard-date-today:not(:disabled):hover,
+.dashboard-date-picker .date-input-group:hover,
+.dashboard-date-month .select__trigger:hover,
+.dashboard-date-year .number-field__group:hover {
   border-color: var(--border-hover, var(--ink));
 }
 
@@ -15063,23 +15171,62 @@ html[data-theme][data-card-style] .companies-security-note svg {
   }
 
   .dashboard-date-periods {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     width: 100%;
-    overflow-x: auto;
+    min-width: 0;
   }
 
-  .dashboard-date-period {
-    flex: 1 0 auto;
+  .dashboard-date-period:first-child {
+    grid-column: 1 / -1;
   }
 
   .dashboard-date-controls {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .dashboard-date-period {
+    padding: 0 4px;
+  }
+
+  .dashboard-date-today {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .dashboard-date-picker {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .dashboard-date-month,
+  .dashboard-date-year {
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .dashboard-date-filter[data-period="year"] .dashboard-date-year {
+    grid-column: 1 / -1;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .dashboard-date-period {
     transition: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .dashboard-date-filter[data-period="month"] .dashboard-date-month {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-date-filter[data-period="month"] .dashboard-date-year {
+    grid-column: 1 / -1;
+    grid-row: 3;
   }
 }
 
