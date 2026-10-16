@@ -10,6 +10,16 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 
 ## Estado do projeto — atualizado em 16/10/2026
 
+### Preencher modelo PowerPoint do Canva — 2026-10-16
+
+- A janela **Exportar para Canva** agora aceita arrastar ou escolher um `.pptx` exportado do Canva. Ela detecta os marcadores, informa quantos campos PierSec encontrou e avisa sobre marcadores sem correspondência antes de gerar o arquivo.
+- O usuário adiciona marcadores de texto no modelo, como `{{empresa}}`, `{{periodo}}`, `{{taxa_abertura}}` e `{{campanha_1_nome}}`. A lista completa de campos gerais e por campanha está no próprio modal e em `templates/pptx/README.md`. Os valores vêm dos filtros ativos e do ranking do dashboard; campos de campanhas podem ser numerados de 1 a 250.
+- O modelo é processado no navegador com JSZip e não é enviado nem salvo no servidor. O fluxo valida `.pptx`, limita arquivo a 20 MB, slides a 100 e conteúdo descompactado a 150 MB. O layout, as imagens e os estilos existentes são mantidos; cada marcador deve estar em um único trecho de texto.
+- O modelo padrão PierSec continua disponível como alternativa. Marcadores desconhecidos permanecem no arquivo e são avisados antes/depois da geração. Não houve alteração no fluxo de autenticação ou nas rotas de campanha.
+- Validações: `pnpm lint` (TypeScript), Prettier e `git diff --check` aprovados. Não foi executada suíte automatizada; não foi fornecido um `.pptx` real do Canva para validar a compatibilidade final, e não houve deploy.
+- `tsconfig.json` agora exclui `.next-verification`, pasta temporária do build anterior, para que a checagem de TypeScript não percorra arquivos gerados.
+- Próximo passo: soltar o modelo real exportado do Canva no painel e conferir se os campos do design usam os marcadores suportados.
+
 ### Exportação de relatórios para Canva — 2026-10-16
 
 - Adicionado ao dashboard o botão **Exportar para Canva**. O resumo acompanha a empresa e o período selecionados e inclui métricas agregadas, o logo local quando disponível e as campanhas filtradas ordenadas por cliques. A tabela é dividida em páginas de cinco campanhas, com limite explícito de 250 por arquivo.

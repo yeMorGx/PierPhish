@@ -37,6 +37,7 @@
     "cn": "^0.4.0",
     "exceljs": "4.4.0",
     "gsap": "^3.13.0",
+    "jszip": "3.10.1",
     "lucide-react": "^1.47.0",
     "mailparser": "3.9.28",
     "motion": "^13.4.0",

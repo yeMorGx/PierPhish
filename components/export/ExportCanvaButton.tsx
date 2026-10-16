@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent, type DragEvent } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import {
   Dialog,
@@ -10,6 +10,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MAX_EXPORT_CAMPAIGNS, type ExportRequest } from "@/lib/export/types";
+import type {
+  CampaignExportSummary,
+  CampaignExportTotals,
+} from "@/lib/export/types";
+import {
+  fillCanvaTemplate,
+  inspectCanvaTemplate,
+  MAX_CANVA_TEMPLATE_BYTES,
+  type CanvaTemplateScan,
+} from "@/lib/export/canva-template";
 import { toast } from "sonner";
 
 type ExportCanvaButtonProps = {
@@ -18,6 +28,8 @@ type ExportCanvaButtonProps = {
   periodLabel: string;
   campaignCount: number;
   request: ExportRequest;
+  campaigns: CampaignExportSummary[];
+  totals: CampaignExportTotals;
 };
 
 function fallbackFilename(title: string) {
@@ -37,11 +49,75 @@ export function ExportCanvaButton({
   periodLabel,
   campaignCount,
   request: exportRequest,
+  campaigns,
+  totals,
 }: ExportCanvaButtonProps) {
   const { session } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [templateScan, setTemplateScan] = useState<CanvaTemplateScan | null>(
+    null,
+  );
+  const [templateError, setTemplateError] = useState("");
+  const [checkingTemplate, setCheckingTemplate] = useState(false);
+  const [draggingTemplate, setDraggingTemplate] = useState(false);
   const exceedsCampaignLimit = campaignCount > MAX_EXPORT_CAMPAIGNS;
+
+  async function selectTemplate(file: File | undefined) {
+    if (!file) return;
+    setTemplateError("");
+    setTemplateScan(null);
+    if (!file.name.toLowerCase().endsWith(".pptx")) {
+      setTemplateFile(null);
+      setTemplateError("Escolha um arquivo .pptx exportado do Canva.");
+      return;
+    }
+    if (file.size === 0 || file.size > MAX_CANVA_TEMPLATE_BYTES) {
+      setTemplateFile(null);
+      setTemplateError("O arquivo precisa ter até 20 MB.");
+      return;
+    }
+
+    setTemplateFile(file);
+    setCheckingTemplate(true);
+    try {
+      const scan = await inspectCanvaTemplate(file, {
+        companyName,
+        periodLabel,
+        campaigns,
+        totals,
+      });
+      setTemplateScan(scan);
+    } catch (error) {
+      setTemplateFile(null);
+      setTemplateError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível ler esse arquivo PowerPoint.",
+      );
+    } finally {
+      setCheckingTemplate(false);
+    }
+  }
+
+  function handleTemplateInput(event: ChangeEvent<HTMLInputElement>) {
+    void selectTemplate(event.currentTarget.files?.[0]);
+    event.currentTarget.value = "";
+  }
+
+  function handleTemplateDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setDraggingTemplate(false);
+    if (checkingTemplate) return;
+    void selectTemplate(event.dataTransfer.files[0]);
+  }
+
+  function clearTemplate() {
+    setTemplateFile(null);
+    setTemplateScan(null);
+    setTemplateError("");
+  }
 
   async function downloadPowerPoint() {
     if (!session?.access_token || loading) return;
@@ -91,6 +167,50 @@ export function ExportCanvaButton({
     }
   }
 
+  async function downloadCanvaTemplate() {
+    if (!templateFile || !templateScan?.recognized.length || loading) return;
+    if (exceedsCampaignLimit) {
+      toast.error(
+        `O limite é de ${MAX_EXPORT_CAMPAIGNS} campanhas por arquivo.`,
+      );
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await fillCanvaTemplate(templateFile, {
+        companyName,
+        periodLabel,
+        campaigns,
+        totals,
+      });
+      const objectUrl = URL.createObjectURL(result.blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = fallbackFilename(
+        `${templateFile.name.replace(/\.pptx$/i, "")}-PierSec`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      toast.success(`${result.replaced} campo(s) preenchido(s) no modelo.`);
+      if (result.unrecognized.length > 0) {
+        toast.warning(
+          `${result.unrecognized.length} marcador(es) sem correspondência foram mantidos no arquivo.`,
+        );
+      }
+      setOpen(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível preencher o modelo.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       <button
@@ -131,25 +251,138 @@ export function ExportCanvaButton({
             </div>
           </dl>
 
-          <section
-            className="export-canva-option"
-            aria-label="Arquivo PowerPoint"
-          >
-            <p className="export-canva-option-label">A · Arquivo PowerPoint</p>
+          <section className="export-canva-option" aria-label="Modelo do Canva">
+            <p className="export-canva-option-label">Modelo do Canva</p>
             <p className="export-canva-option-description">
-              Baixe o .pptx e importe-o no Canva ou abra no PowerPoint.
+              Solte aqui um .pptx exportado do Canva. O PierSec troca os
+              marcadores pelos dados do painel; o arquivo é processado neste
+              navegador.
             </p>
+            <div
+              className={`export-canva-dropzone${draggingTemplate ? "is-dragging" : ""}`}
+              onDragEnter={(event) => {
+                event.preventDefault();
+                setDraggingTemplate(true);
+              }}
+              onDragOver={(event) => event.preventDefault()}
+              onDragLeave={(event) => {
+                const nextTarget = event.relatedTarget;
+                if (
+                  !(nextTarget instanceof Node) ||
+                  !event.currentTarget.contains(nextTarget)
+                ) {
+                  setDraggingTemplate(false);
+                }
+              }}
+              onDrop={handleTemplateDrop}
+            >
+              <input
+                id="export-canva-template"
+                className="export-canva-file-input"
+                type="file"
+                disabled={checkingTemplate}
+                accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                onChange={handleTemplateInput}
+                aria-label="Escolher modelo PowerPoint do Canva"
+              />
+              <label htmlFor="export-canva-template">
+                {templateFile
+                  ? "Trocar arquivo .pptx"
+                  : "Escolher arquivo .pptx"}
+              </label>
+              <span>ou solte o arquivo nesta área · até 20 MB</span>
+            </div>
+            {templateFile && (
+              <div className="export-canva-template-file">
+                <span title={templateFile.name}>{templateFile.name}</span>
+                <button type="button" onClick={clearTemplate}>
+                  Remover
+                </button>
+              </div>
+            )}
+            {checkingTemplate && (
+              <p className="export-canva-help">Lendo os campos do modelo…</p>
+            )}
+            {templateError && (
+              <p className="export-canva-error" role="alert">
+                {templateError}
+              </p>
+            )}
+            {templateScan && (
+              <div className="export-canva-template-scan" aria-live="polite">
+                <p>
+                  {templateScan.slides} slides ·{" "}
+                  {templateScan.recognized.length} campo(s) PierSec
+                  encontrado(s)
+                </p>
+                {templateScan.recognized.length > 0 && (
+                  <p>
+                    Campos:{" "}
+                    {templateScan.recognized
+                      .slice(0, 5)
+                      .map((name) => `{{${name}}}`)
+                      .join(", ")}
+                    {templateScan.recognized.length > 5 ? ", …" : ""}
+                  </p>
+                )}
+                {templateScan.recognized.length === 0 ? (
+                  <p className="export-canva-error">
+                    Nenhum marcador reconhecido. Adicione campos como{" "}
+                    <code>{"{{empresa}}"}</code> no Canva e exporte o modelo
+                    novamente.
+                  </p>
+                ) : (
+                  <p className="export-canva-help">
+                    {templateScan.unrecognized.length > 0
+                      ? `${templateScan.unrecognized.length} marcador(es) desconhecido(s) ficarão sem alteração.`
+                      : "Todos os marcadores encontrados serão preenchidos."}
+                  </p>
+                )}
+              </div>
+            )}
+            <details className="export-canva-fields">
+              <summary>Campos que você pode inserir no Canva</summary>
+              <p>
+                Dados gerais: <code>{"{{empresa}}"}</code>,{" "}
+                <code>{"{{periodo}}"}</code>, <code>{"{{campanhas}}"}</code>,{" "}
+                <code>{"{{participantes}}"}</code>,{" "}
+                <code>{"{{enviados}}"}</code>, <code>{"{{entregues}}"}</code>,{" "}
+                <code>{"{{aberturas}}"}</code>,{" "}
+                <code>{"{{taxa_abertura}}"}</code>, <code>{"{{cliques}}"}</code>
+                , <code>{"{{taxa_cliques}}"}</code> e{" "}
+                <code>{"{{reportes}}"}</code>.
+              </p>
+              <p>
+                Para cada campanha, use por exemplo{" "}
+                <code>{"{{campanha_1_nome}}"}</code>,{" "}
+                <code>{"{{campanha_1_cliques}}"}</code> ou{" "}
+                <code>{"{{campanha_1_taxa_abertura}}"}</code>. Troque o número{" "}
+                para escolher outra campanha, até 250.
+              </p>
+              <p>
+                Digite cada marcador como um único trecho de texto no Canva. O
+                PierSec mantém fontes, cores, imagens e posicionamento do
+                modelo. Textos mais longos podem mudar as quebras de linha.
+              </p>
+            </details>
             <button
               type="button"
               className="export-canva-download"
-              onClick={() => void downloadPowerPoint()}
-              disabled={loading || exceedsCampaignLimit}
+              onClick={() => void downloadCanvaTemplate()}
+              disabled={
+                loading ||
+                checkingTemplate ||
+                !templateFile ||
+                !templateScan?.recognized.length ||
+                exceedsCampaignLimit ||
+                !session?.access_token
+              }
             >
               {loading
-                ? "Gerando arquivo…"
+                ? "Preenchendo modelo…"
                 : exceedsCampaignLimit
                   ? "Limite de 250 campanhas"
-                  : "Baixar .pptx"}
+                  : "Preencher e baixar modelo"}
             </button>
             {exceedsCampaignLimit && (
               <p className="export-canva-help">
@@ -157,21 +390,26 @@ export function ExportCanvaButton({
                 Ajuste os filtros para continuar.
               </p>
             )}
-            <p className="export-canva-help">
-              No Canva, escolha{" "}
-              <strong>Criar um design → Importar arquivo</strong> e selecione o
-              .pptx baixado.
-            </p>
           </section>
 
-          <section
-            className="export-canva-option export-canva-option-disabled"
-            aria-label="Exportação direta para o Canva"
-            aria-disabled="true"
-          >
-            <p className="export-canva-option-label">B · Direto no Canva</p>
+          <section className="export-canva-option" aria-label="Modelo PierSec">
+            <p className="export-canva-option-label">Usar o modelo padrão</p>
             <p className="export-canva-option-description">
-              Em breve (requer Canva Enterprise).
+              Gere uma apresentação pronta com o layout padrão do PierSec.
+            </p>
+            <button
+              type="button"
+              className="export-canva-download export-canva-download-secondary"
+              onClick={() => void downloadPowerPoint()}
+              disabled={
+                loading || exceedsCampaignLimit || !session?.access_token
+              }
+            >
+              {loading ? "Gerando arquivo…" : "Baixar modelo padrão"}
+            </button>
+            <p className="export-canva-help">
+              O arquivo também pode ser importado no Canva ou aberto no
+              PowerPoint.
             </p>
           </section>
 

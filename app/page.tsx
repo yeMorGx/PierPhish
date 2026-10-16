@@ -649,6 +649,8 @@ export default function Home() {
           periodLabel={exportPeriodLabel}
           campaignCount={totals.campaigns}
           request={exportRequest}
+          campaigns={campaignSummary}
+          totals={totals}
         />
       </DashboardCompanyFilter>
       {themePreferences.dashboardMode === "visual" ? (
