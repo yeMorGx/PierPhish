@@ -151,7 +151,7 @@ Criar e acompanhar campanhas de conscientização pelo PierSec. A pessoa usuári
 - Cálculo dos limites usa CalendarDate e o fuso local; o fim continua exclusivo para preservar o filtro por início da campanha. Não se trata de filtrar a data dos eventos: as métricas continuam acumuladas por campanha, conforme o aviso da interface.
 - O layout móvel quebra os atalhos em linhas, sem scroll horizontal, e reorganiza os campos em telas estreitas. Novos estilos usam tokens, foco visível e superfícies sem sombras; sem novas dependências.
 - Validações: `pnpm exec tsc --noEmit`, `pnpm build` (69 páginas), Prettier e `git diff --check` passaram. Detector Impeccable do componente: zero alertas. Nenhum teste automatizado ou operação de campanha foi executado.
-- Entrega: commit/push pendentes; deploy e interação visual em navegador ainda não confirmados. Próximo passo: conferir calendário, seleção de mês/ano, navegação e foco no site publicado, nos dois temas e em telas estreitas.
+- Entrega: commit `ab58baa` enviado para `origin/main`; deploy e interação visual em navegador ainda não confirmados. Próximo passo: conferir calendário, seleção de mês/ano, navegação e foco no site publicado, nos dois temas e em telas estreitas.
 
 ### 2026-10-13 — Remoção da coluna Participações
 
