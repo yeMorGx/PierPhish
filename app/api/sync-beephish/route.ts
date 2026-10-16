@@ -467,15 +467,21 @@ export async function POST(request: NextRequest) {
   let companyQuery = auth.client
     .from("pierphish_companies")
     .select("id,workspace_id,name,client_id,client_secret_ciphertext,status")
-    .eq("status", "active");
+    .eq("status", "active")
+    .eq("workspace_id", workspaceId);
   if (requestedCompanyId)
     companyQuery = companyQuery.eq("id", requestedCompanyId);
-  else companyQuery = companyQuery.eq("workspace_id", workspaceId);
   const { data: companyRows, error: companyError } = await companyQuery;
   if (companyError)
     return errorResponse("Não foi possível carregar as conexões.", 502);
 
   const companies = (companyRows ?? []) as Company[];
+  if (requestedCompanyId && !companies.length) {
+    return errorResponse(
+      "A conexão solicitada não foi encontrada neste workspace.",
+      404,
+    );
+  }
   if (
     !companies.length &&
     !requestedCompanyId &&
