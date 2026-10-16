@@ -6,9 +6,11 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
 import {
   DashboardDateFilter,
+  formatDashboardPeriodLabel,
   getDashboardDateRange,
   type DashboardPeriod,
 } from "@/components/dashboard/dashboard-date-filter";
+import { ExportCanvaButton } from "@/components/export/ExportCanvaButton";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { VisualDashboardContent } from "@/components/dashboard/visual-dashboard-content";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -23,6 +25,7 @@ import type {
   CampaignParticipants,
   CampaignSummary,
 } from "@/components/dashboard/types";
+import { buildSlidesFromSiteData } from "@/lib/export/build-slides";
 import type { WorkspaceRole } from "@/lib/company-data";
 import { demoCampaigns } from "@/lib/demo-data";
 import { demoCompanies, readLocalCompanies } from "@/lib/company-data";
@@ -269,6 +272,58 @@ export default function Home() {
         };
       })(),
     [campaignSummary],
+  );
+
+  const exportCompanyName =
+    selectedCompanyId === "all"
+      ? "Todas as empresas"
+      : (companyFilters.find((company) => company.id === selectedCompanyId)
+          ?.name ?? "Empresa selecionada");
+  const exportPeriodLabel = formatDashboardPeriodLabel(
+    selectedPeriod,
+    referenceDate,
+  );
+  const selectedCompanyLogo = companyFilters.find(
+    (company) => company.id === selectedCompanyId,
+  )?.logoUrl;
+  const exportRequest = useMemo(
+    () =>
+      buildSlidesFromSiteData({
+        companyName: exportCompanyName,
+        periodLabel: exportPeriodLabel,
+        logoDataUrl:
+          selectedCompanyId !== "all" &&
+          selectedCompanyLogo &&
+          /^data:image\/(png|jpeg);base64,/i.test(selectedCompanyLogo)
+            ? selectedCompanyLogo
+            : null,
+        campaigns: campaignSummary.map((campaign) => ({
+          name: campaign.name,
+          people: campaign.people,
+          sentPeople: campaign.sentPeople,
+          deliveredPeople: campaign.deliveredPeople,
+          openedPeople: campaign.openedPeople,
+          clickedPeople: campaign.clickedPeople,
+          reportedPeople: campaign.reportedPeople,
+        })),
+        totals: {
+          campaigns: totals.campaigns,
+          people: totals.people,
+          sent: totals.sent,
+          delivered: totals.delivered,
+          opened: totals.opened,
+          clicked: totals.clicked,
+          reported: totals.reported,
+        },
+      }),
+    [
+      campaignSummary,
+      exportCompanyName,
+      exportPeriodLabel,
+      selectedCompanyId,
+      selectedCompanyLogo,
+      totals,
+    ],
   );
 
   const latestSync = useMemo(
@@ -587,6 +642,13 @@ export default function Home() {
           onPeriodChange={setSelectedPeriod}
           onReferenceChange={setReferenceDate}
           campaignCount={filteredCampaigns.length}
+        />
+        <ExportCanvaButton
+          workspaceId={activeWorkspaceId}
+          companyName={exportCompanyName}
+          periodLabel={exportPeriodLabel}
+          campaignCount={totals.campaigns}
+          request={exportRequest}
         />
       </DashboardCompanyFilter>
       {themePreferences.dashboardMode === "visual" ? (

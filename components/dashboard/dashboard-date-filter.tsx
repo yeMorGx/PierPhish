@@ -96,7 +96,10 @@ function moveReference(
   return firstDay.add({ years: step });
 }
 
-function rangeLabel(period: DashboardPeriod, reference: CalendarDate | null) {
+export function formatDashboardPeriodLabel(
+  period: DashboardPeriod,
+  reference: CalendarDate | null,
+) {
   const range = getDashboardDateRange(period, reference);
   if (!range) return "Todas as datas";
   const longDate = new Intl.DateTimeFormat("pt-BR", {
@@ -113,6 +116,8 @@ function rangeLabel(period: DashboardPeriod, reference: CalendarDate | null) {
   if (period === "year") return String(range.start.getFullYear());
   return `${longDate.format(range.start)} – ${longDate.format(new Date(range.end.getTime() - 1))}`;
 }
+
+const rangeLabel = formatDashboardPeriodLabel;
 
 type DashboardDateFilterProps = {
   period: DashboardPeriod;

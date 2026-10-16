@@ -7,7 +7,10 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig = {
   output: "standalone",
   outputFileTracingRoot: projectRoot,
-  serverExternalPackages: ["@aikidosec/firewall"],
+  serverExternalPackages: ["@aikidosec/firewall", "pptx-automizer"],
+  outputFileTracingIncludes: {
+    "/api/export/pptx": ["./templates/pptx/base.pptx"],
+  },
 };
 
 export default nextConfig;

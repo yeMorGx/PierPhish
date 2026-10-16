@@ -8,7 +8,18 @@ Este arquivo registra o estado do projeto para continuar o trabalho em outro com
 
 Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos, endereços de destinatários ou outros segredos. Diferencie claramente código pronto, configuração aplicada em produção e validação ainda não feita.
 
-## Estado do projeto — atualizado em 08/10/2026
+## Estado do projeto — atualizado em 16/10/2026
+
+### Exportação de relatórios para Canva — 2026-10-16
+
+- Adicionado ao dashboard o botão **Exportar para Canva**. O resumo acompanha a empresa e o período selecionados e inclui métricas agregadas, o logo local quando disponível e as campanhas filtradas ordenadas por cliques. A tabela é dividida em páginas de cinco campanhas, com limite explícito de 250 por arquivo.
+- O modo de arquivo `.pptx` gera a apresentação no servidor com `pptx-automizer`; o modelo de exemplo tem capa, resumo de métricas e tabela de campanhas. `pnpm templates:pptx` regenera o `templates/pptx/base.pptx` usando o script versionado. O README documenta as formas nomeadas e como trocar o modelo pelo design final.
+- `POST /api/export/pptx` exige sessão Supabase com MFA e associação ativa ao workspace. A rota valida o schema e os campos pelo manifesto, limita o payload, aceita somente logos PNG/JPEG locais em data URL e não busca URLs externas. A exportação não leva nomes, e-mails ou outros dados individuais dos destinatários. O arquivo usa MIME de PPTX e `Cache-Control: private, no-store`.
+- O modal orienta como importar o arquivo no Canva. A opção de criação direta no Canva segue desabilitada com a mensagem **Em breve (requer Canva Enterprise)**. Não foi criada integração OAuth/API do Canva, migration, configuração remota ou publicação.
+- Validações: `pnpm lint` (TypeScript) aprovado; Prettier aprovado; `git diff --check` aprovado; dois arquivos de teste, três casos, aprovados. O teste do gerador confirmou quatro slides no cenário com páginas extras de campanhas.
+- O build padrão `pnpm build` parou ao tentar ler `.next/diagnostics/framework.json`, pois `.next` está marcado pelo Windows como ponto de nova análise do OneDrive (`EINVAL`). Tentei `next build` com uma pasta de saída temporária; a compilação iniciou, mas repetiu falhas de rede ao baixar as fontes Google usadas por `app/layout.tsx` e `app/not-found.tsx`, então interrompi a tentativa. Não houve deploy nem importação real no Canva.
+- A pasta local de saída `.next-verification/` ficou como artefato não versionado; ela foi acrescentada ao `.gitignore`. A tentativa de removê-la com `Remove-Item -Recurse` foi bloqueada pela política da ferramenta, então a limpeza fica pendente no computador atual.
+- Próximos passos: abrir um `.pptx` exportado no PowerPoint e importar no Canva; substituir o modelo de exemplo por um `.pptx` final fornecido pelo responsável; implementar o modo direto no Canva apenas depois de aprovar e preparar as credenciais/conta Enterprise.
 
 ### Contraste e espaçamento da gestão do workspace — 2026-09-29
 
