@@ -16,6 +16,7 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 - A sincronização e o recálculo também normalizam as falhas a partir de resultados completos antes de aplicar exclusões. Estados como **Not Delivered** e **Error Sending Email** são classificados como falha; o rótulo individual deixa de confundir esses estados com entrega ou envio.
 - O resumo explica a diferença entre participações e entregues como **sem entrega confirmada**, que pode incluir falhas, pendências ou registros ainda sem atualização. Essa diferença não é usada como total de falhas.
 - Validações: `pnpm lint` (TypeScript), Prettier e `git diff --check` aprovados. Nenhum teste automatizado foi adicionado ou executado. A leitura remota de diagnóstico não foi realizada por ausência de configuração de servidor nesta máquina; nenhum dado remoto foi alterado. O total real de falhas e o deploy ainda precisam de conferência no ambiente publicado.
+- Entrega: implementação `dc3912c` enviada para `origin/main` em 26/10/2026.
 - Próximo passo: conferir o resumo após carregar os resultados e, se necessário, sincronizar as campanhas. Não afirmar que toda a diferença de entrega representa falhas.
 
 ### Localização dos indicadores de participações e falhas — 2026-10-26
