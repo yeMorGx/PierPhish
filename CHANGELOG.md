@@ -10,6 +10,13 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 
 ## Estado do projeto — atualizado em 26/10/2026
 
+### Princípios de Gestalt e UX — 2026-10-26
+
+- Acrescentados ao `AGENTS.md` critérios práticos para Proximidade, Semelhança, Fechamento, Continuidade, Pregnância, Unidade, Fitts, Jakob, Hick-Hyman, Miller, usabilidade estética, Navalha de Occam e Postel.
+- A diretriz de Postel esclarece que aceitar variações comuns e seguras não flexibiliza validações de autenticação, autorização, segredos, dados pessoais ou operações de campanha. A referência de Miller é aproximada, não um limite rígido para tabelas ou listas.
+- Mudança somente documental. Validações: leitura do diff, Prettier e `git diff --check`; nenhum teste automatizado é aplicável. Nenhum deploy.
+- Próximos passos: aplicar esses critérios nas próximas mudanças de interface.
+
 ### Rankings de pessoas no dashboard — 2026-10-26
 
 - Os painéis “Sinais da operação” e “Risco humano” foram substituídos por **Pessoas mais recorrentes** e **Pessoas que mais reportam** na visão geral do dashboard.

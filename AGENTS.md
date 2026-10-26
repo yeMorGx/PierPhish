@@ -85,6 +85,26 @@ Ao criar ou editar qualquer interface, siga estas regras. Elas têm prioridade s
 - Mobile-first: uma coluna no mobile, duas em `sm` e três em `lg`, quando o conteúdo justificar.
 - Transições de 150–200 ms com `ease-out`, apenas em cor, borda e transform. Se uma entrada ajudar a leitura, use fade com `translateY(8px)` uma única vez, sem stagger longo. Sem parallax, bounce, entradas exageradas ou `hover:scale-105` em cards. Respeite `prefers-reduced-motion`.
 
+### Princípios de Gestalt e UX
+
+Use estes princípios como critérios de decisão em cada interface, adaptando-os ao contexto e às regras de acessibilidade, segurança e identidade visual já definidas.
+
+- **Proximidade:** mantenha juntos rótulos, valores e ações que pertencem à mesma tarefa; use espaço para separar grupos diferentes.
+- **Semelhança:** elementos com o mesmo papel devem compartilhar padrões visuais e comportamento. Não use cor ou forma parecida para significados diferentes.
+- **Fechamento:** use formas incompletas somente quando a pessoa puder entendê-las sem esforço. Não dependa de contornos ausentes para comunicar estados ou limites importantes.
+- **Continuidade:** organize conteúdo e foco em uma ordem previsível, guiando a leitura e a próxima ação sem mudanças bruscas de direção.
+- **Pregnância (Prägnanz):** simplifique a composição e a hierarquia; preserve os dados e controles necessários para concluir a tarefa.
+- **Unidade:** mantenha tipografia, espaçamento, componentes e tom coerentes entre telas relacionadas, sem tornar todas as seções visualmente iguais.
+- **Fitts:** ofereça áreas de interação confortáveis e separadas. A ação principal não deve depender de um ícone ou alvo minúsculo.
+- **Jakob:** prefira padrões de navegação e interação que as pessoas já conhecem, salvo quando uma mudança trouxer ganho claro e compreensível.
+- **Hick-Hyman:** reduza escolhas simultâneas, agrupe opções relacionadas e revele controles avançados quando forem necessários.
+- **Miller:** divida informação em grupos com rótulos. Trate 7 ± 2 como uma referência aproximada de carga de memória, não como limite rígido para linhas, campos ou resultados.
+- **Usabilidade estética:** use acabamento visual para apoiar confiança e compreensão; estética nunca substitui legibilidade, feedback ou comportamento correto.
+- **Navalha de Occam:** prefira a solução mais simples que cumpra os requisitos, cubra estados necessários e seja fácil de manter.
+- **Postel (robustez):** aceite variações comuns de entrada quando forem seguras, normalize-as e explique erros recuperáveis. Mantenha validação estrita para autenticação, autorização, segredos, dados pessoais e operações de campanha.
+
+Antes de concluir uma interface, confira se os agrupamentos são claros, os alvos são confortáveis, as escolhas estão contidas, os padrões são familiares, a leitura tem continuidade e cada elemento serve à tarefa.
+
 ### Proibido
 
 - Gradientes roxo/azul/rosa, blobs, orbes, glow, glassmorphism pesado, sombras grandes ou coloridas, bordas acima de 1 px e várias cores de acento.
