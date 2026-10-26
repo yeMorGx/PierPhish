@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CampaignLogoPicker } from "@/components/campaigns/campaign-logo";
 import { ClickedExportAction } from "@/components/campaigns/clicked-export-action";
+import { CampaignMetrics } from "@/components/campaigns/campaign-metrics";
+import type { Stats } from "@/components/dashboard/types";
 import { EmailSampleCard } from "@/components/campaigns/email-sample-card";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import {
@@ -34,14 +36,6 @@ import {
   loadWorkspaceExcludedEmails,
   normalizeWorkspaceEmail,
 } from "@/lib/workspace-exclusions";
-
-type Stats = {
-  total?: number;
-  delivered?: number;
-  opened?: number;
-  clicked?: number;
-  email_reported?: number;
-};
 
 type Campaign = {
   id: number;
@@ -835,49 +829,7 @@ export default function CampaignPeoplePage() {
               )}
             </header>
 
-            <section
-              className="grid grid-cols-4 gap-[var(--cards-gap)] max-[900px]:grid-cols-2 max-[520px]:grid-cols-1"
-              data-tour="campaign-metrics"
-            >
-              {[
-                ["Pessoas", summary.total, "na campanha", "text-[var(--ink)]"],
-                [
-                  "Abriram",
-                  summary.opened,
-                  "visualizaram o e-mail",
-                  "text-[#617b88]",
-                ],
-                [
-                  "Clicaram",
-                  summary.clicked,
-                  "acessaram o link",
-                  "text-[#b4775e]",
-                ],
-                [
-                  "Reportaram",
-                  summary.reported,
-                  "sinalizaram a mensagem",
-                  "text-[#768c4f]",
-                ],
-              ].map(([label, value, helper, color]) => (
-                <article
-                  className="surface-card rounded-[var(--radius-card)] p-6"
-                  key={String(label)}
-                >
-                  <p className="m-0 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
-                    {label}
-                  </p>
-                  <strong
-                    className={`mt-4 block text-[48px] leading-none font-[650] tracking-[-0.08em] ${color}`}
-                  >
-                    {value}
-                  </strong>
-                  <span className="mt-2 block text-[11px] text-[#87919a]">
-                    {helper}
-                  </span>
-                </article>
-              ))}
-            </section>
+            <CampaignMetrics stats={campaign.stats} />
 
             <section
               className="grid grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-1"

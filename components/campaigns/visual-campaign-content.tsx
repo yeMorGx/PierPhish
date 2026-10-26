@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { ClickedExportAction } from "@/components/campaigns/clicked-export-action";
+import { CampaignMetrics } from "@/components/campaigns/campaign-metrics";
+import type { Stats } from "@/components/dashboard/types";
 import { CampaignLogoPicker } from "@/components/campaigns/campaign-logo";
 import { EmailSampleCard } from "@/components/campaigns/email-sample-card";
 import { PersonAvatar } from "@/components/people/person-avatar";
@@ -18,9 +20,7 @@ type VisualCampaignContentProps = {
     name: string;
     status: string | null;
     synced_at: string | null;
-    stats: {
-      delivered?: number;
-    };
+    stats: Stats;
   };
   events: Array<{
     beephish_event_id: string;
@@ -136,14 +136,10 @@ export function VisualCampaignContent({
   visiblePeople,
 }: VisualCampaignContentProps) {
   const openingRate = percent(summary.opened, summary.total);
-  const delivered = campaign.stats?.delivered ?? summary.total;
 
   return (
     <div className="visual-campaign-dashboard">
-      <section
-        className="surface-card visual-campaign-hero"
-        data-tour="campaign-metrics"
-      >
+      <section className="surface-card visual-campaign-hero">
         <div className="visual-campaign-hero-main">
           <Link className="visual-campaign-back" href="/">
             <Icon name="arrow" size={15} />
@@ -192,32 +188,7 @@ export function VisualCampaignContent({
         </div>
       </section>
 
-      <section
-        className="visual-campaign-metric-grid"
-        aria-label="Resumo da campanha"
-      >
-        <article className="surface-card visual-campaign-metric">
-          <span>Pessoas</span>
-          <strong>{summary.total}</strong>
-        </article>
-        <article className="surface-card visual-campaign-metric">
-          <span>Entregues</span>
-          <strong>{delivered}</strong>
-          <small>{percent(delivered, summary.total)}%</small>
-        </article>
-        <article className="surface-card visual-campaign-metric metric-accent">
-          <span>Abriram</span>
-          <strong>{summary.opened}</strong>
-          <small>{openingRate}%</small>
-        </article>
-        <article className="surface-card visual-campaign-metric metric-accent-dark">
-          <span>Sinais</span>
-          <strong>{summary.clicked + summary.reported}</strong>
-          <small>
-            {summary.clicked} cliques · {summary.reported} reportes
-          </small>
-        </article>
-      </section>
+      <CampaignMetrics stats={campaign.stats} />
 
       <section
         className="visual-campaign-content-grid"
