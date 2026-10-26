@@ -49,6 +49,7 @@ type RawParticipant = {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
+  reported: boolean | null;
 };
 
 type AdminCompaniesResponse = {
@@ -124,6 +125,7 @@ export default function Home() {
     useState<CampaignParticipants>(
       isSupabaseConfigured ? {} : demoParticipantsByCampaign,
     );
+  const [participantsLoading, setParticipantsLoading] = useState(false);
   const [personAvatars, setPersonAvatars] = useState<PersonAvatarMap>({});
   const [selectedId, setSelectedId] = useState(5345);
   const [syncing, setSyncing] = useState(false);
@@ -439,10 +441,14 @@ export default function Home() {
   ]);
 
   async function loadCampaigns() {
-    if (!supabase || !workspaceHasBeephishData) return;
+    if (!supabase || !workspaceHasBeephishData) {
+      setParticipantsLoading(false);
+      return;
+    }
     const requestedWorkspaceId = activeWorkspaceId;
     const requestedDatabaseWorkspaceId =
       databaseWorkspaceId(requestedWorkspaceId);
+    setParticipantsLoading(true);
     setError(null);
 
     const { data, error: queryError } = await supabase
@@ -454,6 +460,7 @@ export default function Home() {
     if (readActiveWorkspaceId() !== requestedWorkspaceId) return;
     if (queryError) {
       setError(queryError.message);
+      setParticipantsLoading(false);
       return;
     }
 
@@ -467,28 +474,44 @@ export default function Home() {
     if (readActiveWorkspaceId() !== requestedWorkspaceId) return;
     const nextParticipants: CampaignParticipants = {};
     if (nextCampaigns.length) {
-      const { data: participantData } = await supabase
-        .from("beephish_results")
-        .select(
-          "campaign_id,beephish_id,first_name,last_name,email,modified_date",
-        )
-        .eq("workspace_id", requestedDatabaseWorkspaceId)
-        .in(
-          "campaign_id",
-          nextCampaigns.map((campaign) => campaign.id),
-        )
-        .order("modified_date", { ascending: false })
-        .limit(500);
-      for (const participant of (participantData ?? []) as RawParticipant[]) {
+      const pageSize = 1000;
+      const participantRows: RawParticipant[] = [];
+      for (let start = 0; ; start += pageSize) {
+        const { data: participantData, error: participantError } =
+          await supabase
+            .from("beephish_results")
+            .select(
+              "campaign_id,beephish_id,first_name,last_name,email,reported,modified_date",
+            )
+            .eq("workspace_id", requestedDatabaseWorkspaceId)
+            .in(
+              "campaign_id",
+              nextCampaigns.map((campaign) => campaign.id),
+            )
+            .order("modified_date", { ascending: false })
+            .order("campaign_id", { ascending: true })
+            .order("beephish_id", { ascending: true })
+            .range(start, start + pageSize - 1);
+        if (readActiveWorkspaceId() !== requestedWorkspaceId) return;
+        if (participantError) {
+          setError(participantError.message);
+          setParticipantsByCampaign({});
+          setParticipantsLoading(false);
+          return;
+        }
+        const pageRows = (participantData ?? []) as RawParticipant[];
+        participantRows.push(...pageRows);
+        if (pageRows.length < pageSize) break;
+      }
+
+      for (const participant of participantRows) {
         if (excludedEmails.has(normalizeWorkspaceEmail(participant.email))) {
           continue;
         }
         const name =
           [participant.first_name, participant.last_name]
             .filter(Boolean)
-            .join(" ") ||
-          participant.email ||
-          "Pessoa participante";
+            .join(" ") || "Nome não informado";
         const personId =
           participant.email?.trim().toLowerCase() ||
           participant.beephish_id ||
@@ -496,12 +519,16 @@ export default function Home() {
         const key = String(participant.campaign_id);
         const current = nextParticipants[key] ?? [];
         if (!current.some((participant) => participant.id === personId)) {
-          nextParticipants[key] = [...current, { id: personId, name }];
+          nextParticipants[key] = [
+            ...current,
+            { id: personId, name, reported: Boolean(participant.reported) },
+          ];
         }
       }
     }
     if (readActiveWorkspaceId() !== requestedWorkspaceId) return;
     setParticipantsByCampaign(nextParticipants);
+    setParticipantsLoading(false);
     if (
       nextCampaigns.length &&
       !nextCampaigns.some((campaign) => campaign.id === selectedId)
@@ -672,6 +699,11 @@ export default function Home() {
             campaignBars={campaignBars}
             campaigns={filteredCampaigns}
             campaignSummary={campaignSummary}
+            participantsByCampaign={participantsByCampaign}
+            participantsLoading={participantsLoading}
+            participantRankingsAvailable={
+              isSupabaseConfigured && workspaceHasBeephishData
+            }
             totals={totals}
           />
         </div>

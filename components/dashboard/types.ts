@@ -51,6 +51,7 @@ export type CampaignBar = Campaign & { rate: number };
 export type CampaignParticipant = {
   id: string;
   name: string;
+  reported?: boolean;
 };
 
 export type CampaignParticipants = Record<string, CampaignParticipant[]>;

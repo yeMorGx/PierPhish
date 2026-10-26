@@ -8907,6 +8907,11 @@ html[data-card-style="apple"] .surface-card,
   min-height: 316px;
 }
 
+.bento-dashboard > .people-ranking-card {
+  grid-column: span 6;
+  min-height: 316px;
+}
+
 .bento-dashboard > .campaign-overview-card {
   grid-column: 1 / -1;
 }
@@ -8920,6 +8925,7 @@ html[data-card-style="apple"] .surface-card,
 .bento-dashboard .metric-card,
 .bento-dashboard .bento-signals-card,
 .bento-dashboard .risk-overview,
+.bento-dashboard .people-ranking-card,
 .bento-dashboard .campaign-overview-card {
   border-radius: 20px !important;
 }
@@ -9297,6 +9303,73 @@ html[data-card-style="apple"] .surface-card,
   background: var(--accent-soft) !important;
 }
 
+.people-ranking-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.people-ranking-header h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.people-ranking-header p {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.people-ranking-list {
+  margin: 20px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--line-soft);
+  list-style: none;
+}
+
+.people-ranking-list li {
+  display: grid;
+  min-height: 46px;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.people-ranking-position {
+  color: var(--text-muted);
+  font-family: var(--font-data);
+  font-size: 11px;
+}
+
+.people-ranking-name {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.people-ranking-count {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.people-ranking-state {
+  margin: 20px 0 0;
+  padding: 18px 0;
+  border-top: 1px solid var(--line-soft);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .bento-dashboard .campaign-overview-card {
   padding: 24px !important;
 }
@@ -9373,6 +9446,10 @@ html[data-card-style="apple"] .surface-card,
   }
 
   .bento-dashboard > .risk-overview {
+    grid-column: 1 / -1;
+  }
+
+  .bento-dashboard > .people-ranking-card {
     grid-column: 1 / -1;
   }
 }

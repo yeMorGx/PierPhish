@@ -8,7 +8,15 @@ Este arquivo registra o estado do projeto para continuar o trabalho em outro com
 
 Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos, endereços de destinatários ou outros segredos. Diferencie claramente código pronto, configuração aplicada em produção e validação ainda não feita.
 
-## Estado do projeto — atualizado em 16/10/2026
+## Estado do projeto — atualizado em 26/10/2026
+
+### Rankings de pessoas no dashboard — 2026-10-26
+
+- Os painéis “Sinais da operação” e “Risco humano” foram substituídos por **Pessoas mais recorrentes** e **Pessoas que mais reportam** na visão geral do dashboard.
+- Os rankings seguem a empresa e o período ativos. Recorrência conta em quantas campanhas filtradas a pessoa aparece; reportes contam em quantas dessas campanhas a pessoa reportou uma mensagem. Cada lista mostra até cinco nomes e a contagem correspondente.
+- Os resultados são consultados em páginas no workspace ativo, respeitam a lista de e-mails excluídos e não exibem endereços de e-mail nos rankings. Com estado de carregamento, workspace sem dados ou sem resultados, a interface mostra uma mensagem correspondente.
+- Validações: `pnpm lint`, Prettier e `git diff --check` aprovados. Não foram adicionados nem executados testes automatizados, conforme as instruções do repositório. Deploy ainda não verificado.
+- Próximos passos: conferir os rankings com dados reais após sincronizar o workspace. Nenhuma migration foi necessária.
 
 ### Preencher modelo PowerPoint do Canva — 2026-10-16
 

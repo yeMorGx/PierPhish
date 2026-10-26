@@ -1,11 +1,11 @@
 import { CampaignOpeningsCard } from "@/components/dashboard/campaign-openings-card";
 import { CampaignOverviewCard } from "@/components/dashboard/campaign-overview-card";
 import { OverviewHero } from "@/components/dashboard/overview-hero";
-import { RiskCard } from "@/components/dashboard/risk-card";
-import { SignalSummaryCard } from "@/components/dashboard/signal-summary-card";
+import { PeopleRankings } from "@/components/dashboard/people-rankings";
 import type {
   Campaign,
   CampaignBar,
+  CampaignParticipants,
   CampaignSummary,
   OverviewTotals,
 } from "@/components/dashboard/types";
@@ -16,6 +16,9 @@ type DashboardContentProps = {
   campaignBars: CampaignBar[];
   campaigns: Campaign[];
   campaignSummary: CampaignSummary[];
+  participantsByCampaign: CampaignParticipants;
+  participantsLoading: boolean;
+  participantRankingsAvailable: boolean;
   totals: OverviewTotals;
 };
 
@@ -24,6 +27,9 @@ export function DashboardContent({
   campaignBars,
   campaigns,
   campaignSummary,
+  participantsByCampaign,
+  participantsLoading,
+  participantRankingsAvailable,
   totals,
 }: DashboardContentProps) {
   return (
@@ -43,20 +49,11 @@ export function DashboardContent({
         totals={totals}
       />
       <CampaignOpeningsCard campaigns={campaignBars} total={totals.people} />
-      <SignalSummaryCard
-        clicked={totals.clicked}
-        delivered={totals.delivered}
-        people={totals.people}
-        reported={totals.reported}
-        submitted={totals.submitted}
-      />
-      <RiskCard
-        clicked={totals.clicked}
-        delivered={totals.delivered}
-        opened={totals.opened}
-        reported={totals.reported}
-        submitted={totals.submitted}
-        total={totals.people}
+      <PeopleRankings
+        campaigns={campaignSummary}
+        participantsByCampaign={participantsByCampaign}
+        loading={participantsLoading}
+        available={participantRankingsAvailable}
       />
       <CampaignOverviewCard
         companies={companies}
