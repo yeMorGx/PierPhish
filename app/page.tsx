@@ -26,6 +26,11 @@ import type {
   CampaignSummary,
 } from "@/components/dashboard/types";
 import { buildSlidesFromSiteData } from "@/lib/export/build-slides";
+import {
+  isDeliveryFailure,
+  resolveCampaignFailureCount,
+  type DeliveryResultSummary,
+} from "@/lib/campaigns/delivery-statistics";
 import type { WorkspaceRole } from "@/lib/company-data";
 import { demoCampaigns } from "@/lib/demo-data";
 import { demoCompanies, readLocalCompanies } from "@/lib/company-data";
@@ -50,6 +55,7 @@ type RawParticipant = {
   last_name: string | null;
   email: string | null;
   reported: boolean | null;
+  status: string | null;
 };
 
 type AdminCompaniesResponse = {
@@ -126,6 +132,9 @@ export default function Home() {
       isSupabaseConfigured ? {} : demoParticipantsByCampaign,
     );
   const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [deliveryResults, setDeliveryResults] = useState<
+    Record<string, DeliveryResultSummary>
+  >({});
   const [personAvatars, setPersonAvatars] = useState<PersonAvatarMap>({});
   const [selectedId, setSelectedId] = useState(5345);
   const [syncing, setSyncing] = useState(false);
@@ -217,7 +226,11 @@ export default function Home() {
           const reportedPeople = Number(campaignStats.email_reported ?? 0);
           const sentPeople = Number(campaignStats.sent ?? people);
           const submittedPeople = Number(campaignStats.submitted_data ?? 0);
-          const errorPeople = Number(campaignStats.error ?? 0);
+          const errorPeople =
+            resolveCampaignFailureCount(
+              campaignStats,
+              deliveryResults[String(campaign.id)],
+            ) ?? 0;
 
           return {
             ...campaign,
@@ -238,7 +251,7 @@ export default function Home() {
             second.people - first.people ||
             second.deliveredPeople - first.deliveredPeople,
         ),
-    [filteredCampaigns],
+    [filteredCampaigns, deliveryResults],
   );
 
   const totals = useMemo(
@@ -274,6 +287,14 @@ export default function Home() {
         };
       })(),
     [campaignSummary],
+  );
+
+  const failuresAvailable = campaignSummary.every(
+    (campaign) =>
+      resolveCampaignFailureCount(
+        campaign.stats ?? {},
+        deliveryResults[String(campaign.id)],
+      ) !== null,
   );
 
   const exportCompanyName =
@@ -449,6 +470,7 @@ export default function Home() {
     const requestedDatabaseWorkspaceId =
       databaseWorkspaceId(requestedWorkspaceId);
     setParticipantsLoading(true);
+    setDeliveryResults({});
     setError(null);
 
     const { data, error: queryError } = await supabase
@@ -473,6 +495,9 @@ export default function Home() {
     );
     if (readActiveWorkspaceId() !== requestedWorkspaceId) return;
     const nextParticipants: CampaignParticipants = {};
+    const nextDeliveryResults: Record<string, DeliveryResultSummary> = {};
+    for (const campaign of nextCampaigns)
+      nextDeliveryResults[String(campaign.id)] = { total: 0, failed: 0 };
     if (nextCampaigns.length) {
       const pageSize = 1000;
       const participantRows: RawParticipant[] = [];
@@ -481,7 +506,7 @@ export default function Home() {
           await supabase
             .from("beephish_results")
             .select(
-              "campaign_id,beephish_id,first_name,last_name,email,reported,modified_date",
+              "campaign_id,beephish_id,first_name,last_name,email,reported,status,modified_date",
             )
             .eq("workspace_id", requestedDatabaseWorkspaceId)
             .in(
@@ -517,6 +542,9 @@ export default function Home() {
           participant.beephish_id ||
           `${participant.campaign_id}:${name.toLowerCase()}`;
         const key = String(participant.campaign_id);
+        nextDeliveryResults[key].total += 1;
+        if (isDeliveryFailure(participant.status))
+          nextDeliveryResults[key].failed += 1;
         const current = nextParticipants[key] ?? [];
         if (!current.some((participant) => participant.id === personId)) {
           nextParticipants[key] = [
@@ -528,6 +556,7 @@ export default function Home() {
     }
     if (readActiveWorkspaceId() !== requestedWorkspaceId) return;
     setParticipantsByCampaign(nextParticipants);
+    setDeliveryResults(nextDeliveryResults);
     setParticipantsLoading(false);
     if (
       nextCampaigns.length &&
@@ -704,6 +733,7 @@ export default function Home() {
             participantRankingsAvailable={
               isSupabaseConfigured && workspaceHasBeephishData
             }
+            failuresAvailable={failuresAvailable}
             totals={totals}
           />
         </div>

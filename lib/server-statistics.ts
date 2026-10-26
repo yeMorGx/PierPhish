@@ -1,4 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  isDeliveryFailure,
+  resolveCampaignFailureCount,
+} from "@/lib/campaigns/delivery-statistics";
 
 type Stats = Record<string, unknown>;
 
@@ -22,7 +26,7 @@ function isExcluded(value: unknown, excludedEmails: Set<string>) {
 }
 
 function isNotDelivered(status: string) {
-  return status.includes("not delivered") || status.includes("não entregue");
+  return isDeliveryFailure(status);
 }
 
 function isSending(status: string) {
@@ -70,8 +74,8 @@ export async function loadExcludedWorkspaceEmails(
 }
 
 /**
- * Keeps the original Beephish aggregate and subtracts only the people marked
- * as internal. That prevents a flag change from forcing a new API sync.
+ * Normalizes delivery failures from complete recipient results, then subtracts
+ * internal people from the source aggregate without requiring another API sync.
  */
 export function adjustCampaignStats(
   sourceStats: unknown,
@@ -82,6 +86,18 @@ export function adjustCampaignStats(
     sourceStats && typeof sourceStats === "object"
       ? { ...(sourceStats as Stats) }
       : {};
+  const failed = resolveCampaignFailureCount(
+    {
+      total: numberValue(stats.total) ?? undefined,
+      error: numberValue(stats.error) ?? undefined,
+    },
+    {
+      total: results.length,
+      failed: results.filter((result) => isDeliveryFailure(result.status))
+        .length,
+    },
+  );
+  if (failed !== null) stats.error = failed;
   const excludedResults = results.filter((result) =>
     isExcluded(result.email, excludedEmails),
   );

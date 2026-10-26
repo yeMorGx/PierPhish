@@ -17,6 +17,7 @@ type CampaignOverviewCardProps = {
   companies?: Pick<DashboardCompanyFilterOption, "id" | "name" | "logoUrl">[];
   campaigns: CampaignSummary[];
   totals: OverviewTotals;
+  failuresAvailable?: boolean;
 };
 
 const startDateFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -85,6 +86,7 @@ export function CampaignOverviewCard({
   companies = [],
   campaigns,
   totals,
+  failuresAvailable = true,
 }: CampaignOverviewCardProps) {
   const { logos } = useCampaignLogos();
   const recentCampaigns = [...campaigns].sort(
@@ -94,7 +96,7 @@ export function CampaignOverviewCard({
   );
   const metrics: Array<{
     label: string;
-    value: number;
+    value: number | null;
     suffix?: string;
     help: string;
   }> = [
@@ -115,7 +117,7 @@ export function CampaignOverviewCard({
     },
     {
       label: "Falharam",
-      value: totals.errors,
+      value: failuresAvailable ? totals.errors : null,
       help: "Soma das falhas registradas nas campanhas dos filtros atuais. Mensagens pendentes não são contadas como falhas.",
     },
     {
@@ -190,12 +192,26 @@ export function CampaignOverviewCard({
                 </details>
               </span>
               <strong className="mt-1 block text-[21px] leading-none tracking-[-0.06em] text-[var(--ink)]">
-                <AnimatedNumber value={value} suffix={suffix} />
+                {value === null ? (
+                  <span className="text-[14px]">Não disponível</span>
+                ) : (
+                  <AnimatedNumber value={value} suffix={suffix} />
+                )}
               </strong>
             </div>
           );
         })}
       </div>
+
+      {totals.people > totals.delivered && (
+        <p className="mt-3 mb-0 text-[12px] leading-relaxed text-[var(--text-muted)]">
+          {(totals.people - totals.delivered).toLocaleString("pt-BR")}{" "}
+          participações sem entrega confirmada.
+          {failuresAvailable
+            ? ` ${totals.errors.toLocaleString("pt-BR")} com falha registrada; as demais podem estar pendentes ou sem atualização de entrega.`
+            : " O total de falhas ainda não está disponível. Essa diferença pode incluir pendências e falhas."}
+        </p>
+      )}
 
       <div
         role="region"

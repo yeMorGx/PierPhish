@@ -19,6 +19,7 @@ type DashboardContentProps = {
   participantsByCampaign: CampaignParticipants;
   participantsLoading: boolean;
   participantRankingsAvailable: boolean;
+  failuresAvailable: boolean;
   totals: OverviewTotals;
 };
 
@@ -30,6 +31,7 @@ export function DashboardContent({
   participantsByCampaign,
   participantsLoading,
   participantRankingsAvailable,
+  failuresAvailable,
   totals,
 }: DashboardContentProps) {
   return (
@@ -59,6 +61,7 @@ export function DashboardContent({
         companies={companies}
         campaigns={campaignSummary}
         totals={totals}
+        failuresAvailable={failuresAvailable}
       />
     </div>
   );
