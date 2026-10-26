@@ -6,6 +6,7 @@ import {
   MousePointerClick,
   Send,
   TriangleAlert,
+  UsersRound,
 } from "lucide-react";
 import type { Stats } from "@/components/dashboard/types";
 
@@ -27,6 +28,12 @@ export function CampaignMetrics({
   const stats = suppliedStats ?? {};
   const total = validCount(stats.total);
   const metrics = [
+    {
+      label: "Participações",
+      value: stats.total,
+      icon: UsersRound,
+      showRate: false,
+    },
     { label: "Enviados", value: stats.sent, icon: Send, showRate: false },
     { label: "Entregues", value: stats.delivered, icon: Inbox, showRate: true },
     { label: "Abertos", value: stats.opened, icon: MailOpen, showRate: true },
@@ -49,7 +56,7 @@ export function CampaignMetrics({
       showRate: true,
     },
     {
-      label: "Falha na entrega",
+      label: "Falharam",
       value: stats.error,
       icon: TriangleAlert,
       showRate: true,
@@ -92,8 +99,9 @@ export function CampaignMetrics({
         })}
       </dl>
       <p className="campaign-delivery-metrics-note">
-        Percentuais sobre o total de destinatários. Campos não disponíveis ainda
-        não foram informados pela sincronização.
+        Participações são os destinatários desta campanha. Os percentuais usam
+        esse total. Campos não disponíveis ainda não foram informados pela
+        sincronização.
       </p>
     </section>
   );

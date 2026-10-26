@@ -10,6 +10,13 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 
 ## Estado do projeto — atualizado em 26/10/2026
 
+### Participações e falhas no resumo da campanha — 2026-10-26
+
+- Acrescentado o card **Participações**, com `stats.total`, nos dois modos da página de detalhes da campanha. O indicador de erros existente agora se chama **Falharam** e continua usando `stats.error`, sem inferir falhas pela diferença entre destinatários e entregues.
+- A grade foi ajustada para oito indicadores, com quatro colunas em telas intermediárias e duas no celular. A nota abaixo do resumo explica que participações são os destinatários da campanha e a base dos percentuais.
+- Validações: `pnpm lint` (TypeScript), Prettier e `git diff --check` aprovados. Nenhum teste automatizado foi adicionado ou executado. Deploy não verificado.
+- Próximo passo: conferir os oito indicadores no ambiente publicado com os dados sincronizados.
+
 ### Sete indicadores nos detalhes da campanha — 2026-10-26
 
 - O resumo da página `/campaigns/[id]` agora tem sete indicadores: **Enviados**, **Entregues**, **Abertos**, **Clicados**, **Dados enviados**, **Reportado** e **Falha na entrega**, conforme a estrutura enviada pelo usuário. O componente compartilhado atende os modos padrão e visual.
