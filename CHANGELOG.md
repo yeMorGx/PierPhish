@@ -16,6 +16,7 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 - As linhas são ordenadas da data de início mais recente para a mais antiga. Datas ausentes ou inválidas aparecem como **Não informada** no final; o ID desempata datas iguais. A ordenação é local à tabela, preservando os critérios dos demais gráficos.
 - Ajustados o cabeçalho, a distribuição das nove colunas e o agrupamento dos dados em telas menores. Removida a indicação de maior alcance, que não descreve a nova ordem. Os detalhes de ajuda usam tokens, sem sombra, com foco por fundo e sublinhado, sem outline.
 - Validações: `pnpm lint` (TypeScript), Prettier e `git diff --check` aprovados. Nenhum teste automatizado foi adicionado ou executado; deploy e aparência em produção ainda não verificados.
+- Entrega: implementação `24f306c` enviada para `origin/main` em 26/10/2026.
 - Próximo passo: conferir as datas sincronizadas e o layout no ambiente publicado.
 
 ### Princípios de Gestalt e UX — 2026-10-26
