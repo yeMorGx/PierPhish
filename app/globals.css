@@ -4601,7 +4601,31 @@ html[data-theme="dark"] .status-signal-icon.is-orange {
   white-space: normal;
 }
 
-@media (max-width: 1000px) {
+.campaign-overview-start {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.campaign-overview-start-time {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.campaign-overview-help:focus-visible,
+.campaign-overview-table .campaign-link:focus-visible {
+  outline: none;
+  box-shadow: none;
+  color: var(--ink);
+  background: var(--surface-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 1120px) {
   .campaign-overview-table colgroup {
     display: none;
   }
@@ -4642,11 +4666,13 @@ html[data-theme="dark"] .status-signal-icon.is-orange {
     font-weight: 500;
   }
 
-  .campaign-overview-table td:first-child,
-  .campaign-overview-table td:nth-child(2),
-  .campaign-overview-table td:nth-child(3),
+  .campaign-overview-table td[data-label="Campanha"],
   .campaign-overview-table td[colspan] {
     grid-column: 1 / -1;
+  }
+
+  .campaign-overview-table td[data-label="Posição"] {
+    display: none;
   }
 
   .campaign-overview-table .campaign-link {

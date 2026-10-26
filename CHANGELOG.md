@@ -10,6 +10,14 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 
 ## Estado do projeto — atualizado em 26/10/2026
 
+### Datas e ordem da tabela de campanhas — 2026-10-26
+
+- A tabela **Todas as campanhas** agora exibe a coluna **Início**, próxima ao nome da campanha, com data e horário de Brasília a partir de `launch_date`.
+- As linhas são ordenadas da data de início mais recente para a mais antiga. Datas ausentes ou inválidas aparecem como **Não informada** no final; o ID desempata datas iguais. A ordenação é local à tabela, preservando os critérios dos demais gráficos.
+- Ajustados o cabeçalho, a distribuição das nove colunas e o agrupamento dos dados em telas menores. Removida a indicação de maior alcance, que não descreve a nova ordem. Os detalhes de ajuda usam tokens, sem sombra, com foco por fundo e sublinhado, sem outline.
+- Validações: `pnpm lint` (TypeScript), Prettier e `git diff --check` aprovados. Nenhum teste automatizado foi adicionado ou executado; deploy e aparência em produção ainda não verificados.
+- Próximo passo: conferir as datas sincronizadas e o layout no ambiente publicado.
+
 ### Princípios de Gestalt e UX — 2026-10-26
 
 - Acrescentados ao `AGENTS.md` critérios práticos para Proximidade, Semelhança, Fechamento, Continuidade, Pregnância, Unidade, Fitts, Jakob, Hick-Hyman, Miller, usabilidade estética, Navalha de Occam e Postel.

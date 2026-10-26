@@ -19,6 +19,25 @@ type CampaignOverviewCardProps = {
   totals: OverviewTotals;
 };
 
+const startDateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "America/Sao_Paulo",
+});
+
+const startTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "America/Sao_Paulo",
+});
+
+function startTimestamp(value: string | null) {
+  if (!value || value.startsWith("0001-01-01")) return -Infinity;
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? timestamp : -Infinity;
+}
+
 function statusLabel(status: string | null) {
   if (!status) return "Sem status";
   if (status === "In progress") return "Em andamento";
@@ -68,6 +87,11 @@ export function CampaignOverviewCard({
   totals,
 }: CampaignOverviewCardProps) {
   const { logos } = useCampaignLogos();
+  const recentCampaigns = [...campaigns].sort(
+    (first, second) =>
+      startTimestamp(second.launch_date) - startTimestamp(first.launch_date) ||
+      second.id - first.id,
+  );
   const metrics: Array<{
     label: string;
     value: number;
@@ -122,18 +146,13 @@ export function CampaignOverviewCard({
             Todas as campanhas
           </h3>
           <p className="mt-2 text-[12px] text-[var(--text-muted)]">
-            Ranking por número de destinatários em cada campanha.
+            Mais recentes primeiro, pela data de início. Horários de Brasília.
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2 text-[11px] text-[var(--text-muted)]">
-          <span className="campaign-count-pill rounded-full bg-[#f4f6f7] px-3 py-1.5">
+          <span className="campaign-count-pill rounded-full bg-[var(--surface-soft)] px-3 py-1.5">
             {campaigns.length} campanhas
           </span>
-          {campaigns[0] && (
-            <span className="campaign-reach-pill rounded-full bg-[#edf2f3] px-3 py-1.5 text-[#5f7681]">
-              Maior alcance: {campaigns[0].name}
-            </span>
-          )}
         </div>
       </div>
 
@@ -146,7 +165,7 @@ export function CampaignOverviewCard({
 
           return (
             <div
-              className="campaign-overview-metric rounded-[16px] bg-[#f7f8f8] px-4 py-3"
+              className="campaign-overview-metric rounded-[16px] bg-[var(--surface-soft)] px-4 py-3"
               key={label}
             >
               <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
@@ -154,18 +173,18 @@ export function CampaignOverviewCard({
                 <details className="group relative inline-flex">
                   <summary
                     aria-label={`Como calculamos ${label.toLowerCase()}`}
-                    className="flex size-4 cursor-pointer list-none items-center justify-center rounded-full border border-current/40 text-current transition hover:border-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6556f5] [&::-webkit-details-marker]:hidden"
+                    className="campaign-overview-help flex size-6 cursor-pointer list-none items-center justify-center rounded-full text-current transition-colors hover:bg-[var(--surface-muted)] [&::-webkit-details-marker]:hidden"
                   >
                     <Icon name="help" size={10} />
                   </summary>
                   <span
-                    className={`absolute top-full left-1/2 z-30 mt-2 hidden w-56 max-w-[calc(100vw-3rem)] -translate-x-1/2 rounded-xl border border-[var(--line)] bg-white p-3 text-left text-[11px] leading-5 font-normal whitespace-normal text-[#34404a] shadow-[0_8px_24px_rgba(24,32,43,0.14)] group-open:block ${mobilePopoverAlignment}`}
+                    className={`absolute top-full left-1/2 z-30 mt-2 hidden w-56 max-w-[calc(100vw-3rem)] -translate-x-1/2 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3 text-left text-[12px] leading-5 font-normal whitespace-normal text-[var(--ink)] group-open:block ${mobilePopoverAlignment}`}
                   >
                     {help}
                   </span>
                 </details>
               </span>
-              <strong className="mt-1 block text-[21px] leading-none tracking-[-0.06em] text-[#18202b]">
+              <strong className="mt-1 block text-[21px] leading-none tracking-[-0.06em] text-[var(--ink)]">
                 <AnimatedNumber value={value} suffix={suffix} />
               </strong>
             </div>
@@ -184,34 +203,54 @@ export function CampaignOverviewCard({
           aria-label="Resumo de todas as campanhas"
         >
           <colgroup>
-            {[3, 34, 16, 11, 9, 9, 7, 11].map((width, index) => (
+            {[3, 28, 11, 14, 10, 8, 8, 7, 11].map((width, index) => (
               <col key={index} style={{ width: `${width}%` }} />
             ))}
           </colgroup>
           <thead role="rowgroup">
             <tr
               role="row"
-              className="campaign-overview-table-head border-b border-[var(--line-soft)] bg-[#fafbfb] text-[11px] tracking-[0.1em] text-[var(--text-muted)] uppercase"
+              className="campaign-overview-table-head border-b border-[var(--line-soft)] bg-[var(--surface-soft)] text-[12px] text-[var(--text-muted)]"
             >
-              <th className="w-[48px] px-4 py-3 font-extrabold">#</th>
-              <th className="px-4 py-3 font-extrabold">Campanha</th>
-              <th className="px-4 py-3 font-extrabold">Empresa</th>
-              <th className="px-4 py-3 font-extrabold">Entregues</th>
-              <th className="px-4 py-3 font-extrabold">Abertura</th>
-              <th className="px-4 py-3 font-extrabold">Cliques</th>
-              <th className="px-4 py-3 font-extrabold">Reportes</th>
-              <th className="px-4 py-3 font-extrabold">Status</th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                #
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Campanha
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Início
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Empresa
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Entregues
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Abertura
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Cliques
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Reportes
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Status
+              </th>
             </tr>
           </thead>
           <tbody role="rowgroup">
-            {campaigns.map((campaign, index) => {
+            {recentCampaigns.map((campaign, index) => {
+              const startedAt = startTimestamp(campaign.launch_date);
               const company = companies.find(
                 (item) => item.id === campaign.company_id,
               );
               return (
                 <tr
                   role="row"
-                  className="campaign-overview-table-row border-b border-[var(--line-soft)] text-[11px] text-[#69737d] last:border-0 hover:bg-[#fcfdfd]"
+                  className="campaign-overview-table-row border-b border-[var(--line-soft)] text-[12px] text-[var(--text-muted)] last:border-0 hover:bg-[var(--surface-soft)]"
                   key={campaign.id}
                 >
                   <td
@@ -223,7 +262,7 @@ export function CampaignOverviewCard({
                   </td>
                   <td role="cell" data-label="Campanha" className="px-4 py-3.5">
                     <Link
-                      className="campaign-link flex min-w-0 items-center gap-3 hover:text-[#18202b]"
+                      className="campaign-link flex min-w-0 items-center gap-3 hover:text-[var(--ink)]"
                       href={`/campaigns/${campaign.id}`}
                     >
                       <CampaignLogo
@@ -239,6 +278,21 @@ export function CampaignOverviewCard({
                         </span>
                       </span>
                     </Link>
+                  </td>
+                  <td role="cell" data-label="Início" className="px-4 py-3.5">
+                    {Number.isFinite(startedAt) ? (
+                      <time
+                        className="campaign-overview-start"
+                        dateTime={new Date(startedAt).toISOString()}
+                      >
+                        <span>{startDateFormatter.format(startedAt)}</span>
+                        <span className="campaign-overview-start-time">
+                          {startTimeFormatter.format(startedAt)}
+                        </span>
+                      </time>
+                    ) : (
+                      <span>Não informada</span>
+                    )}
                   </td>
                   <td role="cell" data-label="Empresa" className="px-4 py-3.5">
                     {company ? (
@@ -302,7 +356,7 @@ export function CampaignOverviewCard({
                 <td
                   role="cell"
                   className="px-4 py-8 text-center text-[11px] text-[var(--text-muted)]"
-                  colSpan={8}
+                  colSpan={9}
                 >
                   Nenhuma campanha encontrada.
                 </td>
