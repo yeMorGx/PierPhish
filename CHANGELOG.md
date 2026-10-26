@@ -16,6 +16,7 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 - Os valores vêm dos totais sincronizados em `campaign.stats`, em vez de depender da lista parcial de participantes carregada na tela. Os percentuais usam o total de destinatários, e campos ausentes aparecem como **Não disponível**, sem convertê-los em zero.
 - Layout com ícones de significado correspondente, contagens de pelo menos dois dígitos, bordas e cores por tokens, sem sombra ou outline. A grade se reorganiza em telas menores; o resumo ocupa a largura disponível nos dois modos.
 - Validações: `pnpm lint` (TypeScript), Prettier e `git diff --check` aprovados. Nenhum teste automatizado foi adicionado ou executado. Deploy e conferência visual em produção pendentes.
+- Entrega: implementação `4028300` enviada para `origin/main` em 26/10/2026.
 - Próximo passo: conferir os indicadores com os totais sincronizados de uma campanha real no ambiente publicado.
 
 ### Datas e ordem da tabela de campanhas — 2026-10-26
