@@ -114,6 +114,11 @@ export function CampaignOverviewCard({
       help: "Soma dos e-mails entregues em todas as campanhas incluídas.",
     },
     {
+      label: "Falharam",
+      value: totals.errors,
+      help: "Soma das falhas registradas nas campanhas dos filtros atuais. Mensagens pendentes não são contadas como falhas.",
+    },
+    {
       label: "Abertura",
       value: totals.people
         ? Math.round((totals.opened / totals.people) * 100)
@@ -156,7 +161,7 @@ export function CampaignOverviewCard({
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-6 gap-2 max-[1120px]:grid-cols-3 max-[720px]:grid-cols-2">
+      <div className="mt-5 grid grid-cols-7 gap-2 max-[1120px]:grid-cols-3 max-[720px]:grid-cols-2">
         {metrics.map(({ label, value, suffix, help }, index) => {
           const mobilePopoverAlignment =
             index % 2 === 1
