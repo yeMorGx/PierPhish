@@ -26,11 +26,13 @@ export function OverviewHero({
         <ShaderBackground />
       </div>
       <div className="operational-hero-content">
-        <p className="operational-hero-eyebrow">PierSec / Visão geral</p>
-        <h2>
-          <AnimatedNumber value={totals.campaigns} />{" "}
-          <span>{totals.campaigns === 1 ? "campanha" : "campanhas"}</span>
-        </h2>
+        <div className="operational-hero-main">
+          <p className="operational-hero-eyebrow">PierSec / Visão geral</p>
+          <h2>
+            <AnimatedNumber value={totals.campaigns} />{" "}
+            <span>{totals.campaigns === 1 ? "campanha" : "campanhas"}</span>
+          </h2>
+        </div>
         <HeroMaturity totals={totals} campaigns={campaigns} />
         <div className="operational-hero-footer">
           <span>

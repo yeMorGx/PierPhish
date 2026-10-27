@@ -67,6 +67,8 @@ Ao criar ou editar qualquer interface, siga estas regras. Elas têm prioridade s
 
 ### Componentes
 
+- Quando o usuário pedir **Liquid Glass**, use a biblioteca **`liquid-glass-react`** de https://github.com/rdev/liquid-glass-react, por meio do componente compartilhado `components/ui/liquid-glass-surface.tsx`. Essa é uma exceção restrita ao elemento solicitado, não uma mudança de estilo global. Preserve legibilidade, fallback de renderização e movimento reduzido; não substitua a biblioteca por uma imitação em CSS.
+
 - **Regra obrigatória: nunca usar outline**, inclusive no foco de teclado. Não simule outline com ring ou sombra. Preserve o foco visível por mudança de fundo, texto ou sublinhado, com contraste adequado.
 
 - Card: borda `1px solid var(--border)`, raio de 10–12 px, padding de 20 px e fundo `--surface` ou transparente. Hover muda discretamente a borda e o fundo (3–5%), com `transition-colors` de 150 ms. Quando a navegação pedir um card, use título, descrição curta e link “Ver mais”; o indicador do link pode avançar 2–4 px no hover.

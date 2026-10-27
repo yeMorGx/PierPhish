@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
   type PointerEvent,
+  type CSSProperties,
 } from "react";
 
 import { Icon } from "@/components/ui/icon";
@@ -160,12 +161,17 @@ export function DashboardCompanyFilter({
           >
             Todas
           </button>
-          {companies.map((company) => (
+          {companies.map((company, index) => (
             <button
               className={`dashboard-company-filter ${selectedCompanyId === company.id ? "is-selected" : ""}`}
               type="button"
               aria-pressed={selectedCompanyId === company.id}
               key={company.id}
+              style={
+                {
+                  "--company-enter-index": Math.min(index + 1, 6),
+                } as CSSProperties
+              }
               onClick={() => onChange(company.id)}
               title={`${company.name} · ${company.campaignCount} campanhas`}
             >

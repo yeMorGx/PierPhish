@@ -17203,56 +17203,6 @@ html[data-theme][data-card-style] .companies-security-note svg {
   line-height: 1.6;
   color: var(--maturity-muted);
 }
-.hero-maturity-criteria {
-  margin-top: 12px;
-}
-.hero-maturity-criteria summary {
-  min-height: 36px;
-  padding-block: 8px;
-  width: fit-content;
-  cursor: pointer;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--maturity-fg);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.hero-maturity-criteria summary:focus-visible {
-  outline: none;
-  box-shadow: none;
-  color: var(--maturity-fg);
-  text-decoration-thickness: 3px;
-}
-.hero-maturity-criteria > div {
-  padding-top: 8px;
-  max-width: 520px;
-}
-.hero-maturity-criteria ul {
-  display: grid;
-  gap: 8px;
-  margin: 12px 0;
-  padding: 0;
-  list-style: none;
-}
-.hero-maturity-criteria li {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 4px 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--maturity-line);
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--maturity-muted);
-}
-.hero-maturity-criteria li[aria-current="step"] {
-  color: var(--maturity-fg);
-}
-.hero-maturity-criteria li small {
-  flex-basis: 100%;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
 .dashboard-company-filter-list {
   --company-fade-left: 0px;
   --company-fade-right: 0px;
@@ -17289,4 +17239,222 @@ html[data-theme][data-card-style] .companies-security-note svg {
 }
 .dashboard-company-filter-list .dashboard-company-filter {
   scroll-margin-inline: 24px;
+}
+:root {
+  --liquid-glass-tint: rgb(0 0 0 / 12%);
+}
+.bento-dashboard > .overview-hero-card.operational-hero {
+  min-height: 0;
+  padding: 24px !important;
+}
+.bento-dashboard > .campaign-openings-card {
+  min-height: 276px;
+}
+.operational-hero-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
+  grid-template-areas: "main maturity" "footer footer";
+  column-gap: 24px;
+  row-gap: 16px;
+  align-items: center;
+  min-height: 0;
+}
+.operational-hero-main {
+  grid-area: main;
+  min-width: 0;
+}
+.operational-hero-main .operational-hero-eyebrow {
+  margin-bottom: 12px;
+}
+.operational-hero-main h2 {
+  font-size: clamp(40px, 4.5vw, 60px);
+}
+.operational-hero-main h2 > span:last-child {
+  font-size: clamp(24px, 2.7vw, 34px);
+}
+.operational-hero-content > .piersec-liquid-glass {
+  grid-area: maturity;
+}
+.operational-hero-footer {
+  grid-area: footer;
+  padding-top: 16px;
+  font-size: 12px;
+}
+.piersec-liquid-glass {
+  display: grid;
+  align-items: center;
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  min-height: 180px;
+  color: inherit;
+}
+.piersec-liquid-glass-fallback {
+  padding: 16px;
+  border: 1px solid var(--operational-hero-line);
+  border-radius: 16px;
+  background: var(--liquid-glass-tint);
+}
+.piersec-liquid-glass-panel > .glass {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--liquid-glass-tint);
+  border: 1px solid var(--operational-hero-line);
+  box-shadow: none !important;
+}
+.piersec-liquid-glass-panel > .glass > div {
+  width: 100%;
+  font: inherit !important;
+  color: inherit !important;
+  text-shadow: none !important;
+}
+.operational-hero .hero-maturity {
+  margin: 0;
+  --maturity-focus-bg: var(--operational-hero-text);
+  --maturity-focus-fg: var(--operational-hero-bg);
+}
+.visual-dashboard-hero-insight .hero-maturity {
+  --maturity-focus-bg: var(--contrast-text);
+  --maturity-focus-fg: var(--contrast-block);
+}
+.hero-maturity-heading {
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.hero-maturity > strong {
+  display: block;
+  margin-top: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--maturity-fg);
+}
+.hero-maturity-rate {
+  margin-top: 8px;
+  font-size: 30px;
+}
+.hero-maturity-help {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--maturity-fg);
+  cursor: help;
+}
+.hero-maturity-help:hover,
+.hero-maturity-help:focus-visible {
+  background: var(--maturity-focus-bg);
+  color: var(--maturity-focus-fg);
+  outline: none;
+  box-shadow: none;
+}
+.maturity-tooltip-positioner {
+  z-index: 100;
+}
+.maturity-tooltip {
+  width: min(340px, calc(100vw - 32px));
+  max-height: min(460px, calc(100dvh - 32px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+  box-shadow: none;
+  transform-origin: var(--transform-origin);
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 160ms ease-out,
+    transform 160ms ease-out;
+}
+.maturity-tooltip[data-starting-style],
+.maturity-tooltip[data-ending-style] {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.maturity-tooltip-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.maturity-tooltip p {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.maturity-tooltip ul {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+.maturity-tooltip li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.maturity-tooltip li[aria-current="step"] {
+  color: var(--ink);
+}
+.maturity-tooltip li small {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dashboard-company-filter-list > .dashboard-company-filter {
+  animation: company-filter-enter 200ms ease-out both;
+  animation-delay: calc(var(--company-enter-index, 0) * 18ms);
+}
+@keyframes company-filter-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@media (max-width: 620px) {
+  .operational-hero-content {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "main" "maturity" "footer";
+    row-gap: 12px;
+  }
+  .bento-dashboard > .overview-hero-card.operational-hero {
+    padding: 20px !important;
+  }
+  .piersec-liquid-glass {
+    min-height: 166px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-company-filter-list > .dashboard-company-filter {
+    animation: none;
+  }
+  .maturity-tooltip {
+    transition: none;
+    transform: none;
+  }
+  .piersec-liquid-glass * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

@@ -10,6 +10,15 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 
 ## Estado do projeto — atualizado em 27/10/2026
 
+### Hero compacto com Liquid Glass, tooltip e entrada dos filtros — 2026-10-27
+
+- Reorganizado o hero padrão em duas colunas: total de campanhas à esquerda e maturidade à direita, com rodapé compartilhado. Reduzidos paddings, tipografia e alturas mínimas do hero/gráfico adjacente para evitar que a maturidade aumente desnecessariamente o card. No celular, a disposição se reorganiza em coluna.
+- Adicionada a biblioteca solicitada `liquid-glass-react@1.1.1`, com versão fixa e lockfile. O componente compartilhado `LiquidGlassSurface` usa a biblioteca real, restringe o efeito ao painel de maturidade, remove a sombra externa padrão e mantém fallback com conteúdo durante SSR/hidratação. Elasticidade desativada e ponteiro estático quando movimento reduzido está ativo. O modo padrão evita o modo shader instável da biblioteca; navegadores com refração parcial mantêm conteúdo e aparência de vidro.
+- A explicação **Como a maturidade é calculada** passou de disclosure que expandia o hero para tooltip personalizado em portal, com entrada/saída suaves, abertura por hover/foco, acionamento do botão e fechamento gerenciado pelo Base UI. Contém a fórmula e as cinco faixas existentes, sem alterar cálculos, filtros ou exclusões.
+- Filtros de empresas ganham entrada horizontal curta, com atraso limitado entre opções e sem repetir a entrada ao apenas selecionar filtros. Arraste e degradês de borda continuam preservados. Animações são desativadas com movimento reduzido.
+- Registrada em AGENTS.md a preferência do usuário: quando pedir Liquid Glass, usar a biblioteca rdev/liquid-glass-react pelo componente compartilhado, somente no elemento solicitado, preservando legibilidade e fallback. A preferência não aplica glassmorphism globalmente.
+- Validações aprovadas: TypeScript da aplicação com arquivos versionados e exclusões do projeto, Prettier, git diff --check e detector Impeccable sem apontamentos nos componentes avaliados. Importação da biblioteca em Node sem globais de navegador aprovada; dashboard local compilou e respondeu HTTP 200. Conferência visual local em desktop e viewport 390×844 com dados de demonstração: painel à direita no desktop, reorganização no celular, abertura do tooltip pelo botão e fechamento por Escape. Captura local de conferência salva fora dos arquivos versionados. Entrega por commit e push em main. Nenhuma migration, operação remota de banco, campanha ou mensagem enviada. Próximo passo: conferir estados reais e temas no ambiente publicado; deploy não verificado.
+
 ### Maturidade no card principal e arraste dos filtros — 2026-10-27
 
 - Removido o card independente de maturidade. A informação agora faz parte do card principal da visão geral: no modo padrão, abaixo do total de campanhas; no modo visual, na área de destaque lateral do hero, substituindo a rosca repetida e o indicador de exposição daquele trecho.

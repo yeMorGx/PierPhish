@@ -66,7 +66,7 @@ Configuração da operação solicitada pelo usuário, não um benchmark externo
 | > 10% e ≤ 15% | Alerta             |
 | > 15%         | Crítico            |
 
-A informação de **Maturidade** está integrada ao card principal da visão geral, nos dois modos do dashboard. Mostra a classificação atual, a taxa consolidada e a base; as cinco faixas e a explicação ficam recolhidas em “Como a maturidade é calculada”. Usa cliques ÷ entregues, ou participações se não houver entregas registradas. Segue os filtros e exclusões do dashboard. Sem base, não classifica; dados inválidos ou cliques acima da base exibem pedido de conferência. A taxa é apresentada com até duas casas decimais. Sem destinatários, a interface não classifica o ambiente. A função está em `lib/campaigns/metrics.ts`. As cores são semânticas e acompanhadas de texto.
+A informação de **Maturidade** está integrada ao card principal da visão geral, nos dois modos do dashboard. Mostra a classificação atual, a taxa consolidada e a base; as cinco faixas e a explicação ficam no tooltip “Como a maturidade é calculada”, aberto por hover ou foco no botão de ajuda, sem expandir o hero. O painel de maturidade ocupa a lateral direita do hero no desktop, com Liquid Glass. Usa cliques ÷ entregues, ou participações se não houver entregas registradas. Segue os filtros e exclusões do dashboard. Sem base, não classifica; dados inválidos ou cliques acima da base exibem pedido de conferência. A taxa é apresentada com até duas casas decimais. Sem destinatários, a interface não classifica o ambiente. A função está em `lib/campaigns/metrics.ts`. As cores são semânticas e acompanhadas de texto.
 
 ## Arredondamento e ausência de dados
 
