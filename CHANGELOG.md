@@ -10,6 +10,14 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 
 ## Estado do projeto — atualizado em 27/10/2026
 
+### Critério de pessoas mais recorrentes — 2026-10-27
+
+- Corrigido o ranking **Pessoas mais recorrentes**: agora considera campanhas em que a pessoa clicou ou enviou dados, em vez da quantidade de campanhas recebidas. A mesma campanha conta uma vez no total, mesmo com as duas ações; cada linha mostra os totais de campanhas com clique e com envio de dados separados. Quem apenas recebeu/abriu não entra.
+- Ordenação por campanhas com interação; desempate por envios de dados, cliques e nome. O estado de envio de dados também implica clique, seguindo a convenção dos agregados existentes. Os sinais vêm do status sincronizado dos resultados, não de contagem de cada clique repetido.
+- O carregamento combina sinais de registros repetidos da mesma pessoa na campanha, sem descartar ações. Mantidos os filtros, exclusões de campanhas de teste e de pessoas internas. O ranking de reportes preserva seu critério.
+- Validações aprovadas: TypeScript da aplicação com arquivos versionados e exclusões do projeto, Prettier e git diff --check; detector Impeccable sem apontamentos no card. Sem testes automatizados, migration ou operação remota de banco nesta tarefa. Entrega por commit e push em main. Deploy e conferência visual não verificados.
+- Próximo passo: conferir o ranking com resultados sincronizados no ambiente publicado. O projeto Supabase informado pelo usuário é `acwxnnqnfdzsggwzpetl`; a aplicação da migration anterior não foi reconferida nesta tarefa.
+
 ### Dashboard, gestão de acessos e integridade dos indicadores — 2026-10-27
 
 - Simplificado o card principal da visão geral: total de campanhas, andamento e sincronização, sem repetir a rosca e as métricas da tabela. Integrado o shader WebGL fornecido pelo usuário em `components/ui/istanblue.tsx`, restrito ao hero, com fundo de fallback, limite de pixels, pausa fora da tela/aba e quadro estático quando movimento reduzido está ativo. Rankings ganharam hierarquia de contagens, iniciais, nomes legíveis, tratamento de empates e reflow no celular.

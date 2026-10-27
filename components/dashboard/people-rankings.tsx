@@ -7,7 +7,9 @@ import type {
 type RankedPerson = {
   id: string;
   name: string;
-  campaigns: number;
+  interactionCampaigns: number;
+  clickedCampaigns: number;
+  submittedCampaigns: number;
   reportedCampaigns: number;
 };
 
@@ -34,10 +36,16 @@ function buildRankings(
       const person = people.get(participant.id) ?? {
         id: participant.id,
         name: participant.name.trim() || "Nome não informado",
-        campaigns: 0,
+        interactionCampaigns: 0,
+        clickedCampaigns: 0,
+        submittedCampaigns: 0,
         reportedCampaigns: 0,
       };
-      person.campaigns += 1;
+      if (participant.clicked || participant.submitted)
+        person.interactionCampaigns += 1;
+      if (participant.clicked || participant.submitted)
+        person.clickedCampaigns += 1;
+      if (participant.submitted) person.submittedCampaigns += 1;
       if (participant.reported) person.reportedCampaigns += 1;
       people.set(participant.id, person);
     }
@@ -47,10 +55,15 @@ function buildRankings(
   const sortByCount = (first: number, second: number) => second - first;
   return {
     recurring: values
-      .filter((person) => person.campaigns > 1)
+      .filter((person) => person.interactionCampaigns > 0)
       .sort(
         (first, second) =>
-          sortByCount(first.campaigns, second.campaigns) ||
+          sortByCount(
+            first.interactionCampaigns,
+            second.interactionCampaigns,
+          ) ||
+          sortByCount(first.submittedCampaigns, second.submittedCampaigns) ||
+          sortByCount(first.clickedCampaigns, second.clickedCampaigns) ||
           first.name.localeCompare(second.name, "pt-BR"),
       )
       .slice(0, 5),
@@ -78,7 +91,7 @@ function RankingCard({
   title: string;
   description: string;
   metricLabel: (count: number) => string;
-  countField: "campaigns" | "reportedCampaigns";
+  countField: "interactionCampaigns" | "reportedCampaigns";
   people: RankedPerson[];
   emptyMessage: string;
   loading: boolean;
@@ -95,7 +108,7 @@ function RankingCard({
           <div className="people-ranking-peak">
             <strong>{people[0][countField]}</strong>
             <span>
-              campanhas
+              {people[0][countField] === 1 ? "campanha" : "campanhas"}
               <br />
               no maior total
             </span>
@@ -133,7 +146,16 @@ function RankingCard({
                     .map((part) => part[0])
                     .join("")}
                 </span>
-                <strong className="people-ranking-name">{person.name}</strong>
+                <span className="people-ranking-identity">
+                  <strong className="people-ranking-name">{person.name}</strong>
+                  {countField === "interactionCampaigns" && (
+                    <span className="people-ranking-breakdown">
+                      Cliques em {campaignCountLabel(person.clickedCampaigns)} ·
+                      Dados enviados em{" "}
+                      {campaignCountLabel(person.submittedCampaigns)}
+                    </span>
+                  )}
+                </span>
               </span>
               <span
                 className="people-ranking-count"
@@ -168,11 +190,11 @@ export function PeopleRankings({
     <>
       <RankingCard
         title="Pessoas mais recorrentes"
-        description="Participantes presentes em mais campanhas deste filtro."
+        description="Mais campanhas com clique ou envio de dados. Cada campanha conta uma vez por pessoa."
         metricLabel={campaignCountLabel}
-        countField="campaigns"
+        countField="interactionCampaigns"
         people={rankings.recurring}
-        emptyMessage="Nenhuma pessoa aparece em mais de uma campanha neste filtro."
+        emptyMessage="Nenhum clique ou envio de dados registrado nas campanhas deste filtro."
         loading={loading}
         available={available}
       />

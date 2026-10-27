@@ -33,6 +33,7 @@ import {
 } from "@/lib/campaigns/delivery-statistics";
 import type { WorkspaceRole } from "@/lib/company-data";
 import { campaignIsTest } from "@/lib/campaigns/metrics";
+import { participantInteractions } from "@/lib/campaigns/participant-interactions";
 import { demoCampaigns } from "@/lib/demo-data";
 import { demoCompanies, readLocalCompanies } from "@/lib/company-data";
 import { readPersonAvatars, type PersonAvatarMap } from "@/lib/person-avatars";
@@ -579,12 +580,28 @@ export default function Home() {
         if (isDeliveryFailure(participant.status))
           nextDeliveryResults[key].failed += 1;
         const current = nextParticipants[key] ?? [];
-        if (!current.some((participant) => participant.id === personId)) {
-          nextParticipants[key] = [
-            ...current,
-            { id: personId, name, reported: Boolean(participant.reported) },
-          ];
-        }
+        const interactions = participantInteractions(participant.status);
+        const existing = current.find((person) => person.id === personId);
+        nextParticipants[key] = existing
+          ? current.map((person) =>
+              person.id === personId
+                ? {
+                    ...person,
+                    reported: person.reported || Boolean(participant.reported),
+                    clicked: person.clicked || interactions.clicked,
+                    submitted: person.submitted || interactions.submitted,
+                  }
+                : person,
+            )
+          : [
+              ...current,
+              {
+                id: personId,
+                name,
+                reported: Boolean(participant.reported),
+                ...interactions,
+              },
+            ];
       }
     }
     if (readActiveWorkspaceId() !== requestedWorkspaceId) return;

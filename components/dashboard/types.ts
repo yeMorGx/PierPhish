@@ -53,6 +53,8 @@ export type CampaignParticipant = {
   id: string;
   name: string;
   reported?: boolean;
+  clicked?: boolean;
+  submitted?: boolean;
 };
 
 export type CampaignParticipants = Record<string, CampaignParticipant[]>;

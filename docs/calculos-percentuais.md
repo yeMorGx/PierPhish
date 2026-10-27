@@ -48,6 +48,12 @@ As taxas abaixo são multiplicadas por 100. A apresentação usa arredondamento 
 | Template Canva, `lib/export/canva-template.ts`                    | Abertura e cliques                                              | abertos / participações; clicados / (entregues ou participações)                    | Formatação pt-BR sem casas decimais; denominador zero retorna zero.                                                            |
 | Componentes auxiliares `signal-summary-card.tsx`, `risk-card.tsx` | Cliques, dados enviados, reportes                               | cliques / (entregues ou participações); dados / participações; reportes / entregues | Verificar os consumidores antes de alterar; alguns layouts de apresentação usam esses componentes.                             |
 
+## Ranking de pessoas mais recorrentes
+
+O ranking conta, por pessoa, **campanhas com clique ou envio de dados**, não campanhas recebidas e nem a soma de eventos repetidos. Clique e envio de dados na mesma campanha contam uma única vez no total. A linha apresenta as duas contagens separadas, que podem se sobrepor. O status de envio de dados implica clique, seguindo a convenção dos agregados existentes. Pessoas sem essas ações não entram; até cinco são exibidas, respeitando os filtros e exclusões. Empates são ordenados por envios de dados, cliques e nome, mantendo a mesma posição quando o total de campanhas é igual.
+
+Origem: `app/page.tsx`, `lib/campaigns/participant-interactions.ts` e `components/dashboard/people-rankings.tsx`. Os sinais são extraídos do status sincronizado; a contagem não substitui uma análise do histórico individual de eventos.
+
 ## Faixas da taxa de cliques
 
 Configuração da operação solicitada pelo usuário, não um benchmark externo. Aplicada sobre o valor **sem arredondar**, evitando que 3,4% seja classificado como excelente apenas por aparecer arredondado como 3%.
