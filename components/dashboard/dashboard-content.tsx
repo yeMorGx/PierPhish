@@ -41,6 +41,7 @@ export function DashboardContent({
   return (
     <div className="bento-dashboard grid grid-cols-[minmax(0,1.35fr)_minmax(180px,0.62fr)_minmax(280px,0.82fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-[minmax(0,1.2fr)_minmax(180px,0.7fr)] max-[1120px]:grid-rows-[auto_auto_auto] max-[720px]:flex max-[720px]:flex-col">
       <OverviewHero
+        campaigns={campaignSummary}
         activeCampaigns={
           campaignSummary.filter(
             (campaign) => campaign.status === "In progress",

@@ -156,6 +156,7 @@ export function PresentationSlide({ data, slideId }: PresentationSlideProps) {
   return (
     <div className="presentation-slide-stack">
       <OverviewHero
+        campaigns={data.campaignSummary}
         activeCampaigns={
           data.campaignSummary.filter(
             (campaign) => campaign.status === "In progress",

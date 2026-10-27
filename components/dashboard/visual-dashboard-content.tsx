@@ -21,6 +21,7 @@ import {
 import { Icon, type IconName } from "@/components/ui/icon";
 import { AnimatedNumber } from "@/components/dashboard/animated-number";
 import { BentoDashboardGrid } from "@/components/dashboard/bento-dashboard-grid";
+import { HeroMaturity } from "@/components/dashboard/hero-maturity";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import type {
   CampaignBar,
@@ -108,35 +109,6 @@ function PeopleStack({
   );
 }
 
-function Ring({ value }: { value: number }) {
-  const circumference = 2 * Math.PI * 44;
-  const dashOffset = circumference - (value / 100) * circumference;
-
-  return (
-    <div className="visual-dashboard-ring">
-      <svg viewBox="0 0 104 104" aria-hidden="true">
-        <circle
-          className="visual-dashboard-ring-track"
-          cx="52"
-          cy="52"
-          r="44"
-        />
-        <circle
-          className="visual-dashboard-ring-value"
-          cx="52"
-          cy="52"
-          r="44"
-          strokeDasharray={circumference}
-          strokeDashoffset={dashOffset}
-        />
-      </svg>
-      <strong>
-        <AnimatedNumber value={value} suffix="%" />
-      </strong>
-    </div>
-  );
-}
-
 function CampaignOpeningsChart({ campaigns }: { campaigns: CampaignBar[] }) {
   const data = campaigns.slice(0, 8).map((campaign) => ({
     id: campaign.id,
@@ -214,10 +186,6 @@ export function VisualDashboardContent({
 }: VisualDashboardContentProps) {
   const openingRate = pct(totals.opened, totals.people);
   const deliveryRate = pct(totals.delivered, totals.people);
-  const exposureRate = pct(
-    totals.clicked + totals.submitted + totals.reported,
-    totals.people,
-  );
   const signals = totals.clicked + totals.submitted + totals.reported;
   const metrics: Array<{
     icon: IconName;
@@ -297,17 +265,7 @@ export function VisualDashboardContent({
           </div>
         </div>
         <div className="visual-dashboard-hero-insight">
-          <div className="visual-dashboard-insight-top">
-            <span className="visual-dashboard-insight-icon">
-              <Icon name="chart" size={16} />
-            </span>
-            <span className="visual-dashboard-insight-pulse" />
-          </div>
-          <Ring value={openingRate} />
-          <div className="visual-dashboard-insight-footer">
-            <strong>{exposureRate}%</strong>
-            <span>exposição</span>
-          </div>
+          <HeroMaturity totals={totals} campaigns={campaignSummary} />
         </div>
       </SpotlightCard>
 

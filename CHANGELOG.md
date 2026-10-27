@@ -10,6 +10,14 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 
 ## Estado do projeto — atualizado em 27/10/2026
 
+### Maturidade no card principal e arraste dos filtros — 2026-10-27
+
+- Removido o card independente de maturidade. A informação agora faz parte do card principal da visão geral: no modo padrão, abaixo do total de campanhas; no modo visual, na área de destaque lateral do hero, substituindo a rosca repetida e o indicador de exposição daquele trecho.
+- Componente compartilhado `HeroMaturity` preserva cálculo, faixas e estados de dados incompletos/incoerentes/sem base. O resumo mostra classificação, taxa e base; as cinco faixas e a explicação ficam em **Como a maturidade é calculada**, recolhidas inicialmente para reduzir informação simultânea. Não foram alteradas as demais fórmulas de exposição do modo visual.
+- A lista horizontal de empresas ganhou um degradê de transparência suave apenas nas bordas com conteúdo fora da área visível. A indicação acompanha rolagem, redimensionamento e mudanças nas empresas. Arraste com mouse/caneta usa captura após um limiar de movimento e bloqueia o clique gerado pelo gesto, evitando trocar o filtro ao soltar; cliques normais e navegação por teclado continuam disponíveis, e telas de toque mantêm a rolagem nativa.
+- Estilos por tokens, sem nova cor, sombra ou outline; degradê restrito à indicação de overflow pedida pelo usuário. Campanhas de teste permanecem no banco, no fim da tabela e fora das métricas, com marcação pelo menu do botão direito.
+- Validações aprovadas: TypeScript da aplicação com arquivos versionados e exclusões do projeto, Prettier, git diff --check e detector Impeccable sem apontamentos nos componentes avaliados. Dashboard local respondeu HTTP 200 após as alterações. Atualizado também o consumidor do hero nas apresentações para manter compatibilidade. Entrega por commit e push em main. Nenhuma migration, alteração remota de banco, campanha ou e-mail enviados. Próximo passo: conferir hero e arraste em desktop/mobile, claro/escuro e filtros no ambiente publicado; deploy e conferência visual ainda não verificados.
+
 ### Card de maturidade e apresentação de campanhas de teste — 2026-10-27
 
 - Criado um card próprio de **Maturidade** no dashboard padrão e visual, junto dos filtros, substituindo o resumo de classificação que ficava dentro da tabela. Mostra a taxa consolidada de cliques com até duas casas, a base usada, a faixa atual e as cinco faixas definidas pelo usuário. A classificação usa o valor sem arredondamento e acompanha empresa, período e exclusões existentes. Não representa uma avaliação geral de segurança nem soma reportes/envios de dados.
