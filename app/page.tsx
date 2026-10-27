@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
+import { MaturityCard } from "@/components/dashboard/maturity-card";
 import {
   DashboardDateFilter,
   formatDashboardPeriodLabel,
@@ -759,6 +760,15 @@ export default function Home() {
           totals={totals}
         />
       </DashboardCompanyFilter>
+      <MaturityCard
+        totals={totals}
+        dataAvailable={campaignSummary.every(
+          (campaign) =>
+            typeof campaign.stats.clicked === "number" &&
+            Number.isFinite(campaign.stats.clicked) &&
+            campaign.stats.clicked >= 0,
+        )}
+      />
       {themePreferences.dashboardMode === "visual" ? (
         <div data-tour="dashboard-content">
           <VisualDashboardContent

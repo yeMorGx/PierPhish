@@ -18,7 +18,7 @@ Origem: `lib/campaigns/delivery-statistics.ts`, `app/page.tsx` e `components/das
 
 - Empresa e período são aplicados antes da consolidação. O período usa o início da campanha; as métricas são acumuladas até a sincronização, não apenas eventos ocorridos dentro do período.
 - Campanhas cujo nome contém `teste`, sem distinguir maiúsculas, ficam fora dos indicadores. A correspondência é por trecho, inclusive nomes como “Teste SMTP”.
-- `is_test = true` também exclui a campanha dos indicadores. A tabela continua permitindo abrir a campanha e reverter a marcação manual. Exclusão automática pelo nome exige renomear a campanha para voltar a contar.
+- `is_test = true` também exclui a campanha dos indicadores. A tabela preserva as campanhas de teste no final, com aparência discreta, permitindo abrir os detalhes e reverter a marcação manual pelo menu do botão direito. Nenhum registro é apagado ao marcar como teste. Exclusão automática pelo nome exige renomear a campanha para voltar a contar.
 - O menu de contexto usa a RPC `set_campaign_test_flag`. Ela exige MFA e permissão de gestão no workspace; o servidor registra autor e horário da última marcação.
 - A sincronização preserva a marcação manual, pois não inclui essas colunas no payload de atualização.
 - Exclusões de pessoas internas continuam sendo feitas no fluxo existente de estatísticas. Não combinar agregados filtrados e resultados brutos sem aplicar as mesmas exclusões.
@@ -66,7 +66,7 @@ Configuração da operação solicitada pelo usuário, não um benchmark externo
 | > 10% e ≤ 15% | Alerta             |
 | > 15%         | Crítico            |
 
-Sem destinatários, a interface não classifica o ambiente. A função está em `lib/campaigns/metrics.ts`. As cores são semânticas e acompanhadas de texto.
+O card **Maturidade**, disponível nos dois modos do dashboard, mostra a taxa consolidada, a base usada e as cinco faixas, com indicação textual da atual. Usa cliques ÷ entregues, ou participações se não houver entregas registradas. Segue os filtros e exclusões do dashboard. Sem base, não classifica; dados inválidos ou cliques acima da base exibem pedido de conferência. A taxa é apresentada com até duas casas decimais. Sem destinatários, a interface não classifica o ambiente. A função está em `lib/campaigns/metrics.ts`. As cores são semânticas e acompanhadas de texto.
 
 ## Arredondamento e ausência de dados
 

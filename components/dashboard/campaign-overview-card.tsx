@@ -108,14 +108,12 @@ export function CampaignOverviewCard({
   const { logos } = useCampaignLogos();
   const recentCampaigns = [...campaigns].sort(
     (first, second) =>
+      Number(campaignIsTest(first)) - Number(campaignIsTest(second)) ||
       startTimestamp(second.launch_date) - startTimestamp(first.launch_date) ||
       second.id - first.id,
   );
   const deliveryGap = totals.people - totals.delivered - totals.errors;
   const reconciliationAvailable = failuresAvailable && deliveryGap >= 0;
-  const level = clickRateLevel(
-    rawClickRate(totals.clicked, totals.delivered, totals.people),
-  );
   const metrics: Array<{
     label: string;
     value: number | null;
@@ -180,7 +178,8 @@ export function CampaignOverviewCard({
             Todas as campanhas
           </h3>
           <p className="mt-2 text-[12px] text-[var(--text-muted)]">
-            Mais recentes primeiro, pela data de início. Horários de Brasília.
+            Mais recentes primeiro; campanhas de teste ao final. Horários de
+            Brasília.
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2 text-[11px] text-[var(--text-muted)]">
@@ -190,18 +189,6 @@ export function CampaignOverviewCard({
         </div>
       </div>
 
-      <p className={`campaign-click-level is-${level.tone}`}>
-        <strong>
-          {totals.people ? level.label : "Sem base para classificação"}
-        </strong>
-        <span>
-          Taxa de cliques · cliques ÷ entregas
-          {!totals.delivered && totals.people
-            ? " (base alternativa: participações)"
-            : ""}
-          . Faixas definidas pela operação.
-        </span>
-      </p>
       <p className="campaign-test-hint">
         Testes ficam fora dos indicadores. Use o botão direito na linha para
         marcar.
@@ -311,6 +298,7 @@ export function CampaignOverviewCard({
                 <ContextMenu.Root key={campaign.id}>
                   <ContextMenu.Trigger
                     render={<tr />}
+                    tabIndex={onMarkAsTest ? 0 : undefined}
                     role="row"
                     className="campaign-overview-table-row border-b border-[var(--line-soft)] text-[12px] text-[var(--text-muted)] last:border-0 hover:bg-[var(--surface-soft)]"
                     data-test-campaign={campaignIsTest(campaign) || undefined}
@@ -444,19 +432,6 @@ export function CampaignOverviewCard({
                         <small className="campaign-test-badge">
                           Teste · fora dos indicadores
                         </small>
-                      )}
-                      {onMarkAsTest && !/teste/i.test(campaign.name) && (
-                        <button
-                          type="button"
-                          className="campaign-test-action"
-                          onClick={() =>
-                            void onMarkAsTest(campaign, !campaign.is_test)
-                          }
-                        >
-                          {campaign.is_test
-                            ? "Incluir nos indicadores"
-                            : "Marcar como teste"}
-                        </button>
                       )}
                     </td>
                   </ContextMenu.Trigger>

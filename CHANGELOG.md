@@ -10,6 +10,14 @@ Não inclua neste arquivo chaves, tokens, senhas, códigos de pareamento ativos,
 
 ## Estado do projeto — atualizado em 27/10/2026
 
+### Card de maturidade e apresentação de campanhas de teste — 2026-10-27
+
+- Criado um card próprio de **Maturidade** no dashboard padrão e visual, junto dos filtros, substituindo o resumo de classificação que ficava dentro da tabela. Mostra a taxa consolidada de cliques com até duas casas, a base usada, a faixa atual e as cinco faixas definidas pelo usuário. A classificação usa o valor sem arredondamento e acompanha empresa, período e exclusões existentes. Não representa uma avaliação geral de segurança nem soma reportes/envios de dados.
+- Sem base, o card informa que não pode classificar; contagem de cliques maior que a base ou inválida pede conferência dos dados. Se não há entregas registradas, mantém a base alternativa de participações, explicitamente indicada. Layout monocromático, responsivo e via tokens, com a faixa atual identificada também por texto.
+- Removido o botão visível **Marcar como teste** de cada linha e o CSS sem uso. Marcação e reversão continuam no menu de contexto do botão direito; linhas de usuários com permissão também aceitam foco de teclado para o menu, sem outline/ring.
+- Campanhas identificadas como teste, pelo nome ou pela marcação manual, ficam no final da tabela, com apresentação discreta e rótulo explícito. Dentro de cada grupo, as mais recentes vêm primeiro. Elas permanecem no banco e acessíveis; esta tarefa não adiciona exclusão de registros nem altera o conteúdo da RPC. Continuam fora dos indicadores e do cálculo de maturidade.
+- Validações aprovadas: TypeScript da aplicação com arquivos versionados e exclusões do projeto, Prettier, git diff --check e detector Impeccable sem apontamentos nos dois cards. Dashboard compilado localmente e respondendo HTTP 200. A conferência visual no navegador foi tentada, mas ficou bloqueada por navegação à página de erro de conexão; não afirmar QA visual concluída. Sem testes automatizados, migration, alteração remota de banco ou envio de campanhas nesta tarefa. Entrega por commit e push em main. Próximo passo: conferir o card nos filtros e a ordem/apresentação das linhas no ambiente publicado; deploy não verificado.
+
 ### Critério de pessoas mais recorrentes — 2026-10-27
 
 - Corrigido o ranking **Pessoas mais recorrentes**: agora considera campanhas em que a pessoa clicou ou enviou dados, em vez da quantidade de campanhas recebidas. A mesma campanha conta uma vez no total, mesmo com as duas ações; cada linha mostra os totais de campanhas com clique e com envio de dados separados. Quem apenas recebeu/abriu não entra.
