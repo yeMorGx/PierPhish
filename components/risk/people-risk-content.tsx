@@ -16,6 +16,7 @@ import { PersonAvatar } from "@/components/people/person-avatar";
 import { Icon } from "@/components/ui/icon";
 import { useTheme } from "@/components/theme/theme-provider";
 import { VisualRiskContent } from "@/components/risk/visual-risk-content";
+import { campaignIsTest } from "@/lib/campaigns/metrics";
 import { demoCampaigns } from "@/lib/demo-data";
 import {
   readPersonAvatars,
@@ -66,6 +67,7 @@ type RawEvent = {
 type RiskPerson = PersonDetails;
 
 type CampaignRow = {
+  is_test?: boolean;
   id: number;
   name: string;
   synced_at: string | null;
@@ -570,7 +572,7 @@ function PeopleRiskPage() {
       await Promise.all([
         supabase
           .from("beephish_campaigns")
-          .select("id,name,synced_at,company_id")
+          .select("*")
           .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
           .order("launch_date", { ascending: false }),
         supabase
@@ -599,15 +601,24 @@ function PeopleRiskPage() {
       return;
     }
 
-    const campaignRows = (campaignResult.data ?? []) as CampaignRow[];
+    const campaignRows = ((campaignResult.data ?? []) as CampaignRow[]).filter(
+      (campaign) => !campaignIsTest(campaign),
+    );
     const excludedEmails = await loadWorkspaceExcludedEmails(
       databaseWorkspaceId(activeWorkspaceId),
     );
+    const includedCampaignIds = new Set(
+      campaignRows.map((campaign) => campaign.id),
+    );
     const visibleResults = ((resultResult.data ?? []) as RawResult[]).filter(
-      (result) => !excludedEmails.has(normalizeWorkspaceEmail(result.email)),
+      (result) =>
+        includedCampaignIds.has(result.campaign_id) &&
+        !excludedEmails.has(normalizeWorkspaceEmail(result.email)),
     );
     const visibleEvents = ((eventResult.data ?? []) as RawEvent[]).filter(
-      (event) => !excludedEmails.has(normalizeWorkspaceEmail(event.email)),
+      (event) =>
+        includedCampaignIds.has(event.campaign_id) &&
+        !excludedEmails.has(normalizeWorkspaceEmail(event.email)),
     );
     setCampaignTotal(campaignRows.length);
     setPeople(

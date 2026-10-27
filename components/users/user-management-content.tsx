@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   createColumnHelper,
@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-table";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { useDialogScrollLock } from "@/components/ui/use-dialog-scroll-lock";
 import { Icon } from "@/components/ui/icon";
 import {
   readActiveWorkspaceId,
@@ -184,9 +185,24 @@ export function UserManagementContent() {
   const { ready, user } = useAuth();
   const searchParams = useSearchParams();
   const requestedWorkspaceId = searchParams.get("workspace") ?? "";
+  const [activePanel, setActivePanel] = useState<
+    "directory" | "create" | "invite"
+  >("directory");
+  const [directorySearch, setDirectorySearch] = useState("");
   const [users, setUsers] = useState<ManagedUser[]>(demoUsers);
   const usersTable = useReactTable({
-    data: users,
+    data: users.filter((person) =>
+      [
+        person.name,
+        person.email,
+        ...person.workspaceMemberships.map(
+          (membership) => membership.workspaceName,
+        ),
+      ]
+        .join(" ")
+        .toLocaleLowerCase("pt-BR")
+        .includes(directorySearch.trim().toLocaleLowerCase("pt-BR")),
+    ),
     columns: managedUserColumns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -216,6 +232,10 @@ export function UserManagementContent() {
   const [actionLoading, setActionLoading] = useState(false);
   const [resetTarget, setResetTarget] = useState<ManagedUser | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null);
+  const userDialogRef = useRef<HTMLDivElement>(null);
+  const resetDialogRef = useRef<HTMLFormElement>(null);
+  useDialogScrollLock(Boolean(resetTarget), resetDialogRef);
+  useDialogScrollLock(Boolean(deleteTarget), userDialogRef);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   const globalAdminAccess = isGlobalAdminUser(user);
@@ -413,6 +433,7 @@ export function UserManagementContent() {
 
   useEffect(() => {
     if (!requestedWorkspaceId || window.location.hash !== "#convites") return;
+    setActivePanel("invite");
     const frame = window.requestAnimationFrame(() => {
       document.getElementById("workspace-invite")?.scrollIntoView({
         behavior: "smooth",
@@ -772,7 +793,7 @@ export function UserManagementContent() {
   return (
     <DashboardShell activeSection="settings" title="Usuários">
       <div
-        className="mx-auto grid max-w-[1180px] gap-[var(--cards-gap)] pb-8"
+        className="users-page mx-auto grid max-w-[1180px] gap-[var(--cards-gap)] pb-8"
         data-tour="users-content"
       >
         <section
@@ -789,14 +810,12 @@ export function UserManagementContent() {
                 definir uma senha pessoal.
               </p>
             </div>
-            <span className="grid size-12 flex-none place-items-center rounded-[16px] bg-[var(--surface-soft)] text-[var(--aqua)]">
-              <Icon name="users" size={21} />
-            </span>
+            <span className="users-header-count">{users.length} contas</span>
           </div>
         </section>
 
         {!adminAccess && (
-          <section className="surface-card rounded-[var(--radius-card)] border-[#e8c8c1] bg-[#fff7f4] p-6 text-[12px] text-[#8b4d39]">
+          <section className="surface-card rounded-[var(--radius-card)] border-[var(--line)] bg-[var(--surface-soft)] p-6 text-[12px] text-[var(--text-muted)]">
             Este espaço é reservado para administradores. Peça a um
             administrador para liberar seu acesso.
           </section>
@@ -805,7 +824,7 @@ export function UserManagementContent() {
         {adminAccess && (
           <>
             {!isSupabaseConfigured && (
-              <section className="flex items-center gap-3 rounded-[var(--radius-card)] border border-[var(--line)] bg-[var(--surface-soft)] px-5 py-4 text-[11px] text-[#687780]">
+              <section className="flex items-center gap-3 rounded-[var(--radius-card)] border border-[var(--line)] bg-[var(--surface-soft)] px-5 py-4 text-[11px] text-[var(--text-muted)]">
                 <span className="grid size-7 flex-none place-items-center rounded-full bg-[var(--surface)] text-[var(--aqua)]">
                   <Icon name="settings" size={15} />
                 </span>
@@ -814,9 +833,34 @@ export function UserManagementContent() {
               </section>
             )}
 
+            {(error || notice) && activePanel !== "create" && (
+              <p className="users-feedback" role={error ? "alert" : "status"}>
+                {error ?? notice}
+              </p>
+            )}
+            <nav className="users-panel-nav" aria-label="Gestão de usuários">
+              {(
+                [
+                  { id: "directory", label: "Diretório" },
+                  { id: "create", label: "Criar acesso" },
+                  { id: "invite", label: "Vincular conta existente" },
+                ] as const
+              ).map((panel) => (
+                <button
+                  type="button"
+                  key={panel.id}
+                  aria-current={activePanel === panel.id ? "page" : undefined}
+                  onClick={() => setActivePanel(panel.id)}
+                >
+                  {panel.label}
+                </button>
+              ))}
+            </nav>
             <section
               className="grid grid-cols-[minmax(0,1.2fr)_minmax(270px,0.8fr)] gap-[var(--cards-gap)] max-[860px]:grid-cols-1"
               data-tour="users-form"
+              data-users-panel="create"
+              hidden={activePanel !== "create"}
             >
               <form
                 className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]"
@@ -824,26 +868,26 @@ export function UserManagementContent() {
               >
                 <div className="mb-6 flex items-start justify-between gap-4">
                   <div>
-                    <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                    <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[var(--text-muted)] uppercase">
                       NOVO ACESSO
                     </p>
                     <h2 className="m-0 text-[22px] font-bold tracking-[-0.05em]">
                       Criar usuário
                     </h2>
-                    <p className="mt-2 mb-0 text-[11px] text-[#87919a]">
+                    <p className="mt-2 mb-0 text-[11px] text-[var(--text-muted)]">
                       O usuário entra como membro da operação.
                     </p>
                   </div>
-                  <span className="text-[10px] font-bold text-[#87919a]">
+                  <span className="text-[10px] font-bold text-[var(--text-muted)]">
                     01 / 01
                   </span>
                 </div>
 
                 <div className="grid gap-4">
-                  <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+                  <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[var(--text-muted)] uppercase">
                     Nome completo
                     <input
-                      className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[var(--accent)]"
+                      className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                       value={name}
                       onChange={(event) => setName(event.target.value)}
                       placeholder="Ex.: Mariana Souza"
@@ -852,10 +896,10 @@ export function UserManagementContent() {
                       required
                     />
                   </label>
-                  <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+                  <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[var(--text-muted)] uppercase">
                     E-mail de acesso
                     <input
-                      className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[var(--accent)]"
+                      className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
                       placeholder="mariana@empresa.com"
@@ -865,10 +909,10 @@ export function UserManagementContent() {
                     />
                   </label>
                   <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
-                    <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+                    <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[var(--text-muted)] uppercase">
                       Workspace
                       <select
-                        className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none focus:border-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors focus:border-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
                         value={selectedWorkspaceId}
                         onChange={(event) =>
                           setSelectedWorkspaceId(event.target.value)
@@ -895,10 +939,10 @@ export function UserManagementContent() {
                         ))}
                       </select>
                     </label>
-                    <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+                    <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[var(--text-muted)] uppercase">
                       Nível de acesso
                       <select
-                        className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors outline-none focus:border-[var(--accent)]"
+                        className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] transition-colors focus:border-[var(--accent)]"
                         value={selectedRole}
                         onChange={(event) =>
                           setSelectedRole(event.target.value as WorkspaceRole)
@@ -912,14 +956,14 @@ export function UserManagementContent() {
                       </select>
                     </label>
                   </div>
-                  <p className="-mt-1 mb-0 text-[11px] leading-relaxed text-[#a0a8ad]">
+                  <p className="-mt-1 mb-0 text-[11px] leading-relaxed text-[var(--text-muted)]">
                     {
                       roleOptions.find(
                         (option) => option.value === selectedRole,
                       )?.description
                     }
                   </p>
-                  <label className="flex items-start gap-3 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 py-3 text-[11px] text-[#687780]">
+                  <label className="flex items-start gap-3 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 py-3 text-[11px] text-[var(--text-muted)]">
                     <input
                       className="mt-0.5 size-4 accent-[var(--accent)]"
                       type="checkbox"
@@ -942,7 +986,7 @@ export function UserManagementContent() {
 
                 {(error || notice) && (
                   <p
-                    className={`mt-4 rounded-[12px] px-3.5 py-3 text-[11px] ${error ? "bg-[#fff0ed] text-[#984f3f]" : "bg-[#edf4e8] text-[#527044]"}`}
+                    className="mt-4 rounded-[12px] bg-[var(--surface-soft)] px-3.5 py-3 text-[11px] text-[var(--text-muted)]"
                     role={error ? "alert" : "status"}
                   >
                     {error ?? notice}
@@ -951,7 +995,7 @@ export function UserManagementContent() {
 
                 <div className="mt-6 flex items-center justify-between gap-3 max-[520px]:flex-col max-[520px]:items-stretch">
                   <button
-                    className="inline-flex h-11 items-center justify-center gap-2 rounded-[14px] bg-[var(--ink)] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#3b4650] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-[14px] bg-[var(--ink)] px-4 text-[12px] font-bold text-[var(--canvas)] transition-colors hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                     type="submit"
                     disabled={submitting}
                   >
@@ -961,13 +1005,7 @@ export function UserManagementContent() {
                 </div>
               </form>
 
-              <aside
-                className="rounded-[var(--radius-card)] border border-[var(--contrast-line)] p-6 max-[720px]:rounded-[23px]"
-                style={{
-                  backgroundColor: "var(--contrast-block)",
-                  color: "var(--contrast-text)",
-                }}
-              >
+              <aside className="users-access-guide">
                 <h2 className="m-0 max-w-[240px] text-[25px] leading-[1.02] font-bold tracking-[-0.06em]">
                   Regras de acesso
                 </h2>
@@ -978,16 +1016,16 @@ export function UserManagementContent() {
                     "A própria pessoa define a senha",
                   ].map((item) => (
                     <div className="flex items-start gap-3" key={item}>
-                      <span className="mt-0.5 grid size-5 flex-none place-items-center rounded-full border border-[var(--contrast-line)] text-[#d9e2e2]">
+                      <span className="mt-0.5 grid size-5 flex-none place-items-center rounded-full border border-[var(--contrast-line)] text-[var(--text-muted)]">
                         <Icon name="check" size={12} />
                       </span>
-                      <span className="text-[11px] leading-relaxed text-[#c0cbcd]">
+                      <span className="text-[11px] leading-relaxed text-[var(--text-muted)]">
                         {item}
                       </span>
                     </div>
                   ))}
                 </div>
-                <div className="mt-8 border-t border-white/15 pt-4 text-[10px] leading-relaxed text-[#8f9da1]">
+                <div className="mt-8 border-t border-white/15 pt-4 text-[10px] leading-relaxed text-[var(--text-muted)]">
                   O convite leva a pessoa a confirmar o endereço e definir a
                   própria senha.
                 </div>
@@ -997,22 +1035,24 @@ export function UserManagementContent() {
             <section
               className="surface-card rounded-[var(--radius-card)] p-6 max-[720px]:rounded-[23px]"
               data-tour="users-invite"
+              data-users-panel="invite"
+              hidden={activePanel !== "invite"}
               id="workspace-invite"
             >
               <div className="flex items-start justify-between gap-6 max-[620px]:flex-col">
                 <div>
-                  <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                  <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[var(--text-muted)] uppercase">
                     CONVITE DE WORKSPACE
                   </p>
                   <h2 className="m-0 text-[22px] font-bold tracking-[-0.05em]">
                     Chamar usuário para este ambiente
                   </h2>
-                  <p className="mt-2 mb-0 max-w-[650px] text-[11px] leading-relaxed text-[#87919a]">
+                  <p className="mt-2 mb-0 max-w-[650px] text-[11px] leading-relaxed text-[var(--text-muted)]">
                     Libere uma conta já cadastrada em um workspace e envie um
                     e-mail com as informações de acesso.
                   </p>
                 </div>
-                <span className="grid size-11 flex-none place-items-center rounded-[14px] bg-[#fff1eb] text-[var(--accent)]">
+                <span className="grid size-11 flex-none place-items-center rounded-[14px] bg-[var(--surface-soft)] text-[var(--accent)]">
                   <Icon name="bell" size={19} />
                 </span>
               </div>
@@ -1021,10 +1061,10 @@ export function UserManagementContent() {
                 className="mt-6 grid grid-cols-[minmax(0,1.4fr)_minmax(190px,0.8fr)_minmax(170px,0.7fr)_auto] items-end gap-3 max-[980px]:grid-cols-2 max-[560px]:grid-cols-1"
                 onSubmit={handleInviteSubmit}
               >
-                <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+                <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[var(--text-muted)] uppercase">
                   E-mail da conta existente
                   <input
-                    className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors outline-none placeholder:text-[#aab1b5] focus:border-[var(--accent)]"
+                    className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                     value={inviteEmail}
                     onChange={(event) => setInviteEmail(event.target.value)}
                     placeholder="pessoa@empresa.com"
@@ -1033,10 +1073,10 @@ export function UserManagementContent() {
                     required
                   />
                 </label>
-                <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+                <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[var(--text-muted)] uppercase">
                   Workspace
                   <select
-                    className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors outline-none focus:border-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors focus:border-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
                     value={inviteWorkspaceId}
                     onChange={(event) =>
                       setInviteWorkspaceId(event.target.value)
@@ -1061,10 +1101,10 @@ export function UserManagementContent() {
                     ))}
                   </select>
                 </label>
-                <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+                <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[var(--text-muted)] uppercase">
                   Nível de acesso
                   <select
-                    className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors outline-none focus:border-[var(--accent)]"
+                    className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] normal-case transition-colors focus:border-[var(--accent)]"
                     value={inviteRole}
                     onChange={(event) =>
                       setInviteRole(event.target.value as WorkspaceRole)
@@ -1076,7 +1116,7 @@ export function UserManagementContent() {
                       </option>
                     ))}
                   </select>
-                  <span className="mt-1 flex items-start gap-2 text-[10px] font-normal tracking-normal text-[#687780] normal-case">
+                  <span className="mt-1 flex items-start gap-2 text-[10px] font-normal tracking-normal text-[var(--text-muted)] normal-case">
                     <input
                       className="mt-0.5 size-4 accent-[var(--accent)]"
                       type="checkbox"
@@ -1089,7 +1129,7 @@ export function UserManagementContent() {
                   </span>
                 </label>
                 <button
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] bg-[var(--ink)] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#3b4650] disabled:cursor-not-allowed disabled:opacity-60 max-[980px]:col-span-2 max-[560px]:col-span-1"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] bg-[var(--ink)] px-4 text-[12px] font-bold text-[var(--canvas)] transition-colors hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-60 max-[980px]:col-span-2 max-[560px]:col-span-1"
                   type="submit"
                   disabled={
                     inviting ||
@@ -1104,7 +1144,7 @@ export function UserManagementContent() {
 
               {(inviteError || inviteNotice) && (
                 <p
-                  className={`mt-4 rounded-[12px] px-3.5 py-3 text-[11px] ${inviteError ? "bg-[#fff0ed] text-[#984f3f]" : "bg-[#edf4e8] text-[#527044]"}`}
+                  className="mt-4 rounded-[12px] bg-[var(--surface-soft)] px-3.5 py-3 text-[11px] text-[var(--text-muted)]"
                   role={inviteError ? "alert" : "status"}
                 >
                   {inviteError ?? inviteNotice}
@@ -1112,7 +1152,11 @@ export function UserManagementContent() {
               )}
             </section>
 
-            <section className="grid grid-cols-3 gap-[var(--cards-gap)] max-[700px]:grid-cols-1">
+            <section
+              className="users-directory-summary"
+              data-users-panel="directory"
+              hidden={activePanel !== "directory"}
+            >
               {[
                 ["Usuários", users.length, "contas no ambiente"],
                 ["Ativos", activeUsers, "e-mails confirmados"],
@@ -1122,24 +1166,41 @@ export function UserManagementContent() {
                   className="surface-card rounded-[var(--radius-card)] p-5 max-[720px]:rounded-[23px]"
                   key={label}
                 >
-                  <p className="m-0 text-[10px] text-[#89939a]">{label}</p>
+                  <p className="m-0 text-[10px] text-[var(--text-muted)]">
+                    {label}
+                  </p>
                   <p className="mt-3 mb-1 text-[32px] leading-none font-light tracking-[-0.06em] text-[var(--ink)]">
                     {value}
                   </p>
-                  <p className="m-0 text-[10px] text-[#a0a8ad]">
+                  <p className="m-0 text-[10px] text-[var(--text-muted)]">
                     {description}
                   </p>
                 </article>
               ))}
             </section>
 
+            <label
+              className="users-directory-search"
+              data-users-panel="directory"
+              hidden={activePanel !== "directory"}
+            >
+              Buscar pessoa ou workspace
+              <input
+                type="search"
+                placeholder="Nome, e-mail ou workspace"
+                value={directorySearch}
+                onChange={(event) => setDirectorySearch(event.target.value)}
+              />
+            </label>
             <section
               className="surface-card overflow-hidden rounded-[var(--radius-card)] max-[720px]:rounded-[23px]"
               data-tour="users-list"
+              data-users-panel="directory"
+              hidden={activePanel !== "directory"}
             >
               <div className="flex items-end justify-between gap-4 border-b border-[var(--line-soft)] px-6 py-5 max-[620px]:flex-col max-[620px]:items-start">
                 <div>
-                  <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                  <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[var(--text-muted)] uppercase">
                     DIRETÓRIO DO AMBIENTE
                   </p>
                   <h2 className="m-0 text-[21px] font-bold tracking-[-0.05em]">
@@ -1147,7 +1208,7 @@ export function UserManagementContent() {
                   </h2>
                 </div>
                 <button
-                  className="inline-flex items-center gap-2 rounded-[11px] border border-[var(--line)] px-3 py-2 text-[10px] font-bold text-[#6e7c84] transition-colors hover:border-[var(--text-muted)]"
+                  className="inline-flex items-center gap-2 rounded-[11px] border border-[var(--line)] px-3 py-2 text-[10px] font-bold text-[var(--text-muted)] transition-colors hover:border-[var(--text-muted)]"
                   type="button"
                   onClick={() => void loadUsers()}
                   disabled={loadingUsers || !isSupabaseConfigured}
@@ -1158,27 +1219,45 @@ export function UserManagementContent() {
               </div>
 
               {loadingUsers ? (
-                <p className="px-6 py-8 text-[12px] text-[#8e989d]">
+                <p className="px-6 py-8 text-[12px] text-[var(--text-muted)]">
                   Carregando usuários…
                 </p>
-              ) : users.length === 0 ? (
-                <p className="px-6 py-8 text-[12px] text-[#8e989d]">
-                  Nenhum usuário cadastrado ainda.
+              ) : usersTable.getRowModel().rows.length === 0 ? (
+                <p className="px-6 py-8 text-[12px] text-[var(--text-muted)]">
+                  {users.length === 0
+                    ? "Nenhum usuário cadastrado ainda."
+                    : "Nenhuma conta corresponde à busca."}
                 </p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[1120px] border-collapse text-left">
+                <div className="users-directory-container">
+                  <table className="users-directory-table w-full border-collapse text-left">
                     <thead>
-                      <tr className="border-b border-[var(--line-soft)] text-[9px] font-extrabold tracking-[0.14em] text-[#9aa3a8] uppercase">
-                        <th className="px-6 py-3 font-extrabold">Pessoa</th>
-                        <th className="px-4 py-3 font-extrabold">Workspace</th>
-                        <th className="px-4 py-3 font-extrabold">Nível</th>
-                        <th className="px-4 py-3 font-extrabold">Acesso</th>
-                        <th className="px-4 py-3 font-extrabold">Criado em</th>
-                        <th className="px-6 py-3 text-right font-extrabold">
+                      <tr className="border-b border-[var(--line-soft)] text-[9px] font-extrabold tracking-[0.14em] text-[var(--text-muted)] uppercase">
+                        <th scope="col" className="px-6 py-3 font-extrabold">
+                          Pessoa
+                        </th>
+                        <th scope="col" className="px-4 py-3 font-extrabold">
+                          Workspace
+                        </th>
+                        <th scope="col" className="px-4 py-3 font-extrabold">
+                          Nível
+                        </th>
+                        <th scope="col" className="px-4 py-3 font-extrabold">
+                          Acesso
+                        </th>
+                        <th scope="col" className="px-4 py-3 font-extrabold">
+                          Criado em
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-right font-extrabold"
+                        >
                           Último acesso
                         </th>
-                        <th className="px-6 py-3 text-right font-extrabold">
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-right font-extrabold"
+                        >
                           Ações
                         </th>
                       </tr>
@@ -1191,7 +1270,7 @@ export function UserManagementContent() {
                             className="border-b border-[var(--line-soft)] last:border-b-0"
                             key={managedUser.id}
                           >
-                            <td className="px-6 py-4">
+                            <td data-label="Pessoa" className="px-6 py-4">
                               <div className="flex items-center gap-3">
                                 <span className="grid size-9 flex-none place-items-center rounded-full bg-[var(--surface-soft)] text-[10px] font-bold text-[var(--ink)]">
                                   {getInitials(
@@ -1203,13 +1282,13 @@ export function UserManagementContent() {
                                   <strong className="block truncate text-[12px] font-bold text-[var(--ink)]">
                                     {managedUser.name || "Sem nome"}
                                   </strong>
-                                  <span className="block truncate text-[10px] text-[#8b969c]">
+                                  <span className="block truncate text-[10px] text-[var(--text-muted)]">
                                     {managedUser.email}
                                   </span>
                                 </span>
                               </div>
                             </td>
-                            <td className="px-4 py-4">
+                            <td data-label="Workspace" className="px-4 py-4">
                               <div className="grid gap-1">
                                 {managedUser.workspaceMemberships.length ? (
                                   managedUser.workspaceMemberships.map(
@@ -1223,13 +1302,13 @@ export function UserManagementContent() {
                                     ),
                                   )
                                 ) : (
-                                  <span className="text-[11px] text-[#a0a8ad]">
+                                  <span className="text-[11px] text-[var(--text-muted)]">
                                     Sem workspace
                                   </span>
                                 )}
                               </div>
                             </td>
-                            <td className="px-4 py-4">
+                            <td data-label="Nível" className="px-4 py-4">
                               <div className="grid gap-1.5">
                                 {managedUser.workspaceMemberships.length ? (
                                   managedUser.workspaceMemberships.map(
@@ -1238,11 +1317,11 @@ export function UserManagementContent() {
                                         className="grid gap-1"
                                         key={`${managedUser.id}-${membership.workspaceId}-role`}
                                       >
-                                        <span className="inline-flex w-fit rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[9px] font-bold text-[#687780]">
+                                        <span className="inline-flex w-fit rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[9px] font-bold text-[var(--text-muted)]">
                                           {roleLabel(membership.role)}
                                         </span>
                                         {membership.excludeFromStatistics ? (
-                                          <span className="inline-flex w-fit rounded-full bg-[#fff1eb] px-2.5 py-1 text-[9px] font-bold text-[#a45e4b]">
+                                          <span className="inline-flex w-fit rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[9px] font-bold text-[var(--text-muted)]">
                                             Fora dos indicadores
                                           </span>
                                         ) : null}
@@ -1250,32 +1329,39 @@ export function UserManagementContent() {
                                     ),
                                   )
                                 ) : (
-                                  <span className="text-[11px] text-[#a0a8ad]">
+                                  <span className="text-[11px] text-[var(--text-muted)]">
                                     —
                                   </span>
                                 )}
                               </div>
                             </td>
-                            <td className="px-4 py-4">
-                              <span
-                                className={`inline-flex rounded-full px-2.5 py-1 text-[9px] font-bold ${managedUser.passwordRotationRequired ? "bg-[#fff1e8] text-[#9a603f]" : "bg-[#edf4e8] text-[#5c784b]"}`}
-                              >
+                            <td data-label="Acesso" className="px-4 py-4">
+                              <span className="inline-flex rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[9px] font-bold text-[var(--text-muted)]">
                                 {managedUser.passwordRotationRequired
                                   ? "Troca pendente"
                                   : "Ativo"}
                               </span>
                             </td>
-                            <td className="px-4 py-4 text-[10px] text-[#87939a]">
+                            <td
+                              data-label="Criado em"
+                              className="px-4 py-4 text-[10px] text-[var(--text-muted)]"
+                            >
                               {formatDate(managedUser.createdAt)}
                             </td>
-                            <td className="px-6 py-4 text-right text-[10px] text-[#87939a]">
+                            <td
+                              data-label="Último acesso"
+                              className="px-6 py-4 text-right text-[10px] text-[var(--text-muted)]"
+                            >
                               {formatDate(managedUser.lastSignInAt)}
                             </td>
-                            <td className="px-6 py-4 text-right">
+                            <td
+                              data-label="Ações"
+                              className="px-6 py-4 text-right"
+                            >
                               {canManageTarget(managedUser) ? (
                                 <div className="flex justify-end gap-2">
                                   <button
-                                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[#687780] transition-colors hover:border-[var(--text-muted)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[var(--text-muted)] transition-colors hover:border-[var(--text-muted)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
                                     type="button"
                                     onClick={() =>
                                       openResetPassword(managedUser)
@@ -1286,7 +1372,7 @@ export function UserManagementContent() {
                                     Redefinir
                                   </button>
                                   <button
-                                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#efc6bc] px-2.5 py-2 text-[10px] font-bold text-[#a14e3d] transition-colors hover:bg-[#fff2ef] disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-50"
                                     type="button"
                                     onClick={() => {
                                       setDeleteTarget(managedUser);
@@ -1301,7 +1387,7 @@ export function UserManagementContent() {
                                   </button>
                                 </div>
                               ) : (
-                                <span className="text-[10px] text-[#b0b7ba]">
+                                <span className="text-[10px] text-[var(--text-muted)]">
                                   —
                                 </span>
                               )}
@@ -1320,7 +1406,7 @@ export function UserManagementContent() {
 
       {resetTarget && (
         <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-[#18202b]/35 px-4 backdrop-blur-[2px]"
+          className="users-dialog-backdrop"
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !actionLoading) {
@@ -1329,7 +1415,8 @@ export function UserManagementContent() {
           }}
         >
           <form
-            className="w-full max-w-[460px] rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-[0_24px_70px_rgba(24,32,43,0.18)]"
+            ref={resetDialogRef}
+            className="users-dialog"
             role="dialog"
             aria-modal="true"
             aria-labelledby="reset-user-password-title"
@@ -1338,7 +1425,7 @@ export function UserManagementContent() {
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9a603f] uppercase">
+                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[var(--text-muted)] uppercase">
                   ZONA DE ACESSO
                 </p>
                 <h2
@@ -1347,14 +1434,14 @@ export function UserManagementContent() {
                 >
                   Enviar link de redefinição
                 </h2>
-                <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[#7f8991]">
+                <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[var(--text-muted)]">
                   Enviaremos para {resetTarget.email} um link individual para
                   criar uma nova senha. A senha atual só muda quando a pessoa
                   concluir o processo.
                 </p>
               </div>
               <button
-                className="grid size-9 flex-none place-items-center rounded-[11px] border border-[var(--line)] text-[#7d8990] transition-colors hover:bg-[#f4f6f6]"
+                className="grid size-9 flex-none place-items-center rounded-[11px] border border-[var(--line)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)]"
                 type="button"
                 aria-label="Fechar redefinição de senha"
                 onClick={() => setResetTarget(null)}
@@ -1365,7 +1452,7 @@ export function UserManagementContent() {
             </div>
             {error && (
               <p
-                className="mt-4 rounded-[12px] bg-[#fff0ed] px-3.5 py-3 text-[11px] text-[#984f3f]"
+                className="mt-4 rounded-[12px] bg-[var(--surface-soft)] px-3.5 py-3 text-[11px] text-[var(--text-muted)]"
                 role="alert"
               >
                 {error}
@@ -1373,7 +1460,7 @@ export function UserManagementContent() {
             )}
             <div className="mt-6 flex justify-end gap-2">
               <button
-                className="h-11 rounded-[13px] border border-[var(--line)] px-4 text-[12px] font-bold text-[#687780] transition-colors hover:bg-[#f5f7f7]"
+                className="h-11 rounded-[13px] border border-[var(--line)] px-4 text-[12px] font-bold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)]"
                 type="button"
                 onClick={() => setResetTarget(null)}
                 disabled={actionLoading}
@@ -1381,7 +1468,7 @@ export function UserManagementContent() {
                 Cancelar
               </button>
               <button
-                className="inline-flex h-11 items-center gap-2 rounded-[13px] bg-[var(--ink)] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#3b4650] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-11 items-center gap-2 rounded-[13px] bg-[var(--ink)] px-4 text-[12px] font-bold text-[var(--canvas)] transition-colors hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                 type="submit"
                 disabled={actionLoading}
               >
@@ -1395,7 +1482,7 @@ export function UserManagementContent() {
 
       {deleteTarget && (
         <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-[#18202b]/35 px-4 backdrop-blur-[2px]"
+          className="users-dialog-backdrop"
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !actionLoading) {
@@ -1404,7 +1491,8 @@ export function UserManagementContent() {
           }}
         >
           <div
-            className="w-full max-w-[460px] rounded-[24px] border border-[#efc6bc] bg-white p-6 shadow-[0_24px_70px_rgba(24,32,43,0.18)]"
+            ref={userDialogRef}
+            className="users-dialog"
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-user-title"
@@ -1412,7 +1500,7 @@ export function UserManagementContent() {
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#a14e3d] uppercase">
+                <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[var(--text-muted)] uppercase">
                   AÇÃO PERMANENTE
                 </p>
                 <h2
@@ -1421,13 +1509,13 @@ export function UserManagementContent() {
                 >
                   Excluir usuário
                 </h2>
-                <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[#7f8991]">
+                <p className="mt-2 mb-0 text-[12px] leading-relaxed text-[var(--text-muted)]">
                   A conta de {deleteTarget.name || deleteTarget.email} será
                   removida do Auth e perderá o acesso a todos os workspaces.
                 </p>
               </div>
               <button
-                className="grid size-9 flex-none place-items-center rounded-[11px] border border-[var(--line)] text-[#7d8990] transition-colors hover:bg-[#f4f6f6]"
+                className="grid size-9 flex-none place-items-center rounded-[11px] border border-[var(--line)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)]"
                 type="button"
                 aria-label="Fechar exclusão de usuário"
                 onClick={() => setDeleteTarget(null)}
@@ -1436,14 +1524,14 @@ export function UserManagementContent() {
                 <Icon name="close" size={15} />
               </button>
             </div>
-            <div className="mt-5 rounded-[14px] bg-[#fff4f0] px-4 py-3 text-[11px] leading-relaxed text-[#8d4c3d]">
+            <div className="mt-5 rounded-[14px] bg-[var(--surface-soft)] px-4 py-3 text-[11px] leading-relaxed text-[var(--text-muted)]">
               Esta ação não pode ser desfeita. Para continuar, digite
               <strong className="mx-1 font-extrabold">EXCLUIR</strong> abaixo.
             </div>
-            <label className="mt-5 grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[#7f8991] uppercase">
+            <label className="mt-5 grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[var(--text-muted)] uppercase">
               Confirmação
               <input
-                className="h-12 rounded-[14px] border border-[#efc6bc] bg-[#fffafa] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] uppercase outline-none focus:border-[#c77968]"
+                className="h-12 rounded-[14px] border border-[var(--line)] bg-[var(--surface-soft)] px-4 text-[13px] font-normal tracking-normal text-[var(--ink)] uppercase focus:border-[var(--line)]"
                 value={deleteConfirmation}
                 onChange={(event) => setDeleteConfirmation(event.target.value)}
                 placeholder="EXCLUIR"
@@ -1452,7 +1540,7 @@ export function UserManagementContent() {
             </label>
             {error && (
               <p
-                className="mt-4 rounded-[12px] bg-[#fff0ed] px-3.5 py-3 text-[11px] text-[#984f3f]"
+                className="mt-4 rounded-[12px] bg-[var(--surface-soft)] px-3.5 py-3 text-[11px] text-[var(--text-muted)]"
                 role="alert"
               >
                 {error}
@@ -1460,7 +1548,7 @@ export function UserManagementContent() {
             )}
             <div className="mt-6 flex justify-end gap-2">
               <button
-                className="h-11 rounded-[13px] border border-[var(--line)] px-4 text-[12px] font-bold text-[#687780] transition-colors hover:bg-[#f5f7f7]"
+                className="h-11 rounded-[13px] border border-[var(--line)] px-4 text-[12px] font-bold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)]"
                 type="button"
                 onClick={() => setDeleteTarget(null)}
                 disabled={actionLoading}
@@ -1468,7 +1556,7 @@ export function UserManagementContent() {
                 Cancelar
               </button>
               <button
-                className="inline-flex h-11 items-center gap-2 rounded-[13px] bg-[#b45d4b] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#994c3d] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-11 items-center gap-2 rounded-[13px] bg-[var(--surface-soft)] px-4 text-[12px] font-bold text-[var(--canvas)] transition-colors hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-50"
                 type="button"
                 onClick={() => void handleDeleteUser()}
                 disabled={

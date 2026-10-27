@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import type { Campaign } from "@/components/dashboard/types";
+import { campaignIsTest } from "@/lib/campaigns/metrics";
 import { demoCampaigns } from "@/lib/demo-data";
 import { formatDateTime } from "@/lib/format";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -120,7 +121,9 @@ export function StatusContent() {
     }
 
     if (!client) {
-      setCampaigns(demoCampaigns);
+      setCampaigns(
+        demoCampaigns.filter((campaign) => !campaignIsTest(campaign)),
+      );
       setLoading(false);
       return;
     }
@@ -129,7 +132,7 @@ export function StatusContent() {
     setError(null);
     const { data, error: queryError } = await client
       .from("beephish_campaigns")
-      .select("id,name,status,launch_date,synced_at,stats")
+      .select("*")
       .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
       .order("synced_at", { ascending: false });
 
@@ -140,7 +143,11 @@ export function StatusContent() {
       return;
     }
 
-    setCampaigns((data ?? []) as Campaign[]);
+    setCampaigns(
+      ((data ?? []) as Campaign[]).filter(
+        (campaign) => !campaignIsTest(campaign),
+      ),
+    );
     setLoading(false);
   }
 

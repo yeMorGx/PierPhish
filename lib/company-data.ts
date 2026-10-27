@@ -12,7 +12,11 @@ export type WorkspaceRecord = {
   role?: WorkspaceRole;
 };
 
+export type CompanyEmailProvider =
+  "google_workspace" | "microsoft_exchange" | "other" | "unknown";
+
 export type CompanyRecord = {
+  emailProvider?: CompanyEmailProvider;
   id: string;
   workspaceId: string;
   name: string;

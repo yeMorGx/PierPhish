@@ -147,7 +147,7 @@ function CampaignOpeningsChart({ campaigns }: { campaigns: CampaignBar[] }) {
   return (
     <div
       className="visual-dashboard-recharts"
-      aria-label="Abertura por campanha"
+      aria-label="Clicados por campanhas"
     >
       <ResponsiveContainer height="100%" width="100%">
         <BarChart

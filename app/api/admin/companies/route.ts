@@ -26,6 +26,7 @@ type WorkspacePayload = {
   clientId?: unknown;
   clientSecret?: unknown;
   status?: unknown;
+  emailProvider?: unknown;
 };
 
 function responseError(message: string, status: number) {
@@ -340,6 +341,11 @@ function safeCompany(row: Record<string, unknown>) {
     clientSecretLast4: last4,
     hasClientSecret: Boolean(row.client_secret_ciphertext),
     logoUrl: isLocalImage(row.logo_url) ? row.logo_url : null,
+    emailProvider: ["google_workspace", "microsoft_exchange", "other"].includes(
+      String(row.email_provider),
+    )
+      ? row.email_provider
+      : "unknown",
     status: row.status === "inactive" ? "inactive" : "active",
     createdAt: String(row.created_at ?? ""),
   };
@@ -356,9 +362,7 @@ export async function GET(request: NextRequest) {
     .order("created_at", { ascending: true });
   let companyQuery = client
     .from("pierphish_companies")
-    .select(
-      "id,workspace_id,name,description,client_id,client_secret_last4,client_secret_ciphertext,logo_url,status,created_at",
-    )
+    .select("*")
     .order("created_at", { ascending: true });
   if (managedWorkspaceIds) {
     workspaceQuery = workspaceQuery.in("id", managedWorkspaceIds);
@@ -395,6 +399,13 @@ export async function POST(request: NextRequest) {
     return responseError("Envie os dados em JSON válido.", 400);
   }
 
+  if (
+    payload.emailProvider !== undefined &&
+    !["google_workspace", "microsoft_exchange", "other", "unknown"].includes(
+      String(payload.emailProvider),
+    )
+  )
+    return responseError("Provedor de e-mail inválido.", 400);
   const type = text(payload.type);
   const name = text(payload.name);
   const description = text(payload.description).slice(0, 240);
@@ -475,10 +486,11 @@ export async function POST(request: NextRequest) {
       client_secret_last4: clientSecret.slice(-4),
       logo_url: logoUrl,
       status: "active",
+      ...(payload.emailProvider !== undefined
+        ? { email_provider: payload.emailProvider }
+        : {}),
     })
-    .select(
-      "id,workspace_id,name,description,client_id,client_secret_last4,client_secret_ciphertext,logo_url,status,created_at",
-    )
+    .select("*")
     .single();
 
   if (insertError || !data)
@@ -499,6 +511,13 @@ export async function PATCH(request: NextRequest) {
 
   const id = text(payload.id);
   const name = text(payload.name);
+  if (
+    payload.emailProvider !== undefined &&
+    !["google_workspace", "microsoft_exchange", "other", "unknown"].includes(
+      String(payload.emailProvider),
+    )
+  )
+    return responseError("Provedor de e-mail inválido.", 400);
   const type = text(payload.type);
   if (!id) {
     return responseError(
@@ -572,6 +591,8 @@ export async function PATCH(request: NextRequest) {
     client_id: text(payload.clientId),
     updated_at: new Date().toISOString(),
   };
+  if (payload.emailProvider !== undefined)
+    update.email_provider = payload.emailProvider;
   if (payload.logoUrl === null) update.logo_url = null;
   else if (isLocalImage(payload.logoUrl)) update.logo_url = payload.logoUrl;
   if (payload.status === "inactive" || payload.status === "active")
@@ -597,9 +618,7 @@ export async function PATCH(request: NextRequest) {
     .from("pierphish_companies")
     .update(update)
     .eq("id", id)
-    .select(
-      "id,workspace_id,name,description,client_id,client_secret_last4,client_secret_ciphertext,logo_url,status,created_at",
-    )
+    .select("*")
     .single();
 
   if (updateError || !data)

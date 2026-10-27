@@ -32,6 +32,7 @@ import {
   type DeliveryResultSummary,
 } from "@/lib/campaigns/delivery-statistics";
 import type { WorkspaceRole } from "@/lib/company-data";
+import { campaignIsTest } from "@/lib/campaigns/metrics";
 import { demoCampaigns } from "@/lib/demo-data";
 import { demoCompanies, readLocalCompanies } from "@/lib/company-data";
 import { readPersonAvatars, type PersonAvatarMap } from "@/lib/person-avatars";
@@ -190,6 +191,7 @@ export default function Home() {
           logoUrl: company.logoUrl,
           campaignCount: campaigns.filter(
             (campaign) =>
+              !campaignIsTest(campaign) &&
               campaign.company_id === company.id &&
               startedInRange(campaign, dateRange),
           ).length,
@@ -197,9 +199,14 @@ export default function Home() {
     [activeWorkspaceId, campaigns, companies, dateRange],
   );
 
+  const countedCampaigns = useMemo(
+    () => filteredCampaigns.filter((campaign) => !campaignIsTest(campaign)),
+    [filteredCampaigns],
+  );
+
   const campaignBars = useMemo<CampaignBar[]>(
     () =>
-      [...filteredCampaigns]
+      [...countedCampaigns]
         .sort(
           (first, second) =>
             Number(second.stats.total ?? 0) - Number(first.stats.total ?? 0),
@@ -207,14 +214,14 @@ export default function Home() {
         .map((campaign) => ({
           ...campaign,
           rate: pct(
-            Number(campaign.stats.opened ?? 0),
-            Number(campaign.stats.total ?? 0),
+            Number(campaign.stats.clicked ?? 0),
+            Number(campaign.stats.delivered || campaign.stats.total || 0),
           ),
         })),
-    [filteredCampaigns],
+    [countedCampaigns],
   );
 
-  const campaignSummary = useMemo<CampaignSummary[]>(
+  const allCampaignSummary = useMemo<CampaignSummary[]>(
     () =>
       [...filteredCampaigns]
         .map((campaign) => {
@@ -253,6 +260,32 @@ export default function Home() {
         ),
     [filteredCampaigns, deliveryResults],
   );
+
+  const campaignSummary = useMemo(
+    () => allCampaignSummary.filter((campaign) => !campaignIsTest(campaign)),
+    [allCampaignSummary],
+  );
+
+  async function markCampaignAsTest(campaign: Campaign, marked: boolean) {
+    if (!canSyncWorkspace) return;
+    if (supabase && isSupabaseConfigured) {
+      const { error: markError } = await supabase.rpc(
+        "set_campaign_test_flag",
+        { p_campaign_id: campaign.id, p_is_test: marked },
+      );
+      if (markError) {
+        setError(
+          "Não foi possível salvar a marcação de teste. Confira sua permissão e a migration do ambiente.",
+        );
+        return;
+      }
+    }
+    setCampaigns((current) =>
+      current.map((item) =>
+        item.id === campaign.id ? { ...item, is_test: marked } : item,
+      ),
+    );
+  }
 
   const totals = useMemo(
     () =>
@@ -475,7 +508,7 @@ export default function Home() {
 
     const { data, error: queryError } = await supabase
       .from("beephish_campaigns")
-      .select("id,name,status,launch_date,synced_at,stats,company_id")
+      .select("*")
       .eq("workspace_id", requestedDatabaseWorkspaceId)
       .order("launch_date", { ascending: false });
 
@@ -697,7 +730,7 @@ export default function Home() {
           reference={referenceDate}
           onPeriodChange={setSelectedPeriod}
           onReferenceChange={setReferenceDate}
-          campaignCount={filteredCampaigns.length}
+          campaignCount={countedCampaigns.length}
         />
         <ExportCanvaButton
           workspaceId={activeWorkspaceId}
@@ -726,7 +759,7 @@ export default function Home() {
               (company) => company.workspaceId === activeWorkspaceId,
             )}
             campaignBars={campaignBars}
-            campaigns={filteredCampaigns}
+            campaigns={countedCampaigns}
             campaignSummary={campaignSummary}
             participantsByCampaign={participantsByCampaign}
             participantsLoading={participantsLoading}
@@ -734,6 +767,8 @@ export default function Home() {
               isSupabaseConfigured && workspaceHasBeephishData
             }
             failuresAvailable={failuresAvailable}
+            tableCampaigns={allCampaignSummary}
+            onMarkAsTest={canSyncWorkspace ? markCampaignAsTest : undefined}
             totals={totals}
           />
         </div>

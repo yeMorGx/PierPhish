@@ -10,6 +10,7 @@ export type Stats = {
 };
 
 export type Campaign = {
+  is_test?: boolean;
   id: number;
   name: string;
   company_id?: string | null;

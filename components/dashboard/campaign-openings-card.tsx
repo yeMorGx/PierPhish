@@ -17,36 +17,46 @@ export function CampaignOpeningsCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="m-0 text-[17px] font-bold tracking-[-0.03em]">
-            Abertura por campanha
+            Clicados por campanhas
           </h3>
         </div>
         <Link
           href="#campaign-overview"
-          className="inline-flex items-center gap-[5px] text-[12px] text-[var(--text-muted)] hover:text-[#18202b]"
+          className="inline-flex items-center gap-[5px] text-[12px] text-[var(--text-muted)] hover:text-[var(--ink)]"
         >
           Ver campanhas <Icon name="arrow" size={15} />
         </Link>
       </div>
       <div
         className="flex min-h-0 flex-1 items-end overflow-x-auto"
-        aria-label="Taxa de abertura de todas as campanhas"
+        aria-label="Taxa de cliques de todas as campanhas"
       >
         <div
           className="flex h-full min-w-full items-end gap-[clamp(12px,2vw,24px)] px-3 pt-6"
           style={{ minWidth: `${Math.max(campaigns.length * 76, 300)}px` }}
         >
+          {campaigns.length === 0 && (
+            <p
+              className="self-center text-sm text-[var(--text-muted)]"
+              role="status"
+            >
+              Nenhuma campanha incluída nos indicadores deste filtro.
+            </p>
+          )}
           {campaigns.map((campaign) => (
             <div
               className="flex h-full min-w-[52px] flex-1 flex-col items-center justify-end gap-[9px]"
               key={campaign.id}
             >
-              <div className="-mb-1 text-[11px] font-extrabold text-[#637887]">
+              <div className="-mb-1 text-[11px] font-extrabold text-[var(--ink)]">
                 <AnimatedNumber value={campaign.rate} suffix="%" />
               </div>
-              <div className="flex h-[66%] w-[min(44px,100%)] items-end overflow-hidden rounded-[9px_9px_0_0] bg-[#eef0f1]">
+              <div className="flex h-[66%] w-[min(44px,100%)] items-end overflow-hidden rounded-[9px_9px_0_0] bg-[var(--surface-soft)]">
                 <div
                   className="w-full rounded-[9px_9px_0_0] bg-[var(--chart-series)] transition-[height] duration-500 ease-in-out"
-                  style={{ height: `${campaign.rate}%` }}
+                  style={{
+                    height: `${Math.min(100, Math.max(0, campaign.rate))}%`,
+                  }}
                 />
               </div>
               <span
@@ -60,12 +70,16 @@ export function CampaignOpeningsCard({
         </div>
       </div>
       <div className="mt-[15px] flex justify-between gap-3 text-[11px] text-[var(--text-muted)]">
-        <span className="inline-flex items-center gap-[7px] text-[#65717b]">
+        <span className="inline-flex items-center gap-[7px] text-[var(--text-muted)]">
           <i className="size-1.5 rounded-full bg-[var(--chart-series)]" />
-          Abertura
+          Cliques ÷ entregas¹
         </span>
-        <span>Base: {total} pessoas</span>
+        <span>Entregas no filtro: {total.toLocaleString("pt-BR")}</span>
       </div>
+      <p className="campaign-test-hint">
+        ¹ Sem entregas registradas, a base é o total de participações da
+        campanha.
+      </p>
     </article>
   );
 }

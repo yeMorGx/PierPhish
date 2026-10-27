@@ -1,5 +1,7 @@
 "use client";
 
+import { campaignIsTest } from "@/lib/campaigns/metrics";
+
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshCw } from "lucide-react";
@@ -148,7 +150,9 @@ export function CampaignOverviewContent() {
 
   const connector =
     connectors.find((item) => item.online) ?? connectors[0] ?? null;
-  const campaigns = connector?.snapshot?.campaigns ?? [];
+  const campaigns = (connector?.snapshot?.campaigns ?? []).filter(
+    (campaign) => !campaignIsTest(campaign),
+  );
   const updatedAt = connector?.snapshot?.updatedAt ?? "";
   const totals = useMemo(
     () =>

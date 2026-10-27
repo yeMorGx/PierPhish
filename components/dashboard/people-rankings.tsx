@@ -87,8 +87,20 @@ function RankingCard({
   return (
     <article className="surface-card people-ranking-card min-w-0 overflow-hidden rounded-[var(--radius-card)] p-6">
       <header className="people-ranking-header">
-        <h3>{title}</h3>
-        <p>{description}</p>
+        <div>
+          <h3>{title}</h3>
+          <p>{description}</p>
+        </div>
+        {!loading && available && people.length > 0 && (
+          <div className="people-ranking-peak">
+            <strong>{people[0][countField]}</strong>
+            <span>
+              campanhas
+              <br />
+              no maior total
+            </span>
+          </div>
+        )}
       </header>
 
       {loading ? (
@@ -103,14 +115,35 @@ function RankingCard({
         <p className="people-ranking-state">{emptyMessage}</p>
       ) : (
         <ol className="people-ranking-list">
-          {people.map((person, index) => (
+          {people.map((person) => (
             <li key={person.id}>
               <span className="people-ranking-position" aria-hidden="true">
-                {String(index + 1).padStart(2, "0")}
+                {String(
+                  people.findIndex(
+                    (entry) => entry[countField] === person[countField],
+                  ) + 1,
+                ).padStart(2, "0")}
               </span>
-              <strong className="people-ranking-name">{person.name}</strong>
-              <span className="people-ranking-count">
-                {metricLabel(person[countField])}
+              <span className="people-ranking-person">
+                <span className="people-ranking-avatar" aria-hidden="true">
+                  {person.name
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((part) => part[0])
+                    .join("")}
+                </span>
+                <strong className="people-ranking-name">{person.name}</strong>
+              </span>
+              <span
+                className="people-ranking-count"
+                aria-label={metricLabel(person[countField])}
+              >
+                <strong>{person[countField]}</strong>
+                <span>
+                  {" "}
+                  {person[countField] === 1 ? "campanha" : "campanhas"}
+                </span>
               </span>
             </li>
           ))}

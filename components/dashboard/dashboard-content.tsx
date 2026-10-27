@@ -20,6 +20,8 @@ type DashboardContentProps = {
   participantsLoading: boolean;
   participantRankingsAvailable: boolean;
   failuresAvailable: boolean;
+  tableCampaigns: CampaignSummary[];
+  onMarkAsTest?: (campaign: Campaign, marked: boolean) => Promise<void>;
   totals: OverviewTotals;
 };
 
@@ -32,6 +34,8 @@ export function DashboardContent({
   participantsLoading,
   participantRankingsAvailable,
   failuresAvailable,
+  tableCampaigns,
+  onMarkAsTest,
   totals,
 }: DashboardContentProps) {
   return (
@@ -50,7 +54,7 @@ export function DashboardContent({
         }, null)}
         totals={totals}
       />
-      <CampaignOpeningsCard campaigns={campaignBars} total={totals.people} />
+      <CampaignOpeningsCard campaigns={campaignBars} total={totals.delivered} />
       <PeopleRankings
         campaigns={campaignSummary}
         participantsByCampaign={participantsByCampaign}
@@ -59,7 +63,8 @@ export function DashboardContent({
       />
       <CampaignOverviewCard
         companies={companies}
-        campaigns={campaignSummary}
+        campaigns={tableCampaigns}
+        onMarkAsTest={onMarkAsTest}
         totals={totals}
         failuresAvailable={failuresAvailable}
       />

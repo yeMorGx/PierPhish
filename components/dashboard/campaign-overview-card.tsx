@@ -1,4 +1,10 @@
 import Link from "next/link";
+import { ContextMenu } from "@base-ui/react/context-menu";
+import {
+  campaignIsTest,
+  clickRateLevel,
+  rawClickRate,
+} from "@/lib/campaigns/metrics";
 import {
   CampaignLogo,
   useCampaignLogos,
@@ -18,6 +24,7 @@ type CampaignOverviewCardProps = {
   campaigns: CampaignSummary[];
   totals: OverviewTotals;
   failuresAvailable?: boolean;
+  onMarkAsTest?: (campaign: CampaignSummary, marked: boolean) => Promise<void>;
 };
 
 const startDateFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -52,13 +59,22 @@ function statusClass(status: string | null) {
   return "campaign-overview-status is-neutral";
 }
 
-function CampaignRate({ value, label }: { value: number; label: string }) {
+function CampaignRate({
+  value,
+  label,
+  classification,
+}: {
+  value: number;
+  label: string;
+  classification?: ReturnType<typeof clickRateLevel>;
+}) {
   const rate = Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
   return (
     <span
-      className="campaign-overview-rate"
+      className={`campaign-overview-rate ${classification ? `is-${classification.tone}` : ""}`}
+      title={classification?.label}
       role="img"
-      aria-label={`${label}: ${rate}%`}
+      aria-label={`${label}: ${rate}%${classification ? ` · ${classification.label}` : ""}`}
     >
       <svg viewBox="0 0 44 44" aria-hidden="true">
         <circle
@@ -87,12 +103,18 @@ export function CampaignOverviewCard({
   campaigns,
   totals,
   failuresAvailable = true,
+  onMarkAsTest,
 }: CampaignOverviewCardProps) {
   const { logos } = useCampaignLogos();
   const recentCampaigns = [...campaigns].sort(
     (first, second) =>
       startTimestamp(second.launch_date) - startTimestamp(first.launch_date) ||
       second.id - first.id,
+  );
+  const deliveryGap = totals.people - totals.delivered - totals.errors;
+  const reconciliationAvailable = failuresAvailable && deliveryGap >= 0;
+  const level = clickRateLevel(
+    rawClickRate(totals.clicked, totals.delivered, totals.people),
   );
   const metrics: Array<{
     label: string;
@@ -119,6 +141,11 @@ export function CampaignOverviewCard({
       label: "Falharam",
       value: failuresAvailable ? totals.errors : null,
       help: "Soma das falhas registradas nas campanhas dos filtros atuais. Mensagens pendentes não são contadas como falhas.",
+    },
+    {
+      label: "Sem confirmação",
+      value: reconciliationAvailable ? deliveryGap : null,
+      help: "Participações menos entregues e falhas registradas. Pode incluir pendências ou estados sem atualização; não representa novas falhas.",
     },
     {
       label: "Abertura",
@@ -158,12 +185,28 @@ export function CampaignOverviewCard({
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2 text-[11px] text-[var(--text-muted)]">
           <span className="campaign-count-pill rounded-full bg-[var(--surface-soft)] px-3 py-1.5">
-            {campaigns.length} campanhas
+            {totals.campaigns} campanhas nos indicadores
           </span>
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-7 gap-2 max-[1120px]:grid-cols-3 max-[720px]:grid-cols-2">
+      <p className={`campaign-click-level is-${level.tone}`}>
+        <strong>
+          {totals.people ? level.label : "Sem base para classificação"}
+        </strong>
+        <span>
+          Taxa de cliques · cliques ÷ entregas
+          {!totals.delivered && totals.people
+            ? " (base alternativa: participações)"
+            : ""}
+          . Faixas definidas pela operação.
+        </span>
+      </p>
+      <p className="campaign-test-hint">
+        Testes ficam fora dos indicadores. Use o botão direito na linha para
+        marcar.
+      </p>
+      <div className="mt-5 grid grid-cols-8 gap-2 max-[1120px]:grid-cols-3 max-[720px]:grid-cols-2">
         {metrics.map(({ label, value, suffix, help }, index) => {
           const mobilePopoverAlignment =
             index % 2 === 1
@@ -203,15 +246,11 @@ export function CampaignOverviewCard({
         })}
       </div>
 
-      {totals.people > totals.delivered && (
-        <p className="mt-3 mb-0 text-[12px] leading-relaxed text-[var(--text-muted)]">
-          {(totals.people - totals.delivered).toLocaleString("pt-BR")}{" "}
-          participações sem entrega confirmada.
-          {failuresAvailable
-            ? ` ${totals.errors.toLocaleString("pt-BR")} com falha registrada; as demais podem estar pendentes ou sem atualização de entrega.`
-            : " O total de falhas ainda não está disponível. Essa diferença pode incluir pendências e falhas."}
-        </p>
-      )}
+      <p className="campaign-delivery-reconciliation">
+        {reconciliationAvailable
+          ? `${totals.people.toLocaleString("pt-BR")} participações = ${totals.delivered.toLocaleString("pt-BR")} entregues + ${totals.errors.toLocaleString("pt-BR")} falhas + ${deliveryGap.toLocaleString("pt-BR")} sem confirmação.`
+          : "Não há dados completos e consistentes para conciliar as entregas. Sincronize as campanhas antes de comparar os totais."}
+      </p>
 
       <div
         role="region"
@@ -269,107 +308,179 @@ export function CampaignOverviewCard({
                 (item) => item.id === campaign.company_id,
               );
               return (
-                <tr
-                  role="row"
-                  className="campaign-overview-table-row border-b border-[var(--line-soft)] text-[12px] text-[var(--text-muted)] last:border-0 hover:bg-[var(--surface-soft)]"
-                  key={campaign.id}
-                >
-                  <td
-                    role="cell"
-                    data-label="Posição"
-                    className="px-4 py-3.5 font-bold text-[var(--text-muted)]"
+                <ContextMenu.Root key={campaign.id}>
+                  <ContextMenu.Trigger
+                    render={<tr />}
+                    role="row"
+                    className="campaign-overview-table-row border-b border-[var(--line-soft)] text-[12px] text-[var(--text-muted)] last:border-0 hover:bg-[var(--surface-soft)]"
+                    data-test-campaign={campaignIsTest(campaign) || undefined}
                   >
-                    {String(index + 1).padStart(2, "0")}
-                  </td>
-                  <td role="cell" data-label="Campanha" className="px-4 py-3.5">
-                    <Link
-                      className="campaign-link flex min-w-0 items-center gap-3 hover:text-[var(--ink)]"
-                      href={`/campaigns/${campaign.id}`}
+                    <td
+                      role="cell"
+                      data-label="Posição"
+                      className="px-4 py-3.5 font-bold text-[var(--text-muted)]"
                     >
-                      <CampaignLogo
-                        fallback={campaign.name.charAt(0).toUpperCase()}
-                        src={logos[String(campaign.id)]}
-                      />
-                      <span className="flex min-w-0 flex-col">
-                        <strong className="campaign-name text-[12px] break-words text-[var(--ink)]">
-                          {campaign.name}
-                        </strong>
-                        <span className="campaign-id mt-0.5 text-[11px] text-[var(--text-muted)]">
-                          ID {campaign.id}
-                        </span>
-                      </span>
-                    </Link>
-                  </td>
-                  <td role="cell" data-label="Início" className="px-4 py-3.5">
-                    {Number.isFinite(startedAt) ? (
-                      <time
-                        className="campaign-overview-start"
-                        dateTime={new Date(startedAt).toISOString()}
+                      {String(index + 1).padStart(2, "0")}
+                    </td>
+                    <td
+                      role="cell"
+                      data-label="Campanha"
+                      className="px-4 py-3.5"
+                    >
+                      <Link
+                        className="campaign-link flex min-w-0 items-center gap-3 hover:text-[var(--ink)]"
+                        href={`/campaigns/${campaign.id}`}
                       >
-                        <span>{startDateFormatter.format(startedAt)}</span>
-                        <span className="campaign-overview-start-time">
-                          {startTimeFormatter.format(startedAt)}
+                        <CampaignLogo
+                          fallback={campaign.name.charAt(0).toUpperCase()}
+                          src={logos[String(campaign.id)]}
+                        />
+                        <span className="flex min-w-0 flex-col">
+                          <strong className="campaign-name text-[12px] break-words text-[var(--ink)]">
+                            {campaign.name}
+                          </strong>
+                          <span className="campaign-id mt-0.5 text-[11px] text-[var(--text-muted)]">
+                            ID {campaign.id}
+                          </span>
                         </span>
-                      </time>
-                    ) : (
-                      <span>Não informada</span>
-                    )}
-                  </td>
-                  <td role="cell" data-label="Empresa" className="px-4 py-3.5">
-                    {company ? (
-                      <div className="flex min-w-0 items-center gap-2">
-                        <Avatar
-                          className="campaign-company-logo after:hidden"
-                          aria-hidden="true"
+                      </Link>
+                    </td>
+                    <td role="cell" data-label="Início" className="px-4 py-3.5">
+                      {Number.isFinite(startedAt) ? (
+                        <time
+                          className="campaign-overview-start"
+                          dateTime={new Date(startedAt).toISOString()}
                         >
-                          {company.logoUrl && (
-                            <AvatarImage src={company.logoUrl} alt="" />
-                          )}
-                          <AvatarFallback>
-                            {company.name.trim().charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="min-w-0 text-[12px] font-medium break-words text-[var(--ink)]">
-                          {company.name}
+                          <span>{startDateFormatter.format(startedAt)}</span>
+                          <span className="campaign-overview-start-time">
+                            {startTimeFormatter.format(startedAt)}
+                          </span>
+                        </time>
+                      ) : (
+                        <span>Não informada</span>
+                      )}
+                    </td>
+                    <td
+                      role="cell"
+                      data-label="Empresa"
+                      className="px-4 py-3.5"
+                    >
+                      {company ? (
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Avatar
+                            className="campaign-company-logo after:hidden"
+                            aria-hidden="true"
+                          >
+                            {company.logoUrl && (
+                              <AvatarImage src={company.logoUrl} alt="" />
+                            )}
+                            <AvatarFallback>
+                              {company.name.trim().charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="min-w-0 text-[12px] font-medium break-words text-[var(--ink)]">
+                            {company.name}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[12px] text-[var(--text-muted)]">
+                          Empresa não informada
                         </span>
-                      </div>
-                    ) : (
-                      <span className="text-[12px] text-[var(--text-muted)]">
-                        Empresa não informada
+                      )}
+                    </td>
+                    <td
+                      role="cell"
+                      data-label="Entregues"
+                      className="px-4 py-3.5"
+                    >
+                      <span>
+                        <AnimatedNumber value={campaign.deliveredPeople} />/
+                        <AnimatedNumber value={campaign.people} />
                       </span>
-                    )}
-                  </td>
-                  <td
-                    role="cell"
-                    data-label="Entregues"
-                    className="px-4 py-3.5"
-                  >
-                    <span>
-                      <AnimatedNumber value={campaign.deliveredPeople} />/
-                      <AnimatedNumber value={campaign.people} />
-                    </span>
-                  </td>
-                  <td role="cell" data-label="Abertura" className="px-4 py-3.5">
-                    <CampaignRate
-                      value={campaign.openRate}
-                      label="Taxa de abertura"
-                    />
-                  </td>
-                  <td role="cell" data-label="Cliques" className="px-4 py-3.5">
-                    <CampaignRate
-                      value={campaign.clickRate}
-                      label="Taxa de cliques"
-                    />
-                  </td>
-                  <td role="cell" data-label="Reportes" className="px-4 py-3.5">
-                    <AnimatedNumber value={campaign.reportedPeople} />
-                  </td>
-                  <td role="cell" data-label="Status" className="px-4 py-3.5">
-                    <span className={statusClass(campaign.status)}>
-                      {statusLabel(campaign.status)}
-                    </span>
-                  </td>
-                </tr>
+                    </td>
+                    <td
+                      role="cell"
+                      data-label="Abertura"
+                      className="px-4 py-3.5"
+                    >
+                      <CampaignRate
+                        value={campaign.openRate}
+                        label="Taxa de abertura"
+                      />
+                    </td>
+                    <td
+                      role="cell"
+                      data-label="Cliques"
+                      className="px-4 py-3.5"
+                    >
+                      <CampaignRate
+                        value={campaign.clickRate}
+                        classification={
+                          campaign.people
+                            ? clickRateLevel(
+                                rawClickRate(
+                                  campaign.clickedPeople,
+                                  campaign.deliveredPeople,
+                                  campaign.people,
+                                ),
+                              )
+                            : undefined
+                        }
+                        label="Taxa de cliques"
+                      />
+                    </td>
+                    <td
+                      role="cell"
+                      data-label="Reportes"
+                      className="px-4 py-3.5"
+                    >
+                      <AnimatedNumber value={campaign.reportedPeople} />
+                    </td>
+                    <td role="cell" data-label="Status" className="px-4 py-3.5">
+                      <span className={statusClass(campaign.status)}>
+                        {statusLabel(campaign.status)}
+                      </span>
+                      {campaignIsTest(campaign) && (
+                        <small className="campaign-test-badge">
+                          Teste · fora dos indicadores
+                        </small>
+                      )}
+                      {onMarkAsTest && !/teste/i.test(campaign.name) && (
+                        <button
+                          type="button"
+                          className="campaign-test-action"
+                          onClick={() =>
+                            void onMarkAsTest(campaign, !campaign.is_test)
+                          }
+                        >
+                          {campaign.is_test
+                            ? "Incluir nos indicadores"
+                            : "Marcar como teste"}
+                        </button>
+                      )}
+                    </td>
+                  </ContextMenu.Trigger>
+                  <ContextMenu.Portal>
+                    <ContextMenu.Positioner>
+                      <ContextMenu.Popup className="campaign-test-menu">
+                        <ContextMenu.Item
+                          disabled={
+                            !onMarkAsTest || /teste/i.test(campaign.name)
+                          }
+                          onClick={() =>
+                            void onMarkAsTest?.(campaign, !campaign.is_test)
+                          }
+                        >
+                          {/teste/i.test(campaign.name)
+                            ? "Teste identificado pelo nome"
+                            : campaign.is_test
+                              ? "Incluir nos indicadores"
+                              : "Marcar como teste"}
+                        </ContextMenu.Item>
+                      </ContextMenu.Popup>
+                    </ContextMenu.Positioner>
+                  </ContextMenu.Portal>
+                </ContextMenu.Root>
               );
             })}
             {!campaigns.length && (

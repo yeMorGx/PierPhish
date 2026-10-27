@@ -5,8 +5,9 @@ import type {
   FormEvent,
   KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useDialogScrollLock } from "@/components/ui/use-dialog-scroll-lock";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Icon } from "@/components/ui/icon";
 import {
@@ -991,6 +992,8 @@ export function WorkspaceManagePanel({
 }
 
 export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
+  const dialogRef = useRef<HTMLElement>(null);
+  useDialogScrollLock(open, dialogRef);
   const { ready, user } = useAuth();
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([
     connectedWorkspace,
@@ -1229,6 +1232,7 @@ export function WorkspaceSwitcher({ onClose, open }: WorkspaceSwitcherProps) {
       role="presentation"
     >
       <section
+        ref={dialogRef}
         aria-labelledby="workspace-modal-title"
         aria-modal="true"
         className={`workspace-modal ${

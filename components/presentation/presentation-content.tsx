@@ -13,6 +13,7 @@ import type {
   PresentationSlideId,
 } from "@/components/presentation/presentation-types";
 import { Icon } from "@/components/ui/icon";
+import { campaignIsTest } from "@/lib/campaigns/metrics";
 import { demoCampaigns } from "@/lib/demo-data";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import type { Campaign } from "@/components/dashboard/types";
@@ -134,7 +135,9 @@ export function PresentationContent() {
     }
 
     if (!supabase) {
-      setCampaigns(demoCampaigns);
+      setCampaigns(
+        demoCampaigns.filter((campaign) => !campaignIsTest(campaign)),
+      );
       setLoading(false);
       return;
     }
@@ -142,7 +145,7 @@ export function PresentationContent() {
     setLoading(true);
     const { data: nextCampaigns, error: queryError } = await supabase
       .from("beephish_campaigns")
-      .select("id,name,status,launch_date,synced_at,stats")
+      .select("*")
       .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
       .order("launch_date", { ascending: false });
 
@@ -153,7 +156,11 @@ export function PresentationContent() {
       return;
     }
 
-    setCampaigns((nextCampaigns ?? []) as Campaign[]);
+    setCampaigns(
+      ((nextCampaigns ?? []) as Campaign[]).filter(
+        (campaign) => !campaignIsTest(campaign),
+      ),
+    );
     setLoading(false);
   }, [activeWorkspaceId, workspaceHasBeephishData]);
 

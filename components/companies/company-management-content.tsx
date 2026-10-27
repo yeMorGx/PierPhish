@@ -1,7 +1,8 @@
 "use client";
 
 import type { ChangeEvent, FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useDialogScrollLock } from "@/components/ui/use-dialog-scroll-lock";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
@@ -14,6 +15,7 @@ import {
   readLocalCompanies,
   readLocalWorkspaces,
   type CompanyRecord,
+  type CompanyEmailProvider,
   type WorkspaceEnvironment,
   type WorkspaceRole,
   type WorkspaceRecord,
@@ -30,6 +32,7 @@ const acceptedLogoTypes = ["image/png", "image/jpeg", "image/webp"];
 type Modal = "company" | null;
 
 type CompanyDraft = {
+  emailProvider: CompanyEmailProvider;
   workspaceId: string;
   name: string;
   description: string;
@@ -40,6 +43,7 @@ type CompanyDraft = {
 };
 
 const emptyCompany: CompanyDraft = {
+  emailProvider: "unknown",
   workspaceId: "",
   name: "",
   description: "",
@@ -98,8 +102,7 @@ function isAdminUser(user: ReturnType<typeof useAuth>["user"]) {
   if (!isSupabaseConfigured) return true;
   if (user?.email?.toLowerCase() === superAdminEmail) return true;
   const metadata = user?.app_metadata as
-    | { role?: unknown; is_admin?: unknown }
-    | undefined;
+    { role?: unknown; is_admin?: unknown } | undefined;
   return (
     metadata?.is_admin === true ||
     metadata?.role === "admin" ||
@@ -202,8 +205,13 @@ export function CompanyManagementContent() {
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(
     isSupabaseConfigured ? "" : demoWorkspaces[0].id,
   );
+  const [clientView, setClientView] = useState<"cards" | "list">("cards");
   const [modal, setModal] = useState<Modal>(null);
   const [workspaceManagerOpen, setWorkspaceManagerOpen] = useState(false);
+  const companyDialogRef = useRef<HTMLFormElement>(null);
+  const workspaceDialogRef = useRef<HTMLElement>(null);
+  useDialogScrollLock(modal === "company", companyDialogRef);
+  useDialogScrollLock(workspaceManagerOpen, workspaceDialogRef);
   const [editingCompany, setEditingCompany] = useState<CompanyRecord | null>(
     null,
   );
@@ -404,6 +412,7 @@ export function CompanyManagementContent() {
       setEditingCompany(company);
       setCompanyDraft({
         workspaceId: company.workspaceId,
+        emailProvider: company.emailProvider ?? "unknown",
         name: company.name,
         description: company.description,
         clientId: company.clientId,
@@ -476,6 +485,7 @@ export function CompanyManagementContent() {
           Boolean(clientSecret) || Boolean(editingCompany?.hasClientSecret),
         logoUrl: companyDraft.logoUrl,
         status: companyDraft.status,
+        emailProvider: companyDraft.emailProvider,
         createdAt: editingCompany?.createdAt ?? new Date().toISOString(),
       };
       const nextCompanies = editingCompany
@@ -504,16 +514,29 @@ export function CompanyManagementContent() {
       return;
     }
     const method = editingCompany ? "PATCH" : "POST";
+    const { emailProvider: nextProvider, ...connectionDraft } = companyDraft;
+    const providerChange =
+      nextProvider !== (editingCompany?.emailProvider ?? "unknown")
+        ? { emailProvider: nextProvider }
+        : {};
     const bodyPayload = editingCompany
       ? {
           type: "company",
           id: editingCompany.id,
-          ...companyDraft,
+          ...connectionDraft,
+          ...providerChange,
           name,
           clientId,
           ...(clientSecret ? { clientSecret } : {}),
         }
-      : { type: "company", ...companyDraft, name, clientId, clientSecret };
+      : {
+          type: "company",
+          ...connectionDraft,
+          ...providerChange,
+          name,
+          clientId,
+          clientSecret,
+        };
     const response = await fetch("/api/admin/companies", {
       method,
       headers: {
@@ -656,6 +679,9 @@ export function CompanyManagementContent() {
                   <div className="companies-section-head">
                     <div>
                       <h2>Clientes BeePhish</h2>
+                      <p className="companies-provider-hint">
+                        Conexões e plataformas de e-mail dos clientes.
+                      </p>
                     </div>
                     <button
                       className="companies-secondary-button"
@@ -666,8 +692,26 @@ export function CompanyManagementContent() {
                       Adicionar cliente
                     </button>
                   </div>
+                  <div
+                    className="companies-view-switch"
+                    role="group"
+                    aria-label="Visualização de clientes"
+                  >
+                    {(["list", "cards"] as const).map((view) => (
+                      <button
+                        type="button"
+                        key={view}
+                        aria-pressed={clientView === view}
+                        onClick={() => setClientView(view)}
+                      >
+                        {view === "list" ? "Lista" : "Cards"}
+                      </button>
+                    ))}
+                  </div>
                   {workspaceCompanies.length ? (
-                    <div className="companies-client-grid">
+                    <div
+                      className={`companies-client-grid ${clientView === "list" ? "is-list" : ""}`}
+                    >
                       {workspaceCompanies.map((company) => (
                         <article
                           className="companies-client-card"
@@ -688,6 +732,16 @@ export function CompanyManagementContent() {
                             </span>
                           </div>
                           <h3>{company.name}</h3>
+                          <span className="companies-provider-label">
+                            {
+                              {
+                                google_workspace: "Google Workspace",
+                                microsoft_exchange: "Microsoft Exchange",
+                                other: "Outro provedor",
+                                unknown: "Provedor não informado",
+                              }[company.emailProvider ?? "unknown"]
+                            }
+                          </span>
                           <p>
                             {company.description ||
                               "Sem informações adicionais."}
@@ -763,6 +817,7 @@ export function CompanyManagementContent() {
           }}
         >
           <form
+            ref={companyDialogRef}
             className="companies-modal companies-company-modal"
             role="dialog"
             aria-modal="true"
@@ -859,6 +914,26 @@ export function CompanyManagementContent() {
                     maxLength={240}
                     rows={3}
                   />
+                </label>
+                <label>
+                  Plataforma de e-mail
+                  <select
+                    value={companyDraft.emailProvider}
+                    onChange={(event) =>
+                      setCompanyDraft((current) => ({
+                        ...current,
+                        emailProvider: event.target
+                          .value as CompanyEmailProvider,
+                      }))
+                    }
+                  >
+                    <option value="unknown">Não informado</option>
+                    <option value="google_workspace">Google Workspace</option>
+                    <option value="microsoft_exchange">
+                      Microsoft Exchange
+                    </option>
+                    <option value="other">Outro provedor</option>
+                  </select>
                 </label>
                 <div className="companies-credential-block">
                   <div>
@@ -958,6 +1033,7 @@ export function CompanyManagementContent() {
           }}
         >
           <section
+            ref={workspaceDialogRef}
             aria-labelledby="workspace-modal-title"
             aria-modal="true"
             className="workspace-modal"
@@ -981,7 +1057,8 @@ export function CompanyManagementContent() {
               workspace={{
                 ...selectedWorkspace,
                 initial: getInitial(selectedWorkspace.name),
-                role: selectedWorkspace.role ?? activeWorkspaceRole ?? undefined,
+                role:
+                  selectedWorkspace.role ?? activeWorkspaceRole ?? undefined,
               }}
             />
           </section>

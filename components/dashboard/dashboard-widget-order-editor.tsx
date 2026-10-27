@@ -21,9 +21,9 @@ import { GripVertical } from "lucide-react";
 import { useUiStore, type DashboardWidgetId } from "@/lib/ui-store";
 
 const labels: Record<DashboardWidgetId, { label: string; hint: string }> = {
-  hero: { label: "Abertura consolidada", hint: "Indicador principal" },
+  hero: { label: "Visão geral", hint: "Indicador principal" },
   metrics: { label: "Métricas rápidas", hint: "Campanhas e pessoas" },
-  chart: { label: "Abertura por campanha", hint: "Comparativo visual" },
+  chart: { label: "Clicados por campanhas", hint: "Comparativo visual" },
   risk: { label: "Risco humano", hint: "Sinais de exposição" },
   campaigns: { label: "Visão de campanhas", hint: "Atalhos para detalhes" },
 };

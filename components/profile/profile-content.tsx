@@ -9,6 +9,7 @@ import { ProfileEditorCard } from "@/components/profile/profile-editor-card";
 import { ProfileHero } from "@/components/profile/profile-hero";
 import { ProfileIdentityCard } from "@/components/profile/profile-identity-card";
 import { ProfileSummaryCard } from "@/components/profile/profile-summary-card";
+import { campaignIsTest } from "@/lib/campaigns/metrics";
 import { demoCampaigns } from "@/lib/demo-data";
 import { formatDateTime } from "@/lib/format";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -84,7 +85,7 @@ export function ProfileContent() {
       setError(null);
       const { data, error: queryError } = await client
         .from("beephish_campaigns")
-        .select("id,name,status,launch_date,synced_at,stats")
+        .select("*")
         .eq("workspace_id", databaseWorkspaceId(activeWorkspaceId))
         .order("synced_at", { ascending: false });
 
@@ -95,7 +96,11 @@ export function ProfileContent() {
         return;
       }
 
-      setCampaigns((data ?? []) as Campaign[]);
+      setCampaigns(
+        ((data ?? []) as Campaign[]).filter(
+          (campaign) => !campaignIsTest(campaign),
+        ),
+      );
       setLoading(false);
     }
 
