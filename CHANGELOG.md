@@ -1,5 +1,12 @@
 # Change log e passagem de contexto
 
+### Comparação e rankings inspirados nos relatórios — 2026-10-28
+
+- Adicionada comparação de até três campanhas na visão geral, nos dois modos do dashboard. Seleção inicial usa as três mais recentes; ordem da comparação é cronológica. Empresa, período e exclusão de testes seguem os dados filtrados existentes.
+- Métricas disponíveis: entregues, abertos, cliques, dados enviados e reportes. Cada linha mostra quantidade, base, taxa e diferença em pontos percentuais perante a campanha anterior selecionada. Entregues usa participações; interações usam entregues, com fallback explícito para participações. Base zero mostra taxa indisponível.
+- Rankings existentes de cliques/dados e reportes reunidos com seletor para reduzir a altura. Sem criar rankings de departamentos ou gestores sem dados confirmados.
+- Validação: Prettier, TypeScript e diff check; sem testes automatizados ou deploy confirmado. Próximos passos: conferir comparação autenticada após deploy e acompanhar cobertura dos dados sincronizados.
+
 ### Cabeçalho da campanha — 2026-10-28
 
 - Reorganizado o cabeçalho do detalhe da campanha em duas colunas responsivas. O seletor de logo ficou compacto; título, descrição e prévia do e-mail mantêm áreas próprias, sem sobreposição.
