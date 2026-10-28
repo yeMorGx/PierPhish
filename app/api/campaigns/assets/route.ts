@@ -14,6 +14,7 @@ import {
   isWorkspaceId,
   requireGophishWorkspaceAccess,
 } from "@/lib/server-gophish";
+import { recordAuditEvent } from "@/lib/server-audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -954,6 +955,19 @@ export async function POST(request: NextRequest) {
     .single();
   if (error || !command)
     return gophishError("Não foi possível colocar o ativo na fila.", 502);
+
+  await recordAuditEvent(access.client, {
+    workspaceId: databaseWorkspaceId(body.workspaceId),
+    actorUserId: access.userId,
+    actorName: access.userLabel,
+    action: "campaign.asset_operation_requested",
+    resourceType: asset.type,
+    resourceId: command.id,
+    resourceName: asset.name,
+    outcome: "requested",
+    metadata: { asset_type: asset.type, item_count: asset.itemCount },
+    idempotencyKey: `campaign-asset-request:${command.id}`,
+  });
 
   return NextResponse.json(
     { commandId: command.id, status: "queued" },

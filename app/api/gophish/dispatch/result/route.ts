@@ -3,6 +3,7 @@ import {
   authenticateGophishConnector,
   gophishError,
 } from "@/lib/server-gophish";
+import { recordAuditEvent } from "@/lib/server-audit";
 
 export const runtime = "nodejs";
 
@@ -45,6 +46,33 @@ export async function POST(request: NextRequest) {
     return gophishError("Não foi possível registrar o resultado.", 502);
   if (data !== true)
     return gophishError("Comando não encontrado ou já concluído.", 409);
+  const { data: command } = await auth.client
+    .from("pierphish_gophish_campaign_commands")
+    .select(
+      "workspace_id,requested_by,requested_by_name,campaign_name,recipient_count",
+    )
+    .eq("id", body.commandId)
+    .eq("connector_id", auth.connectorId)
+    .maybeSingle();
+  if (command) {
+    await recordAuditEvent(auth.client, {
+      workspaceId: command.workspace_id,
+      actorUserId: command.requested_by,
+      actorName: command.requested_by_name,
+      action: "campaign.execution_finished",
+      resourceType: "campaign",
+      resourceId: body.commandId,
+      resourceName: command.campaign_name,
+      outcome:
+        body.status === "succeeded"
+          ? "success"
+          : body.status === "failed"
+            ? "failure"
+            : "partial",
+      metadata: { recipient_count: command.recipient_count },
+      idempotencyKey: `campaign-result:${body.commandId}`,
+    });
+  }
   return NextResponse.json(
     { accepted: true },
     { headers: { "Cache-Control": "no-store, max-age=0" } },

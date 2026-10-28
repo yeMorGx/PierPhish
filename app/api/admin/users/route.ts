@@ -12,6 +12,7 @@ import {
   makeWorkspaceInviteEmail,
   sendPierSecEmail,
 } from "@/lib/server-email";
+import { recordAuditEvent } from "@/lib/server-audit";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -589,6 +590,18 @@ export async function POST(request: NextRequest) {
       }),
     );
 
+    await recordAuditEvent(client, {
+      workspaceId: workspace.id,
+      actorUserId: adminUser.id,
+      actorName: userDisplayName(adminUser) || adminUser.email,
+      action: "workspace.member_added",
+      resourceType: "user",
+      resourceId: invitedUser.id,
+      resourceName: userDisplayName(invitedUser) || "Acesso ao workspace",
+      outcome: emailResult.sent ? "success" : "partial",
+      metadata: { role_after: role, email_sent: emailResult.sent },
+    });
+
     return NextResponse.json(
       {
         invitation: {
@@ -665,6 +678,17 @@ export async function POST(request: NextRequest) {
       .eq("workspace_id", workspace.id)
       .eq("user_id", updatedUserData.user.id);
     await client.auth.admin.deleteUser(updatedUserData.user.id);
+    await recordAuditEvent(client, {
+      workspaceId: workspace.id,
+      actorUserId: adminUser.id,
+      actorName: userDisplayName(adminUser) || adminUser.email,
+      action: "user.invite_failed",
+      resourceType: "user",
+      resourceId: updatedUserData.user.id,
+      resourceName: name,
+      outcome: "failure",
+      metadata: { email_sent: false, role_after: role },
+    });
     return responseError(
       "Não foi possível enviar o convite. A conta não foi criada; confira a configuração de e-mail e tente novamente.",
       502,
@@ -698,6 +722,18 @@ export async function POST(request: NextRequest) {
     workspaceMemberships[0].environment =
       createdWorkspace.environment === "production" ? "production" : "test";
   }
+
+  await recordAuditEvent(client, {
+    workspaceId: workspace.id,
+    actorUserId: adminUser.id,
+    actorName: userDisplayName(adminUser) || adminUser.email,
+    action: "user.invited",
+    resourceType: "user",
+    resourceId: updatedUserData.user.id,
+    resourceName: name,
+    outcome: "success",
+    metadata: { role_after: role, email_sent: true },
+  });
 
   return NextResponse.json(
     { user: safeUser(updatedUserData.user, workspaceMemberships) },
@@ -784,6 +820,33 @@ export async function PATCH(request: NextRequest) {
       return responseError("Não foi possível salvar o acesso do usuário.", 502);
     }
 
+    const previousExcluded = Boolean(membership.exclude_from_statistics);
+    if (
+      membership.role !== role ||
+      previousExcluded !== excludeFromStatistics
+    ) {
+      const { data: targetUser } =
+        await client.auth.admin.getUserById(targetId);
+      await recordAuditEvent(client, {
+        workspaceId,
+        actorUserId: adminUser.id,
+        actorName: userDisplayName(adminUser) || adminUser.email,
+        action: "workspace.member_updated",
+        resourceType: "user",
+        resourceId: targetId,
+        resourceName: targetUser?.user
+          ? userDisplayName(targetUser.user) || "Acesso ao workspace"
+          : "Acesso ao workspace",
+        outcome: "success",
+        metadata: {
+          role_before: membership.role,
+          role_after: role,
+          excluded_before: previousExcluded,
+          excluded_after: excludeFromStatistics,
+        },
+      });
+    }
+
     try {
       await recalculateWorkspaceCampaignStats(client, workspaceId);
     } catch {
@@ -829,8 +892,47 @@ export async function PATCH(request: NextRequest) {
     return responseError("Usuário não encontrado.", 404);
   }
   const targetEmail = targetData.user.email;
+  const { data: targetMemberships, error: targetMembershipError } = await client
+    .from("pierphish_workspace_members")
+    .select("workspace_id")
+    .eq("user_id", targetId)
+    .eq("status", "active");
+  if (targetMembershipError) {
+    return responseError(
+      "Não foi possível verificar os workspaces do usuário.",
+      503,
+    );
+  }
+  const auditWorkspaceIds = Array.from(
+    new Set(
+      (targetMemberships ?? []).map((membership) => membership.workspace_id),
+    ),
+  ).filter(
+    (workspaceId) =>
+      ownerWorkspaceIds === null || ownerWorkspaceIds.includes(workspaceId),
+  );
+  const recordPasswordReset = async (sent: boolean) => {
+    for (const workspaceId of auditWorkspaceIds.length
+      ? auditWorkspaceIds
+      : [null]) {
+      await recordAuditEvent(client, {
+        workspaceId,
+        actorUserId: adminUser.id,
+        actorName: userDisplayName(adminUser) || adminUser.email,
+        action: sent
+          ? "user.password_reset_sent"
+          : "user.password_reset_failed",
+        resourceType: "user",
+        resourceId: targetId,
+        resourceName: userDisplayName(targetData.user) || "Acesso da pessoa",
+        outcome: sent ? "success" : "failure",
+        metadata: { email_sent: sent },
+      });
+    }
+  };
   const appBaseUrl = getAppBaseUrl(request.nextUrl.origin);
   if (!targetEmail || !isResendConfigured() || !appBaseUrl) {
+    await recordPasswordReset(false);
     return responseError(
       "O envio de e-mails ainda não está configurado no servidor.",
       503,
@@ -847,6 +949,7 @@ export async function PATCH(request: NextRequest) {
       },
     });
   if (linkError || !linkData.user || !linkData.properties?.action_link) {
+    await recordPasswordReset(false);
     return responseError("Não foi possível gerar o link de acesso.", 502);
   }
 
@@ -865,6 +968,7 @@ export async function PATCH(request: NextRequest) {
       },
     );
     if (metadataError) {
+      await recordPasswordReset(false);
       return responseError(
         "Não foi possível preparar o convite de acesso.",
         502,
@@ -885,6 +989,7 @@ export async function PATCH(request: NextRequest) {
           actionUrl: linkData.properties.action_link,
         }),
   );
+  await recordPasswordReset(emailResult.sent);
   if (!emailResult.sent) {
     return responseError("Não foi possível enviar o e-mail de acesso.", 502);
   }
@@ -928,9 +1033,33 @@ export async function DELETE(request: NextRequest) {
     return responseError("Usuário não encontrado.", 404);
   }
 
+  const { data: targetMemberships } = await client
+    .from("pierphish_workspace_members")
+    .select("workspace_id")
+    .eq("user_id", targetId);
+
   const { error: deleteError } = await client.auth.admin.deleteUser(targetId);
   if (deleteError) {
     return responseError("Não foi possível excluir o usuário.", 502);
+  }
+
+  const affectedWorkspaces = Array.from(
+    new Set((targetMemberships ?? []).map((item) => item.workspace_id)),
+  );
+  for (const workspaceId of affectedWorkspaces.length
+    ? affectedWorkspaces
+    : [null]) {
+    await recordAuditEvent(client, {
+      workspaceId,
+      actorUserId: adminUser.id,
+      actorName: userDisplayName(adminUser) || adminUser.email,
+      action: "user.deleted",
+      resourceType: "user",
+      resourceId: targetId,
+      resourceName: userDisplayName(targetData.user) || "Acesso removido",
+      outcome: "success",
+      idempotencyKey: `user-delete:${targetId}:${workspaceId ?? "global"}`,
+    });
   }
 
   return NextResponse.json({ ok: true, email: targetData.user.email ?? "" });

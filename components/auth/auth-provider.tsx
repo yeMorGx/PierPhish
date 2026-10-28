@@ -3,6 +3,7 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { recordClientAuditAction } from "@/lib/client-audit";
 
 type AuthContextValue = {
   session: Session | null;
@@ -34,10 +35,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setReady(true);
 
         const listener = supabase.auth.onAuthStateChange(
-          (_event, nextSession) => {
+          (event, nextSession) => {
             if (!mounted) return;
             setSession(nextSession);
             setReady(true);
+            if (event === "SIGNED_IN" && nextSession?.access_token) {
+              recordClientAuditAction(
+                nextSession.access_token,
+                "auth.login_succeeded",
+              );
+            }
           },
         );
         subscription = listener.data.subscription;
@@ -55,6 +62,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function signOut() {
+    if (session?.access_token) {
+      recordClientAuditAction(session.access_token, "auth.logout");
+    }
     await supabase?.auth.signOut();
     setSession(null);
   }

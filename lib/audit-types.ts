@@ -9,4 +9,6 @@ export type AuditLogItem = {
   status?: string;
   finishedAt?: string | null;
   href?: string;
+  details?: Array<{ label: string; value: string }>;
+  recordKind?: "request" | "event";
 };

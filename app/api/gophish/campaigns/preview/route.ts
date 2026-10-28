@@ -5,6 +5,7 @@ import {
   isWorkspaceId,
   requireGophishWorkspaceAccess,
 } from "@/lib/server-gophish";
+import { recordAuditEvent } from "@/lib/server-audit";
 
 export const runtime = "nodejs";
 
@@ -238,6 +239,21 @@ export async function POST(request: NextRequest) {
       502,
     );
   }
+  await recordAuditEvent(access.client, {
+    workspaceId: databaseWorkspaceId(body.workspaceId),
+    actorUserId: access.userId,
+    actorName: access.userLabel,
+    action: "campaign.preview_created",
+    resourceType: "campaign",
+    resourceId: preview.id,
+    resourceName: campaignName,
+    outcome: "requested",
+    metadata: {
+      recipient_count: recipientCount,
+      group_count: selected.groups.length,
+    },
+    idempotencyKey: `campaign-preview:${preview.id}`,
+  });
   return NextResponse.json(
     {
       previewId: preview.id,

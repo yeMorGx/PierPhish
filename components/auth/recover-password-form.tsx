@@ -9,6 +9,7 @@ import {
 } from "@/components/auth/auth-page-shell";
 import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { recordClientAuditAction } from "@/lib/client-audit";
 
 export function RecoverPasswordForm() {
   const { ready, user } = useAuth();
@@ -49,6 +50,14 @@ export function RecoverPasswordForm() {
       setError("Não foi possível atualizar a senha. Solicite um novo link.");
       setLoading(false);
       return;
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session?.access_token) {
+      recordClientAuditAction(
+        sessionData.session.access_token,
+        "auth.password_changed",
+      );
     }
 
     await supabase.auth.signOut({ scope: "local" });

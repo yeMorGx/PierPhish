@@ -91,6 +91,7 @@ export async function requireGophishWorkspaceAccess(
       client: SupabaseClient;
       userId: string;
       userLabel: string;
+      isGlobalAdmin: boolean;
       error?: never;
     }
   | { client?: never; userId?: never; error: NextResponse }
@@ -176,5 +177,10 @@ export async function requireGophishWorkspaceAccess(
     (typeof metadataFields?.name === "string" && metadataFields.name.trim()) ||
     data.user.email ||
     data.user.id;
-  return { client, userId: data.user.id, userLabel: userLabel.slice(0, 120) };
+  return {
+    client,
+    userId: data.user.id,
+    userLabel: userLabel.slice(0, 120),
+    isGlobalAdmin: isAdmin,
+  };
 }

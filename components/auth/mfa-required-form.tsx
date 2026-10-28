@@ -17,6 +17,7 @@ import {
 } from "@/components/auth/auth-page-shell";
 import { Icon } from "@/components/ui/icon";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { recordClientAuditAction } from "@/lib/client-audit";
 
 type MfaPhase = "checking" | "enroll" | "challenge";
 
@@ -197,11 +198,26 @@ export function MfaRequiredForm() {
       code: normalizedCode,
     });
     if (verifyError) {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.access_token) {
+        recordClientAuditAction(
+          data.session.access_token,
+          "auth.mfa_verification_failed",
+        );
+      }
       setError(
         "Código inválido ou expirado. Confira o autenticador e tente novamente.",
       );
       setLoading(false);
       return;
+    }
+
+    const { data: verifiedSession } = await supabase.auth.getSession();
+    if (verifiedSession.session?.access_token) {
+      recordClientAuditAction(
+        verifiedSession.session.access_token,
+        isEnrollment ? "auth.mfa_enabled" : "auth.mfa_verified",
+      );
     }
 
     const { error: refreshError } = await supabase.auth.refreshSession();

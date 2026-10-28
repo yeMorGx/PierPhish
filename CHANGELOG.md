@@ -1,5 +1,14 @@
 # Change log e passagem de contexto
 
+### Auditoria operacional ampliada — 2026-10-28
+
+- Implementado o registro de convites/contas, associação e permissões de workspace, conexões de clientes, redefinição administrativa associada aos workspaces da pessoa, eventos autenticados, recuperação de senha, prévia/confirmação/resultado/sincronização de campanhas, marcação de teste e operações de ativos enfileiradas/concluídas. `/api/audit` mescla eventos novos e comandos antigos sem duplicar o mesmo recurso. Metadados não guardam endereços dos destinatários, HTML, credenciais, conteúdo cifrado ou erro bruto.
+- As migrations `20261028190000`–`20261028200000` criam os eventos, protegem o histórico contra `UPDATE`/`DELETE`/`TRUNCATE` e removem FKs de ator/workspace para exclusões de contas não alterarem eventos antigos.
+- Banco aplicado pelo SQL Editor autenticado no projeto PierPhish `acwxnnqnfdzsggwzpetl`. Verificação confirmou RLS ligada, zero políticas, sem leitura por `anon`/`authenticated`, inserção por `service_role`, trigger ativo nas três operações, zero FKs no log e as quatro versões no ledger remoto. Nenhum evento de teste inserido, campanha ou e-mail enviado.
+- O ledger `supabase_migrations.schema_migrations` existia com migrations anteriores, mas sem estas quatro versões. Após confirmar a estrutura aplicada, as quatro versões foram registradas no ledger para evitar reaplicação pelo CLI. Nenhum job `cron.job` ativo aponta à tabela de eventos; retenção futura precisa de um expurgo controlado compatível com o trigger imutável. A conexão MCP Supabase ainda nega acesso aos advisors.
+- Sessão iniciada exige JWT recente; MFA concluído exige AAL2 e ativação exige fator TOTP verificado; troca de senha exige atualização recente. Saída fica como solicitação. Tentativas de login sem sessão válida não são registradas; falhas MFA são reportadas pela interface em sessão AAL1 e não provam o código recebido. Limites e escopo por workspace descritos em `docs/audit-expansion.md`.
+- Validações: `pnpm lint` (TypeScript), Prettier em TS/TSX/Markdown e `git diff --check` aprovados; migrations SQL revisadas manualmente e schema/ledger conferidos no painel. Sem testes automatizados (não solicitados), advisories ou deploy confirmado. Próximos passos: publicar/deploy, validar eventos reais com conta controlada em `/auditoria`, executar advisors com acesso autorizado e planejar expurgo controlado antes de configurar retenção.
+
 ### Auditoria: identificação e estados — 2026-10-28
 
 - Pills da auditoria recebem cores semânticas por tokens: tipo azul, concluída verde, falha vermelha, fila/verificação amarela e expirada neutra. Exceção visual solicitada pelo usuário; rótulos preservam o significado sem depender da cor.

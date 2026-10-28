@@ -6,6 +6,7 @@ import {
   makePasswordResetEmail,
   sendPierSecEmail,
 } from "@/lib/server-email";
+import { recordAuditEvent } from "@/lib/server-audit";
 
 export const runtime = "nodejs";
 
@@ -89,12 +90,24 @@ export async function POST(request: NextRequest) {
     });
   } catch {
     console.error("[email] Password reset link generation failed.");
+    await recordAuditEvent(client, {
+      action: "auth.password_reset_requested",
+      resourceType: "authentication",
+      resourceName: "Recuperação de senha",
+      outcome: "failure",
+    });
     return NextResponse.json({ ok: true });
   }
   const { data, error } = linkResult;
 
   // A mesma resposta é usada para contas inexistentes para evitar enumeração.
   if (error || !data.user?.email || !data.properties?.action_link) {
+    await recordAuditEvent(client, {
+      action: "auth.password_reset_requested",
+      resourceType: "authentication",
+      resourceName: "Recuperação de senha",
+      outcome: "requested",
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -111,8 +124,21 @@ export async function POST(request: NextRequest) {
 
   if (!sent) {
     console.error("[email] Password reset delivery failed.");
+    await recordAuditEvent(client, {
+      action: "auth.password_reset_requested",
+      resourceType: "authentication",
+      resourceName: "Recuperação de senha",
+      outcome: "failure",
+    });
     return NextResponse.json({ ok: true });
   }
+
+  await recordAuditEvent(client, {
+    action: "auth.password_reset_requested",
+    resourceType: "authentication",
+    resourceName: "Recuperação de senha",
+    outcome: "requested",
+  });
 
   return NextResponse.json({ ok: true });
 }

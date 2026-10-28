@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
 import { identifyAikidoUser, requireMfa } from "@/lib/server-auth";
+import { recordAuditEvent } from "@/lib/server-audit";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -133,6 +134,7 @@ async function requireWorkspaceManager(
       ? (getAdminClient(serviceRoleKey) ?? authClient)
       : authClient,
     error: null,
+    user: data.user,
   };
 }
 
@@ -188,7 +190,7 @@ async function requireAdmin(request: NextRequest) {
     ? (getAdminClient(serviceRoleKey) ?? authClient)
     : authClient;
 
-  return { client, error: null };
+  return { client, error: null, user: data.user };
 }
 
 async function requireCompaniesAccess(request: NextRequest) {
@@ -237,6 +239,7 @@ async function requireCompaniesAccess(request: NextRequest) {
         : authClient,
       error: null,
       managedWorkspaceIds: null,
+      user: data.user,
     };
   }
 
@@ -282,6 +285,7 @@ async function requireCompaniesAccess(request: NextRequest) {
       : authClient,
     error: null,
     managedWorkspaceIds,
+    user: data.user,
   };
 }
 
@@ -352,9 +356,9 @@ function safeCompany(row: Record<string, unknown>) {
 }
 
 export async function GET(request: NextRequest) {
-  const { client, error, managedWorkspaceIds } =
-    await requireCompaniesAccess(request);
-  if (error || !client) return error;
+  const access = await requireCompaniesAccess(request);
+  const { client, error, managedWorkspaceIds, user } = access;
+  if (error || !client || !user) return error;
 
   let workspaceQuery = client
     .from("pierphish_workspaces")
@@ -416,7 +420,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (type === "workspace") {
-    const { client, error } = await requireAdmin(request);
+    const { client, error, user } = await requireAdmin(request);
     if (error || !client) return error;
     const environment =
       payload.environment === "production" ? "production" : "test";
@@ -428,6 +432,21 @@ export async function POST(request: NextRequest) {
 
     if (insertError || !data)
       return responseError("Não foi possível criar o workspace.", 400);
+    const userMetadata = (user.user_metadata ?? {}) as Record<string, unknown>;
+    await recordAuditEvent(client, {
+      workspaceId: data.id,
+      actorUserId: user.id,
+      actorName:
+        (typeof userMetadata.display_name === "string" &&
+          userMetadata.display_name) ||
+        user.email,
+      action: "workspace.created",
+      resourceType: "workspace",
+      resourceId: data.id,
+      resourceName: data.name,
+      outcome: "success",
+      metadata: { changed_fields: "nome, descrição, ambiente, logo" },
+    });
     return NextResponse.json(
       { workspace: safeWorkspace(data as Record<string, unknown>) },
       { status: 201 },
@@ -441,9 +460,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { client, error, managedWorkspaceIds } =
-    await requireCompaniesAccess(request);
-  if (error || !client) return error;
+  const access = await requireCompaniesAccess(request);
+  const { client, error, managedWorkspaceIds, user } = access;
+  if (error || !client || !user) return error;
 
   const workspaceId = text(payload.workspaceId);
   const databaseWorkspaceId =
@@ -495,6 +514,23 @@ export async function POST(request: NextRequest) {
 
   if (insertError || !data)
     return responseError("Não foi possível criar o cliente.", 400);
+  const userMetadata = (user.user_metadata ?? {}) as Record<string, unknown>;
+  await recordAuditEvent(client, {
+    workspaceId: data.workspace_id,
+    actorUserId: user.id,
+    actorName:
+      (typeof userMetadata.display_name === "string" &&
+        userMetadata.display_name) ||
+      user.email,
+    action: "workspace.client_created",
+    resourceType: "client",
+    resourceId: data.id,
+    resourceName: data.name,
+    outcome: "success",
+    metadata: {
+      changed_fields: "nome, descrição, identificação, provedor e logo",
+    },
+  });
   return NextResponse.json(
     { company: safeCompany(data as Record<string, unknown>) },
     { status: 201 },
@@ -556,28 +592,49 @@ export async function PATCH(request: NextRequest) {
     if (updateError || !data) {
       return responseError("Não foi possível atualizar o workspace.", 400);
     }
+    const userMetadata = (workspaceAccess.user.user_metadata ?? {}) as Record<
+      string,
+      unknown
+    >;
+    await recordAuditEvent(client, {
+      workspaceId: databaseId,
+      actorUserId: workspaceAccess.user.id,
+      actorName:
+        (typeof userMetadata.display_name === "string" &&
+          userMetadata.display_name) ||
+        workspaceAccess.user.email,
+      action: "workspace.updated",
+      resourceType: "workspace",
+      resourceId: data.id,
+      resourceName: data.name,
+      outcome: "success",
+      metadata: { changed_fields: "nome, descrição, ambiente, logo" },
+    });
     return NextResponse.json({
       workspace: safeWorkspace(data as Record<string, unknown>),
     });
   }
 
-  const { client, error, managedWorkspaceIds } =
-    await requireCompaniesAccess(request);
-  if (error || !client) return error;
+  const access = await requireCompaniesAccess(request);
+  const { client, error, managedWorkspaceIds, user } = access;
+  if (error || !client || !user) return error;
+
+  const { data: previousCompany, error: lookupError } = await client
+    .from("pierphish_companies")
+    .select(
+      "workspace_id,name,description,client_id,email_provider,status,logo_url",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (lookupError) {
+    return responseError("Não foi possível verificar o cliente.", 503);
+  }
+  if (!previousCompany) {
+    return responseError("Cliente não encontrado.", 404);
+  }
 
   if (managedWorkspaceIds) {
-    const { data: existingCompany, error: lookupError } = await client
-      .from("pierphish_companies")
-      .select("workspace_id")
-      .eq("id", id)
-      .maybeSingle();
-    if (lookupError) {
-      return responseError("Não foi possível verificar o cliente.", 503);
-    }
-    if (!existingCompany) {
-      return responseError("Cliente não encontrado.", 404);
-    }
-    if (!managedWorkspaceIds.includes(existingCompany.workspace_id)) {
+    if (!managedWorkspaceIds.includes(previousCompany.workspace_id)) {
       return responseError(
         "Você não pode editar clientes de outro workspace.",
         403,
@@ -623,6 +680,34 @@ export async function PATCH(request: NextRequest) {
 
   if (updateError || !data)
     return responseError("Não foi possível atualizar o cliente.", 400);
+  const changedFields: string[] = [];
+  if (previousCompany.name !== data.name) changedFields.push("nome");
+  if (previousCompany.description !== data.description)
+    changedFields.push("descrição");
+  if (previousCompany.client_id !== data.client_id)
+    changedFields.push("conexão");
+  if (previousCompany.email_provider !== data.email_provider)
+    changedFields.push("provedor de e-mail");
+  if (previousCompany.status !== data.status) changedFields.push("estado");
+  if (previousCompany.logo_url !== data.logo_url) changedFields.push("logo");
+  if (clientSecret) changedFields.push("credencial");
+  if (changedFields.length) {
+    const userMetadata = (user.user_metadata ?? {}) as Record<string, unknown>;
+    await recordAuditEvent(client, {
+      workspaceId: data.workspace_id,
+      actorUserId: user.id,
+      actorName:
+        (typeof userMetadata.display_name === "string" &&
+          userMetadata.display_name) ||
+        user.email,
+      action: "workspace.client_updated",
+      resourceType: "client",
+      resourceId: data.id,
+      resourceName: data.name,
+      outcome: "success",
+      metadata: { changed_fields: changedFields.join(", ") },
+    });
+  }
   return NextResponse.json({
     company: safeCompany(data as Record<string, unknown>),
   });

@@ -10,6 +10,7 @@ import {
   CircleCheck,
   CalendarClock,
   CalendarCheck,
+  ListChecks,
   X,
 } from "lucide-react";
 import { useProfile } from "@/components/profile/profile-provider";
@@ -127,14 +128,15 @@ export function AuditContent() {
       <section className="surface-card audit-page">
         <h2>Histórico de operações</h2>
         <p className="audit-scope-note">
-          Solicitações de campanhas e operações em grupos, modelos, páginas e
-          perfis de envio deste workspace. Mostra o estado atual de cada
-          solicitação, não cada transição. Não inclui acessos à conta, mudanças
-          de usuários ou operações feitas diretamente em serviços externos.
+          Acessos, mudanças de usuários e workspaces, autenticação e operações
+          de campanhas deste workspace. Eventos de autenticação mostram ações
+          confirmadas pela sessão; tentativas de entrada recusadas antes da
+          autenticação não podem ser atribuídas com segurança a um workspace.
         </p>
         <p className="audit-scope-note">
-          Até 100 solicitações recentes de cada origem. Os filtros consultam
-          apenas os registros carregados.
+          Até 100 solicitações recentes por origem e 200 eventos adicionais.
+          Estados atuais de solicitações não representam todas as transições; os
+          filtros consultam apenas os registros carregados.
         </p>
         {current?.loading || !current ? (
           <p role="status">Carregando histórico…</p>
@@ -203,17 +205,26 @@ export function AuditContent() {
                     value: <AuditPill value={detail.status} kind="status" />,
                   },
                   {
-                    label: "Solicitada em",
+                    label: "Registrada em",
                     icon: CalendarClock,
                     value: formatAuditTime(detail.timestamp),
                   },
-                  {
-                    label: "Finalizada em",
-                    icon: CalendarCheck,
-                    value: detail.finishedAt
-                      ? formatAuditTime(detail.finishedAt)
-                      : "Sem finalização registrada",
-                  },
+                  ...(detail.recordKind === "event"
+                    ? []
+                    : [
+                        {
+                          label: "Finalizada em",
+                          icon: CalendarCheck,
+                          value: detail.finishedAt
+                            ? formatAuditTime(detail.finishedAt)
+                            : "Sem finalização registrada",
+                        },
+                      ]),
+                  ...(detail.details ?? []).map((row) => ({
+                    label: row.label,
+                    icon: ListChecks,
+                    value: row.value,
+                  })),
                 ].map((row) => (
                   <div key={row.label}>
                     <dt>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { identifyAikidoUser } from "@/lib/server-auth";
+import { recordAuditEvent } from "@/lib/server-audit";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -55,6 +56,22 @@ export async function POST(request: NextRequest) {
       { status: 502 },
     );
   }
+
+  const metadata = (data.user.user_metadata ?? {}) as Record<string, unknown>;
+  const displayName =
+    typeof metadata.display_name === "string"
+      ? metadata.display_name
+      : typeof metadata.name === "string"
+        ? metadata.name
+        : data.user.email;
+  await recordAuditEvent(client, {
+    actorUserId: data.user.id,
+    actorName: displayName,
+    action: "auth.password_changed",
+    resourceType: "authentication",
+    resourceName: "Senha alterada",
+    outcome: "success",
+  });
 
   return NextResponse.json({ ok: true });
 }

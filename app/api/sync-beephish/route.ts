@@ -7,6 +7,7 @@ import {
   adjustCampaignStats,
   loadExcludedWorkspaceEmails,
 } from "@/lib/server-statistics";
+import { recordAuditEvent } from "@/lib/server-audit";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -81,8 +82,7 @@ async function requireSyncAccess(request: NextRequest, workspaceId: string) {
   identifyAikidoUser(data.user);
 
   const metadata = data.user.app_metadata as
-    | { role?: unknown; is_admin?: unknown }
-    | undefined;
+    { role?: unknown; is_admin?: unknown } | undefined;
   const metadataRole =
     typeof metadata?.role === "string" ? metadata.role.toLowerCase() : "";
   let admin =
@@ -124,7 +124,17 @@ async function requireSyncAccess(request: NextRequest, workspaceId: string) {
   const client = serviceRoleKey ? getClient(serviceRoleKey) : authClient;
   if (!client)
     return { error: errorResponse("Supabase não configurado.", 503) };
-  return { client, userId: data.user.id };
+  const profileMetadata = (data.user.user_metadata ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const userLabel =
+    (typeof profileMetadata.display_name === "string" &&
+      profileMetadata.display_name) ||
+    (typeof profileMetadata.name === "string" && profileMetadata.name) ||
+    data.user.email ||
+    data.user.id;
+  return { client, userId: data.user.id, userLabel };
 }
 
 function decodeBase64Url(value: string) {
@@ -194,8 +204,8 @@ function isOlderThan(value: unknown, days: number) {
   const date = dateOrNull(value);
   return Boolean(
     date &&
-      Number.isFinite(days) &&
-      Date.parse(date) < Date.now() - days * 24 * 60 * 60 * 1000,
+    Number.isFinite(days) &&
+    Date.parse(date) < Date.now() - days * 24 * 60 * 60 * 1000,
   );
 }
 
@@ -526,11 +536,51 @@ export async function POST(request: NextRequest) {
 
   const successful = results.filter((result) => result.campaigns.length > 0);
   if (!successful.length) {
+    const failureCount = results.reduce(
+      (total, result) =>
+        total + (result.failures?.length ?? 0) + (result.error ? 1 : 0),
+      0,
+    );
+    await recordAuditEvent(auth.client, {
+      workspaceId,
+      actorUserId: auth.userId,
+      actorName: auth.userLabel,
+      action: "campaign.sync_completed",
+      resourceType: "sync",
+      resourceName: "Sincronização de campanhas",
+      outcome: "failure",
+      metadata: {
+        company_count: results.length,
+        failure_count: failureCount,
+      },
+    });
     return errorResponse(
       results[0]?.error ?? "Não foi possível sincronizar.",
       502,
     );
   }
+  const failureCount = results.reduce(
+    (total, result) =>
+      total + (result.failures?.length ?? 0) + (result.error ? 1 : 0),
+    0,
+  );
+  await recordAuditEvent(auth.client, {
+    workspaceId,
+    actorUserId: auth.userId,
+    actorName: auth.userLabel,
+    action: "campaign.sync_completed",
+    resourceType: "sync",
+    resourceName: "Sincronização de campanhas",
+    outcome: failureCount ? "partial" : "success",
+    metadata: {
+      company_count: results.length,
+      campaign_count: successful.reduce(
+        (total, result) => total + result.campaigns.length,
+        0,
+      ),
+      failure_count: failureCount,
+    },
+  });
   return NextResponse.json({
     success: true,
     userId: auth.userId,
