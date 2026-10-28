@@ -104,16 +104,7 @@ function RankingCard({
           <h3>{title}</h3>
           <p>{description}</p>
         </div>
-        {!loading && available && people.length > 0 && (
-          <div className="people-ranking-peak">
-            <strong>{people[0][countField]}</strong>
-            <span>
-              {people[0][countField] === 1 ? "campanha" : "campanhas"}
-              <br />
-              no maior total
-            </span>
-          </div>
-        )}
+        <span className="people-ranking-column-label">Campanhas</span>
       </header>
 
       {loading ? (
@@ -150,9 +141,8 @@ function RankingCard({
                   <strong className="people-ranking-name">{person.name}</strong>
                   {countField === "interactionCampaigns" && (
                     <span className="people-ranking-breakdown">
-                      Cliques em {campaignCountLabel(person.clickedCampaigns)} ·
-                      Dados enviados em{" "}
-                      {campaignCountLabel(person.submittedCampaigns)}
+                      {campaignCountLabel(person.clickedCampaigns)} com clique ·{" "}
+                      {person.submittedCampaigns} com dados
                     </span>
                   )}
                 </span>
@@ -162,7 +152,7 @@ function RankingCard({
                 aria-label={metricLabel(person[countField])}
               >
                 <strong>{person[countField]}</strong>
-                <span>
+                <span className="sr-only">
                   {" "}
                   {person[countField] === 1 ? "campanha" : "campanhas"}
                 </span>

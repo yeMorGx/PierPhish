@@ -9025,7 +9025,7 @@ html[data-card-style="apple"] .surface-card,
 
 .bento-dashboard > .people-ranking-card {
   grid-column: span 6;
-  min-height: 316px;
+  min-height: 0;
 }
 
 .bento-dashboard > .campaign-overview-card {
@@ -16509,49 +16509,31 @@ html[data-theme][data-card-style] .companies-security-note svg {
   font-weight: 600;
 }
 .people-ranking-card {
-  padding: 28px !important;
+  padding: 20px !important;
 }
 .people-ranking-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 24px;
+  gap: 12px;
 }
 .people-ranking-header h3 {
-  font-size: 20px;
-  line-height: 1.25;
+  font-size: 16px;
+  line-height: 1.4;
   letter-spacing: -0.03em;
 }
 .people-ranking-header p {
-  max-width: 32ch;
-  font-size: 14px;
-  line-height: 1.6;
-  margin-top: 8px;
-}
-.people-ranking-peak {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-}
-.people-ranking-peak strong {
-  font-size: 44px;
-  line-height: 1;
-  font-weight: 600;
-  letter-spacing: -0.04em;
-  color: var(--ink);
-}
-.people-ranking-peak > span {
-  color: var(--text-muted);
+  max-width: 64ch;
   font-size: 12px;
   line-height: 1.5;
+  margin-top: 4px;
 }
 .people-ranking-list {
-  margin-top: 28px;
+  margin-top: 16px;
 }
 .people-ranking-list li {
-  min-height: 68px;
-  gap: 16px;
+  min-height: 52px;
+  gap: 12px;
   grid-template-columns: 20px minmax(0, 1fr) auto;
 }
 .people-ranking-list li:last-child {
@@ -16562,7 +16544,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
 }
 .people-ranking-person {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
   min-width: 0;
 }
@@ -16573,16 +16555,16 @@ html[data-theme][data-card-style] .companies-security-note svg {
 
 .people-ranking-breakdown {
   display: block;
-  margin-top: 4px;
+  margin-top: 2px;
   color: var(--text-muted);
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.4;
 }
 .people-ranking-avatar {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
   border: 1px solid var(--line);
   border-radius: 50%;
@@ -16599,7 +16581,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
   line-height: 1.5;
 }
 .people-ranking-count {
-  min-width: 68px;
+  min-width: 24px;
   font-variant-numeric: tabular-nums;
 }
 .people-ranking-count strong {
@@ -16893,18 +16875,11 @@ html[data-theme][data-card-style] .companies-security-note svg {
     padding: 20px !important;
   }
   .people-ranking-header {
-    flex-direction: column;
-    gap: 20px;
-  }
-  .people-ranking-peak {
-    align-self: flex-start;
-  }
-  .people-ranking-peak strong {
-    font-size: 36px;
+    gap: 12px;
   }
   .people-ranking-list li {
     gap: 8px;
-    grid-template-columns: 18px minmax(0, 1fr) 60px;
+    grid-template-columns: 18px minmax(0, 1fr) 24px;
   }
   .people-ranking-avatar {
     display: none;
@@ -17557,4 +17532,11 @@ html[data-theme][data-card-style] .companies-security-note svg {
   font-size: 12px;
   line-height: 1.6;
   color: var(--text-muted);
+}
+
+.people-ranking-column-label {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
 }

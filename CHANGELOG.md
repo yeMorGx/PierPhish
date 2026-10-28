@@ -1,5 +1,12 @@
 # Change log e passagem de contexto
 
+
+### Rankings de pessoas compactos — 2026-10-28
+
+- Reduzidos padding (28 para 20 px), título (20 para 16 px), avatares (36 para 28 px), espaço antes da lista (28 para 16 px) e altura mínima das linhas (68 para 52 px). Removida a altura mínima de 316 px do card para estados vazios.
+- Removido o destaque repetido do maior total no cabeçalho. Uma etiqueta Campanhas identifica a coluna; cada linha mantém número e nome acessível, sem repetir a unidade visualmente. Detalhes de cliques/envio de dados foram abreviados, preservando a unidade em campanhas. Mantidos cinco nomes, desempates, filtros e cálculos.
+- Validações aprovadas: Prettier, sintaxe TSX, git diff --check e detector Impeccable sem apontamentos. Sem testes automatizados; conferência visual com dados reais e deploy não verificados. Entrega por commit/push em main. Próximo pedido: definir informações relevantes para o espaço livre do card principal usando a skill grill-me, cuja disponibilidade precisa ser confirmada.
+
 ### Comparativo horizontal de cliques — 2026-10-28
 
 - Substituído o gráfico vertical de **Clicados por campanhas** por barras horizontais na escala fixa de 0 a 100%. Nomes completos e clicáveis ficam acima da barra, com percentual alinhado à direita; removidos cortes de texto e rolagem lateral.
