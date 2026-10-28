@@ -113,18 +113,26 @@ export function CampaignOverviewCard({
       second.id - first.id,
   );
   const deliveryGap = totals.people - totals.delivered - totals.errors;
-  const reconciliationAvailable = failuresAvailable && deliveryGap >= 0;
+  const reconciliationAvailable =
+    failuresAvailable &&
+    deliveryGap >= 0 &&
+    campaigns
+      .filter((campaign) => !campaignIsTest(campaign))
+      .every(
+        (campaign) =>
+          [
+            campaign.people,
+            campaign.deliveredPeople,
+            campaign.errorPeople,
+          ].every((value) => Number.isFinite(value) && value >= 0) &&
+          campaign.deliveredPeople + campaign.errorPeople <= campaign.people,
+      );
   const metrics: Array<{
     label: string;
     value: number | null;
     suffix?: string;
     help: string;
   }> = [
-    {
-      label: "Campanhas",
-      value: totals.campaigns,
-      help: "Número de campanhas incluídas no painel após aplicar os filtros atuais.",
-    },
     {
       label: "Participações",
       value: totals.people,
@@ -144,6 +152,11 @@ export function CampaignOverviewCard({
       label: "Sem confirmação",
       value: reconciliationAvailable ? deliveryGap : null,
       help: "Participações menos entregues e falhas registradas. Pode incluir pendências ou estados sem atualização; não representa novas falhas.",
+    },
+    {
+      label: "Campanhas",
+      value: totals.campaigns,
+      help: "Número de campanhas incluídas no painel após aplicar os filtros atuais.",
     },
     {
       label: "Abertura",
@@ -193,51 +206,62 @@ export function CampaignOverviewCard({
         Testes ficam fora dos indicadores. Use o botão direito na linha para
         marcar.
       </p>
-      <div className="mt-5 grid grid-cols-8 gap-2 max-[1120px]:grid-cols-3 max-[720px]:grid-cols-2">
-        {metrics.map(({ label, value, suffix, help }, index) => {
-          const mobilePopoverAlignment =
-            index % 2 === 1
-              ? "max-[720px]:right-0 max-[720px]:left-auto max-[720px]:translate-x-0"
-              : "";
+      <div className="campaign-metric-groups">
+        {[
+          { title: "Entrega dos e-mails", items: metrics.slice(0, 4) },
+          { title: "Resultados das campanhas", items: metrics.slice(4) },
+        ].map((group, groupIndex) => (
+          <section key={group.title} aria-label={group.title}>
+            <h4 className="campaign-metric-group-title">{group.title}</h4>
+            <div className="grid grid-cols-4 gap-2 max-[720px]:grid-cols-2">
+              {group.items.map(({ label, value, suffix, help }, index) => {
+                const mobilePopoverAlignment =
+                  index % 2 === 1
+                    ? "max-[720px]:right-0 max-[720px]:left-auto max-[720px]:translate-x-0"
+                    : "";
 
-          return (
-            <div
-              className="campaign-overview-metric rounded-[16px] bg-[var(--surface-soft)] px-4 py-3"
-              key={label}
-            >
-              <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-                {label}
-                <details className="group relative inline-flex">
-                  <summary
-                    aria-label={`Como calculamos ${label.toLowerCase()}`}
-                    className="campaign-overview-help flex size-6 cursor-pointer list-none items-center justify-center rounded-full text-current transition-colors hover:bg-[var(--surface-muted)] [&::-webkit-details-marker]:hidden"
+                return (
+                  <div
+                    className="campaign-overview-metric rounded-[16px] bg-[var(--surface-soft)] px-4 py-3"
+                    key={label}
                   >
-                    <Icon name="help" size={10} />
-                  </summary>
-                  <span
-                    className={`absolute top-full left-1/2 z-30 mt-2 hidden w-56 max-w-[calc(100vw-3rem)] -translate-x-1/2 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3 text-left text-[12px] leading-5 font-normal whitespace-normal text-[var(--ink)] group-open:block ${mobilePopoverAlignment}`}
-                  >
-                    {help}
-                  </span>
-                </details>
-              </span>
-              <strong className="mt-1 block text-[21px] leading-none tracking-[-0.06em] text-[var(--ink)]">
-                {value === null ? (
-                  <span className="text-[14px]">Não disponível</span>
-                ) : (
-                  <AnimatedNumber value={value} suffix={suffix} />
-                )}
-              </strong>
+                    <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+                      {label}
+                      <details className="group relative inline-flex">
+                        <summary
+                          aria-label={`Como calculamos ${label.toLowerCase()}`}
+                          className="campaign-overview-help flex size-6 cursor-pointer list-none items-center justify-center rounded-full text-current transition-colors hover:bg-[var(--surface-muted)] [&::-webkit-details-marker]:hidden"
+                        >
+                          <Icon name="help" size={10} />
+                        </summary>
+                        <span
+                          className={`absolute top-full left-1/2 z-30 mt-2 hidden w-56 max-w-[calc(100vw-3rem)] -translate-x-1/2 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3 text-left text-[12px] leading-5 font-normal whitespace-normal text-[var(--ink)] group-open:block ${mobilePopoverAlignment}`}
+                        >
+                          {help}
+                        </span>
+                      </details>
+                    </span>
+                    <strong className="mt-1 block text-[21px] leading-none tracking-[-0.06em] text-[var(--ink)]">
+                      {value === null ? (
+                        <span className="text-[14px]">Não disponível</span>
+                      ) : (
+                        <AnimatedNumber value={value} suffix={suffix} />
+                      )}
+                    </strong>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+            {groupIndex === 0 && (
+              <p className="campaign-delivery-reconciliation">
+                {reconciliationAvailable
+                  ? `${totals.people.toLocaleString("pt-BR")} participações = ${totals.delivered.toLocaleString("pt-BR")} entregues + ${totals.errors.toLocaleString("pt-BR")} falhas + ${deliveryGap.toLocaleString("pt-BR")} sem confirmação.`
+                  : "Não há dados completos e consistentes para conciliar as entregas. Sincronize as campanhas antes de comparar os totais."}
+              </p>
+            )}
+          </section>
+        ))}
       </div>
-
-      <p className="campaign-delivery-reconciliation">
-        {reconciliationAvailable
-          ? `${totals.people.toLocaleString("pt-BR")} participações = ${totals.delivered.toLocaleString("pt-BR")} entregues + ${totals.errors.toLocaleString("pt-BR")} falhas + ${deliveryGap.toLocaleString("pt-BR")} sem confirmação.`
-          : "Não há dados completos e consistentes para conciliar as entregas. Sincronize as campanhas antes de comparar os totais."}
-      </p>
 
       <div
         role="region"

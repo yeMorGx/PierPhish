@@ -1,5 +1,12 @@
 # Change log e passagem de contexto
 
+### Conciliação das contagens de entrega — 2026-10-28
+
+- Conferida a origem do dashboard: participações e entregas vêm dos agregados; falhas vêm de resultados completos ou error informado, sem inferir falhas pela diferença. Na imagem do usuário, a diferença aritmética é 135 (1.372 menos 1.237 menos zero); isso não confirma 135 rejeições de envio.
+- Agrupados Participações, Entregues, Falharam e Sem confirmação na mesma seção, com a equação imediatamente abaixo. Campanhas, abertura, taxa de cliques e reportes ficam em uma segunda seção, evitando confundir o conjunto de entrega. O indicador Sem confirmação e a equação já existiam; esta tarefa melhora sua proximidade e hierarquia.
+- Reforçada a validação por campanha: valores inválidos/negativos ou entregas mais falhas acima das participações impedem uma conciliação aparentemente válida por compensação entre campanhas. Nesse caso aparece orientação para sincronizar; sem confirmação fica indisponível. Campanhas de teste continuam excluídas do cálculo.
+- Validações aprovadas: Prettier, sintaxe TSX e git diff --check. Não executados testes automatizados, sincronização remota ou alteração de banco. Origem dos 135 registros não foi verificada no serviço remoto. Commit/push em main ao concluir; deploy não verificado. Próximo passo: sincronizar e verificar estados de destinatários no ambiente real para distinguir pendências de falhas efetivas.
+
 ### Faixas de criticidade e transição do gráfico — 2026-10-28
 
 - Barras seguem as faixas existentes de maturidade: até 3% verde; acima de 3 até 5% verde-azulado; acima de 5 até 10% amarelo; acima de 10 até 15% laranja; acima de 15% vermelho com aproximação ao vinho em 100%. Cores semânticas por tokens restritos ao gráfico, conforme pedido; sem alterar as fórmulas ou a paleta das outras áreas.

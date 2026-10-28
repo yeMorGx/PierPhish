@@ -17604,3 +17604,15 @@ html[data-theme][data-card-style] .companies-security-note svg {
   color: var(--campaign-clicks-tone);
   flex-shrink: 0;
 }
+
+.campaign-metric-groups {
+  display: grid;
+  gap: 20px;
+  margin-top: 20px;
+}
+.campaign-metric-group-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
