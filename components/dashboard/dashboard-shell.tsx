@@ -27,7 +27,8 @@ type ActiveSection =
   | "workspaces"
   | "settings"
   | "presentation"
-  | "docs";
+  | "docs"
+  | "audit";
 
 type DashboardShellProps = {
   activeSection: ActiveSection;
@@ -291,6 +292,16 @@ export function DashboardShell({
                 onClick={() => setProfileOpen(false)}
               >
                 <Icon name="help" size={16} /> Documentação
+              </Link>
+              <Link
+                className="profile-menu-item"
+                role="menuitem"
+                href="/auditoria"
+                aria-current={activeSection === "audit" ? "page" : undefined}
+                onClick={() => setProfileOpen(false)}
+              >
+                <Icon name="shield" size={16} />
+                Auditoria
               </Link>
               <button
                 className="profile-menu-item"

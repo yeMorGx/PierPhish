@@ -1,5 +1,14 @@
 # Change log e passagem de contexto
 
+### Histórico de auditoria operacional — 2026-10-28
+
+- Integrado o componente de histórico enviado pelo usuário como AuditLog reutilizável em components/ui/audit-log.tsx, adaptado ao Base UI, Lucide e tokens existentes. Busca, filtros de responsável/tipo/estado, paginação de 12 itens, detalhes, abrir origem e copiar ID com confirmação/erro. Ações também ficam disponíveis por botão visível e menu de contexto. Não foram instaladas dependências Radix duplicadas nem usados dados fictícios do exemplo.
+- Nova página /auditoria, acessível no menu do perfil. Carregamento, erro, ausência de sessão e nenhum resultado são tratados. Troca de workspace/usuário cancela a requisição anterior, invalida a lista e fecha detalhes de outro escopo.
+- Nova API GET /api/audit consulta somente metadados das tabelas existentes de solicitações de campanhas e ativos, após autenticação, MFA e autorização administrativa do workspace pelo verificador já usado pelo projeto. Filtro de workspace aplicado às duas consultas; cache privado/no-store e resposta sem payload, conteúdo cifrado, mensagens brutas de erro ou credenciais. Sem escrita no banco ou migration.
+- Escopo explícito: até 100 solicitações recentes de cada origem (até 200 no conjunto), com aviso quando há mais registros. Filtros são sobre o recorte carregado. Mostra estado atual e datas da solicitação/finalização, sem prometer trilha imutável de cada transição. Não inclui logins, alterações de usuários, operações BeePhish externas ou ações que nunca foram registradas. Ampliação dessa cobertura exige nova tarefa de instrumentação.
+- Validações aprovadas: TypeScript da aplicação (incluindo novos arquivos) sem diagnósticos, Prettier, git diff --check e detector Impeccable sem apontamentos. Conferência visual local desktop claro do estado sem sessão; API local retornou 401 sem token para workspace válido. Não foram usados tokens artificiais nem acessado banco remoto para simular autorização. Registros reais, filtros com dados autenticados, detalhes/contexto e isolamento remoto entre perfis não validados no ambiente de produção.
+- Commit/push em main ao concluir; deploy não verificado. Nenhuma campanha ou e-mail enviados. Próximos passos: validar leitura autenticada com administrador/MFA no workspace correto e definir se será necessário registrar também eventos de usuários, login e outras operações.
+
 ### Dashboard compacto, detalhes de entrega e controles — 2026-10-28
 
 - Indicadores de entrega/resultados compactados e colocados na mesma linha em telas largas. Falhas e Sem confirmação se tornam um cartão combinado, cujo total só aparece quando a conciliação é válida. Ao clicar, abre modal Base UI com rolagem contida, totais separados e detalhamento por campanha com links; valores desconhecidos continuam explícitos. Não transforma pendências em falhas nem altera dados de destinatários.
