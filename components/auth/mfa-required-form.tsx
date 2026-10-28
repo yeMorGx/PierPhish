@@ -38,7 +38,7 @@ export function MfaRequiredForm() {
   const { ready, user, signOut } = useAuth();
   const [phase, setPhase] = useState<MfaPhase>("checking");
   const [factorId, setFactorId] = useState("");
-  const [factorName, setFactorName] = useState("PierPhish");
+  const [factorName, setFactorName] = useState("PierSec");
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [secret, setSecret] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -99,7 +99,7 @@ export function MfaRequiredForm() {
     const { data: enrolledFactor, error: enrollError } =
       await supabase.auth.mfa.enroll({
         factorType: "totp",
-        friendlyName: "PierPhish",
+        friendlyName: "PierSec",
       });
 
     if (enrollError || !enrolledFactor) {
@@ -110,7 +110,7 @@ export function MfaRequiredForm() {
     }
 
     setFactorId(enrolledFactor.id);
-    setFactorName(enrolledFactor.friendly_name || "PierPhish");
+    setFactorName(enrolledFactor.friendly_name || "PierSec");
     setQrCode(enrolledFactor.totp?.qr_code ?? null);
     setSecret(enrolledFactor.totp?.secret ?? null);
     setPhase("enroll");
@@ -251,7 +251,7 @@ export function MfaRequiredForm() {
         </h1>
         <p>
           {isEnrollment
-            ? "Use um aplicativo autenticador para proteger sua conta antes de entrar no PierPhish."
+            ? "Use um aplicativo autenticador para proteger sua conta antes de entrar no PierSec."
             : `Abra ${factorName} e informe o código atual para continuar.`}
         </p>
       </div>

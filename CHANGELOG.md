@@ -1,5 +1,15 @@
 # Change log e passagem de contexto
 
+### QA do cadastro, convite e entrada — 2026-10-28
+
+- Revisados os fluxos no código. Conta nova: administrador cria usuário e vínculo ativo do workspace; Supabase gera link de convite e PierSec tenta enviá-lo pelo Resend. Pessoa define senha de pelo menos 12 caracteres com três grupos de caracteres e configura TOTP antes de acessar. Conta existente: adicionar ao workspace ativa o acesso imediatamente, cria notificação e tenta enviar aviso por e-mail; não exige aceite do convite. Entrada normal exige senha e MFA; recuperação de senha usa link por e-mail e encerra a sessão local após a troca.
+- Corrigido limite de 100 usuários: listagem administrativa agora percorre páginas de 1.000 usuários e procura e-mail normalizado em páginas sucessivas. Falha do provedor para a listagem/consulta continua sendo reportada.
+- Convite para conta existente não apresenta mais erro se a ativação já ocorreu e apenas o recálculo dos indicadores falhou. A resposta separa o acesso liberado, o estado do e-mail e o estado dos indicadores; a interface informa cada resultado.
+- Alinhados nome acessível, marca de login e nome padrão do autenticador para PierSec.
+- QA automatizado: `pnpm test` aprovado (5 arquivos, 11 testes), incluindo 3 testes da busca/listagem paginada. `pnpm lint` (TypeScript), Prettier nos arquivos TS/TSX e `git diff --check` aprovados. Documentação Supabase confirma `page`/`perPage` e o uso apenas no servidor ([referência](https://supabase.com/docs/reference/javascript/auth-admin-listusers)).
+- Limite da validação: `.env.local` deste computador não configura Supabase; não foi possível testar login real, MFA, convite ou entrega Resend. Nenhuma conta foi criada, e-mail enviado, operação remota feita ou deploy confirmado.
+- Próximos passos: depois do deploy, testar com conta controlada em ambiente autorizado: criação e primeiro acesso, login com TOTP, convite de uma conta existente, senha esquecida e falha de e-mail. Conferir a chegada real no provedor, pois aceitação pelo Resend não garante entrega.
+
 ### Dashboard em colunas, marcas e paginação da tabela — 2026-10-28
 
 - Botão Exportar para o Canva renderiza somente quando o usuário autenticado tem o e-mail gabriel.goes@piersec.com.br (comparação normalizada). Restrição de visibilidade do componente; não altera as autorizações existentes da API de exportação. Sem sessão ou para outros usuários, botão/modal não são renderizados.

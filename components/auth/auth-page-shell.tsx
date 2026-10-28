@@ -27,7 +27,7 @@ export function AuthPageShell({
           {children}
         </div>
       </section>
-      <aside className="login-artwork" aria-label="Ilustração do PierPhish">
+      <aside className="login-artwork" aria-label="Ilustração do PierSec">
         {artwork}
       </aside>
     </main>
@@ -36,12 +36,8 @@ export function AuthPageShell({
 
 export function LoginBrand() {
   return (
-    <Link
-      className="login-brand"
-      href="/"
-      aria-label="PierPhish. Powered by PierSec"
-    >
-      <span className="login-brand-name">PierPhish</span>
+    <Link className="login-brand" href="/" aria-label="PierSec">
+      <span className="login-brand-name">PierSec</span>
       <span className="login-brand-powered" aria-label="Powered by PierSec">
         <span>Powered by</span>
         <Image src="/piersec-logo.png" alt="PierSec" width={44} height={44} />

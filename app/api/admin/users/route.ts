@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, type User } from "@supabase/supabase-js";
+import { findAuthUserByEmail, listAllAuthUsers } from "@/lib/admin-auth-users";
 import { persistedPrimaryWorkspaceId } from "@/lib/company-data";
 import { identifyAikidoUser, requireMfa } from "@/lib/server-auth";
 import { recalculateWorkspaceCampaignStats } from "@/lib/server-statistics";
@@ -336,10 +337,9 @@ export async function GET(request: NextRequest) {
   const { client, error, managedWorkspaceIds } = await requireAdmin(request);
   if (error || !client) return error;
 
-  const { data, error: listError } = await client.auth.admin.listUsers({
-    page: 1,
-    perPage: 100,
-  });
+  const { users, error: listError } = await listAllAuthUsers((options) =>
+    client.auth.admin.listUsers(options),
+  );
   if (listError)
     return responseError("Não foi possível carregar os usuários.", 502);
 
@@ -407,7 +407,7 @@ export async function GET(request: NextRequest) {
     : null;
 
   return NextResponse.json({
-    users: data.users
+    users: users
       .filter((user) => !visibleUserIds || visibleUserIds.has(user.id))
       .map((user) => safeUser(user, membershipsByUser.get(user.id) ?? [])),
   });
@@ -479,15 +479,15 @@ export async function POST(request: NextRequest) {
   }
 
   if (mode === "invite") {
-    const { data: existingUsers, error: existingUsersError } =
-      await client.auth.admin.listUsers({ page: 1, perPage: 100 });
+    const { user: invitedUser, error: existingUsersError } =
+      await findAuthUserByEmail(
+        (options) => client.auth.admin.listUsers(options),
+        email,
+      );
     if (existingUsersError) {
       return responseError("Não foi possível localizar o usuário.", 502);
     }
 
-    const invitedUser = (existingUsers.users ?? []).find(
-      (candidate) => candidate.email?.toLowerCase() === email.toLowerCase(),
-    );
     if (!invitedUser) {
       return responseError(
         "Não existe uma conta com este e-mail. Crie o usuário primeiro ou use outro e-mail.",
@@ -571,13 +571,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let statsUpdated = true;
     try {
       await recalculateWorkspaceCampaignStats(client, workspace.id);
     } catch {
-      return responseError(
-        "O acesso foi liberado, mas não foi possível atualizar os indicadores deste workspace.",
-        502,
-      );
+      statsUpdated = false;
     }
 
     const emailResult = await sendPierSecEmail(
@@ -599,6 +597,7 @@ export async function POST(request: NextRequest) {
           workspaceName: workspace.name,
           role,
           emailSent: emailResult.sent,
+          statsUpdated,
         },
       },
       { status: 201 },

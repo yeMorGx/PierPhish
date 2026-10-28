@@ -637,6 +637,7 @@ export function UserManagementContent() {
         name?: string;
         workspaceName?: string;
         emailSent?: boolean;
+        statsUpdated?: boolean;
       };
       error?: string;
     };
@@ -648,10 +649,17 @@ export function UserManagementContent() {
 
     setInviteEmail("");
     setInviteExcludeFromStatistics(false);
+    const recipient = body.invitation.name
+      ? ` para ${body.invitation.name}`
+      : "";
+    const emailStatus = body.invitation.emailSent
+      ? "Enviamos um e-mail com os detalhes."
+      : "O e-mail não foi enviado; confira a configuração do Resend.";
+    const statsStatus = body.invitation.statsUpdated
+      ? ""
+      : " Os indicadores do workspace não foram atualizados.";
     setInviteNotice(
-      body.invitation.emailSent
-        ? `Acesso liberado${body.invitation.name ? ` para ${body.invitation.name}` : ""}. Enviamos um e-mail com os detalhes.`
-        : `Acesso liberado${body.invitation.name ? ` para ${body.invitation.name}` : ""}, mas o e-mail não foi enviado. Confira a configuração do Resend.`,
+      `Acesso liberado${recipient}. ${emailStatus}${statsStatus}`,
     );
     await loadUsers();
     setInviting(false);
