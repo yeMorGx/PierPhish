@@ -17429,6 +17429,8 @@ html[data-theme][data-card-style] .companies-security-note svg {
   }
 }
 .campaign-clicks-card {
+  --campaign-clicks-low: #c87970;
+  --campaign-clicks-high: #a53757;
   align-self: start;
   display: flex;
   flex-direction: column;
@@ -17535,7 +17537,6 @@ html[data-theme][data-card-style] .companies-security-note svg {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
-.campaign-clicks-note,
 .campaign-clicks-empty {
   margin: 0;
   font-size: 12px;

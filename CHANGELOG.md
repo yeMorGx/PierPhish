@@ -1,5 +1,12 @@
 # Change log e passagem de contexto
 
+### Gravidade e três campanhas no gráfico de cliques — 2026-10-28
+
+- Reduzida paginação de cinco para três campanhas por página, mantendo acesso a todas por Anterior/Próxima, ordenação e filtros.
+- Barras recebem uma cor sólida por valor, interpolada entre vermelho suave e vinho em 100%, via tokens restritos ao gráfico. Exceção de cor solicitada pelo usuário, sem mudar a paleta global. Percentual e comprimento continuam informando o valor sem depender da cor. Não é um novo cálculo nem mudança nas faixas de maturidade.
+- Removida a explicação final sobre cliques/entregas e o seletor CSS sem uso. Total de entregas e paginação preservados.
+- Validações: Prettier, sintaxe TSX e diff; commit/push em main ao concluir. Deploy e conferência visual em produção não verificados.
+
 ### Indicadores como rodapé do card principal — 2026-10-28
 
 - Agrupados os quatro indicadores e a linha de andamento/sincronização em um footer semântico único, ancorado à base do hero. O conteúdo ocupa a altura disponível e a primeira linha absorve o espaço extra, evitando área vazia abaixo do rodapé. No celular, mantém empilhamento e indicadores em duas colunas.

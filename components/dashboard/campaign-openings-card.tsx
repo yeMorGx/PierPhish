@@ -6,7 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import type { CampaignBar } from "@/components/dashboard/types";
 
 type CampaignOpeningsCardProps = { campaigns: CampaignBar[]; total: number };
-const pageSize = 5;
+const pageSize = 3;
 
 export function CampaignOpeningsCard({
   campaigns,
@@ -58,6 +58,7 @@ export function CampaignOpeningsCard({
                 <div
                   style={{
                     width: `${Math.min(100, Math.max(0, campaign.rate))}%`,
+                    backgroundColor: `color-mix(in oklab, var(--campaign-clicks-low), var(--campaign-clicks-high) ${Math.min(100, Math.max(0, campaign.rate))}%)`,
                   }}
                 />
               </div>
@@ -98,10 +99,6 @@ export function CampaignOpeningsCard({
           </nav>
         )}
       </div>
-      <p className="campaign-clicks-note">
-        Cliques ÷ entregas. Sem entregas registradas, a base é o total de
-        participações da campanha.
-      </p>
     </article>
   );
 }
