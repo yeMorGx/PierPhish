@@ -17,9 +17,9 @@ export function LiquidGlassSurface({ children }: { children: ReactNode }) {
         <LiquidGlass
           className="piersec-liquid-glass-panel"
           style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
+            position: "relative",
+            top: "0px",
+            left: "0px",
             width: "100%",
           }}
           padding="16px"

@@ -1,5 +1,11 @@
 # Change log e passagem de contexto
 
+### Alinhamento das camadas do Liquid Glass — 2026-10-28
+
+- Corrigido o contorno duplicado/deslocado da maturidade. A biblioteca mede o painel na montagem e conserva dimensões nas camadas auxiliares; após mudanças no conteúdo/tipografia, essas medidas podem divergir da superfície real.
+- Painel agora participa do fluxo normal, sem centralização por transform. Camadas auxiliares ficam ancoradas em inset zero e usam 100% da caixa atual, sem depender da altura em cache. Superfície interna usa flex para evitar espaço de linha do inline-flex. Removidas alturas mínimas do invólucro que poderiam separar contornos. Biblioteca, refração, tooltip em portal e foco sem outline preservados.
+- Validações aprovadas: Prettier e git diff --check. Conferência visual no dashboard local com dados de demonstração; medidas do DOM confirmaram mesma posição, largura e altura (260 × 169 px) em todas as camadas, inclusive a superfície interna. Após recarregar os estilos, contorno único confirmado. Entrega por commit e push em main. Nenhuma fórmula, dado, banco ou operação de campanha alterada; deploy ainda não verificado.
+
 ### Gráfico de cliques com espaço próprio e recorte do Liquid Glass — 2026-10-28
 
 - Ajustado especificamente o card **Clicados por campanhas**: barras com altura estável de 136 px, separação entre valor/gráfico/nome, nomes completos em até duas linhas e legenda que reorganiza em telas estreitas. Removida a cadeia de alturas percentuais que comprimia as barras conforme a altura do hero. Rolagem horizontal continua restrita ao gráfico, acessível por teclado, sem outline.

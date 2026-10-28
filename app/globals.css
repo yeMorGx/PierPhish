@@ -17235,12 +17235,10 @@ html[data-theme][data-card-style] .companies-security-note svg {
   font-size: 12px;
 }
 .piersec-liquid-glass {
-  display: grid;
-  align-items: center;
+  display: block;
   position: relative;
   min-width: 0;
   width: 100%;
-  min-height: 180px;
   border-radius: 16px;
   clip-path: inset(0 round 16px);
   isolation: isolate;
@@ -17253,6 +17251,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
   background: var(--liquid-glass-tint);
 }
 .piersec-liquid-glass-panel > .glass {
+  display: flex !important;
   width: 100%;
   box-sizing: border-box;
   background: var(--liquid-glass-tint);
@@ -17398,9 +17397,6 @@ html[data-theme][data-card-style] .companies-security-note svg {
   .bento-dashboard > .overview-hero-card.operational-hero {
     padding: 20px !important;
   }
-  .piersec-liquid-glass {
-    min-height: 166px;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .dashboard-company-filter-list > .dashboard-company-filter {
@@ -17450,6 +17446,19 @@ html[data-theme][data-card-style] .companies-security-note svg {
 }
 .piersec-liquid-glass > span {
   box-sizing: border-box;
+}
+.piersec-liquid-glass-panel {
+  transform: none !important;
+}
+/* The library caches its first measurement; overlays follow the live box. */
+.piersec-liquid-glass > span,
+.piersec-liquid-glass
+  > div:not(.piersec-liquid-glass-panel):not(.piersec-liquid-glass-fallback) {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform: none !important;
 }
 @media (min-width: 1121px) {
   .bento-dashboard > .overview-hero-card.operational-hero {
