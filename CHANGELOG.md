@@ -5,6 +5,7 @@
 - Reorganizado o cabeçalho do detalhe da campanha em duas colunas responsivas. O seletor de logo ficou compacto; título, descrição e prévia do e-mail mantêm áreas próprias, sem sobreposição.
 - Reduzidos padding e altura do cabeçalho. Em telas estreitas, os elementos passam para uma coluna e o seletor mantém um rótulo acessível.
 - Validações: `pnpm exec prettier --check 'app/campaigns/[id]/page.tsx' app/globals.css CHANGELOG.md`, `pnpm lint` e `git diff --check` aprovados. Sem testes automatizados; deploy não verificado.
+- Commit `443c54a` e push para `main` confirmados.
 - Próximo passo: conferir o cabeçalho em uma campanha real após o deploy.
 
 ### Auditoria operacional ampliada — 2026-10-28
