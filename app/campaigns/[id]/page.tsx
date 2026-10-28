@@ -790,12 +790,9 @@ export default function CampaignPeoplePage() {
           />
         ) : (
           <>
-            <header className="surface-card flex items-center justify-between gap-6 rounded-[30px] px-8 py-7 max-[720px]:flex-col max-[720px]:items-stretch max-[720px]:rounded-[22px] max-[720px]:px-6">
-              <div className="min-w-0">
-                <Link
-                  href="/"
-                  className="mb-5 inline-flex items-center gap-2 text-[11px] font-bold text-[#7f8a94] transition-colors hover:text-[var(--ink)]"
-                >
+            <header className="surface-card campaign-detail-header">
+              <div className="campaign-detail-header-main">
+                <Link href="/" className="campaign-detail-back">
                   <span className="rotate-180">
                     <Icon name="arrow" size={15} />
                   </span>{" "}
@@ -809,13 +806,13 @@ export default function CampaignPeoplePage() {
                       .toUpperCase()}
                   />
                   <div className="min-w-0">
-                    <p className="mb-2 text-[10px] font-extrabold tracking-[0.16em] text-[#9299a2] uppercase">
+                    <p className="campaign-detail-overline">
                       CAMPANHA / {campaignId}
                     </p>
-                    <h1 className="m-0 max-w-[920px] text-[clamp(28px,3.6vw,48px)] leading-[1] font-[680] tracking-[-0.06em]">
+                    <h1 className="campaign-detail-name">
                       {campaign?.name ?? `Campanha ${campaignId}`}
                     </h1>
-                    <p className="mt-3 mb-0 text-[12px] text-[#7b838d]">
+                    <p className="campaign-detail-description">
                       Pessoas alcançadas e sinais registrados nesta campanha.
                     </p>
                   </div>
@@ -824,7 +821,7 @@ export default function CampaignPeoplePage() {
               {campaign && (
                 <EmailSampleCard
                   campaignId={campaign.id}
-                  className="campaign-detail-email-trigger ml-auto max-[720px]:ml-0 max-[720px]:w-full"
+                  className="campaign-detail-email-trigger"
                 />
               )}
             </header>
