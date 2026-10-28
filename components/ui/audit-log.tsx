@@ -7,6 +7,52 @@ import { toast } from "sonner";
 import type { AuditLogItem } from "@/lib/audit-types";
 export type { AuditLogItem } from "@/lib/audit-types";
 
+export function AuditActor({
+  actor,
+  photo,
+}: {
+  actor?: string;
+  photo?: string | null;
+}) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <span className="audit-actor">
+      <span className="audit-actor-photo">
+        {photo && !failed ? (
+          <img src={photo} alt="" onError={() => setFailed(true)} />
+        ) : (
+          <span aria-hidden="true">
+            {actor?.slice(0, 1).toUpperCase() || "?"}
+          </span>
+        )}
+      </span>
+      {actor || "Responsável não informado"}
+    </span>
+  );
+}
+export function AuditPill({
+  value,
+  kind = "type",
+}: {
+  value?: string;
+  kind?: "type" | "status";
+}) {
+  const tone =
+    kind === "type"
+      ? "info"
+      : value === "Concluída"
+        ? "success"
+        : value === "Falhou"
+          ? "danger"
+          : value === "Expirada"
+            ? "neutral"
+            : "warning";
+  return (
+    <span className="audit-pill" data-tone={tone}>
+      {value || "Não informado"}
+    </span>
+  );
+}
 function formatTime(value: string) {
   const time = Date.parse(value);
   return Number.isFinite(time)
@@ -165,9 +211,9 @@ export function AuditLog({
                 <strong>{item.title}</strong>
                 <p>{item.description}</p>
                 <div className="audit-entry-tags">
-                  <span>{item.actor || "Responsável não informado"}</span>
-                  <span>{item.type}</span>
-                  <span>{item.status}</span>
+                  <AuditActor actor={item.actor} photo={item.actorPhoto} />
+                  <AuditPill value={item.type} />
+                  <AuditPill value={item.status} kind="status" />
                 </div>
               </div>
               <div className="audit-entry-meta">

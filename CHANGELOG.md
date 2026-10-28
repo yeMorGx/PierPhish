@@ -1,5 +1,13 @@
 # Change log e passagem de contexto
 
+### Auditoria: identificação e estados — 2026-10-28
+
+- Pills da auditoria recebem cores semânticas por tokens: tipo azul, concluída verde, falha vermelha, fila/verificação amarela e expirada neutra. Exceção visual solicitada pelo usuário; rótulos preservam o significado sem depender da cor.
+- Foto circular ao lado do responsável quando corresponde ao perfil autenticado disponível. Sem foto ou falha ao carregar, mostra inicial. Fotos de outros usuários não foram buscadas em diretório global; a limitação está documentada.
+- Modal de detalhes recebe ícones funcionais nos campos e no fechamento, além das mesmas pills e identificação do responsável.
+- Usuário aprovou ampliar todas as categorias de eventos. Escopo, contrato, cuidados de autorização e próximos passos registrados em `docs/audit-expansion.md`. A consulta Supabase desta sessão retornou somente o projeto Gabriel; o banco PierSec informado não está acessível pelo conector. Nenhum evento novo, migration ou alteração remota foi ativado.
+- Validação: formatação dos arquivos alterados e TypeScript; sem teste visual autenticado ou deploy confirmado. Entrega visual em commit/push na branch atual. Próximo passo: conectar o banco PierSec correto para inspecionar o schema e implementar/validar a instrumentação de usuários, autenticação e campanhas.
+
 ### Fundo claro no fluxo de autenticação — 2026-10-28
 
 - O fluxo de autenticação agora mantém fundo, painel e controles no tema claro mesmo quando o tema global está escuro. A regra vale para login, primeiro acesso/troca de senha, MFA, esqueci minha senha e redefinição de senha, todos renderizados pelo mesmo `AuthPageShell`.

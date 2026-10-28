@@ -2,11 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  Hash,
+  Type,
+  UserRound,
+  Layers,
+  CircleCheck,
+  CalendarClock,
+  CalendarCheck,
+  X,
+} from "lucide-react";
+import { useProfile } from "@/components/profile/profile-provider";
 import { Dialog } from "@base-ui/react/dialog";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import {
   AuditLog,
+  AuditActor,
+  AuditPill,
   formatAuditTime,
   type AuditLogItem,
 } from "@/components/ui/audit-log";
@@ -22,6 +35,7 @@ type AuditState = {
 };
 export function AuditContent() {
   const { session, user } = useAuth();
+  const { preferences } = useProfile();
   const workspaceId = useActiveWorkspaceId();
   const scope = `${workspaceId}:${user?.id ?? ""}`;
   const router = useRouter();
@@ -133,7 +147,13 @@ export function AuditContent() {
             )}
             <AuditLog
               key={scope}
-              items={current.items}
+              items={current.items.map((item) => ({
+                ...item,
+                actorPhoto:
+                  item.actor?.toLowerCase() === user?.email?.toLowerCase()
+                    ? preferences.avatar
+                    : item.actorPhoto,
+              }))}
               onOpenRecord={(item) => {
                 if (item.href) router.push(item.href);
               }}
@@ -153,32 +173,53 @@ export function AuditContent() {
           <Dialog.Popup className="audit-detail-dialog">
             <div className="audit-detail-heading">
               <Dialog.Title>Detalhes da solicitação</Dialog.Title>
-              <Dialog.Close aria-label="Fechar detalhes">Fechar</Dialog.Close>
+              <Dialog.Close aria-label="Fechar detalhes">
+                <X size={18} aria-hidden="true" /> Fechar
+              </Dialog.Close>
             </div>
             {detail && (
               <dl>
                 {[
-                  { label: "Registro", value: detail.id },
-                  { label: "Nome", value: detail.title },
+                  { label: "Registro", icon: Hash, value: detail.id },
+                  { label: "Nome", icon: Type, value: detail.title },
                   {
                     label: "Responsável",
-                    value: detail.actor ?? "Não informado",
+                    icon: UserRound,
+                    value: (
+                      <AuditActor
+                        actor={detail.actor}
+                        photo={detail.actorPhoto}
+                      />
+                    ),
                   },
-                  { label: "Tipo", value: detail.type },
-                  { label: "Estado atual", value: detail.status },
+                  {
+                    label: "Tipo",
+                    icon: Layers,
+                    value: <AuditPill value={detail.type} />,
+                  },
+                  {
+                    label: "Estado atual",
+                    icon: CircleCheck,
+                    value: <AuditPill value={detail.status} kind="status" />,
+                  },
                   {
                     label: "Solicitada em",
+                    icon: CalendarClock,
                     value: formatAuditTime(detail.timestamp),
                   },
                   {
                     label: "Finalizada em",
+                    icon: CalendarCheck,
                     value: detail.finishedAt
                       ? formatAuditTime(detail.finishedAt)
                       : "Sem finalização registrada",
                   },
                 ].map((row) => (
                   <div key={row.label}>
-                    <dt>{row.label}</dt>
+                    <dt>
+                      <row.icon size={16} aria-hidden="true" />
+                      {row.label}
+                    </dt>
                     <dd>{row.value}</dd>
                   </div>
                 ))}
