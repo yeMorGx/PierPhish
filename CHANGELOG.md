@@ -1,5 +1,11 @@
 # Change log e passagem de contexto
 
+### Remoção dos trechos marcados no hero — 2026-10-28
+
+- Removidas a observação abaixo dos indicadores e toda a seção Próxima ação, incluindo botão e lógica de escolha da campanha. Limpos imports, CSS e áreas de grid sem uso, eliminando também o espaço reservado ao trecho.
+- Preservados os quatro indicadores, regras de dados indisponíveis, maturidade em Liquid Glass, campanhas em andamento e sincronização. Nenhum cálculo ou dado alterado.
+- Validações: formatação, sintaxe TSX e git diff --check; commit/push em main ao concluir. Deploy e conferência visual em produção não verificados.
+
 ### Resumo de risco e envio no card principal — 2026-10-28
 
 - Após esclarecimento pelo material grill-me fornecido pelo usuário, definido resumo equilibrado de risco/envio com próxima ação baseada nos dados. Preenchido o espaço do hero com Entregues, Falhas registradas, Dados enviados e Reportes, mantendo maturidade à direita e informações de sincronização.
