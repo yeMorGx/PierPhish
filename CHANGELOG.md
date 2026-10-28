@@ -1,5 +1,12 @@
 # Change log e passagem de contexto
 
+### Comparativo horizontal de cliques — 2026-10-28
+
+- Substituído o gráfico vertical de **Clicados por campanhas** por barras horizontais na escala fixa de 0 a 100%. Nomes completos e clicáveis ficam acima da barra, com percentual alinhado à direita; removidos cortes de texto e rolagem lateral.
+- Maiores taxas aparecem primeiro, com desempate por nome/ID. Paginação de cinco campanhas mantém acesso a todas as campanhas recebidas pelo componente, sem aumentar indefinidamente o card. Filtros e exclusões existentes são preservados; nenhum cálculo foi alterado. Mantida a explicação da base alternativa quando não há entregas.
+- Layout via tokens, foco por fundo/sublinhado sem outline, estado vazio e controles com nomes acessíveis. Sem novas cores, sombras ou animações decorativas.
+- Validação: Prettier e detector Impeccable aprovados. TypeScript da aplicação aprovado sem diagnósticos; git diff --check aprovado. Dashboard compilou e respondeu HTTP 200; conferência visual desktop em tema claro com dados de demonstração confirmou nomes completos, percentuais alinhados e escala das barras. Paginação com mais de cinco campanhas e tema escuro não foram conferidos visualmente nesta tarefa. A página volta ao início quando muda a lista/ordenação. Entrega por commit/push em main; deploy não verificado. Nenhuma alteração de banco ou envio de campanha.
+
 ### Alinhamento das camadas do Liquid Glass — 2026-10-28
 
 - Corrigido o contorno duplicado/deslocado da maturidade. A biblioteca mede o painel na montagem e conserva dimensões nas camadas auxiliares; após mudanças no conteúdo/tipografia, essas medidas podem divergir da superfície real.

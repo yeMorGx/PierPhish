@@ -1,85 +1,106 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
-import { AnimatedNumber } from "@/components/dashboard/animated-number";
 import type { CampaignBar } from "@/components/dashboard/types";
 
-type CampaignOpeningsCardProps = {
-  campaigns: CampaignBar[];
-  total: number;
-};
+type CampaignOpeningsCardProps = { campaigns: CampaignBar[]; total: number };
+const pageSize = 5;
 
 export function CampaignOpeningsCard({
   campaigns,
   total,
 }: CampaignOpeningsCardProps) {
+  const [pagination, setPagination] = useState({ filter: "", page: 0 });
+  const sorted = [...campaigns].sort(
+    (a, b) =>
+      b.rate - a.rate || a.name.localeCompare(b.name, "pt-BR") || a.id - b.id,
+  );
+  const pages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const filter = sorted.map((campaign) => campaign.id).join(",");
+  const currentPage =
+    pagination.filter === filter ? Math.min(pagination.page, pages - 1) : 0;
+  const setPage = (page: number) => setPagination({ filter, page });
+  const visible = sorted.slice(
+    currentPage * pageSize,
+    (currentPage + 1) * pageSize,
+  );
   return (
-    <article className="surface-card campaign-openings-card flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] p-[25px] max-[1120px]:rounded-[45px] max-[720px]:rounded-[23px] max-[720px]:p-[22px]">
-      <div className="flex items-start justify-between gap-3">
+    <article className="surface-card campaign-openings-card campaign-clicks-card">
+      <div className="campaign-clicks-heading">
         <div>
-          <h3 className="m-0 text-[17px] font-bold tracking-[-0.03em]">
-            Clicados por campanhas
-          </h3>
+          <h3>Clicados por campanhas</h3>
+          <p>Taxa de cliques · maiores primeiro</p>
         </div>
-        <Link
-          href="#campaign-overview"
-          className="inline-flex items-center gap-[5px] text-[12px] text-[var(--text-muted)] hover:text-[var(--ink)]"
-        >
+        <Link href="#campaign-overview" className="campaign-clicks-link">
           Ver campanhas <Icon name="arrow" size={15} />
         </Link>
       </div>
-      <div
-        className="campaign-clicks-scroll flex items-end overflow-x-auto"
-        tabIndex={0}
-        aria-label="Taxa de cliques de todas as campanhas"
-      >
-        <div
-          className="campaign-clicks-plot flex min-w-full items-end"
-          style={{ minWidth: `${Math.max(campaigns.length * 76, 300)}px` }}
+      {visible.length ? (
+        <ol
+          className="campaign-clicks-ranking"
+          aria-label="Campanhas por taxa de cliques"
+          start={currentPage * pageSize + 1}
         >
-          {campaigns.length === 0 && (
-            <p
-              className="self-center text-sm text-[var(--text-muted)]"
-              role="status"
-            >
-              Nenhuma campanha incluída nos indicadores deste filtro.
-            </p>
-          )}
-          {campaigns.map((campaign) => (
-            <div
-              className="flex min-w-[60px] flex-1 flex-col items-center justify-end gap-2"
-              key={campaign.id}
-            >
-              <div className="-mb-1 text-[11px] font-extrabold text-[var(--ink)]">
-                <AnimatedNumber value={campaign.rate} suffix="%" />
+          {visible.map((campaign) => (
+            <li key={campaign.id}>
+              <div className="campaign-clicks-row-heading">
+                <Link href={`/campaigns/${campaign.id}`}>{campaign.name}</Link>
+                <span>
+                  {campaign.rate.toLocaleString("pt-BR", {
+                    maximumFractionDigits: 2,
+                  })}
+                  %
+                </span>
               </div>
-              <div className="campaign-clicks-track flex items-end overflow-hidden bg-[var(--surface-soft)]">
+              <div className="campaign-clicks-bar" aria-hidden="true">
                 <div
-                  className="w-full rounded-[9px_9px_0_0] bg-[var(--chart-series)] transition-[height] duration-500 ease-in-out"
                   style={{
-                    height: `${Math.min(100, Math.max(0, campaign.rate))}%`,
+                    width: `${Math.min(100, Math.max(0, campaign.rate))}%`,
                   }}
                 />
               </div>
-              <span
-                className="campaign-clicks-name text-[11px] text-[var(--text-muted)]"
-                title={campaign.name}
-              >
-                {campaign.name}
-              </span>
-            </div>
+            </li>
           ))}
-        </div>
+        </ol>
+      ) : (
+        <p className="campaign-clicks-empty" role="status">
+          Nenhuma campanha incluída nos indicadores deste filtro.
+        </p>
+      )}
+      <div className="campaign-clicks-footer">
+        <span>{total.toLocaleString("pt-BR")} entregas no filtro</span>
+        {pages > 1 && (
+          <nav
+            className="campaign-clicks-pagination"
+            aria-label="Páginas do gráfico de cliques"
+          >
+            <button
+              type="button"
+              aria-label="Campanhas anteriores"
+              disabled={currentPage === 0}
+              onClick={() => setPage(currentPage - 1)}
+            >
+              Anterior
+            </button>
+            <span aria-live="polite">
+              {currentPage + 1} de {pages}
+            </span>
+            <button
+              type="button"
+              aria-label="Próximas campanhas"
+              disabled={currentPage === pages - 1}
+              onClick={() => setPage(currentPage + 1)}
+            >
+              Próxima
+            </button>
+          </nav>
+        )}
       </div>
-      <div className="mt-3 flex flex-wrap justify-between gap-3 text-[11px] text-[var(--text-muted)]">
-        <span className="inline-flex items-center gap-[7px] text-[var(--text-muted)]">
-          <i className="size-1.5 rounded-full bg-[var(--chart-series)]" />
-          Cliques ÷ entregas¹
-        </span>
-        <span>Entregas no filtro: {total.toLocaleString("pt-BR")}</span>
-      </div>
-      <p className="campaign-test-hint">
-        ¹ Sem entregas registradas, a base é o total de participações da
-        campanha.
+      <p className="campaign-clicks-note">
+        Cliques ÷ entregas. Sem entregas registradas, a base é o total de
+        participações da campanha.
       </p>
     </article>
   );
