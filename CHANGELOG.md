@@ -1,6 +1,5 @@
 # Change log e passagem de contexto
 
-
 ### Rankings de pessoas compactos — 2026-10-28
 
 - Reduzidos padding (28 para 20 px), título (20 para 16 px), avatares (36 para 28 px), espaço antes da lista (28 para 16 px) e altura mínima das linhas (68 para 52 px). Removida a altura mínima de 316 px do card para estados vazios.
