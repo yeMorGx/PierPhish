@@ -1,5 +1,16 @@
 # Change log e passagem de contexto
 
+### Dashboard em colunas, marcas e paginação da tabela — 2026-10-28
+
+- Botão Exportar para o Canva renderiza somente quando o usuário autenticado tem o e-mail gabriel.goes@piersec.com.br (comparação normalizada). Restrição de visibilidade do componente; não altera as autorizações existentes da API de exportação. Sem sessão ou para outros usuários, botão/modal não são renderizados.
+- Reorganizados hero/rankings na coluna principal e os dois gráficos na coluna lateral, cada coluna com fluxo vertical independente. O gráfico por empresa sobe para logo abaixo do gráfico de cliques, eliminando vãos entre linhas de cards com alturas diferentes. Rankings lado a lado têm altura igual.
+- Removida a numeração de posição dos rankings de pessoas e substituída por logos circulares das empresas das campanhas que contribuíram para as interações/reportes. Até duas logos aparecem quando há mais de uma empresa; título/nome acessível lista as empresas conhecidas. Sem logo usa inicial da empresa; sem associação conhecida, marcador de empresa não informada, sem inferir vínculo pelo nome ou e-mail. Contagens e ordem dos rankings preservadas.
+- Empresa selecionada no filtro (nome e marca) aparece acima de PierSec / Visão geral. Seleção Todas mostra Todas as empresas. Prop opcional mantém os consumidores de apresentação compatíveis sem atribuir empresa incorreta.
+- Sete indicadores da tabela recebem altura de 86 px e três linhas internas alinhadas para rótulo/valor/detalhe. Conferência de DOM local confirmou a mesma posição vertical para os sete valores.
+- Tabela passa a mostrar 10 campanhas por página, com opções de 20/50, contagem da faixa visível, Anterior/Próxima e transição curta de 140 ms, desativada com movimento reduzido. Filtros, novos dados e mudança do tamanho reiniciam/limitam a página. Paginação afeta somente as linhas, nunca totais e gráficos.
+- Controle Mostrar campanhas ocultas movido para o final, após tabela e paginação. Ao expandir, abre a página em que começam os testes; ao recolher volta à primeira página. Testes permanecem no banco, no final da lista e fora dos indicadores.
+- Validações aprovadas: TypeScript da aplicação sem diagnósticos após corrigir a passagem das empresas ao segundo ranking, Prettier, git diff --check e detector Impeccable sem apontamentos. Conferência visual desktop claro com demonstração: colunas sem vãos, logo/nome acompanhando seleção e ocultas abaixo da tabela; botão Canva ausente sem sessão. Dataset local tem quatro campanhas e rankings sem dados pessoais; navegação com muitos registros, logos em rankings reais, presença do botão na conta autorizada, escuro/mobile e deploy não foram conferidos em produção. Sem testes automatizados, banco alterado, campanha ou e-mail enviados. Commit/push em main ao concluir.
+
 ### Histórico de auditoria operacional — 2026-10-28
 
 - Integrado o componente de histórico enviado pelo usuário como AuditLog reutilizável em components/ui/audit-log.tsx, adaptado ao Base UI, Lucide e tokens existentes. Busca, filtros de responsável/tipo/estado, paginação de 12 itens, detalhes, abrir origem e copiar ID com confirmação/erro. Ações também ficam disponíveis por botão visível e menu de contexto. Não foram instaladas dependências Radix duplicadas nem usados dados fictícios do exemplo.

@@ -14,6 +14,10 @@ import type { DashboardCompanyFilterOption } from "./dashboard-company-filter";
 
 type DashboardContentProps = {
   companies: Pick<DashboardCompanyFilterOption, "id" | "name" | "logoUrl">[];
+  selectedCompany?: Pick<
+    DashboardCompanyFilterOption,
+    "id" | "name" | "logoUrl"
+  > | null;
   campaignBars: CampaignBar[];
   campaigns: Campaign[];
   campaignSummary: CampaignSummary[];
@@ -28,6 +32,7 @@ type DashboardContentProps = {
 
 export function DashboardContent({
   companies,
+  selectedCompany,
   campaignBars,
   campaigns,
   campaignSummary,
@@ -41,32 +46,44 @@ export function DashboardContent({
 }: DashboardContentProps) {
   return (
     <div className="bento-dashboard grid grid-cols-[minmax(0,1.35fr)_minmax(180px,0.62fr)_minmax(280px,0.82fr)] gap-[var(--cards-gap)] max-[1120px]:grid-cols-[minmax(0,1.2fr)_minmax(180px,0.7fr)] max-[1120px]:grid-rows-[auto_auto_auto] max-[720px]:flex max-[720px]:flex-col">
-      <OverviewHero
-        failuresAvailable={failuresAvailable}
-        campaigns={campaignSummary}
-        activeCampaigns={
-          campaignSummary.filter(
-            (campaign) => campaign.status === "In progress",
-          ).length
-        }
-        latestSync={campaigns.reduce<string | null>((latest, campaign) => {
-          if (!campaign.synced_at) return latest;
-          if (!latest || Date.parse(campaign.synced_at) > Date.parse(latest))
-            return campaign.synced_at;
-          return latest;
-        }, null)}
-        totals={totals}
-      />
-      <CampaignOpeningsCard campaigns={campaignBars} total={totals.delivered} />
-      <div className="dashboard-people-column">
-        <PeopleRankings
+      <div className="dashboard-primary-column">
+        <OverviewHero
+          company={selectedCompany}
+          failuresAvailable={failuresAvailable}
           campaigns={campaignSummary}
-          participantsByCampaign={participantsByCampaign}
-          loading={participantsLoading}
-          available={participantRankingsAvailable}
+          activeCampaigns={
+            campaignSummary.filter(
+              (campaign) => campaign.status === "In progress",
+            ).length
+          }
+          latestSync={campaigns.reduce<string | null>((latest, campaign) => {
+            if (!campaign.synced_at) return latest;
+            if (!latest || Date.parse(campaign.synced_at) > Date.parse(latest))
+              return campaign.synced_at;
+            return latest;
+          }, null)}
+          totals={totals}
+        />
+        <div className="dashboard-people-column">
+          <PeopleRankings
+            companies={companies}
+            campaigns={campaignSummary}
+            participantsByCampaign={participantsByCampaign}
+            loading={participantsLoading}
+            available={participantRankingsAvailable}
+          />
+        </div>
+      </div>
+      <div className="dashboard-secondary-column">
+        <CampaignOpeningsCard
+          campaigns={campaignBars}
+          total={totals.delivered}
+        />
+        <CompanySignalsChart
+          campaigns={campaignSummary}
+          companies={companies}
         />
       </div>
-      <CompanySignalsChart campaigns={campaignSummary} companies={companies} />
       <CampaignOverviewCard
         companies={companies}
         campaigns={tableCampaigns}

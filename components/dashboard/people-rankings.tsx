@@ -1,10 +1,15 @@
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useMemo } from "react";
 import type {
   CampaignParticipants,
   CampaignSummary,
 } from "@/components/dashboard/types";
 
+type CompanyBrand = { id: string; name: string; logoUrl?: string | null };
+
 type RankedPerson = {
+  interactionCompanyIds: string[];
+  reportedCompanyIds: string[];
   id: string;
   name: string;
   interactionCampaigns: number;
@@ -14,6 +19,7 @@ type RankedPerson = {
 };
 
 type PeopleRankingsProps = {
+  companies?: CompanyBrand[];
   campaigns: CampaignSummary[];
   participantsByCampaign: CampaignParticipants;
   loading: boolean;
@@ -33,7 +39,9 @@ function buildRankings(
   for (const campaign of campaigns) {
     const participants = participantsByCampaign[String(campaign.id)] ?? [];
     for (const participant of participants) {
-      const person = people.get(participant.id) ?? {
+      const person: RankedPerson = people.get(participant.id) ?? {
+        interactionCompanyIds: [],
+        reportedCompanyIds: [],
         id: participant.id,
         name: participant.name.trim() || "Nome não informado",
         interactionCampaigns: 0,
@@ -47,6 +55,18 @@ function buildRankings(
         person.clickedCampaigns += 1;
       if (participant.submitted) person.submittedCampaigns += 1;
       if (participant.reported) person.reportedCampaigns += 1;
+      if (campaign.company_id) {
+        if (
+          (participant.clicked || participant.submitted) &&
+          !person.interactionCompanyIds.includes(campaign.company_id)
+        )
+          person.interactionCompanyIds.push(campaign.company_id);
+        if (
+          participant.reported &&
+          !person.reportedCompanyIds.includes(campaign.company_id)
+        )
+          person.reportedCompanyIds.push(campaign.company_id);
+      }
       people.set(participant.id, person);
     }
   }
@@ -78,7 +98,48 @@ function buildRankings(
   };
 }
 
+function CompanyMarks({
+  companyIds,
+  companies,
+}: {
+  companyIds: string[];
+  companies: CompanyBrand[];
+}) {
+  const brands = companyIds
+    .map((id) => companies.find((company) => company.id === id))
+    .filter((company): company is CompanyBrand => Boolean(company));
+  const label = brands.length
+    ? brands.map((company) => company.name).join(", ")
+    : "Empresa não informada";
+  return (
+    <span
+      className="people-ranking-companies"
+      role="img"
+      aria-label={label}
+      title={label}
+    >
+      {brands.length ? (
+        brands.slice(0, 2).map((company) => (
+          <Avatar
+            key={company.id}
+            className="people-ranking-company-avatar after:hidden"
+            aria-hidden="true"
+          >
+            {company.logoUrl && <AvatarImage src={company.logoUrl} alt="" />}
+            <AvatarFallback>
+              {company.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        ))
+      ) : (
+        <span className="people-ranking-company-unknown">?</span>
+      )}
+    </span>
+  );
+}
+
 function RankingCard({
+  companies,
   title,
   description,
   metricLabel,
@@ -88,6 +149,7 @@ function RankingCard({
   loading,
   available,
 }: {
+  companies: CompanyBrand[];
   title: string;
   description: string;
   metricLabel: (count: number) => string;
@@ -121,22 +183,15 @@ function RankingCard({
         <ol className="people-ranking-list">
           {people.map((person) => (
             <li key={person.id}>
-              <span className="people-ranking-position" aria-hidden="true">
-                {String(
-                  people.findIndex(
-                    (entry) => entry[countField] === person[countField],
-                  ) + 1,
-                ).padStart(2, "0")}
-              </span>
+              <CompanyMarks
+                companyIds={
+                  countField === "interactionCampaigns"
+                    ? person.interactionCompanyIds
+                    : person.reportedCompanyIds
+                }
+                companies={companies}
+              />
               <span className="people-ranking-person">
-                <span className="people-ranking-avatar" aria-hidden="true">
-                  {person.name
-                    .split(/\s+/)
-                    .filter(Boolean)
-                    .slice(0, 2)
-                    .map((part) => part[0])
-                    .join("")}
-                </span>
                 <span className="people-ranking-identity">
                   <strong className="people-ranking-name">{person.name}</strong>
                   {countField === "interactionCampaigns" && (
@@ -166,6 +221,7 @@ function RankingCard({
 }
 
 export function PeopleRankings({
+  companies = [],
   campaigns,
   participantsByCampaign,
   loading,
@@ -179,6 +235,7 @@ export function PeopleRankings({
   return (
     <>
       <RankingCard
+        companies={companies}
         title="Pessoas mais recorrentes"
         description="Mais campanhas com clique ou envio de dados. Cada campanha conta uma vez por pessoa."
         metricLabel={campaignCountLabel}
@@ -190,6 +247,7 @@ export function PeopleRankings({
       />
       <RankingCard
         title="Pessoas que mais reportam"
+        companies={companies}
         description="Campanhas em que cada pessoa reportou uma mensagem."
         metricLabel={campaignCountLabel}
         countField="reportedCampaigns"

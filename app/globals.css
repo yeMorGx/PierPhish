@@ -18292,3 +18292,165 @@ html[data-theme="dark"] .bento-shell .header-sync-button:focus-visible {
   outline: none;
   box-shadow: none;
 }
+/* Independent columns remove gaps caused by cards of different heights. */
+.dashboard-primary-column,
+.dashboard-secondary-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-self: start;
+  min-width: 0;
+}
+.dashboard-primary-column {
+  grid-column: span 7;
+}
+.dashboard-secondary-column {
+  grid-column: span 5;
+}
+.dashboard-primary-column > .surface-card,
+.dashboard-secondary-column > .surface-card {
+  width: 100%;
+  align-self: stretch;
+}
+.dashboard-primary-column .operational-hero {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 24px !important;
+}
+.dashboard-primary-column .dashboard-people-column {
+  width: 100%;
+  align-items: stretch;
+}
+.dashboard-primary-column .people-ranking-card {
+  height: 100%;
+}
+.operational-hero-company {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--operational-hero-text);
+}
+.hero-company-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.people-ranking-companies {
+  display: flex;
+  align-items: center;
+  min-width: 28px;
+}
+.people-ranking-company-avatar,
+.people-ranking-company-unknown {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  padding: 0;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 11px;
+}
+.people-ranking-company-avatar + .people-ranking-company-avatar {
+  margin-left: -14px;
+}
+.dashboard-people-column .people-ranking-list li {
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+}
+.campaign-metric-groups {
+  align-items: start;
+}
+.campaign-metric-group-title {
+  min-height: 18px;
+}
+.bento-dashboard .campaign-metrics-row .campaign-overview-metric {
+  display: grid;
+  grid-template-rows: 24px 24px 14px;
+  row-gap: 2px;
+  align-content: start;
+  height: 86px;
+  padding: 10px 12px;
+}
+.campaign-metrics-row .campaign-overview-metric > span {
+  grid-row: 1;
+  font-size: 11px;
+  line-height: 12px;
+}
+.campaign-metrics-row .campaign-overview-metric > strong {
+  grid-row: 2;
+  margin-top: 0;
+  align-self: center;
+  font-size: 21px;
+  line-height: 1;
+}
+.campaign-metrics-row .campaign-overview-metric > small {
+  grid-row: 3;
+}
+.campaign-table-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.campaign-table-pagination label,
+.campaign-table-pagination > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.campaign-table-pagination select,
+.campaign-table-pagination button {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+.campaign-table-pagination button {
+  cursor: pointer;
+}
+.campaign-table-pagination button:hover:not(:disabled),
+.campaign-table-pagination :focus-visible {
+  background: var(--surface-muted);
+}
+.campaign-table-pagination button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.campaign-table-pagination :focus {
+  outline: none;
+  box-shadow: none;
+}
+@media (max-width: 1120px) {
+  .dashboard-primary-column,
+  .dashboard-secondary-column {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 720px) {
+  .dashboard-primary-column .operational-hero {
+    padding: 20px !important;
+  }
+  .dashboard-primary-column .dashboard-people-column {
+    grid-template-columns: 1fr;
+  }
+  .campaign-table-pagination > div {
+    flex-wrap: wrap;
+  }
+}

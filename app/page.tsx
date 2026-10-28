@@ -772,6 +772,11 @@ export default function Home() {
       ) : (
         <div data-tour="dashboard-content">
           <DashboardContent
+            selectedCompany={
+              companyFilters.find(
+                (company) => company.id === selectedCompanyId,
+              ) ?? null
+            }
             companies={(companies ?? []).filter(
               (company) => company.workspaceId === activeWorkspaceId,
             )}

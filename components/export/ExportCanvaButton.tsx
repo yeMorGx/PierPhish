@@ -52,7 +52,7 @@ export function ExportCanvaButton({
   campaigns,
   totals,
 }: ExportCanvaButtonProps) {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [templateFile, setTemplateFile] = useState<File | null>(null);
@@ -210,6 +210,9 @@ export function ExportCanvaButton({
       setLoading(false);
     }
   }
+
+  if (user?.email?.trim().toLowerCase() !== "gabriel.goes@piersec.com.br")
+    return null;
 
   return (
     <>

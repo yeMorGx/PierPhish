@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { DeliveryIssuesDialog } from "./delivery-issues-dialog";
 import Link from "next/link";
 import { ContextMenu } from "@base-ui/react/context-menu";
@@ -109,6 +110,9 @@ export function CampaignOverviewCard({
 }: CampaignOverviewCardProps) {
   const { logos } = useCampaignLogos();
   const [showTests, setShowTests] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const [pageSize, setPageSize] = useState(10);
+  const [pagination, setPagination] = useState({ scope: "", page: 0 });
   const [issuesOpen, setIssuesOpen] = useState(false);
   const recentCampaigns = [...campaigns].sort(
     (first, second) =>
@@ -119,6 +123,31 @@ export function CampaignOverviewCard({
   const countedCampaigns = recentCampaigns.filter((c) => !campaignIsTest(c));
   const hiddenCount = recentCampaigns.length - countedCampaigns.length;
   const visibleCampaigns = showTests ? recentCampaigns : countedCampaigns;
+  const scopeFor = (expanded: boolean) =>
+    expanded +
+    ":" +
+    pageSize +
+    ":" +
+    recentCampaigns.map((c) => c.id).join(",");
+  const tableScope = scopeFor(showTests);
+  const pages = Math.max(1, Math.ceil(visibleCampaigns.length / pageSize));
+  const currentPage =
+    pagination.scope === tableScope ? Math.min(pagination.page, pages - 1) : 0;
+  const pageCampaigns = visibleCampaigns.slice(
+    currentPage * pageSize,
+    (currentPage + 1) * pageSize,
+  );
+  const changePage = (page: number) =>
+    setPagination({ scope: tableScope, page });
+  const toggleTests = () => {
+    const expanded = !showTests;
+    setPagination({
+      scope: scopeFor(expanded),
+      page: expanded ? Math.floor(countedCampaigns.length / pageSize) : 0,
+    });
+    setShowTests(expanded);
+  };
+
   const deliveryGap = totals.people - totals.delivered - totals.errors;
   const reconciliationAvailable =
     failuresAvailable &&
@@ -281,21 +310,6 @@ export function CampaignOverviewCard({
         ))}
       </div>
 
-      {hiddenCount > 0 && (
-        <button
-          type="button"
-          className="campaign-hidden-toggle"
-          aria-expanded={showTests}
-          aria-controls="campaign-table-region"
-          onClick={() => setShowTests((v) => !v)}
-        >
-          <Icon name="chevron" size={14} />
-          {showTests
-            ? "Ocultar campanhas de teste"
-            : "Mostrar campanhas ocultas"}{" "}
-          ({hiddenCount})
-        </button>
-      )}
       <div
         id="campaign-table-region"
         role="region"
@@ -346,190 +360,271 @@ export function CampaignOverviewCard({
               </th>
             </tr>
           </thead>
-          <tbody role="rowgroup">
-            {visibleCampaigns.map((campaign, index) => {
-              const startedAt = startTimestamp(campaign.launch_date);
-              const company = companies.find(
-                (item) => item.id === campaign.company_id,
-              );
-              return (
-                <ContextMenu.Root key={campaign.id}>
-                  <ContextMenu.Trigger
-                    render={<tr />}
-                    tabIndex={onMarkAsTest ? 0 : undefined}
-                    role="row"
-                    className="campaign-overview-table-row border-b border-[var(--line-soft)] text-[12px] text-[var(--text-muted)] last:border-0 hover:bg-[var(--surface-soft)]"
-                    data-test-campaign={campaignIsTest(campaign) || undefined}
-                  >
-                    <td
-                      role="cell"
-                      data-label="Posição"
-                      className="px-4 py-3.5 font-bold text-[var(--text-muted)]"
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.tbody
+              key={tableScope + ":" + currentPage}
+              role="rowgroup"
+              initial={reducedMotion ? false : { opacity: 0, x: 6 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={reducedMotion ? { opacity: 1 } : { opacity: 0, x: -6 }}
+              transition={{
+                duration: reducedMotion ? 0 : 0.14,
+                ease: "easeOut",
+              }}
+            >
+              {pageCampaigns.map((campaign, index) => {
+                const startedAt = startTimestamp(campaign.launch_date);
+                const company = companies.find(
+                  (item) => item.id === campaign.company_id,
+                );
+                return (
+                  <ContextMenu.Root key={campaign.id}>
+                    <ContextMenu.Trigger
+                      render={<tr />}
+                      tabIndex={onMarkAsTest ? 0 : undefined}
+                      role="row"
+                      className="campaign-overview-table-row border-b border-[var(--line-soft)] text-[12px] text-[var(--text-muted)] last:border-0 hover:bg-[var(--surface-soft)]"
+                      data-test-campaign={campaignIsTest(campaign) || undefined}
                     >
-                      {String(index + 1).padStart(2, "0")}
-                    </td>
-                    <td
-                      role="cell"
-                      data-label="Campanha"
-                      className="px-4 py-3.5"
-                    >
-                      <Link
-                        className="campaign-link flex min-w-0 items-center gap-3 hover:text-[var(--ink)]"
-                        href={`/campaigns/${campaign.id}`}
+                      <td
+                        role="cell"
+                        data-label="Posição"
+                        className="px-4 py-3.5 font-bold text-[var(--text-muted)]"
                       >
-                        <CampaignLogo
-                          fallback={campaign.name.charAt(0).toUpperCase()}
-                          src={logos[String(campaign.id)]}
-                        />
-                        <span className="flex min-w-0 flex-col">
-                          <strong className="campaign-name text-[12px] break-words text-[var(--ink)]">
-                            {campaign.name}
-                          </strong>
-                          <span className="campaign-id mt-0.5 text-[11px] text-[var(--text-muted)]">
-                            ID {campaign.id}
-                          </span>
-                        </span>
-                      </Link>
-                    </td>
-                    <td role="cell" data-label="Início" className="px-4 py-3.5">
-                      {Number.isFinite(startedAt) ? (
-                        <time
-                          className="campaign-overview-start"
-                          dateTime={new Date(startedAt).toISOString()}
+                        {String(currentPage * pageSize + index + 1).padStart(
+                          2,
+                          "0",
+                        )}
+                      </td>
+                      <td
+                        role="cell"
+                        data-label="Campanha"
+                        className="px-4 py-3.5"
+                      >
+                        <Link
+                          className="campaign-link flex min-w-0 items-center gap-3 hover:text-[var(--ink)]"
+                          href={`/campaigns/${campaign.id}`}
                         >
-                          <span>{startDateFormatter.format(startedAt)}</span>
-                          <span className="campaign-overview-start-time">
-                            {startTimeFormatter.format(startedAt)}
+                          <CampaignLogo
+                            fallback={campaign.name.charAt(0).toUpperCase()}
+                            src={logos[String(campaign.id)]}
+                          />
+                          <span className="flex min-w-0 flex-col">
+                            <strong className="campaign-name text-[12px] break-words text-[var(--ink)]">
+                              {campaign.name}
+                            </strong>
+                            <span className="campaign-id mt-0.5 text-[11px] text-[var(--text-muted)]">
+                              ID {campaign.id}
+                            </span>
                           </span>
-                        </time>
-                      ) : (
-                        <span>Não informada</span>
-                      )}
-                    </td>
-                    <td
-                      role="cell"
-                      data-label="Empresa"
-                      className="px-4 py-3.5"
-                    >
-                      {company ? (
-                        <div className="flex min-w-0 items-center gap-2">
-                          <Avatar
-                            className="campaign-company-logo after:hidden"
-                            aria-hidden="true"
+                        </Link>
+                      </td>
+                      <td
+                        role="cell"
+                        data-label="Início"
+                        className="px-4 py-3.5"
+                      >
+                        {Number.isFinite(startedAt) ? (
+                          <time
+                            className="campaign-overview-start"
+                            dateTime={new Date(startedAt).toISOString()}
                           >
-                            {company.logoUrl && (
-                              <AvatarImage src={company.logoUrl} alt="" />
-                            )}
-                            <AvatarFallback>
-                              {company.name.trim().charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="min-w-0 text-[12px] font-medium break-words text-[var(--ink)]">
-                            {company.name}
+                            <span>{startDateFormatter.format(startedAt)}</span>
+                            <span className="campaign-overview-start-time">
+                              {startTimeFormatter.format(startedAt)}
+                            </span>
+                          </time>
+                        ) : (
+                          <span>Não informada</span>
+                        )}
+                      </td>
+                      <td
+                        role="cell"
+                        data-label="Empresa"
+                        className="px-4 py-3.5"
+                      >
+                        {company ? (
+                          <div className="flex min-w-0 items-center gap-2">
+                            <Avatar
+                              className="campaign-company-logo after:hidden"
+                              aria-hidden="true"
+                            >
+                              {company.logoUrl && (
+                                <AvatarImage src={company.logoUrl} alt="" />
+                              )}
+                              <AvatarFallback>
+                                {company.name.trim().charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="min-w-0 text-[12px] font-medium break-words text-[var(--ink)]">
+                              {company.name}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[12px] text-[var(--text-muted)]">
+                            Empresa não informada
                           </span>
-                        </div>
-                      ) : (
-                        <span className="text-[12px] text-[var(--text-muted)]">
-                          Empresa não informada
+                        )}
+                      </td>
+                      <td
+                        role="cell"
+                        data-label="Entregues"
+                        className="px-4 py-3.5"
+                      >
+                        <span>
+                          <AnimatedNumber value={campaign.deliveredPeople} />/
+                          <AnimatedNumber value={campaign.people} />
                         </span>
-                      )}
-                    </td>
-                    <td
-                      role="cell"
-                      data-label="Entregues"
-                      className="px-4 py-3.5"
-                    >
-                      <span>
-                        <AnimatedNumber value={campaign.deliveredPeople} />/
-                        <AnimatedNumber value={campaign.people} />
-                      </span>
-                    </td>
-                    <td
-                      role="cell"
-                      data-label="Abertura"
-                      className="px-4 py-3.5"
-                    >
-                      <CampaignRate
-                        value={campaign.openRate}
-                        label="Taxa de abertura"
-                      />
-                    </td>
-                    <td
-                      role="cell"
-                      data-label="Cliques"
-                      className="px-4 py-3.5"
-                    >
-                      <CampaignRate
-                        value={campaign.clickRate}
-                        classification={
-                          campaign.people
-                            ? clickRateLevel(
-                                rawClickRate(
-                                  campaign.clickedPeople,
-                                  campaign.deliveredPeople,
-                                  campaign.people,
-                                ),
-                              )
-                            : undefined
-                        }
-                        label="Taxa de cliques"
-                      />
-                    </td>
-                    <td
-                      role="cell"
-                      data-label="Reportes"
-                      className="px-4 py-3.5"
-                    >
-                      <AnimatedNumber value={campaign.reportedPeople} />
-                    </td>
-                    <td role="cell" data-label="Status" className="px-4 py-3.5">
-                      <span className={statusClass(campaign.status)}>
-                        {statusLabel(campaign.status)}
-                      </span>
-                      {campaignIsTest(campaign) && (
-                        <small className="campaign-test-badge">
-                          Teste · fora dos indicadores
-                        </small>
-                      )}
-                    </td>
-                  </ContextMenu.Trigger>
-                  <ContextMenu.Portal>
-                    <ContextMenu.Positioner>
-                      <ContextMenu.Popup className="campaign-test-menu">
-                        <ContextMenu.Item
-                          disabled={
-                            !onMarkAsTest || /teste/i.test(campaign.name)
+                      </td>
+                      <td
+                        role="cell"
+                        data-label="Abertura"
+                        className="px-4 py-3.5"
+                      >
+                        <CampaignRate
+                          value={campaign.openRate}
+                          label="Taxa de abertura"
+                        />
+                      </td>
+                      <td
+                        role="cell"
+                        data-label="Cliques"
+                        className="px-4 py-3.5"
+                      >
+                        <CampaignRate
+                          value={campaign.clickRate}
+                          classification={
+                            campaign.people
+                              ? clickRateLevel(
+                                  rawClickRate(
+                                    campaign.clickedPeople,
+                                    campaign.deliveredPeople,
+                                    campaign.people,
+                                  ),
+                                )
+                              : undefined
                           }
-                          onClick={() =>
-                            void onMarkAsTest?.(campaign, !campaign.is_test)
-                          }
-                        >
-                          {/teste/i.test(campaign.name)
-                            ? "Teste identificado pelo nome"
-                            : campaign.is_test
-                              ? "Incluir nos indicadores"
-                              : "Marcar como teste"}
-                        </ContextMenu.Item>
-                      </ContextMenu.Popup>
-                    </ContextMenu.Positioner>
-                  </ContextMenu.Portal>
-                </ContextMenu.Root>
-              );
-            })}
-            {!visibleCampaigns.length && (
-              <tr role="row">
-                <td
-                  role="cell"
-                  className="px-4 py-8 text-center text-[11px] text-[var(--text-muted)]"
-                  colSpan={9}
-                >
-                  Nenhuma campanha encontrada.
-                </td>
-              </tr>
-            )}
-          </tbody>
+                          label="Taxa de cliques"
+                        />
+                      </td>
+                      <td
+                        role="cell"
+                        data-label="Reportes"
+                        className="px-4 py-3.5"
+                      >
+                        <AnimatedNumber value={campaign.reportedPeople} />
+                      </td>
+                      <td
+                        role="cell"
+                        data-label="Status"
+                        className="px-4 py-3.5"
+                      >
+                        <span className={statusClass(campaign.status)}>
+                          {statusLabel(campaign.status)}
+                        </span>
+                        {campaignIsTest(campaign) && (
+                          <small className="campaign-test-badge">
+                            Teste · fora dos indicadores
+                          </small>
+                        )}
+                      </td>
+                    </ContextMenu.Trigger>
+                    <ContextMenu.Portal>
+                      <ContextMenu.Positioner>
+                        <ContextMenu.Popup className="campaign-test-menu">
+                          <ContextMenu.Item
+                            disabled={
+                              !onMarkAsTest || /teste/i.test(campaign.name)
+                            }
+                            onClick={() =>
+                              void onMarkAsTest?.(campaign, !campaign.is_test)
+                            }
+                          >
+                            {/teste/i.test(campaign.name)
+                              ? "Teste identificado pelo nome"
+                              : campaign.is_test
+                                ? "Incluir nos indicadores"
+                                : "Marcar como teste"}
+                          </ContextMenu.Item>
+                        </ContextMenu.Popup>
+                      </ContextMenu.Positioner>
+                    </ContextMenu.Portal>
+                  </ContextMenu.Root>
+                );
+              })}
+              {!visibleCampaigns.length && (
+                <tr role="row">
+                  <td
+                    role="cell"
+                    className="px-4 py-8 text-center text-[11px] text-[var(--text-muted)]"
+                    colSpan={9}
+                  >
+                    Nenhuma campanha encontrada.
+                  </td>
+                </tr>
+              )}
+            </motion.tbody>
+          </AnimatePresence>
         </table>
       </div>
+      <nav
+        className="campaign-table-pagination"
+        aria-label="Paginação das campanhas"
+      >
+        <label>
+          Por página
+          <select
+            aria-label="Campanhas por página"
+            value={pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+          >
+            {[10, 20, 50].map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </label>
+        <span aria-live="polite">
+          {visibleCampaigns.length ? currentPage * pageSize + 1 : 0}–
+          {Math.min((currentPage + 1) * pageSize, visibleCampaigns.length)} de{" "}
+          {visibleCampaigns.length}
+        </span>
+        <div>
+          <button
+            type="button"
+            disabled={currentPage === 0}
+            onClick={() => changePage(currentPage - 1)}
+          >
+            Anterior
+          </button>
+          <span>
+            Página {currentPage + 1} de {pages}
+          </span>
+          <button
+            type="button"
+            disabled={currentPage === pages - 1}
+            onClick={() => changePage(currentPage + 1)}
+          >
+            Próxima
+          </button>
+        </div>
+      </nav>
+      {hiddenCount > 0 && (
+        <button
+          type="button"
+          className="campaign-hidden-toggle"
+          aria-expanded={showTests}
+          aria-controls="campaign-table-region"
+          onClick={toggleTests}
+        >
+          <Icon name="chevron" size={14} />
+          {showTests
+            ? "Ocultar campanhas de teste"
+            : "Mostrar campanhas ocultas"}{" "}
+          ({hiddenCount})
+        </button>
+      )}
       <DeliveryIssuesDialog
         open={issuesOpen}
         onOpenChange={setIssuesOpen}

@@ -1,3 +1,4 @@
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { formatDate } from "@/lib/format";
 import { AnimatedNumber } from "@/components/dashboard/animated-number";
 import { HeroMaturity } from "@/components/dashboard/hero-maturity";
@@ -13,6 +14,7 @@ type OverviewHeroProps = {
   totals: OverviewTotals;
   campaigns: CampaignSummary[];
   failuresAvailable?: boolean;
+  company?: { name: string; logoUrl: string | null } | null;
 };
 
 export function OverviewHero({
@@ -21,6 +23,7 @@ export function OverviewHero({
   totals,
   campaigns,
   failuresAvailable = false,
+  company,
 }: OverviewHeroProps) {
   const hasCampaigns = campaigns.length > 0;
   const hasMetric = (field: "submitted_data" | "email_reported") =>
@@ -51,6 +54,25 @@ export function OverviewHero({
       </div>
       <div className="operational-hero-content">
         <div className="operational-hero-main">
+          {company !== undefined && (
+            <div className="operational-hero-company">
+              {company ? (
+                <>
+                  <Avatar className="hero-company-logo after:hidden">
+                    {company.logoUrl && (
+                      <AvatarImage src={company.logoUrl} alt="" />
+                    )}
+                    <AvatarFallback>
+                      {company.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span>{company.name}</span>
+                </>
+              ) : (
+                <span>Todas as empresas</span>
+              )}
+            </div>
+          )}
           <p className="operational-hero-eyebrow">PierSec / Visão geral</p>
           <h2>
             <AnimatedNumber value={totals.campaigns} />{" "}
