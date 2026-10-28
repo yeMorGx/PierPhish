@@ -1,5 +1,12 @@
 # Change log e passagem de contexto
 
+### Fundo claro no fluxo de autenticação — 2026-10-28
+
+- O fluxo de autenticação agora mantém fundo, painel e controles no tema claro mesmo quando o tema global está escuro. A regra vale para login, primeiro acesso/troca de senha, MFA, esqueci minha senha e redefinição de senha, todos renderizados pelo mesmo `AuthPageShell`.
+- Escopados os tokens claros em `.login-page` e removido o vínculo com o canvas temático global. A ilustração escura da lateral permanece como imagem do produto; a área de formulário fica clara.
+- Verificação local com tema global escuro: `/login`, `/esqueci-senha`, `/redefinir-senha`, `/alterar-senha` e `/mfa` retornaram fundo/painel brancos e `color-scheme: light`. Não foi possível verificar um fluxo autenticado real, produção ou deploy.
+- Próximos passos: conferir em produção após o deploy, incluindo recuperação e primeiro acesso com uma conta controlada.
+
 ### Desempenho ao abrir “Criar acesso” — 2026-10-28
 
 - A tela de usuários mantinha a tabela inteira montada, inclusive as linhas do diretório escondido, e refazia a busca em cada troca de aba. Isso tornava a navegação pesada quando a lista crescia.

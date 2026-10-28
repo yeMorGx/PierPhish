@@ -20,7 +20,7 @@ export function AuthPageShell({
   children,
 }: AuthPageShellProps) {
   return (
-    <main className="login-page theme-canvas" aria-busy={ariaBusy}>
+    <main className="login-page" aria-busy={ariaBusy}>
       <section className="login-panel">
         <div className="login-panel-inner">
           <LoginBrand />
