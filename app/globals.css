@@ -17173,6 +17173,8 @@ html[data-theme][data-card-style] .companies-security-note svg {
   --liquid-glass-tint: rgb(0 0 0 / 12%);
 }
 .bento-dashboard > .overview-hero-card.operational-hero {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
   padding: 24px !important;
 }
@@ -17182,7 +17184,9 @@ html[data-theme][data-card-style] .companies-security-note svg {
 .operational-hero-content {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
-  grid-template-areas: "main maturity" "summary summary" "footer footer";
+  grid-template-areas: "main maturity" "footer footer";
+  grid-template-rows: minmax(min-content, 1fr) auto;
+  flex: 1;
   column-gap: 24px;
   row-gap: 16px;
   align-items: center;
@@ -17206,7 +17210,10 @@ html[data-theme][data-card-style] .companies-security-note svg {
 }
 .operational-hero-footer {
   grid-area: footer;
-  padding-top: 16px;
+  align-self: end;
+  display: block;
+  border-top: 0;
+  padding-top: 0;
   font-size: 12px;
 }
 .piersec-liquid-glass {
@@ -17366,7 +17373,8 @@ html[data-theme][data-card-style] .companies-security-note svg {
 @media (max-width: 620px) {
   .operational-hero-content {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "main" "maturity" "summary" "footer";
+    grid-template-areas: "main" "maturity" "footer";
+    grid-template-rows: auto auto auto;
     row-gap: 12px;
   }
   .bento-dashboard > .overview-hero-card.operational-hero {
@@ -17543,7 +17551,6 @@ html[data-theme][data-card-style] .companies-security-note svg {
 }
 
 .operational-hero-summary {
-  grid-area: summary;
   border-top: 1px solid var(--operational-hero-line);
   padding-top: 20px;
 }
@@ -17559,6 +17566,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
   line-height: 1.5;
 }
 .operational-hero-summary dd {
+  color: var(--operational-hero-text);
   margin: 8px 0 0;
   font-size: 28px;
   font-weight: 600;
@@ -17569,4 +17577,15 @@ html[data-theme][data-card-style] .companies-security-note svg {
   .operational-hero-summary dl {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.operational-hero-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px 24px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--operational-hero-line);
 }

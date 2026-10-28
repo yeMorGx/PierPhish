@@ -1,5 +1,11 @@
 # Change log e passagem de contexto
 
+### Indicadores como rodapé do card principal — 2026-10-28
+
+- Agrupados os quatro indicadores e a linha de andamento/sincronização em um footer semântico único, ancorado à base do hero. O conteúdo ocupa a altura disponível e a primeira linha absorve o espaço extra, evitando área vazia abaixo do rodapé. No celular, mantém empilhamento e indicadores em duas colunas.
+- Preservados todos os valores, cálculos, filtros e Liquid Glass. Estilos via tokens, sem nova decoração ou outline.
+- Validações: formatação, sintaxe TSX e revisão do diff; commit/push em main ao concluir. Deploy e conferência visual em produção não verificados.
+
 ### Remoção dos trechos marcados no hero — 2026-10-28
 
 - Removidas a observação abaixo dos indicadores e toda a seção Próxima ação, incluindo botão e lógica de escolha da campanha. Limpos imports, CSS e áreas de grid sem uso, eliminando também o espaço reservado ao trecho.

@@ -58,35 +58,37 @@ export function OverviewHero({
           </h2>
         </div>
         <HeroMaturity totals={totals} campaigns={campaigns} />
-        <section
-          className="operational-hero-summary"
-          aria-label="Resumo de envio e risco"
-        >
-          <dl>
-            {metrics.map((metric) => (
-              <div key={metric.label}>
-                <dt>{metric.label}</dt>
-                <dd>
-                  {metric.value === null ? (
-                    <span aria-label="Dado não disponível">—</span>
-                  ) : (
-                    <AnimatedNumber value={metric.value} />
-                  )}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-        <div className="operational-hero-footer">
-          <span>
-            <strong>{activeCampaigns}</strong> em andamento
-          </span>
-          <span>
-            {latestSync
-              ? `Atualizado ${formatDate(latestSync)}`
-              : "Aguardando sincronização"}
-          </span>
-        </div>
+        <footer className="operational-hero-footer">
+          <section
+            className="operational-hero-summary"
+            aria-label="Resumo de envio e risco"
+          >
+            <dl>
+              {metrics.map((metric) => (
+                <div key={metric.label}>
+                  <dt>{metric.label}</dt>
+                  <dd>
+                    {metric.value === null ? (
+                      <span aria-label="Dado não disponível">—</span>
+                    ) : (
+                      <AnimatedNumber value={metric.value} />
+                    )}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+          <div className="operational-hero-status">
+            <span>
+              <strong>{activeCampaigns}</strong> em andamento
+            </span>
+            <span>
+              {latestSync
+                ? `Atualizado ${formatDate(latestSync)}`
+                : "Aguardando sincronização"}
+            </span>
+          </div>
+        </footer>
       </div>
     </article>
   );
