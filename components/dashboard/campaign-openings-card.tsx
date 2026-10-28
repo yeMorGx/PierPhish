@@ -28,11 +28,12 @@ export function CampaignOpeningsCard({
         </Link>
       </div>
       <div
-        className="flex min-h-0 flex-1 items-end overflow-x-auto"
+        className="campaign-clicks-scroll flex items-end overflow-x-auto"
+        tabIndex={0}
         aria-label="Taxa de cliques de todas as campanhas"
       >
         <div
-          className="flex h-full min-w-full items-end gap-[clamp(12px,2vw,24px)] px-3 pt-6"
+          className="campaign-clicks-plot flex min-w-full items-end"
           style={{ minWidth: `${Math.max(campaigns.length * 76, 300)}px` }}
         >
           {campaigns.length === 0 && (
@@ -45,13 +46,13 @@ export function CampaignOpeningsCard({
           )}
           {campaigns.map((campaign) => (
             <div
-              className="flex h-full min-w-[52px] flex-1 flex-col items-center justify-end gap-[9px]"
+              className="flex min-w-[60px] flex-1 flex-col items-center justify-end gap-2"
               key={campaign.id}
             >
               <div className="-mb-1 text-[11px] font-extrabold text-[var(--ink)]">
                 <AnimatedNumber value={campaign.rate} suffix="%" />
               </div>
-              <div className="flex h-[66%] w-[min(44px,100%)] items-end overflow-hidden rounded-[9px_9px_0_0] bg-[var(--surface-soft)]">
+              <div className="campaign-clicks-track flex items-end overflow-hidden bg-[var(--surface-soft)]">
                 <div
                   className="w-full rounded-[9px_9px_0_0] bg-[var(--chart-series)] transition-[height] duration-500 ease-in-out"
                   style={{
@@ -60,16 +61,16 @@ export function CampaignOpeningsCard({
                 />
               </div>
               <span
-                className="max-w-[70px] overflow-hidden text-[11px] text-ellipsis whitespace-nowrap text-[var(--text-muted)]"
+                className="campaign-clicks-name text-[11px] text-[var(--text-muted)]"
                 title={campaign.name}
               >
-                {campaign.name.split(" ").slice(0, 2).join(" ")}
+                {campaign.name}
               </span>
             </div>
           ))}
         </div>
       </div>
-      <div className="mt-[15px] flex justify-between gap-3 text-[11px] text-[var(--text-muted)]">
+      <div className="mt-3 flex flex-wrap justify-between gap-3 text-[11px] text-[var(--text-muted)]">
         <span className="inline-flex items-center gap-[7px] text-[var(--text-muted)]">
           <i className="size-1.5 rounded-full bg-[var(--chart-series)]" />
           Cliques ÷ entregas¹

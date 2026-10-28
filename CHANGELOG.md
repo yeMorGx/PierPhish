@@ -1,5 +1,12 @@
 # Change log e passagem de contexto
 
+### Gráfico de cliques com espaço próprio e recorte do Liquid Glass — 2026-10-28
+
+- Ajustado especificamente o card **Clicados por campanhas**: barras com altura estável de 136 px, separação entre valor/gráfico/nome, nomes completos em até duas linhas e legenda que reorganiza em telas estreitas. Removida a cadeia de alturas percentuais que comprimia as barras conforme a altura do hero. Rolagem horizontal continua restrita ao gráfico, acessível por teclado, sem outline.
+- No desktop, a primeira linha usa sete colunas para o hero e cinco para o gráfico; em telas intermediárias o gráfico ocupa uma linha inteira. Os cálculos, campanhas incluídas e filtros permanecem os mesmos.
+- Liquid Glass continua usando a biblioteca existente; corrigido o box-sizing das camadas de brilho e aplicado recorte arredondado ao conjunto para impedir pontas fora das bordas. Tooltip continua em portal, fora do recorte.
+- Validações: Prettier, revisão do diff e detector Impeccable de layout sem apontamentos. TypeScript da aplicação aprovado, sem diagnósticos. Dashboard compilado e respondendo HTTP 200; conferência visual local em desktop com dados de demonstração confirmou barras com altura própria e contorno arredondado do vidro. A navegação inicial excedeu o tempo limite durante compilação, mas a inspeção posterior funcionou. Não foi validado com os dados reais em produção. Entrega por commit e push na branch main; deploy não verificado. Próximo passo: conferir a aparência no ambiente publicado, principalmente o gráfico com muitas campanhas e os cantos do vidro.
+
 Este arquivo registra o estado do projeto para continuar o trabalho em outro computador ou sessão.
 
 ## Regra para próximas alterações

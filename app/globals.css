@@ -9284,52 +9284,6 @@ html[data-card-style="apple"] .surface-card,
   font-weight: 500;
 }
 
-.bento-dashboard .campaign-openings-card > div:nth-of-type(2) {
-  margin-top: 24px;
-}
-
-.bento-dashboard .campaign-openings-card > div:nth-of-type(2) > div {
-  gap: 14px;
-  padding-right: 4px;
-  padding-left: 4px;
-}
-
-.bento-dashboard .campaign-openings-card > div:nth-of-type(2) > div > div {
-  min-width: 42px;
-}
-
-.bento-dashboard
-  .campaign-openings-card
-  > div:nth-of-type(2)
-  > div
-  > div
-  > div:nth-child(2) {
-  width: min(34px, 100%);
-  border-radius: 8px 8px 0 0;
-  background: #e5e6e4;
-}
-
-.bento-dashboard
-  .campaign-openings-card
-  > div:nth-of-type(2)
-  > div
-  > div
-  > div:nth-child(2)
-  > div {
-  border-radius: 8px 8px 0 0;
-  background: var(--chart-series) !important;
-}
-
-.bento-dashboard
-  .campaign-openings-card
-  > div:nth-of-type(2)
-  > div
-  > div
-  > div:first-child {
-  color: var(--ink) !important;
-  font-weight: 500;
-}
-
 .bento-dashboard .campaign-openings-card a {
   color: var(--text-muted);
 }
@@ -17287,6 +17241,9 @@ html[data-theme][data-card-style] .companies-security-note svg {
   min-width: 0;
   width: 100%;
   min-height: 180px;
+  border-radius: 16px;
+  clip-path: inset(0 round 16px);
+  isolation: isolate;
   color: inherit;
 }
 .piersec-liquid-glass-fallback {
@@ -17456,5 +17413,54 @@ html[data-theme][data-card-style] .companies-security-note svg {
   .piersec-liquid-glass * {
     transition: none !important;
     animation: none !important;
+  }
+}
+
+/* Keep the campaign chart independent of the hero's content height. */
+.bento-dashboard > .campaign-openings-card {
+  min-height: 0;
+}
+.campaign-clicks-scroll {
+  flex: none;
+  margin-top: 20px;
+  padding-bottom: 8px;
+}
+.campaign-clicks-scroll:focus-visible {
+  background: var(--surface-soft);
+}
+.campaign-clicks-plot {
+  gap: 16px;
+  padding: 4px;
+}
+.campaign-clicks-track {
+  height: 136px;
+  width: 36px;
+  border-radius: 8px 8px 0 0;
+}
+.campaign-clicks-name {
+  width: 72px;
+  height: 36px;
+  line-height: 18px;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.piersec-liquid-glass > span {
+  box-sizing: border-box;
+}
+@media (min-width: 1121px) {
+  .bento-dashboard > .overview-hero-card.operational-hero {
+    grid-column: span 7;
+  }
+  .bento-dashboard > .campaign-openings-card {
+    grid-column: span 5;
+  }
+}
+@media (min-width: 781px) and (max-width: 1120px) {
+  .bento-dashboard > .campaign-openings-card {
+    grid-column: 1 / -1;
   }
 }
