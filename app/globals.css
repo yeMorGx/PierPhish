@@ -17182,7 +17182,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
 .operational-hero-content {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
-  grid-template-areas: "main maturity" "footer footer";
+  grid-template-areas: "main maturity" "summary summary" "action action" "footer footer";
   column-gap: 24px;
   row-gap: 16px;
   align-items: center;
@@ -17366,7 +17366,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
 @media (max-width: 620px) {
   .operational-hero-content {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "main" "maturity" "footer";
+    grid-template-areas: "main" "maturity" "summary" "action" "footer";
     row-gap: 12px;
   }
   .bento-dashboard > .overview-hero-card.operational-hero {
@@ -17421,6 +17421,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
   }
 }
 .campaign-clicks-card {
+  align-self: start;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -17539,4 +17540,85 @@ html[data-theme][data-card-style] .companies-security-note svg {
   color: var(--text-muted);
   font-size: 12px;
   line-height: 1.6;
+}
+
+.operational-hero-summary {
+  grid-area: summary;
+  border-top: 1px solid var(--operational-hero-line);
+  padding-top: 20px;
+}
+.operational-hero-summary dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+.operational-hero-summary dt {
+  color: var(--operational-hero-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.operational-hero-summary dd {
+  margin: 8px 0 0;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.operational-hero-summary > p {
+  margin: 12px 0 0;
+  color: var(--operational-hero-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.operational-hero-action {
+  grid-area: action;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding-block: 4px;
+}
+.operational-hero-action > div {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.operational-hero-action strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.operational-hero-action p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--operational-hero-muted);
+  overflow-wrap: anywhere;
+}
+.operational-hero-action a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--operational-hero-text);
+  color: var(--operational-hero-bg);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+.operational-hero-action a:hover {
+  opacity: 0.9;
+}
+.operational-hero-action a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  background: var(--operational-hero-muted);
+}
+@media (max-width: 620px) {
+  .operational-hero-summary dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

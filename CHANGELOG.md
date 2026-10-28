@@ -1,5 +1,13 @@
 # Change log e passagem de contexto
 
+### Resumo de risco e envio no card principal — 2026-10-28
+
+- Após esclarecimento pelo material grill-me fornecido pelo usuário, definido resumo equilibrado de risco/envio com próxima ação baseada nos dados. Preenchido o espaço do hero com Entregues, Falhas registradas, Dados enviados e Reportes, mantendo maturidade à direita e informações de sincronização.
+- Métricas usam totais existentes dos filtros, sem fórmulas novas. Falhas respeitam failuresAvailable; envios de dados/reportes incompletos aparecem como não informados. Contagens explicam que uma pessoa pode aparecer em mais de uma campanha.
+- Próxima ação abre detalhes de uma campanha incluída no filtro: prioriza maior quantidade de envios de dados, depois cliques, depois falhas disponíveis; desempata por ID. Sem sinais positivos, leva à tabela atual. É apenas navegação, sem criar, confirmar ou enviar campanhas. Não representa avaliação de pessoas únicas nem garante cobertura completa de dados ausentes.
+- Layout sem cartões aninhados, via tokens do hero, com duas colunas de indicadores no celular, foco por sublinhado/fundo e Liquid Glass preservado. Gráfico adjacente deixa de esticar até a altura do hero para evitar espaço vazio dentro dele.
+- Validações: Prettier, detector Impeccable e diff aprovados; conferência visual desktop local com dados de demonstração confirmou indicadores e destino da ação. TypeScript da aplicação aprovado sem diagnósticos. Commit/push em main; deploy não verificado. Nenhuma operação de banco ou envio. Próximo passo: conferir dados reais, estados incompletos e tema escuro no ambiente publicado.
+
 ### Rankings de pessoas compactos — 2026-10-28
 
 - Reduzidos padding (28 para 20 px), título (20 para 16 px), avatares (36 para 28 px), espaço antes da lista (28 para 16 px) e altura mínima das linhas (68 para 52 px). Removida a altura mínima de 316 px do card para estados vazios.
