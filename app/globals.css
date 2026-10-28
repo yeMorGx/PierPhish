@@ -17429,7 +17429,11 @@ html[data-theme][data-card-style] .companies-security-note svg {
   }
 }
 .campaign-clicks-card {
-  --campaign-clicks-low: #c87970;
+  --campaign-clicks-excellent: #398767;
+  --campaign-clicks-good: #4b948c;
+  --campaign-clicks-acceptable: #bb963e;
+  --campaign-clicks-warning: #d57b39;
+  --campaign-clicks-critical: #d6534e;
   --campaign-clicks-high: #a53757;
   align-self: start;
   display: flex;
@@ -17497,7 +17501,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
 .campaign-clicks-bar > div {
   height: 100%;
   border-radius: inherit;
-  background: var(--chart-series);
+  background: var(--campaign-clicks-tone);
 }
 .campaign-clicks-footer {
   display: flex;
@@ -17589,4 +17593,14 @@ html[data-theme][data-card-style] .companies-security-note svg {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--operational-hero-line);
+}
+
+.campaign-clicks-severity {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.campaign-clicks-severity > svg {
+  color: var(--campaign-clicks-tone);
+  flex-shrink: 0;
 }

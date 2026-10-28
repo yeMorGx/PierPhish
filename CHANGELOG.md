@@ -1,5 +1,12 @@
 # Change log e passagem de contexto
 
+### Faixas de criticidade e transição do gráfico — 2026-10-28
+
+- Barras seguem as faixas existentes de maturidade: até 3% verde; acima de 3 até 5% verde-azulado; acima de 5 até 10% amarelo; acima de 10 até 15% laranja; acima de 15% vermelho com aproximação ao vinho em 100%. Cores semânticas por tokens restritos ao gráfico, conforme pedido; sem alterar as fórmulas ou a paleta das outras áreas.
+- Ícone de criticidade ao lado de cada percentual, com formato por faixa, nome acessível e título textual. Percentuais continuam em cor neutra; informação não depende apenas da cor. Campanhas de mesma taxa recebem a mesma cor.
+- AnimatePresence/motion aplica saída e entrada curtas de 160 ms na troca de página; preferência por movimento reduzido elimina o deslocamento e a duração. Mantidas três campanhas por página e controles fora da região animada.
+- Validações: Prettier, sintaxe TSX, detector Impeccable e diff aprovados; conferência visual desktop local com dados de demonstração confirmou cores/ícones em 0%, 20% e 100%. Dataset local tem três campanhas; troca de página com mais registros e tema escuro não foram conferidos visualmente. TypeScript da aplicação aprovado sem diagnósticos. Commit/push em main; deploy não verificado.
+
 ### Gravidade e três campanhas no gráfico de cliques — 2026-10-28
 
 - Reduzida paginação de cinco para três campanhas por página, mantendo acesso a todas por Anterior/Próxima, ordenação e filtros.
