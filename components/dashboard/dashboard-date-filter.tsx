@@ -26,7 +26,7 @@ import {
 export type DashboardPeriod = "all" | "day" | "week" | "month" | "year";
 
 const periodOptions: { id: DashboardPeriod; label: string }[] = [
-  { id: "all", label: "Todo o período" },
+  { id: "all", label: "Tudo" },
   { id: "day", label: "Dia" },
   { id: "week", label: "Semana" },
   { id: "month", label: "Mês" },

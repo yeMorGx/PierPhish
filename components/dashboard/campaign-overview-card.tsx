@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { DeliveryIssuesDialog } from "./delivery-issues-dialog";
 import Link from "next/link";
 import { ContextMenu } from "@base-ui/react/context-menu";
 import {
@@ -106,12 +108,17 @@ export function CampaignOverviewCard({
   onMarkAsTest,
 }: CampaignOverviewCardProps) {
   const { logos } = useCampaignLogos();
+  const [showTests, setShowTests] = useState(false);
+  const [issuesOpen, setIssuesOpen] = useState(false);
   const recentCampaigns = [...campaigns].sort(
     (first, second) =>
       Number(campaignIsTest(first)) - Number(campaignIsTest(second)) ||
       startTimestamp(second.launch_date) - startTimestamp(first.launch_date) ||
       second.id - first.id,
   );
+  const countedCampaigns = recentCampaigns.filter((c) => !campaignIsTest(c));
+  const hiddenCount = recentCampaigns.length - countedCampaigns.length;
+  const visibleCampaigns = showTests ? recentCampaigns : countedCampaigns;
   const deliveryGap = totals.people - totals.delivered - totals.errors;
   const reconciliationAvailable =
     failuresAvailable &&
@@ -144,14 +151,9 @@ export function CampaignOverviewCard({
       help: "Soma dos e-mails entregues em todas as campanhas incluídas.",
     },
     {
-      label: "Falharam",
-      value: failuresAvailable ? totals.errors : null,
-      help: "Soma das falhas registradas nas campanhas dos filtros atuais. Mensagens pendentes não são contadas como falhas.",
-    },
-    {
-      label: "Sem confirmação",
-      value: reconciliationAvailable ? deliveryGap : null,
-      help: "Participações menos entregues e falhas registradas. Pode incluir pendências ou estados sem atualização; não representa novas falhas.",
+      label: "Falhas e sem confirmação",
+      value: reconciliationAvailable ? totals.errors + deliveryGap : null,
+      help: "Soma de falhas confirmadas e mensagens sem confirmação. Abra os detalhes para consultar os valores separados por campanha.",
     },
     {
       label: "Campanhas",
@@ -208,13 +210,36 @@ export function CampaignOverviewCard({
       </p>
       <div className="campaign-metric-groups">
         {[
-          { title: "Entrega dos e-mails", items: metrics.slice(0, 4) },
-          { title: "Resultados das campanhas", items: metrics.slice(4) },
+          { title: "Entrega dos e-mails", items: metrics.slice(0, 3) },
+          { title: "Resultados das campanhas", items: metrics.slice(3) },
         ].map((group, groupIndex) => (
           <section key={group.title} aria-label={group.title}>
             <h4 className="campaign-metric-group-title">{group.title}</h4>
-            <div className="grid grid-cols-4 gap-2 max-[720px]:grid-cols-2">
+            <div
+              className={`campaign-metrics-row ${groupIndex === 0 ? "is-delivery" : "is-results"}`}
+            >
               {group.items.map(({ label, value, suffix, help }, index) => {
+                if (label === "Falhas e sem confirmação")
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      className="campaign-overview-metric delivery-issue-card"
+                      onClick={() => setIssuesOpen(true)}
+                      aria-haspopup="dialog"
+                    >
+                      <span>{label}</span>
+                      <strong>
+                        {value === null ? (
+                          "Não disponível"
+                        ) : (
+                          <AnimatedNumber value={value} />
+                        )}
+                      </strong>
+                      <small>Ver detalhes</small>
+                    </button>
+                  );
+
                 const mobilePopoverAlignment =
                   index % 2 === 1
                     ? "max-[720px]:right-0 max-[720px]:left-auto max-[720px]:translate-x-0"
@@ -252,18 +277,27 @@ export function CampaignOverviewCard({
                 );
               })}
             </div>
-            {groupIndex === 0 && (
-              <p className="campaign-delivery-reconciliation">
-                {reconciliationAvailable
-                  ? `${totals.people.toLocaleString("pt-BR")} participações = ${totals.delivered.toLocaleString("pt-BR")} entregues + ${totals.errors.toLocaleString("pt-BR")} falhas + ${deliveryGap.toLocaleString("pt-BR")} sem confirmação.`
-                  : "Não há dados completos e consistentes para conciliar as entregas. Sincronize as campanhas antes de comparar os totais."}
-              </p>
-            )}
           </section>
         ))}
       </div>
 
+      {hiddenCount > 0 && (
+        <button
+          type="button"
+          className="campaign-hidden-toggle"
+          aria-expanded={showTests}
+          aria-controls="campaign-table-region"
+          onClick={() => setShowTests((v) => !v)}
+        >
+          <Icon name="chevron" size={14} />
+          {showTests
+            ? "Ocultar campanhas de teste"
+            : "Mostrar campanhas ocultas"}{" "}
+          ({hiddenCount})
+        </button>
+      )}
       <div
+        id="campaign-table-region"
         role="region"
         aria-label="Tabela de campanhas"
         className="campaign-overview-table-wrap mt-5 rounded-[18px] border border-[var(--line-soft)]"
@@ -313,7 +347,7 @@ export function CampaignOverviewCard({
             </tr>
           </thead>
           <tbody role="rowgroup">
-            {recentCampaigns.map((campaign, index) => {
+            {visibleCampaigns.map((campaign, index) => {
               const startedAt = startTimestamp(campaign.launch_date);
               const company = companies.find(
                 (item) => item.id === campaign.company_id,
@@ -482,7 +516,7 @@ export function CampaignOverviewCard({
                 </ContextMenu.Root>
               );
             })}
-            {!campaigns.length && (
+            {!visibleCampaigns.length && (
               <tr role="row">
                 <td
                   role="cell"
@@ -496,6 +530,12 @@ export function CampaignOverviewCard({
           </tbody>
         </table>
       </div>
+      <DeliveryIssuesDialog
+        open={issuesOpen}
+        onOpenChange={setIssuesOpen}
+        campaigns={countedCampaigns}
+        failuresAvailable={failuresAvailable}
+      />
     </Card>
   );
 }

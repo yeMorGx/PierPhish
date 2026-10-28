@@ -120,6 +120,11 @@ export function DashboardShell({
 
   useEffect(() => {
     if (!profileOpen) return;
+    const focusFrame = requestAnimationFrame(() =>
+      profileMenuRef.current
+        ?.querySelector<HTMLElement>('[role="menuitem"]')
+        ?.focus(),
+    );
 
     function handlePointerDown(event: PointerEvent) {
       if (
@@ -130,12 +135,18 @@ export function DashboardShell({
     }
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setProfileOpen(false);
+      if (event.key === "Escape") {
+        setProfileOpen(false);
+        profileMenuRef.current
+          ?.querySelector<HTMLButtonElement>(".sidebar-profile-button")
+          ?.focus();
+      }
     }
 
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
     return () => {
+      cancelAnimationFrame(focusFrame);
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
@@ -186,12 +197,38 @@ export function DashboardShell({
 
           {profileOpen && (
             <div
-              className="surface-card absolute top-0 left-[calc(100%+12px)] z-50 w-[250px] rounded-[22px] p-2 max-[720px]:top-full max-[720px]:left-0 max-[720px]:mt-2"
+              className="surface-card piersec-profile-menu"
               role="menu"
+              aria-label="Menu do perfil"
+              onKeyDown={(event) => {
+                if (
+                  !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)
+                )
+                  return;
+                event.preventDefault();
+                const items = Array.from(
+                  event.currentTarget.querySelectorAll<HTMLElement>(
+                    '[role="menuitem"]',
+                  ),
+                );
+                const current = items.indexOf(
+                  document.activeElement as HTMLElement,
+                );
+                const index =
+                  event.key === "Home"
+                    ? 0
+                    : event.key === "End"
+                      ? items.length - 1
+                      : (current +
+                          (event.key === "ArrowDown" ? 1 : -1) +
+                          items.length) %
+                        items.length;
+                items[index]?.focus();
+              }}
             >
               <Link
                 href="/configuracoes"
-                className="flex items-center gap-3 rounded-[16px] bg-[#f5f7f7] p-3 transition-colors hover:bg-[#edf2f3]"
+                className="profile-menu-account"
                 role="menuitem"
                 onClick={() => setProfileOpen(false)}
               >
@@ -216,9 +253,8 @@ export function DashboardShell({
                   </span>
                 </span>
               </Link>
-              <div className="my-2 h-px bg-[var(--line-soft)]" />
               <button
-                className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#fff5f1] hover:text-[#a5553b] focus-visible:bg-[#fff5f1] focus-visible:text-[#a5553b]"
+                className="profile-menu-item"
                 type="button"
                 role="menuitem"
                 onClick={() => {
@@ -238,9 +274,8 @@ export function DashboardShell({
                   </span>
                 )}
               </button>
-              <div className="my-2 h-px bg-[var(--line-soft)]" />
               <Link
-                className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#edf4f5] hover:text-[#3e6573] focus-visible:bg-[#edf4f5] focus-visible:text-[#3e6573]"
+                className="profile-menu-item"
                 role="menuitem"
                 href="/workspaces"
                 onClick={() => setProfileOpen(false)}
@@ -249,17 +284,16 @@ export function DashboardShell({
                 Workspaces
               </Link>
               <Link
-                className={`block w-full rounded-[13px] border-0 px-3 py-2.5 pl-[38px] text-left text-[11px] font-bold transition-colors hover:bg-[var(--surface-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${activeSection === "docs" ? "text-[var(--ink)]" : "text-[var(--text-muted)] hover:text-[var(--ink)]"}`}
+                className="profile-menu-item profile-menu-docs"
                 role="menuitem"
                 href="/docs"
                 aria-current={activeSection === "docs" ? "page" : undefined}
                 onClick={() => setProfileOpen(false)}
               >
-                Documentação
+                <Icon name="help" size={16} /> Documentação
               </Link>
-              <div className="my-2 h-px bg-[var(--line-soft)]" />
               <button
-                className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#edf4f5] hover:text-[#3e6573] focus-visible:bg-[#edf4f5] focus-visible:text-[#3e6573]"
+                className="profile-menu-item"
                 type="button"
                 role="menuitem"
                 onClick={() => {
@@ -270,9 +304,8 @@ export function DashboardShell({
                 <Icon name="help" size={16} />
                 Ver tour do produto
               </button>
-              <div className="my-2 h-px bg-[var(--line-soft)]" />
               <button
-                className="flex w-full items-center gap-2.5 rounded-[13px] border-0 bg-transparent px-3 py-2.5 text-left text-[11px] font-bold text-[#66717b] transition-colors hover:bg-[#fff1ed] hover:text-[#a5553b] focus-visible:bg-[#fff1ed] focus-visible:text-[#a5553b]"
+                className="profile-menu-item"
                 type="button"
                 role="menuitem"
                 onClick={() => void signOut()}

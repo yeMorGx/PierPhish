@@ -216,6 +216,7 @@ export function ExportCanvaButton({
       <button
         type="button"
         className="dashboard-export-button"
+        aria-label="Exportar para o Canva"
         onClick={() => setOpen(true)}
         disabled={!session?.access_token}
         title={
@@ -224,7 +225,8 @@ export function ExportCanvaButton({
             : "Entre no PierSec para exportar"
         }
       >
-        Exportar para Canva
+        Exportar para o{" "}
+        <span className="canva-logo" role="img" aria-label="Canva" />
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>

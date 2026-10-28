@@ -1,3 +1,4 @@
+import { CompanySignalsChart } from "./company-signals-chart";
 import { CampaignOpeningsCard } from "@/components/dashboard/campaign-openings-card";
 import { CampaignOverviewCard } from "@/components/dashboard/campaign-overview-card";
 import { OverviewHero } from "@/components/dashboard/overview-hero";
@@ -57,12 +58,15 @@ export function DashboardContent({
         totals={totals}
       />
       <CampaignOpeningsCard campaigns={campaignBars} total={totals.delivered} />
-      <PeopleRankings
-        campaigns={campaignSummary}
-        participantsByCampaign={participantsByCampaign}
-        loading={participantsLoading}
-        available={participantRankingsAvailable}
-      />
+      <div className="dashboard-people-column">
+        <PeopleRankings
+          campaigns={campaignSummary}
+          participantsByCampaign={participantsByCampaign}
+          loading={participantsLoading}
+          available={participantRankingsAvailable}
+        />
+      </div>
+      <CompanySignalsChart campaigns={campaignSummary} companies={companies} />
       <CampaignOverviewCard
         companies={companies}
         campaigns={tableCampaigns}
