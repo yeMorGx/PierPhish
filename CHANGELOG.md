@@ -1,5 +1,12 @@
 # Change log e passagem de contexto
 
+### Desempenho ao abrir “Criar acesso” — 2026-10-28
+
+- A tela de usuários mantinha a tabela inteira montada, inclusive as linhas do diretório escondido, e refazia a busca em cada troca de aba. Isso tornava a navegação pesada quando a lista crescia.
+- Busca do diretório agora é memorizada e a tabela exibe 25 contas por página com controles Anterior/Próxima. A lista completa e a busca continuam disponíveis; a aba de criação não precisa renderizar milhares de linhas.
+- QA visual no servidor local: “Criar acesso” abriu em 283 ms com os dados de demonstração; formulário e campos apareceram. O diretório mostrou os 3 registros de demonstração. Dataset real grande e produção não disponíveis para reproduzir o travamento.
+- Validações aprovadas: `pnpm lint` (TypeScript sem erros), `pnpm test` (5 arquivos, 11 testes), Prettier do componente e `git diff --check`. Nenhuma conta/e-mail real alterado; deploy não verificado.
+
 ### QA do cadastro, convite e entrada — 2026-10-28
 
 - Revisados os fluxos no código. Conta nova: administrador cria usuário e vínculo ativo do workspace; Supabase gera link de convite e PierSec tenta enviá-lo pelo Resend. Pessoa define senha de pelo menos 12 caracteres com três grupos de caracteres e configura TOTP antes de acessar. Conta existente: adicionar ao workspace ativa o acesso imediatamente, cria notificação e tenta enviar aviso por e-mail; não exige aceite do convite. Entrada normal exige senha e MFA; recuperação de senha usa link por e-mail e encerra a sessão local após a troca.

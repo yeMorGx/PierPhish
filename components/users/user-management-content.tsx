@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   createColumnHelper,
   getCoreRowModel,
+  getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import { AuthGuard } from "@/components/auth/auth-guard";
@@ -190,8 +191,9 @@ export function UserManagementContent() {
   >("directory");
   const [directorySearch, setDirectorySearch] = useState("");
   const [users, setUsers] = useState<ManagedUser[]>(demoUsers);
-  const usersTable = useReactTable({
-    data: users.filter((person) =>
+  const filteredUsers = useMemo(() => {
+    const normalizedSearch = directorySearch.trim().toLocaleLowerCase("pt-BR");
+    return users.filter((person) =>
       [
         person.name,
         person.email,
@@ -201,10 +203,15 @@ export function UserManagementContent() {
       ]
         .join(" ")
         .toLocaleLowerCase("pt-BR")
-        .includes(directorySearch.trim().toLocaleLowerCase("pt-BR")),
-    ),
+        .includes(normalizedSearch),
+    );
+  }, [directorySearch, users]);
+  const usersTable = useReactTable({
+    data: filteredUsers,
     columns: managedUserColumns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 25 } },
   });
   const [loadingUsers, setLoadingUsers] = useState(isSupabaseConfigured);
   const [submitting, setSubmitting] = useState(false);
@@ -1405,6 +1412,44 @@ export function UserManagementContent() {
                       })}
                     </tbody>
                   </table>
+                </div>
+              )}
+              {!loadingUsers && filteredUsers.length > 0 && (
+                <div className="flex items-center justify-between gap-4 border-t border-[var(--line-soft)] px-6 py-4 max-[520px]:flex-col max-[520px]:items-stretch">
+                  <p className="m-0 text-[11px] text-[var(--text-muted)]">
+                    Mostrando{" "}
+                    {usersTable.getState().pagination.pageIndex * 25 + 1}–
+                    {Math.min(
+                      (usersTable.getState().pagination.pageIndex + 1) * 25,
+                      filteredUsers.length,
+                    )}{" "}
+                    de {filteredUsers.length} contas
+                  </p>
+                  <div className="flex items-center justify-end gap-2">
+                    <span
+                      aria-live="polite"
+                      className="min-w-16 text-center text-[11px] text-[var(--text-muted)]"
+                    >
+                      Página {usersTable.getState().pagination.pageIndex + 1} de{" "}
+                      {Math.max(usersTable.getPageCount(), 1)}
+                    </span>
+                    <button
+                      className="h-9 rounded-[10px] border border-[var(--line)] px-3 text-[11px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!usersTable.getCanPreviousPage()}
+                      onClick={() => usersTable.previousPage()}
+                      type="button"
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      className="h-9 rounded-[10px] border border-[var(--line)] px-3 text-[11px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!usersTable.getCanNextPage()}
+                      onClick={() => usersTable.nextPage()}
+                      type="button"
+                    >
+                      Próxima
+                    </button>
+                  </div>
                 </div>
               )}
             </section>
