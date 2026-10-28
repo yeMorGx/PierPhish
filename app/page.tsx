@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
 import { CampaignComparison } from "@/components/dashboard/campaign-comparison";
+import { CampaignOverviewCard } from "@/components/dashboard/campaign-overview-card";
+import { PeopleRankings } from "@/components/dashboard/people-rankings";
 import {
   DashboardDateFilter,
   formatDashboardPeriodLabel,
@@ -784,19 +786,27 @@ export default function Home() {
             campaignBars={campaignBars}
             campaigns={countedCampaigns}
             campaignSummary={campaignSummary}
-            participantsByCampaign={participantsByCampaign}
-            participantsLoading={participantsLoading}
-            participantRankingsAvailable={
-              isSupabaseConfigured && workspaceHasBeephishData
-            }
             failuresAvailable={failuresAvailable}
-            tableCampaigns={allCampaignSummary}
-            onMarkAsTest={canSyncWorkspace ? markCampaignAsTest : undefined}
             totals={totals}
           />
         </div>
       )}
+      <PeopleRankings
+        campaigns={campaignSummary}
+        participantsByCampaign={participantsByCampaign}
+        loading={participantsLoading}
+        available={isSupabaseConfigured && workspaceHasBeephishData}
+      />
       <CampaignComparison campaigns={campaignSummary} />
+      <CampaignOverviewCard
+        companies={(companies ?? []).filter(
+          (company) => company.workspaceId === activeWorkspaceId,
+        )}
+        campaigns={allCampaignSummary}
+        onMarkAsTest={canSyncWorkspace ? markCampaignAsTest : undefined}
+        totals={totals}
+        failuresAvailable={failuresAvailable}
+      />
       <footer className="hidden">
         <span>
           Última sincronização: {latestSync ?? "Nenhuma coleta realizada"}

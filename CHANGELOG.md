@@ -1,5 +1,11 @@
 # Change log e passagem de contexto
 
+### Rankings em três cards e tabela no final — 2026-10-28
+
+- Rankings do dashboard agora seguem os três cards do BeePhish: campanhas clicadas, campanhas com dados enviados e campanhas reportadas. Cada card mostra até cinco pessoas e quantidade de campanhas; clique e envio de dados usam contagens separadas.
+- Rankings e comparação ficam antes da tabela. “Todas as campanhas” agora é a última seção visível nos modos padrão e visual.
+- Validação: Prettier, TypeScript e verificação do diff aprovados. Sem testes automatizados ou deploy confirmado.
+
 ### Comparação e rankings inspirados nos relatórios — 2026-10-28
 
 - Adicionada comparação de até três campanhas na visão geral, nos dois modos do dashboard. Seleção inicial usa as três mais recentes; ordem da comparação é cronológica. Empresa, período e exclusão de testes seguem os dados filtrados existentes.
