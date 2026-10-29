@@ -5,7 +5,7 @@
 - Corrigido o diretório: administradores de workspace também veem ações para pessoas elegíveis; antes, a coluna mostrava traço porque os controles eram exclusivos de proprietários.
 - A API agora limita essas ações aos workspaces administrados. Bloqueia a própria conta, administradores globais, proprietários e usuários vinculados a workspaces fora do escopo do solicitante.
 - Validação: `pnpm lint`, Prettier e `git diff --check` aprovados. Sem testes automatizados ou deploy confirmado.
-- Commit e push pendentes.
+- Commit `74930c4` enviado para `origin/main`; deploy não verificado.
 
 ### Convites e administração de empresas — 2026-10-29
 
