@@ -1,18 +1,25 @@
-import { useMemo } from "react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useMemo, useState } from "react";
 import type {
   CampaignParticipants,
   CampaignSummary,
 } from "@/components/dashboard/types";
 
+type CompanyBrand = { id: string; name: string; logoUrl?: string | null };
+
 type RankedPerson = {
+  interactionCompanyIds: string[];
+  reportedCompanyIds: string[];
   id: string;
   name: string;
+  interactionCampaigns: number;
   clickedCampaigns: number;
   submittedCampaigns: number;
   reportedCampaigns: number;
 };
 
 type PeopleRankingsProps = {
+  companies?: CompanyBrand[];
   campaigns: CampaignSummary[];
   participantsByCampaign: CampaignParticipants;
   loading: boolean;
@@ -33,15 +40,33 @@ function buildRankings(
     const participants = participantsByCampaign[String(campaign.id)] ?? [];
     for (const participant of participants) {
       const person: RankedPerson = people.get(participant.id) ?? {
+        interactionCompanyIds: [],
+        reportedCompanyIds: [],
         id: participant.id,
         name: participant.name.trim() || "Nome não informado",
+        interactionCampaigns: 0,
         clickedCampaigns: 0,
         submittedCampaigns: 0,
         reportedCampaigns: 0,
       };
-      if (participant.clicked) person.clickedCampaigns += 1;
+      if (participant.clicked || participant.submitted)
+        person.interactionCampaigns += 1;
+      if (participant.clicked || participant.submitted)
+        person.clickedCampaigns += 1;
       if (participant.submitted) person.submittedCampaigns += 1;
       if (participant.reported) person.reportedCampaigns += 1;
+      if (campaign.company_id) {
+        if (
+          (participant.clicked || participant.submitted) &&
+          !person.interactionCompanyIds.includes(campaign.company_id)
+        )
+          person.interactionCompanyIds.push(campaign.company_id);
+        if (
+          participant.reported &&
+          !person.reportedCompanyIds.includes(campaign.company_id)
+        )
+          person.reportedCompanyIds.push(campaign.company_id);
+      }
       people.set(participant.id, person);
     }
   }
@@ -49,19 +74,16 @@ function buildRankings(
   const values = [...people.values()];
   const sortByCount = (first: number, second: number) => second - first;
   return {
-    clicked: values
-      .filter((person) => person.clickedCampaigns > 0)
+    recurring: values
+      .filter((person) => person.interactionCampaigns > 0)
       .sort(
         (first, second) =>
-          sortByCount(first.clickedCampaigns, second.clickedCampaigns) ||
-          first.name.localeCompare(second.name, "pt-BR"),
-      )
-      .slice(0, 5),
-    submitted: values
-      .filter((person) => person.submittedCampaigns > 0)
-      .sort(
-        (first, second) =>
+          sortByCount(
+            first.interactionCampaigns,
+            second.interactionCampaigns,
+          ) ||
           sortByCount(first.submittedCampaigns, second.submittedCampaigns) ||
+          sortByCount(first.clickedCampaigns, second.clickedCampaigns) ||
           first.name.localeCompare(second.name, "pt-BR"),
       )
       .slice(0, 5),
@@ -76,7 +98,48 @@ function buildRankings(
   };
 }
 
+function CompanyMarks({
+  companyIds,
+  companies,
+}: {
+  companyIds: string[];
+  companies: CompanyBrand[];
+}) {
+  const brands = companyIds
+    .map((id) => companies.find((company) => company.id === id))
+    .filter((company): company is CompanyBrand => Boolean(company));
+  const label = brands.length
+    ? brands.map((company) => company.name).join(", ")
+    : "Empresa não informada";
+  return (
+    <span
+      className="people-ranking-companies"
+      role="img"
+      aria-label={label}
+      title={label}
+    >
+      {brands.length ? (
+        brands.slice(0, 2).map((company) => (
+          <Avatar
+            key={company.id}
+            className="people-ranking-company-avatar after:hidden"
+            aria-hidden="true"
+          >
+            {company.logoUrl && <AvatarImage src={company.logoUrl} alt="" />}
+            <AvatarFallback>
+              {company.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        ))
+      ) : (
+        <span className="people-ranking-company-unknown">?</span>
+      )}
+    </span>
+  );
+}
+
 function RankingCard({
+  companies,
   title,
   description,
   metricLabel,
@@ -86,10 +149,11 @@ function RankingCard({
   loading,
   available,
 }: {
+  companies: CompanyBrand[];
   title: string;
   description: string;
   metricLabel: (count: number) => string;
-  countField: "clickedCampaigns" | "submittedCampaigns" | "reportedCampaigns";
+  countField: "interactionCampaigns" | "reportedCampaigns";
   people: RankedPerson[];
   emptyMessage: string;
   loading: boolean;
@@ -117,14 +181,25 @@ function RankingCard({
         <p className="people-ranking-state">{emptyMessage}</p>
       ) : (
         <ol className="people-ranking-list">
-          {people.map((person, index) => (
+          {people.map((person) => (
             <li key={person.id}>
-              <span className="people-ranking-position">
-                {String(index + 1).padStart(2, "0")}
-              </span>
+              <CompanyMarks
+                companyIds={
+                  countField === "interactionCampaigns"
+                    ? person.interactionCompanyIds
+                    : person.reportedCompanyIds
+                }
+                companies={companies}
+              />
               <span className="people-ranking-person">
                 <span className="people-ranking-identity">
                   <strong className="people-ranking-name">{person.name}</strong>
+                  {countField === "interactionCampaigns" && (
+                    <span className="people-ranking-breakdown">
+                      {campaignCountLabel(person.clickedCampaigns)} com clique ·{" "}
+                      {person.submittedCampaigns} com dados
+                    </span>
+                  )}
                 </span>
               </span>
               <span
@@ -146,48 +221,65 @@ function RankingCard({
 }
 
 export function PeopleRankings({
+  companies = [],
   campaigns,
   participantsByCampaign,
   loading,
   available,
 }: PeopleRankingsProps) {
+  const [view, setView] = useState("recurring");
   const rankings = useMemo(
     () => buildRankings(campaigns, participantsByCampaign),
     [campaigns, participantsByCampaign],
   );
 
   return (
-    <div className="people-rankings-cards">
-      <RankingCard
-        title="Campanhas clicadas"
-        description="Pessoas com cliques em mais campanhas."
-        metricLabel={campaignCountLabel}
-        countField="clickedCampaigns"
-        people={rankings.clicked}
-        emptyMessage="Nenhum clique registrado neste filtro."
-        loading={loading}
-        available={available}
-      />
-      <RankingCard
-        title="Campanhas reportadas"
-        description="Pessoas com reportes em mais campanhas."
-        metricLabel={campaignCountLabel}
-        countField="reportedCampaigns"
-        people={rankings.reporters}
-        emptyMessage="Nenhum reporte registrado neste filtro."
-        loading={loading}
-        available={available}
-      />
-      <RankingCard
-        title="Campanhas com dados enviados"
-        description="Pessoas que mais enviaram dados nas campanhas."
-        metricLabel={campaignCountLabel}
-        countField="submittedCampaigns"
-        people={rankings.submitted}
-        emptyMessage="Nenhum envio de dados registrado neste filtro."
-        loading={loading}
-        available={available}
-      />
+    <div className="people-rankings-tabs">
+      <div
+        className="campaign-comparison-metrics"
+        role="group"
+        aria-label="Ranking de pessoas"
+      >
+        <button
+          type="button"
+          aria-pressed={view === "recurring"}
+          onClick={() => setView("recurring")}
+        >
+          Cliques e dados
+        </button>
+        <button
+          type="button"
+          aria-pressed={view === "reporters"}
+          onClick={() => setView("reporters")}
+        >
+          Reportes
+        </button>
+      </div>
+      {view === "recurring" ? (
+        <RankingCard
+          companies={companies}
+          title="Pessoas mais recorrentes"
+          description="Mais campanhas com clique ou envio de dados. Cada campanha conta uma vez por pessoa."
+          metricLabel={campaignCountLabel}
+          countField="interactionCampaigns"
+          people={rankings.recurring}
+          emptyMessage="Nenhum clique ou envio de dados registrado nas campanhas deste filtro."
+          loading={loading}
+          available={available}
+        />
+      ) : (
+        <RankingCard
+          title="Pessoas que mais reportam"
+          companies={companies}
+          description="Campanhas em que cada pessoa reportou uma mensagem."
+          metricLabel={campaignCountLabel}
+          countField="reportedCampaigns"
+          people={rankings.reporters}
+          emptyMessage="Nenhum reporte registrado nas campanhas deste filtro."
+          loading={loading}
+          available={available}
+        />
+      )}
     </div>
   );
 }

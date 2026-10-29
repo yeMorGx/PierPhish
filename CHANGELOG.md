@@ -1,11 +1,16 @@
 # Change log e passagem de contexto
 
-### Rankings em três cards e tabela no final — 2026-10-28
+### Reversão do layout de rankings — 2026-10-29
+
+- Revertidos os três cards de rankings e a posição da tabela introduzidos em 894b2f4. Dashboard restaurado ao layout anterior a essa alteração.
+- Validação: `pnpm lint` (TypeScript) e `git diff --check` aprovados. Prettier apontou formatação nos arquivos restaurados; mantive o rollback sem reformatar áreas antigas. Sem deploy confirmado.
+
+### Rankings em três cards e tabela no final (revertidos em 2026-10-29) — 2026-10-28
 
 - Rankings do dashboard agora seguem os três cards do BeePhish: campanhas clicadas, campanhas com dados enviados e campanhas reportadas. Cada card mostra até cinco pessoas e quantidade de campanhas; clique e envio de dados usam contagens separadas.
 - Rankings e comparação ficam antes da tabela. “Todas as campanhas” agora é a última seção visível nos modos padrão e visual.
 - Validação: Prettier, TypeScript e verificação do diff aprovados. Sem testes automatizados ou deploy confirmado.
-- Commit 894b2f4 e push para main confirmados.
+- Commit 894b2f4 e push para main confirmados; alteração revertida em 2026-10-29.
 
 ### Comparação e rankings inspirados nos relatórios — 2026-10-28
 
