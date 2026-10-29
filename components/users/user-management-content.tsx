@@ -753,6 +753,47 @@ export function UserManagementContent() {
     setActionLoading(false);
   }
 
+  async function handleResendInvite(managedUser: ManagedUser) {
+    if (managedUser.emailConfirmed) return;
+    setActionLoading(true);
+    setError(null);
+    setNotice(null);
+
+    if (!isSupabaseConfigured) {
+      setNotice(`Convite simulado para ${managedUser.email}.`);
+      setActionLoading(false);
+      return;
+    }
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      setError("Sua sessão expirou. Entre novamente para continuar.");
+      setActionLoading(false);
+      return;
+    }
+    const response = await fetch("/api/admin/users", {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "resend-invite",
+        userId: managedUser.id,
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as {
+      error?: string;
+    };
+    if (!response.ok) {
+      setError(body.error ?? "Não foi possível reenviar o convite.");
+      setActionLoading(false);
+      return;
+    }
+    setNotice(`Convite reenviado para ${managedUser.email}.`);
+    setActionLoading(false);
+  }
+
   async function handleDeleteUser() {
     if (!deleteTarget || deleteConfirmation.trim() !== "EXCLUIR") return;
     setActionLoading(true);
@@ -1352,9 +1393,11 @@ export function UserManagementContent() {
                             </td>
                             <td data-label="Acesso" className="px-4 py-4">
                               <span className="inline-flex rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[9px] font-bold text-[var(--text-muted)]">
-                                {managedUser.passwordRotationRequired
-                                  ? "Troca pendente"
-                                  : "Ativo"}
+                                {!managedUser.emailConfirmed
+                                  ? "Convite pendente"
+                                  : managedUser.passwordRotationRequired
+                                    ? "Troca pendente"
+                                    : "Ativo"}
                               </span>
                             </td>
                             <td
@@ -1375,17 +1418,31 @@ export function UserManagementContent() {
                             >
                               {canManageTarget(managedUser) ? (
                                 <div className="flex justify-end gap-2">
-                                  <button
-                                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[var(--text-muted)] transition-colors hover:border-[var(--text-muted)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
-                                    type="button"
-                                    onClick={() =>
-                                      openResetPassword(managedUser)
-                                    }
-                                    disabled={actionLoading}
-                                  >
-                                    <Icon name="settings" size={12} />
-                                    Redefinir
-                                  </button>
+                                  {managedUser.emailConfirmed ? (
+                                    <button
+                                      className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[var(--text-muted)] transition-colors hover:border-[var(--text-muted)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
+                                      type="button"
+                                      onClick={() =>
+                                        openResetPassword(managedUser)
+                                      }
+                                      disabled={actionLoading}
+                                    >
+                                      <Icon name="settings" size={12} />
+                                      Redefinir
+                                    </button>
+                                  ) : (
+                                    <button
+                                      className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[var(--text-muted)] transition-colors hover:border-[var(--text-muted)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
+                                      type="button"
+                                      onClick={() =>
+                                        void handleResendInvite(managedUser)
+                                      }
+                                      disabled={actionLoading}
+                                    >
+                                      <Icon name="arrow" size={12} />
+                                      Reenviar convite
+                                    </button>
+                                  )}
                                   <button
                                     className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-50"
                                     type="button"

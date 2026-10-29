@@ -355,6 +355,52 @@ function safeCompany(row: Record<string, unknown>) {
   };
 }
 
+type CompanyCampaignTable =
+  "beephish_campaigns" | "beephish_results" | "beephish_events";
+
+async function loadCompanyReferenceIds(
+  client: NonNullable<ReturnType<typeof getAdminClient>>,
+  workspaceId: string,
+  companyId: string,
+  table: CompanyCampaignTable,
+) {
+  const ids: string[] = [];
+  for (let from = 0; ; from += 500) {
+    const { data, error } = await client
+      .from(table)
+      .select("id")
+      .eq("workspace_id", workspaceId)
+      .eq("company_id", companyId)
+      .order("id", { ascending: true })
+      .range(from, from + 499);
+    if (error) return { ids, error: true };
+    ids.push(...(data ?? []).map((row) => String(row.id)));
+    if ((data?.length ?? 0) < 500) break;
+  }
+  return { ids, error: false };
+}
+
+async function restoreCompanyReferences(
+  client: NonNullable<ReturnType<typeof getAdminClient>>,
+  workspaceId: string,
+  companyId: string,
+  rows: Array<{ table: CompanyCampaignTable; ids: string[] }>,
+) {
+  let failures = 0;
+  for (const { table, ids } of rows) {
+    for (let start = 0; start < ids.length; start += 200) {
+      const { error } = await client
+        .from(table)
+        .update({ company_id: companyId })
+        .eq("workspace_id", workspaceId)
+        .is("company_id", null)
+        .in("id", ids.slice(start, start + 200));
+      if (error) failures += 1;
+    }
+  }
+  return failures;
+}
+
 export async function GET(request: NextRequest) {
   const access = await requireCompaniesAccess(request);
   const { client, error, managedWorkspaceIds, user } = access;
@@ -711,4 +757,186 @@ export async function PATCH(request: NextRequest) {
   return NextResponse.json({
     company: safeCompany(data as Record<string, unknown>),
   });
+}
+
+export async function DELETE(request: NextRequest) {
+  const access = await requireCompaniesAccess(request);
+  const { client, error, managedWorkspaceIds, user } = access;
+  if (error || !client || !user) return error;
+
+  let payload: { companyId?: unknown };
+  try {
+    payload = (await request.json()) as { companyId?: unknown };
+  } catch {
+    return responseError("Envie os dados da exclusão em JSON válido.", 400);
+  }
+
+  const companyId = text(payload.companyId);
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      companyId,
+    )
+  ) {
+    return responseError("Informe uma empresa válida.", 400);
+  }
+
+  const { data: company, error: companyError } = await client
+    .from("pierphish_companies")
+    .select("id,workspace_id,name")
+    .eq("id", companyId)
+    .maybeSingle();
+  if (companyError) {
+    return responseError("Não foi possível verificar a empresa.", 503);
+  }
+  if (!company) return responseError("Empresa não encontrada.", 404);
+  if (
+    managedWorkspaceIds &&
+    !managedWorkspaceIds.includes(company.workspace_id)
+  ) {
+    return responseError(
+      "Você não pode excluir empresas de outro workspace.",
+      403,
+    );
+  }
+
+  const { count: emailSampleCount, error: emailSamplesError } = await client
+    .from("campaign_email_samples")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId);
+  if (emailSamplesError) {
+    return responseError(
+      "Não foi possível verificar os exemplos de e-mail associados.",
+      503,
+    );
+  }
+  if (emailSampleCount) {
+    return responseError(
+      `Remova os ${emailSampleCount} exemplo(s) de e-mail associado(s) antes de excluir esta empresa.`,
+      409,
+    );
+  }
+
+  const linkTables: CompanyCampaignTable[] = [
+    "beephish_campaigns",
+    "beephish_results",
+    "beephish_events",
+  ];
+  const references: Array<{ table: CompanyCampaignTable; ids: string[] }> = [];
+  for (const table of linkTables) {
+    const result = await loadCompanyReferenceIds(
+      client,
+      company.workspace_id,
+      companyId,
+      table,
+    );
+    if (result.error) {
+      return responseError(
+        "Não foi possível conferir as campanhas vinculadas a esta empresa.",
+        503,
+      );
+    }
+    references.push({ table, ids: result.ids });
+  }
+
+  const campaignCount =
+    references.find((entry) => entry.table === "beephish_campaigns")?.ids
+      .length ?? 0;
+  const recordDeleteFailure = async (rollbackFailures: number) => {
+    await recordAuditEvent(client, {
+      workspaceId: company.workspace_id,
+      actorUserId: user.id,
+      actorName:
+        (typeof user.user_metadata?.display_name === "string" &&
+          user.user_metadata.display_name) ||
+        user.email,
+      action: rollbackFailures
+        ? "workspace.client_delete_rollback_failed"
+        : "workspace.client_delete_failed",
+      resourceType: "client",
+      resourceId: companyId,
+      resourceName: company.name,
+      outcome: "failure",
+      metadata: {
+        campaign_count: campaignCount,
+        failure_count: rollbackFailures,
+      },
+    });
+  };
+
+  const detached: Array<{ table: CompanyCampaignTable; ids: string[] }> = [];
+  let detachFailed = false;
+  for (const { table, ids } of references) {
+    for (let start = 0; start < ids.length; start += 200) {
+      const batch = ids.slice(start, start + 200);
+      const { error: updateError } = await client
+        .from(table)
+        .update({ company_id: null })
+        .eq("workspace_id", company.workspace_id)
+        .eq("company_id", companyId)
+        .in("id", batch);
+      if (updateError) {
+        detachFailed = true;
+        break;
+      }
+      detached.push({ table, ids: batch });
+    }
+    if (detachFailed) break;
+  }
+
+  if (detachFailed) {
+    const rollbackFailures = await restoreCompanyReferences(
+      client,
+      company.workspace_id,
+      companyId,
+      detached,
+    );
+    await recordDeleteFailure(rollbackFailures);
+    return responseError(
+      rollbackFailures
+        ? "A exclusão falhou e parte do histórico pode ter ficado sem vínculo. Atualize os dados e contate o suporte se continuar."
+        : "Não foi possível preparar a exclusão. Os vínculos existentes foram restaurados.",
+      502,
+    );
+  }
+
+  const { data: deletedCompany, error: deleteError } = await client
+    .from("pierphish_companies")
+    .delete()
+    .eq("id", companyId)
+    .eq("workspace_id", company.workspace_id)
+    .select("id")
+    .maybeSingle();
+  if (deleteError || !deletedCompany) {
+    const rollbackFailures = await restoreCompanyReferences(
+      client,
+      company.workspace_id,
+      companyId,
+      detached,
+    );
+    await recordDeleteFailure(rollbackFailures);
+    return responseError(
+      rollbackFailures
+        ? "A exclusão falhou e parte do histórico pode ter ficado sem vínculo. Atualize os dados e contate o suporte se continuar."
+        : "Não foi possível excluir a empresa. Os vínculos existentes foram restaurados.",
+      deleteError ? 502 : 409,
+    );
+  }
+
+  const userMetadata = (user.user_metadata ?? {}) as Record<string, unknown>;
+  await recordAuditEvent(client, {
+    workspaceId: company.workspace_id,
+    actorUserId: user.id,
+    actorName:
+      (typeof userMetadata.display_name === "string" &&
+        userMetadata.display_name) ||
+      user.email,
+    action: "workspace.client_deleted",
+    resourceType: "client",
+    resourceId: companyId,
+    resourceName: company.name,
+    outcome: "success",
+    metadata: { company_count: 1, campaign_count: campaignCount },
+  });
+
+  return NextResponse.json({ ok: true, campaignsDetached: campaignCount });
 }

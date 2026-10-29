@@ -222,8 +222,14 @@ export function CompanyManagementContent() {
     useState<WorkspaceRole | null>(null);
   const [localMode, setLocalMode] = useState(!isSupabaseConfigured);
   const [submitting, setSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<CompanyRecord | null>(null);
+  const [deletingCompany, setDeletingCompany] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const deleteCompanyDialogRef = useRef<HTMLFormElement>(null);
+  useDialogScrollLock(Boolean(deleteTarget), deleteCompanyDialogRef);
 
   const adminAccess =
     isAdminUser(user) ||
@@ -570,6 +576,76 @@ export function CompanyManagementContent() {
     setSubmitting(false);
   }
 
+  function openDeleteCompany(company: CompanyRecord) {
+    setDeleteTarget(company);
+    setDeleteConfirmation("");
+    setDeleteError(null);
+    setError(null);
+    setNotice(null);
+  }
+
+  function closeDeleteCompany() {
+    if (deletingCompany) return;
+    setDeleteTarget(null);
+    setDeleteConfirmation("");
+    setDeleteError(null);
+  }
+
+  async function handleDeleteCompany(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!deleteTarget || deleteConfirmation.trim() !== "EXCLUIR") return;
+    setDeletingCompany(true);
+    setDeleteError(null);
+
+    if (!isSupabaseConfigured || localMode) {
+      const nextCompanies = companies.filter(
+        (company) => company.id !== deleteTarget.id,
+      );
+      persistDemo(workspaces, nextCompanies);
+      setNotice(`Empresa ${deleteTarget.name} removida deste navegador.`);
+      setDeleteTarget(null);
+      setDeleteConfirmation("");
+      setDeletingCompany(false);
+      return;
+    }
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      setDeleteError("Sua sessão expirou. Entre novamente para continuar.");
+      setDeletingCompany(false);
+      return;
+    }
+    const response = await fetch("/api/admin/companies", {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ companyId: deleteTarget.id }),
+    });
+    const body = (await response.json().catch(() => ({}))) as {
+      campaignsDetached?: number;
+      error?: string;
+    };
+    if (!response.ok) {
+      setDeleteError(body.error ?? "Não foi possível excluir a empresa.");
+      setDeletingCompany(false);
+      return;
+    }
+    setCompanies((current) =>
+      current.filter((company) => company.id !== deleteTarget.id),
+    );
+    const detachedCount = body.campaignsDetached ?? 0;
+    setNotice(
+      detachedCount
+        ? `Empresa removida. ${detachedCount} campanha(s) e seus resultados foram mantidos no workspace, sem vínculo com a empresa.`
+        : `Empresa ${deleteTarget.name} removida.`,
+    );
+    setDeleteTarget(null);
+    setDeleteConfirmation("");
+    setDeletingCompany(false);
+  }
+
   function handleModalKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") closeModal();
   }
@@ -759,12 +835,23 @@ export function CompanyManagementContent() {
                             <small>
                               Adicionado {formatDate(company.createdAt)}
                             </small>
-                            <button
-                              type="button"
-                              onClick={() => openCompanyModal(company)}
-                            >
-                              Editar <Icon name="arrow" size={14} />
-                            </button>
+                            <div className="companies-card-actions">
+                              <button
+                                type="button"
+                                onClick={() => openCompanyModal(company)}
+                              >
+                                Editar <Icon name="arrow" size={14} />
+                              </button>
+                              {adminAccess && (
+                                <button
+                                  className="companies-card-delete-button"
+                                  type="button"
+                                  onClick={() => openDeleteCompany(company)}
+                                >
+                                  Excluir <Icon name="close" size={13} />
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </article>
                       ))}
@@ -1013,6 +1100,84 @@ export function CompanyManagementContent() {
                     ? "Salvar alterações"
                     : "Adicionar cliente"}{" "}
                 <Icon name="arrow" size={15} />
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="companies-modal-backdrop"
+          role="presentation"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") closeDeleteCompany();
+          }}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeDeleteCompany();
+          }}
+        >
+          <form
+            ref={deleteCompanyDialogRef}
+            className="companies-modal companies-delete-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-company-heading"
+            onSubmit={(event) => void handleDeleteCompany(event)}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="companies-modal-head">
+              <div>
+                <h2 id="delete-company-heading">Excluir empresa</h2>
+                <p>
+                  {deleteTarget.name} será removida deste workspace. Campanhas,
+                  resultados e eventos históricos serão preservados no workspace
+                  sem vínculo com a empresa. Exemplos de e-mail associados
+                  precisam ser removidos antes.
+                </p>
+              </div>
+              <button
+                className="companies-modal-close"
+                type="button"
+                onClick={closeDeleteCompany}
+                aria-label="Fechar confirmação de exclusão"
+                disabled={deletingCompany}
+              >
+                <Icon name="close" size={17} />
+              </button>
+            </div>
+            <label className="companies-delete-confirmation">
+              Digite EXCLUIR para confirmar
+              <input
+                autoComplete="off"
+                value={deleteConfirmation}
+                onChange={(event) => setDeleteConfirmation(event.target.value)}
+                disabled={deletingCompany}
+              />
+            </label>
+            {deleteError && (
+              <p className="companies-modal-feedback is-error" role="alert">
+                {deleteError}
+              </p>
+            )}
+            <div className="companies-modal-footer">
+              <button
+                className="companies-cancel-button"
+                type="button"
+                onClick={closeDeleteCompany}
+                disabled={deletingCompany}
+              >
+                Cancelar
+              </button>
+              <button
+                className="companies-delete-confirm-button"
+                type="submit"
+                disabled={
+                  deletingCompany || deleteConfirmation.trim() !== "EXCLUIR"
+                }
+              >
+                {deletingCompany ? "Excluindo…" : "Excluir empresa"}
+                <Icon name="close" size={14} />
               </button>
             </div>
           </form>

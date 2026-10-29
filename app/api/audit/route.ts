@@ -45,6 +45,14 @@ const eventInfo: Record<
     type: "Usuários",
     description: "O convite não foi concluído; a conta foi removida.",
   },
+  "user.invite_resent": {
+    type: "Usuários",
+    description: "Convite de acesso reenviado por um administrador.",
+  },
+  "user.invite_resend_failed": {
+    type: "Usuários",
+    description: "Falha ao reenviar o convite de acesso.",
+  },
   "user.password_reset_sent": {
     type: "Usuários",
     description: "Link de acesso ou redefinição enviado por um administrador.",
@@ -80,6 +88,20 @@ const eventInfo: Record<
   "workspace.client_updated": {
     type: "Conexões",
     description: "Configurações da conexão de cliente atualizadas.",
+  },
+  "workspace.client_deleted": {
+    type: "Conexões",
+    description:
+      "Empresa removida; campanhas e resultados foram preservados no workspace.",
+  },
+  "workspace.client_delete_failed": {
+    type: "Conexões",
+    description: "Falha ao excluir a empresa; os vínculos foram restaurados.",
+  },
+  "workspace.client_delete_rollback_failed": {
+    type: "Conexões",
+    description:
+      "Falha ao excluir a empresa e restaurar parte dos vínculos históricos.",
   },
   "campaign.preview_created": {
     type: "Campanha",

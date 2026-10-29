@@ -866,7 +866,8 @@ export async function PATCH(request: NextRequest) {
     });
   }
 
-  if (payload.action !== "reset-password") {
+  const resendInvite = payload.action === "resend-invite";
+  if (payload.action !== "reset-password" && !resendInvite) {
     return responseError("Ação de usuário inválida.", 400);
   }
 
@@ -892,6 +893,13 @@ export async function PATCH(request: NextRequest) {
     return responseError("Usuário não encontrado.", 404);
   }
   const targetEmail = targetData.user.email;
+  const emailConfirmed = Boolean(targetData.user.email_confirmed_at);
+  if (resendInvite && emailConfirmed) {
+    return responseError(
+      "Este usuário já confirmou o e-mail. Use a redefinição de senha.",
+      409,
+    );
+  }
   const { data: targetMemberships, error: targetMembershipError } = await client
     .from("pierphish_workspace_members")
     .select("workspace_id")
@@ -911,7 +919,14 @@ export async function PATCH(request: NextRequest) {
     (workspaceId) =>
       ownerWorkspaceIds === null || ownerWorkspaceIds.includes(workspaceId),
   );
-  const recordPasswordReset = async (sent: boolean) => {
+  const recordAccessEmail = async (sent: boolean) => {
+    const action = resendInvite
+      ? sent
+        ? "user.invite_resent"
+        : "user.invite_resend_failed"
+      : sent
+        ? "user.password_reset_sent"
+        : "user.password_reset_failed";
     for (const workspaceId of auditWorkspaceIds.length
       ? auditWorkspaceIds
       : [null]) {
@@ -919,9 +934,7 @@ export async function PATCH(request: NextRequest) {
         workspaceId,
         actorUserId: adminUser.id,
         actorName: userDisplayName(adminUser) || adminUser.email,
-        action: sent
-          ? "user.password_reset_sent"
-          : "user.password_reset_failed",
+        action,
         resourceType: "user",
         resourceId: targetId,
         resourceName: userDisplayName(targetData.user) || "Acesso da pessoa",
@@ -932,14 +945,13 @@ export async function PATCH(request: NextRequest) {
   };
   const appBaseUrl = getAppBaseUrl(request.nextUrl.origin);
   if (!targetEmail || !isResendConfigured() || !appBaseUrl) {
-    await recordPasswordReset(false);
+    await recordAccessEmail(false);
     return responseError(
       "O envio de e-mails ainda não está configurado no servidor.",
       503,
     );
   }
 
-  const emailConfirmed = Boolean(targetData.user.email_confirmed_at);
   const { data: linkData, error: linkError } =
     await client.auth.admin.generateLink({
       type: emailConfirmed ? "recovery" : "invite",
@@ -949,7 +961,7 @@ export async function PATCH(request: NextRequest) {
       },
     });
   if (linkError || !linkData.user || !linkData.properties?.action_link) {
-    await recordPasswordReset(false);
+    await recordAccessEmail(false);
     return responseError("Não foi possível gerar o link de acesso.", 502);
   }
 
@@ -968,7 +980,7 @@ export async function PATCH(request: NextRequest) {
       },
     );
     if (metadataError) {
-      await recordPasswordReset(false);
+      await recordAccessEmail(false);
       return responseError(
         "Não foi possível preparar o convite de acesso.",
         502,
@@ -989,7 +1001,7 @@ export async function PATCH(request: NextRequest) {
           actionUrl: linkData.properties.action_link,
         }),
   );
-  await recordPasswordReset(emailResult.sent);
+  await recordAccessEmail(emailResult.sent);
   if (!emailResult.sent) {
     return responseError("Não foi possível enviar o e-mail de acesso.", 502);
   }

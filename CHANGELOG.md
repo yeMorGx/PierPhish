@@ -1,5 +1,13 @@
 # Change log e passagem de contexto
 
+### Convites e administração de empresas — 2026-10-29
+
+- A lista identifica contas sem e-mail confirmado como “Convite pendente” e oferece “Reenviar convite”. A API gera novo link de convite, reenvia pelo Resend e registra sucesso ou falha na auditoria. Contas confirmadas continuam com a ação de redefinir senha.
+- Exclusão de empresa exige confirmação digitando “EXCLUIR”. Preserva campanhas, resultados e eventos, removendo seus vínculos com a empresa. A exclusão é bloqueada enquanto houver exemplo de e-mail associado. Falhas restauram os vínculos quando possível e ficam registradas.
+- Exclusão de usuários já estava disponível para proprietários e administradores globais, com confirmação e remoção pela API administrativa.
+- Google Workspace e Microsoft Exchange já podem ser escolhidos ao criar ou editar uma empresa; confirmei o salvamento pelo formulário e pela API.
+- Validação: `pnpm lint`, Prettier e `git diff --check` aprovados. Sem testes automatizados, operação remota de banco ou deploy confirmado.
+
 ### Reversão da comparação e rankings — 2026-10-29
 
 - Revertida a comparação de campanhas e a alteração dos rankings introduzidas em `cec29cb`. Visão geral restaurada ao estado anterior a esse commit.
