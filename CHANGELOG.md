@@ -7,6 +7,7 @@
 - Exclusão de usuários já estava disponível para proprietários e administradores globais, com confirmação e remoção pela API administrativa.
 - Google Workspace e Microsoft Exchange já podem ser escolhidos ao criar ou editar uma empresa; confirmei o salvamento pelo formulário e pela API.
 - Validação: `pnpm lint`, Prettier e `git diff --check` aprovados. Sem testes automatizados, operação remota de banco ou deploy confirmado.
+- Código commitado em `50ee11c` e enviado para `origin/main`; deploy não verificado.
 
 ### Reversão da comparação e rankings — 2026-10-29
 
