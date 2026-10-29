@@ -36,6 +36,7 @@ type ManagedUser = {
   createdAt: string;
   lastSignInAt: string | null;
   emailConfirmed: boolean;
+  isGlobalAdmin: boolean;
   passwordRotationRequired: boolean;
   workspaceMemberships: WorkspaceMembership[];
 };
@@ -99,6 +100,7 @@ const demoUsers: ManagedUser[] = [
     createdAt: "2026-09-03T18:40:00.000Z",
     lastSignInAt: "2026-09-11T12:15:00.000Z",
     emailConfirmed: true,
+    isGlobalAdmin: true,
     passwordRotationRequired: false,
     workspaceMemberships: [
       {
@@ -117,6 +119,7 @@ const demoUsers: ManagedUser[] = [
     createdAt: "2026-09-08T14:25:00.000Z",
     lastSignInAt: "2026-09-11T10:42:00.000Z",
     emailConfirmed: true,
+    isGlobalAdmin: false,
     passwordRotationRequired: false,
     workspaceMemberships: [
       {
@@ -135,6 +138,7 @@ const demoUsers: ManagedUser[] = [
     createdAt: "2026-09-10T09:10:00.000Z",
     lastSignInAt: null,
     emailConfirmed: true,
+    isGlobalAdmin: false,
     passwordRotationRequired: true,
     workspaceMemberships: [
       {
@@ -252,10 +256,6 @@ export function UserManagementContent() {
     workspaceOptions.some(
       (workspace) => workspace.role === "owner" || workspace.role === "admin",
     );
-  const ownerAccess =
-    !isSupabaseConfigured ||
-    globalAdminAccess ||
-    workspaceOptions.some((workspace) => workspace.role === "owner");
   const availableRoleOptions = globalAdminAccess
     ? roleOptions
     : roleOptions.filter((option) => option.value !== "owner");
@@ -320,6 +320,7 @@ export function UserManagementContent() {
         setUsers(
           parsed.map((managedUser) => ({
             ...managedUser,
+            isGlobalAdmin: managedUser.isGlobalAdmin === true,
             workspaceMemberships: Array.isArray(
               managedUser.workspaceMemberships,
             )
@@ -484,6 +485,7 @@ export function UserManagementContent() {
         createdAt: new Date().toISOString(),
         lastSignInAt: null,
         emailConfirmed: true,
+        isGlobalAdmin: false,
         passwordRotationRequired: true,
         workspaceMemberships: [
           {
@@ -673,23 +675,31 @@ export function UserManagementContent() {
   }
 
   function canManageTarget(managedUser: ManagedUser) {
-    if (!ownerAccess || managedUser.id === user?.id) return false;
+    if (!adminAccess || managedUser.id === user?.id) return false;
+    if (managedUser.isGlobalAdmin && !globalAdminAccess) return false;
     if (globalAdminAccess || !isSupabaseConfigured) return true;
+    const managedWorkspaceIds = new Set(
+      workspaceOptions
+        .filter(
+          (workspace) =>
+            workspace.role === "owner" || workspace.role === "admin",
+        )
+        .map((workspace) => workspace.id),
+    );
     const ownedWorkspaceIds = new Set(
       workspaceOptions
         .filter((workspace) => workspace.role === "owner")
         .map((workspace) => workspace.id),
     );
+    const workspaceScope = ownedWorkspaceIds.size
+      ? ownedWorkspaceIds
+      : managedWorkspaceIds;
     return (
-      managedUser.workspaceMemberships.some(
-        (membership) =>
-          ownedWorkspaceIds.has(membership.workspaceId) &&
-          membership.role !== "owner",
+      managedUser.workspaceMemberships.some((membership) =>
+        workspaceScope.has(membership.workspaceId),
       ) &&
       !managedUser.workspaceMemberships.some(
-        (membership) =>
-          ownedWorkspaceIds.has(membership.workspaceId) &&
-          membership.role === "owner",
+        (membership) => membership.role === "owner",
       )
     );
   }

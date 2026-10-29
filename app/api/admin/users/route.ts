@@ -72,6 +72,18 @@ function roleLabel(role: WorkspaceRole) {
   }[role];
 }
 
+function isGlobalAdminAccount(user: User) {
+  const metadata = (user.app_metadata ?? {}) as AdminMetadata;
+  const role = typeof metadata.role === "string" ? metadata.role : "";
+  return (
+    user.email?.toLowerCase() === superAdminEmail ||
+    metadata.is_admin === true ||
+    role === "admin" ||
+    role === "owner" ||
+    role === "super_admin"
+  );
+}
+
 function getAdminClient() {
   if (!supabaseUrl || !serviceRoleKey) return null;
 
@@ -118,14 +130,7 @@ async function requireAdmin(request: NextRequest) {
   }
   identifyAikidoUser(data.user);
 
-  const metadata = (data.user.app_metadata ?? {}) as AdminMetadata;
-  const role = typeof metadata.role === "string" ? metadata.role : "";
-  const isGlobalAdmin =
-    data.user.email?.toLowerCase() === superAdminEmail ||
-    metadata.is_admin === true ||
-    role === "admin" ||
-    role === "owner" ||
-    role === "super_admin";
+  const isGlobalAdmin = isGlobalAdminAccount(data.user);
 
   let managedWorkspaceIds: string[] | null = null;
   let ownerWorkspaceIds: string[] | null = null;
@@ -172,10 +177,11 @@ async function requireAdmin(request: NextRequest) {
   };
 }
 
-async function canOwnerManageUser(
+async function canManagerManageUser(
   client: NonNullable<ReturnType<typeof getAdminClient>>,
   requesterId: string,
   targetId: string,
+  managedWorkspaceIds: string[] | null,
   ownerWorkspaceIds: string[] | null,
 ) {
   if (requesterId === targetId) {
@@ -188,11 +194,11 @@ async function canOwnerManageUser(
     };
   }
   if (ownerWorkspaceIds === null) return { allowed: true, error: null };
-  if (!ownerWorkspaceIds.length) {
+  if (!managedWorkspaceIds?.length) {
     return {
       allowed: false,
       error: responseError(
-        "Somente o proprietário do workspace pode executar esta ação.",
+        "Você não administra workspaces com acesso a este usuário.",
         403,
       ),
     };
@@ -202,8 +208,7 @@ async function canOwnerManageUser(
     .from("pierphish_workspace_members")
     .select("workspace_id,role")
     .eq("user_id", targetId)
-    .eq("status", "active")
-    .in("workspace_id", ownerWorkspaceIds);
+    .eq("status", "active");
   if (membershipError) {
     return {
       allowed: false,
@@ -211,20 +216,52 @@ async function canOwnerManageUser(
     };
   }
 
-  if (!memberships?.length) {
+  const targetMemberships = memberships ?? [];
+  if (
+    !targetMemberships.some((membership) =>
+      managedWorkspaceIds.includes(membership.workspace_id),
+    )
+  ) {
     return {
       allowed: false,
       error: responseError(
-        "Você só pode administrar usuários do seu workspace.",
+        "Você só pode administrar usuários dos workspaces que administra.",
         403,
       ),
     };
   }
-  if (memberships.some((membership) => membership.role === "owner")) {
+  if (
+    targetMemberships.some(
+      (membership) => !managedWorkspaceIds.includes(membership.workspace_id),
+    )
+  ) {
     return {
       allowed: false,
       error: responseError(
-        "A conta de um proprietário não pode ser alterada por outro proprietário.",
+        "Este usuário também pertence a um workspace que você não administra.",
+        403,
+      ),
+    };
+  }
+  if (targetMemberships.some((membership) => membership.role === "owner")) {
+    return {
+      allowed: false,
+      error: responseError(
+        "A conta de um proprietário não pode ser alterada por outro administrador.",
+        403,
+      ),
+    };
+  }
+  if (
+    ownerWorkspaceIds.length > 0 &&
+    !targetMemberships.some((membership) =>
+      ownerWorkspaceIds.includes(membership.workspace_id),
+    )
+  ) {
+    return {
+      allowed: false,
+      error: responseError(
+        "Você só pode administrar usuários de workspaces dos quais é proprietário.",
         403,
       ),
     };
@@ -327,6 +364,7 @@ function safeUser(
     createdAt: user.created_at,
     lastSignInAt: user.last_sign_in_at,
     emailConfirmed: Boolean(user.email_confirmed_at),
+    isGlobalAdmin: isGlobalAdminAccount(user),
     passwordRotationRequired:
       (user.app_metadata as { password_rotation_required?: unknown } | null)
         ?.password_rotation_required === true,
@@ -742,7 +780,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const { client, error, ownerWorkspaceIds, adminUser } =
+  const { client, error, managedWorkspaceIds, ownerWorkspaceIds, adminUser } =
     await requireAdmin(request);
   if (error || !client) {
     return error ?? responseError("Não foi possível validar a sessão.", 401);
@@ -874,10 +912,11 @@ export async function PATCH(request: NextRequest) {
   const targetId = typeof payload.userId === "string" ? payload.userId : "";
   if (!targetId) return responseError("Usuário não informado.", 400);
 
-  const permission = await canOwnerManageUser(
+  const permission = await canManagerManageUser(
     client,
     adminUser.id,
     targetId,
+    managedWorkspaceIds,
     ownerWorkspaceIds,
   );
   if (permission.error || !permission.allowed) {
@@ -891,6 +930,12 @@ export async function PATCH(request: NextRequest) {
     await client.auth.admin.getUserById(targetId);
   if (targetError || !targetData.user) {
     return responseError("Usuário não encontrado.", 404);
+  }
+  if (ownerWorkspaceIds !== null && isGlobalAdminAccount(targetData.user)) {
+    return responseError(
+      "Somente um administrador global pode alterar esta conta.",
+      403,
+    );
   }
   const targetEmail = targetData.user.email;
   const emailConfirmed = Boolean(targetData.user.email_confirmed_at);
@@ -1010,7 +1055,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const { client, error, ownerWorkspaceIds, adminUser } =
+  const { client, error, managedWorkspaceIds, ownerWorkspaceIds, adminUser } =
     await requireAdmin(request);
   if (error || !client) {
     return error ?? responseError("Não foi possível validar a sessão.", 401);
@@ -1026,10 +1071,11 @@ export async function DELETE(request: NextRequest) {
   const targetId = typeof payload.userId === "string" ? payload.userId : "";
   if (!targetId) return responseError("Usuário não informado.", 400);
 
-  const permission = await canOwnerManageUser(
+  const permission = await canManagerManageUser(
     client,
     adminUser.id,
     targetId,
+    managedWorkspaceIds,
     ownerWorkspaceIds,
   );
   if (permission.error || !permission.allowed) {
@@ -1043,6 +1089,12 @@ export async function DELETE(request: NextRequest) {
     await client.auth.admin.getUserById(targetId);
   if (targetError || !targetData.user) {
     return responseError("Usuário não encontrado.", 404);
+  }
+  if (ownerWorkspaceIds !== null && isGlobalAdminAccount(targetData.user)) {
+    return responseError(
+      "Somente um administrador global pode excluir esta conta.",
+      403,
+    );
   }
 
   const { data: targetMemberships } = await client
