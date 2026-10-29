@@ -1,5 +1,5 @@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type {
   CampaignParticipants,
   CampaignSummary,
@@ -227,59 +227,35 @@ export function PeopleRankings({
   loading,
   available,
 }: PeopleRankingsProps) {
-  const [view, setView] = useState("recurring");
   const rankings = useMemo(
     () => buildRankings(campaigns, participantsByCampaign),
     [campaigns, participantsByCampaign],
   );
 
   return (
-    <div className="people-rankings-tabs">
-      <div
-        className="campaign-comparison-metrics"
-        role="group"
-        aria-label="Ranking de pessoas"
-      >
-        <button
-          type="button"
-          aria-pressed={view === "recurring"}
-          onClick={() => setView("recurring")}
-        >
-          Cliques e dados
-        </button>
-        <button
-          type="button"
-          aria-pressed={view === "reporters"}
-          onClick={() => setView("reporters")}
-        >
-          Reportes
-        </button>
-      </div>
-      {view === "recurring" ? (
-        <RankingCard
-          companies={companies}
-          title="Pessoas mais recorrentes"
-          description="Mais campanhas com clique ou envio de dados. Cada campanha conta uma vez por pessoa."
-          metricLabel={campaignCountLabel}
-          countField="interactionCampaigns"
-          people={rankings.recurring}
-          emptyMessage="Nenhum clique ou envio de dados registrado nas campanhas deste filtro."
-          loading={loading}
-          available={available}
-        />
-      ) : (
-        <RankingCard
-          title="Pessoas que mais reportam"
-          companies={companies}
-          description="Campanhas em que cada pessoa reportou uma mensagem."
-          metricLabel={campaignCountLabel}
-          countField="reportedCampaigns"
-          people={rankings.reporters}
-          emptyMessage="Nenhum reporte registrado nas campanhas deste filtro."
-          loading={loading}
-          available={available}
-        />
-      )}
-    </div>
+    <>
+      <RankingCard
+        companies={companies}
+        title="Pessoas mais recorrentes"
+        description="Mais campanhas com clique ou envio de dados. Cada campanha conta uma vez por pessoa."
+        metricLabel={campaignCountLabel}
+        countField="interactionCampaigns"
+        people={rankings.recurring}
+        emptyMessage="Nenhum clique ou envio de dados registrado nas campanhas deste filtro."
+        loading={loading}
+        available={available}
+      />
+      <RankingCard
+        title="Pessoas que mais reportam"
+        companies={companies}
+        description="Campanhas em que cada pessoa reportou uma mensagem."
+        metricLabel={campaignCountLabel}
+        countField="reportedCampaigns"
+        people={rankings.reporters}
+        emptyMessage="Nenhum reporte registrado nas campanhas deste filtro."
+        loading={loading}
+        available={available}
+      />
+    </>
   );
 }

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
-import { CampaignComparison } from "@/components/dashboard/campaign-comparison";
 import {
   DashboardDateFilter,
   formatDashboardPeriodLabel,
@@ -796,7 +795,6 @@ export default function Home() {
           />
         </div>
       )}
-      <CampaignComparison campaigns={campaignSummary} />
       <footer className="hidden">
         <span>
           Última sincronização: {latestSync ?? "Nenhuma coleta realizada"}

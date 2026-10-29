@@ -1,5 +1,10 @@
 # Change log e passagem de contexto
 
+### Reversão da comparação e rankings — 2026-10-29
+
+- Revertida a comparação de campanhas e a alteração dos rankings introduzidas em `cec29cb`. Visão geral restaurada ao estado anterior a esse commit.
+- Validação: `pnpm lint` (TypeScript) e `git diff --check` aprovados. Sem deploy confirmado.
+
 ### Reversão do layout de rankings — 2026-10-29
 
 - Revertidos os três cards de rankings e a posição da tabela introduzidos em 894b2f4. Dashboard restaurado ao layout anterior a essa alteração.
@@ -12,7 +17,7 @@
 - Validação: Prettier, TypeScript e verificação do diff aprovados. Sem testes automatizados ou deploy confirmado.
 - Commit 894b2f4 e push para main confirmados; alteração revertida em 2026-10-29.
 
-### Comparação e rankings inspirados nos relatórios — 2026-10-28
+### Comparação e rankings inspirados nos relatórios (revertidos em 2026-10-29) — 2026-10-28
 
 - Adicionada comparação de até três campanhas na visão geral, nos dois modos do dashboard. Seleção inicial usa as três mais recentes; ordem da comparação é cronológica. Empresa, período e exclusão de testes seguem os dados filtrados existentes.
 - Métricas disponíveis: entregues, abertos, cliques, dados enviados e reportes. Cada linha mostra quantidade, base, taxa e diferença em pontos percentuais perante a campanha anterior selecionada. Entregues usa participações; interações usam entregues, com fallback explícito para participações. Base zero mostra taxa indisponível.
