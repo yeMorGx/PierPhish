@@ -1,5 +1,11 @@
 # Change log e passagem de contexto
 
+### Bloqueio do dashboard durante primeiro acesso — 2026-10-30
+
+- Dashboard passa a montar seu conteúdo somente após o AuthGuard autorizar o acesso. Navegar para a raiz pelo histórico ou pela marca durante a troca obrigatória de senha retorna para /alterar-senha, sem montar o conteúdo operacional ou iniciar sua sincronização.
+- Troca obrigatória tem prioridade sobre a rota de MFA no guard compartilhado. APIs que usam requireMfa consultam o usuário no servidor e recusam operações enquanto password_rotation_required estiver ativo, inclusive com JWT anterior à mudança do metadado.
+- Validações: TypeScript, Prettier e git diff --check. Sem testes automatizados ou operação remota. Próximo passo: conferir histórico do navegador com conta de primeiro acesso após deploy; deploy não confirmado. Commit/push consultáveis no histórico Git.
+
 ### Convite privado sem envio de e-mail — 2026-10-30
 
 - Adicionada a entrega por link privado na criação de usuários, selecionada por padrão. E-mail continua como identificador da conta, mas o modo por link não depende do Resend nem envia mensagens. O administrador confirma a identidade por outro canal e compartilha o convite diretamente com a pessoa.

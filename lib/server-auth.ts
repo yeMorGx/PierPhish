@@ -21,6 +21,23 @@ export function identifyAikidoUser(user: { id: string }) {
  * AAL2 means Supabase has verified a second factor for the current session.
  */
 export async function requireMfa(client: SupabaseClient, token: string) {
+  const { data: userData, error: userError } = await client.auth.getUser(token);
+  if (userError || !userData.user) {
+    return NextResponse.json(
+      { error: "Sua sessão não é válida." },
+      { status: 401 },
+    );
+  }
+  if (userData.user.app_metadata?.password_rotation_required === true) {
+    return NextResponse.json(
+      {
+        error: "Defina uma nova senha antes de continuar.",
+        code: "password_setup_required",
+      },
+      { status: 403 },
+    );
+  }
+
   const { data, error } = await client.auth.getClaims(token);
   const claims = data?.claims as { aal?: unknown } | undefined;
 

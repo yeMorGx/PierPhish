@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
+import { AuthGuard } from "@/components/auth/auth-guard";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
 import {
   DashboardDateFilter,
@@ -119,6 +120,14 @@ function isGlobalAdmin(user: ReturnType<typeof useAuth>["user"]) {
 }
 
 export default function Home() {
+  return (
+    <AuthGuard>
+      <HomeContent />
+    </AuthGuard>
+  );
+}
+
+function HomeContent() {
   const router = useRouter();
   const { ready, user } = useAuth();
   const { preferences: themePreferences } = useTheme();

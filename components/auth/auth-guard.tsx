@@ -23,16 +23,17 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       router.replace("/login");
       return;
     }
-    if (pathname === "/mfa") {
-      setMfaState("allowed");
-      return;
-    }
     if (mustChangePassword && pathname !== "/alterar-senha") {
       router.replace("/alterar-senha");
       return;
     }
 
     if (mustChangePassword) {
+      setMfaState("allowed");
+      return;
+    }
+
+    if (pathname === "/mfa") {
       setMfaState("allowed");
       return;
     }
