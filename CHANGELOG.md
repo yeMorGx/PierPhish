@@ -1,5 +1,11 @@
 # Change log e passagem de contexto
 
+### Renovar convite na tela de cópia e rolagem do diretório — 2026-10-30
+
+- Painel do link privado recebe botão Gerar novo link, vinculado à mesma conta e à mesma API administrativa. Não cria outra pessoa, não envia e-mail e mantém as verificações de permissão e primeiro acesso pendente no servidor. Carregamento e falha de rede recebem feedback e liberação do estado ocupado.
+- Menu de ações do diretório usa modal=false: o padrão modal do Base UI bloqueava a rolagem do documento e podia conflitar com o bloqueio/restauração dos modais de exclusão e redefinição. Os modais continuam usando seu próprio bloqueio e contenção de foco; o menu mantém navegação por teclado e fechamento próprios.
+- Validações: TypeScript, Prettier e git diff --check. Propriedade modal conferida nos tipos da biblioteca instalada. Sem testes automatizados, geração real de convite ou validação visual autenticada. Próximo passo: após deploy, recarregar a aba e conferir menu, renovação, abertura/fechamento de modais e rolagem. Commit/push registrados no histórico Git; deploy não confirmado.
+
 ### Aceitação explícita do convite e sessão de primeiro acesso — 2026-10-30
 
 - Usuário relatou que o destinatário abriu o convite e foi enviado ao login sem definir senha. O fluxo anterior redirecionava para login quando não havia sessão, ocultando convites inválidos ou expirados. A causa exata do link real não foi reproduzida; nenhum token do destinatário foi solicitado ou consumido.

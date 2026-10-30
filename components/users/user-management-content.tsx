@@ -197,6 +197,7 @@ export function UserManagementContent() {
   >("directory");
   const [delivery, setDelivery] = useState<"email" | "link">("link");
   const [inviteRecipient, setInviteRecipient] = useState("");
+  const [inviteTarget, setInviteTarget] = useState<ManagedUser | null>(null);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [copyNotice, setCopyNotice] = useState("");
   const [directorySearch, setDirectorySearch] = useState("");
@@ -558,6 +559,7 @@ export function UserManagementContent() {
     setEmail("");
     setSelectedExcludeFromStatistics(false);
     setInviteRecipient(email.trim());
+    setInviteTarget(body.inviteLink ? body.user : null);
     setInviteLink(body.inviteLink ?? null);
     setCopyNotice("");
     setNotice(
@@ -793,51 +795,57 @@ export function UserManagementContent() {
     setCopyNotice("");
     setActionLoading(true);
     setError(null);
-    setNotice(null);
+    setNotice(delivery === "link" ? "Gerando novo link privado…" : null);
 
-    if (!isSupabaseConfigured) {
-      setNotice(`Convite simulado para ${managedUser.email}.`);
-      setActionLoading(false);
-      return;
-    }
+    try {
+      if (!isSupabaseConfigured) {
+        setNotice(`Convite simulado para ${managedUser.email}.`);
+        return;
+      }
 
-    const accessToken = await getAccessToken();
-    if (!accessToken) {
-      setError("Sua sessão expirou. Entre novamente para continuar.");
+      const accessToken = await getAccessToken();
+      if (!accessToken) {
+        setError("Sua sessão expirou. Entre novamente para continuar.");
+        return;
+      }
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "resend-invite",
+          delivery,
+          userId: managedUser.id,
+        }),
+      });
+      const body = (await response.json().catch(() => ({}))) as {
+        inviteLink?: string;
+        error?: string;
+      };
+      if (!response.ok) {
+        setError(body.error ?? "Não foi possível reenviar o convite.");
+        return;
+      }
+      if (body.inviteLink) {
+        setInviteTarget(managedUser);
+        setInviteRecipient(managedUser.email);
+        setInviteLink(body.inviteLink);
+        setCopyNotice("");
+        setActivePanel("create");
+        setNotice(`Link gerado para ${managedUser.email}.`);
+      } else {
+        setNotice(`Convite reenviado para ${managedUser.email}.`);
+      }
+    } catch {
+      setError(
+        "Não foi possível preparar o convite. Confira sua conexão e tente novamente.",
+      );
+      setNotice(null);
+    } finally {
       setActionLoading(false);
-      return;
     }
-    const response = await fetch("/api/admin/users", {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        action: "resend-invite",
-        delivery,
-        userId: managedUser.id,
-      }),
-    });
-    const body = (await response.json().catch(() => ({}))) as {
-      inviteLink?: string;
-      error?: string;
-    };
-    if (!response.ok) {
-      setError(body.error ?? "Não foi possível reenviar o convite.");
-      setActionLoading(false);
-      return;
-    }
-    if (body.inviteLink) {
-      setInviteRecipient(managedUser.email);
-      setInviteLink(body.inviteLink);
-      setCopyNotice("");
-      setActivePanel("create");
-      setNotice(`Link gerado para ${managedUser.email}.`);
-    } else {
-      setNotice(`Convite reenviado para ${managedUser.email}.`);
-    }
-    setActionLoading(false);
   }
 
   async function handleDeleteUser() {
@@ -1145,6 +1153,18 @@ export function UserManagementContent() {
                       >
                         Copiar link privado
                       </button>
+                      {inviteTarget && (
+                        <button
+                          type="button"
+                          disabled={actionLoading || submitting}
+                          className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm focus:underline disabled:opacity-50"
+                          onClick={() =>
+                            void handleResendInvite(inviteTarget, "link")
+                          }
+                        >
+                          Gerar novo link
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm focus:underline"
@@ -1555,7 +1575,7 @@ export function UserManagementContent() {
                               className="px-6 py-4 text-right"
                             >
                               {canManageTarget(managedUser) ? (
-                                <Menu.Root>
+                                <Menu.Root modal={false}>
                                   <Menu.Trigger
                                     className="users-actions-trigger"
                                     aria-label={`Ações de ${managedUser.name || managedUser.email}`}
