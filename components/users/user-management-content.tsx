@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Menu } from "@base-ui/react/menu";
+import { MoreHorizontal } from "lucide-react";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -1538,62 +1540,82 @@ export function UserManagementContent() {
                               className="px-6 py-4 text-right"
                             >
                               {canManageTarget(managedUser) ? (
-                                <div className="flex justify-end gap-2">
-                                  {managedUser.emailConfirmed ? (
-                                    <button
-                                      className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[var(--text-muted)] transition-colors hover:border-[var(--text-muted)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
-                                      type="button"
-                                      onClick={() =>
-                                        openResetPassword(managedUser)
-                                      }
-                                      disabled={actionLoading}
-                                    >
-                                      <Icon name="settings" size={12} />
-                                      Redefinir
-                                    </button>
-                                  ) : (
-                                    <button
-                                      className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[var(--text-muted)] transition-colors hover:border-[var(--text-muted)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50"
-                                      type="button"
-                                      onClick={() =>
-                                        void handleResendInvite(managedUser)
-                                      }
-                                      disabled={actionLoading}
-                                    >
-                                      <Icon name="arrow" size={12} />
-                                      Reenviar convite
-                                    </button>
-                                  )}
-                                  {!managedUser.emailConfirmed && (
-                                    <button
-                                      type="button"
-                                      disabled={actionLoading}
-                                      className="rounded-lg border border-[var(--line)] px-3 py-2 text-xs text-[var(--ink)] focus:underline disabled:opacity-50"
-                                      onClick={() =>
-                                        void handleResendInvite(
-                                          managedUser,
-                                          "link",
-                                        )
-                                      }
-                                    >
-                                      Gerar link privado
-                                    </button>
-                                  )}
-                                  <button
-                                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--line)] px-2.5 py-2 text-[10px] font-bold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)] disabled:cursor-not-allowed disabled:opacity-50"
-                                    type="button"
-                                    onClick={() => {
-                                      setDeleteTarget(managedUser);
-                                      setDeleteConfirmation("");
-                                      setError(null);
-                                      setNotice(null);
-                                    }}
+                                <Menu.Root>
+                                  <Menu.Trigger
+                                    className="users-actions-trigger"
+                                    aria-label={`Ações de ${managedUser.name || managedUser.email}`}
                                     disabled={actionLoading}
                                   >
-                                    <Icon name="close" size={12} />
-                                    Excluir
-                                  </button>
-                                </div>
+                                    <MoreHorizontal
+                                      size={18}
+                                      aria-hidden="true"
+                                    />
+                                  </Menu.Trigger>
+                                  <Menu.Portal>
+                                    <Menu.Positioner
+                                      sideOffset={8}
+                                      align="end"
+                                      className="z-50"
+                                    >
+                                      <Menu.Popup className="users-actions-menu">
+                                        {managedUser.emailConfirmed ? (
+                                          <Menu.Item
+                                            className="users-actions-item"
+                                            disabled={actionLoading}
+                                            onClick={() =>
+                                              openResetPassword(managedUser)
+                                            }
+                                          >
+                                            <Icon name="settings" size={16} />{" "}
+                                            Redefinir senha
+                                          </Menu.Item>
+                                        ) : (
+                                          <>
+                                            <Menu.Item
+                                              className="users-actions-item"
+                                              disabled={actionLoading}
+                                              onClick={() =>
+                                                void handleResendInvite(
+                                                  managedUser,
+                                                )
+                                              }
+                                            >
+                                              <Icon name="arrow" size={16} />{" "}
+                                              Reenviar convite
+                                            </Menu.Item>
+                                            <Menu.Item
+                                              className="users-actions-item"
+                                              disabled={actionLoading}
+                                              onClick={() =>
+                                                void handleResendInvite(
+                                                  managedUser,
+                                                  "link",
+                                                )
+                                              }
+                                            >
+                                              <Icon name="plus" size={16} />{" "}
+                                              Gerar link privado
+                                            </Menu.Item>
+                                          </>
+                                        )}
+                                        <Menu.Separator className="users-actions-separator" />
+                                        <Menu.Item
+                                          className="users-actions-item"
+                                          disabled={actionLoading}
+                                          onClick={() => {
+                                            setDeleteTarget(managedUser);
+                                            setDeleteConfirmation("");
+                                            setError(null);
+                                            setNotice(null);
+                                          }}
+                                        >
+                                          <Icon name="close" size={16} />{" "}
+                                          Excluir usuário
+                                        </Menu.Item>
+                                      </Menu.Popup>
+                                    </Menu.Positioner>
+                                  </Menu.Portal>
+                                </Menu.Root>
                               ) : (
                                 <span className="text-[10px] text-[var(--text-muted)]">
                                   —

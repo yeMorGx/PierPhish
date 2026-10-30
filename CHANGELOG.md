@@ -1,5 +1,12 @@
 # Change log e passagem de contexto
 
+### Ações compactas no diretório de usuários — 2026-10-30
+
+- Corrigida a coluna de ações que espremia três botões e quebrava seus rótulos letra por letra, aumentando a altura das linhas. Cada usuário elegível agora tem um botão de menu de 40 px; a coluna reserva 96 px no desktop.
+- Menu usa o componente Base UI já instalado, com portal para evitar recorte pela tabela, navegação por teclado, foco por fundo/sublinhado e rótulo acessível com identificação da pessoa. Textos ficam em uma linha, com ícones funcionais; exclusão segue exigindo a confirmação existente.
+- Preservadas as permissões e ações de reenviar convite, gerar link privado e redefinir senha. Aparência usa tokens existentes, borda de 1 px e nenhum ring, sombra ou outline adicional.
+- Validações: TypeScript, Prettier e git diff --check. Sem testes automatizados. Próximo passo: conferir o menu no navegador após deploy, em desktop e mobile; contraste não medido nesta tarefa e deploy não confirmado. Commit/push registrados no histórico Git.
+
 ### Identificação no primeiro acesso — 2026-10-30
 
 - Tela de definição de senha mostra o nome cadastrado no convite e o e-mail parcialmente oculto, obtidos da sessão autenticada. Nome ausente mantém o texto genérico. Nenhum nome ou e-mail foi adicionado à URL; parâmetros externos não são usados para identificar a conta na tela.
