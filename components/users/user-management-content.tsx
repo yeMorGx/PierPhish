@@ -784,7 +784,11 @@ export function UserManagementContent() {
     managedUser: ManagedUser,
     delivery: "email" | "link" = "email",
   ) {
-    if (managedUser.emailConfirmed) return;
+    if (
+      managedUser.emailConfirmed &&
+      (delivery !== "link" || !managedUser.passwordRotationRequired)
+    )
+      return;
     setInviteLink(null);
     setCopyNotice("");
     setActionLoading(true);
@@ -1594,20 +1598,23 @@ export function UserManagementContent() {
                                               <Icon name="arrow" size={16} />{" "}
                                               Reenviar convite
                                             </Menu.Item>
-                                            <Menu.Item
-                                              className="users-actions-item"
-                                              disabled={actionLoading}
-                                              onClick={() =>
-                                                void handleResendInvite(
-                                                  managedUser,
-                                                  "link",
-                                                )
-                                              }
-                                            >
-                                              <Icon name="plus" size={16} />{" "}
-                                              Gerar link privado
-                                            </Menu.Item>
                                           </>
+                                        )}
+                                        {(!managedUser.emailConfirmed ||
+                                          managedUser.passwordRotationRequired) && (
+                                          <Menu.Item
+                                            className="users-actions-item"
+                                            disabled={actionLoading}
+                                            onClick={() =>
+                                              void handleResendInvite(
+                                                managedUser,
+                                                "link",
+                                              )
+                                            }
+                                          >
+                                            <Icon name="plus" size={16} /> Gerar
+                                            link privado
+                                          </Menu.Item>
                                         )}
                                         <Menu.Separator className="users-actions-separator" />
                                         <Menu.Item

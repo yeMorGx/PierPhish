@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   AuthPageShell,
   StaticAuthArtwork,
@@ -34,9 +35,9 @@ export function PasswordSetupForm() {
 
   useEffect(() => {
     if (!ready) return;
-    if (!isSupabaseConfigured || !user) {
-      router.replace(isSupabaseConfigured ? "/login" : "/");
-    } else if (!mustChangePassword) {
+    if (!isSupabaseConfigured) {
+      router.replace("/");
+    } else if (user && !mustChangePassword) {
       router.replace("/mfa");
     }
   }, [mustChangePassword, ready, router, user]);
@@ -158,8 +159,16 @@ export function PasswordSetupForm() {
             <Icon name="arrow" size={17} />
           </button>
         </form>
-      ) : (
+      ) : !ready ? (
         <div className="login-loading">Verificando seu acesso…</div>
+      ) : (
+        <div className="login-error" role="alert">
+          <p>
+            Não foi possível validar seu convite. Ele pode ter expirado ou já
+            ter sido usado. Peça ao administrador um novo link privado.
+          </p>
+          <Link href="/login">Já defini minha senha: entrar</Link>
+        </div>
       )}
 
       <p className="login-footer">

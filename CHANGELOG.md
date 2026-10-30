@@ -1,5 +1,13 @@
 # Change log e passagem de contexto
 
+### Aceitação explícita do convite e sessão de primeiro acesso — 2026-10-30
+
+- Usuário relatou que o destinatário abriu o convite e foi enviado ao login sem definir senha. O fluxo anterior redirecionava para login quando não havia sessão, ocultando convites inválidos ou expirados. A causa exata do link real não foi reproduzida; nenhum token do destinatário foi solicitado ou consumido.
+- Novos links privados abrem /aceitar-convite no próprio PierSec. Token fica no fragmento, sem e-mail/nome na URL e sem envio no GET do documento. A validação por Supabase verifyOtp ocorre somente ao clicar em aceitar; leitura/prévia simples do endereço não consome o convite. Após sucesso, fragmento é removido e a pessoa segue para /alterar-senha. Erros inválido/expirado/usado e falha de rede são apresentados na própria página.
+- AuthProvider registra o listener antes da leitura inicial e evita que uma leitura antiga sobrescreva evento de sessão mais recente. Tela de primeiro acesso sem sessão mostra instruções para obter novo link, em vez de redirecionar silenciosamente ao login.
+- Gerar link privado também fica disponível para contas já confirmadas que ainda exigem troca de senha. Nesse caso usa token de recuperação, mantendo o bloqueio de primeiro acesso e a autorização administrativa existente. Contas já ativadas não passam a expor links privados de recuperação aos administradores.
+- Validações: TypeScript, Prettier e git diff --check; documentação oficial verifyOtp e tipos do SDK instalado consultados. Sem testes automatizados, convite real, alteração de banco ou deploy confirmado. Próximo passo: após publicação, gerar novo link para a conta pendente e validar em outro navegador; links antigos não ganham a nova etapa. Commit/push registrados no histórico Git.
+
 ### Cores semânticas no diretório — 2026-10-30
 
 - Níveis de permissão recebem pills azuis; acessos ativos verdes e convites/trocas pendentes âmbar. Avatares usam azul suave, cabeçalho tem superfície mais clara e exclusão no menu usa vermelho semântico. Tokens restritos ao diretório e ao menu, com variantes claro/escuro; exceção de cor solicitada pelo usuário.

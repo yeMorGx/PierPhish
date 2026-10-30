@@ -25,31 +25,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     let mounted = true;
-    let subscription: { unsubscribe: () => void } | null = null;
+    let sessionChanged = false;
+    const listener = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (!mounted) return;
+      sessionChanged = true;
+      setSession(nextSession);
+      setReady(true);
+      if (event === "SIGNED_IN" && nextSession?.access_token) {
+        recordClientAuditAction(
+          nextSession.access_token,
+          "auth.login_succeeded",
+        );
+      }
+    });
+    const subscription = listener.data.subscription;
 
     void (async () => {
       try {
         const { data } = await supabase.auth.getSession();
-        if (!mounted) return;
+        if (!mounted || sessionChanged) return;
         setSession(data.session ?? null);
         setReady(true);
-
-        const listener = supabase.auth.onAuthStateChange(
-          (event, nextSession) => {
-            if (!mounted) return;
-            setSession(nextSession);
-            setReady(true);
-            if (event === "SIGNED_IN" && nextSession?.access_token) {
-              recordClientAuditAction(
-                nextSession.access_token,
-                "auth.login_succeeded",
-              );
-            }
-          },
-        );
-        subscription = listener.data.subscription;
       } catch {
-        if (!mounted) return;
+        if (!mounted || sessionChanged) return;
         setSession(null);
         setReady(true);
       }

@@ -13,6 +13,7 @@ function pageTitle(pathname: string) {
 
   const titles: Record<string, string> = {
     "/alterar-senha": "Alterar senha",
+    "/aceitar-convite": "Aceitar convite",
     "/apresentacao": "Apresentação",
     "/configuracoes": "Configurações",
     "/empresas": "Empresas",
@@ -34,9 +35,13 @@ function pageTitle(pathname: string) {
 }
 
 function isWorkspaceAwarePage(pathname: string) {
-  return !["/alterar-senha", "/login", "/mfa", "/politica-de-cookies"].includes(
-    pathname,
-  );
+  return ![
+    "/aceitar-convite",
+    "/alterar-senha",
+    "/login",
+    "/mfa",
+    "/politica-de-cookies",
+  ].includes(pathname);
 }
 
 export function PageMetadata() {

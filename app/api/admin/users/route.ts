@@ -800,7 +800,9 @@ export async function POST(request: NextRequest) {
     {
       user: safeUser(updatedUserData.user, workspaceMemberships),
       ...(manualDelivery
-        ? { inviteLink: inviteData.properties.action_link }
+        ? {
+            inviteLink: `${appBaseUrl}/aceitar-convite#token_hash=${encodeURIComponent(inviteData.properties.hashed_token)}&type=invite`,
+          }
         : {}),
     },
     { status: 201, headers: { "Cache-Control": "no-store" } },
@@ -968,7 +970,14 @@ export async function PATCH(request: NextRequest) {
   }
   const targetEmail = targetData.user.email;
   const emailConfirmed = Boolean(targetData.user.email_confirmed_at);
-  if (resendInvite && emailConfirmed) {
+  if (
+    resendInvite &&
+    emailConfirmed &&
+    !(
+      manualDelivery &&
+      targetData.user.app_metadata?.password_rotation_required === true
+    )
+  ) {
     return responseError(
       "Este usuário já confirmou o e-mail. Use a redefinição de senha.",
       409,
@@ -1081,7 +1090,10 @@ export async function PATCH(request: NextRequest) {
       });
     }
     return NextResponse.json(
-      { ok: true, inviteLink: linkData.properties.action_link },
+      {
+        ok: true,
+        inviteLink: `${appBaseUrl}/aceitar-convite#token_hash=${encodeURIComponent(linkData.properties.hashed_token)}&type=${emailConfirmed ? "recovery" : "invite"}`,
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   }
