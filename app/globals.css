@@ -16957,11 +16957,62 @@ html[data-theme][data-card-style] .companies-security-note svg {
 .users-directory-container {
   min-width: 0;
 }
+.users-directory-table,
+.users-actions-menu {
+  --users-info: #245eaa;
+  --users-success: #246940;
+  --users-warning: #805500;
+  --users-danger: #a52d40;
+}
+html[data-theme="dark"] .users-directory-table,
+html[data-theme="dark"] .users-actions-menu {
+  --users-info: #9bc5ff;
+  --users-success: #98d7ab;
+  --users-warning: #f4cd75;
+  --users-danger: #ffacb9;
+}
+.users-directory-badge {
+  --users-tone: var(--text-muted);
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--users-tone) 30%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--users-tone) 12%, var(--surface));
+  color: var(--users-tone);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: normal;
+}
+.users-directory-badge[data-tone="info"] {
+  --users-tone: var(--users-info);
+}
+.users-directory-badge[data-tone="success"] {
+  --users-tone: var(--users-success);
+}
+.users-directory-badge[data-tone="warning"] {
+  --users-tone: var(--users-warning);
+}
+.users-directory-avatar {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--users-info) 14%, var(--surface));
+  color: var(--users-info);
+  font-size: 11px;
+  font-weight: 600;
+}
 .users-directory-table {
   width: 100%;
   table-layout: fixed;
 }
 .users-directory-table th {
+  background: var(--surface-soft);
   font-size: 11px;
   letter-spacing: 0;
   text-transform: none;
@@ -16989,8 +17040,16 @@ html[data-theme][data-card-style] .companies-security-note svg {
 }
 .users-directory-table td button {
   min-height: 36px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.users-directory-table td:last-child > div {
+  flex-wrap: wrap;
 }
 .users-actions-trigger {
+  white-space: nowrap;
+  overflow-wrap: normal;
   display: inline-flex;
   width: 40px;
   height: 40px;
@@ -17000,7 +17059,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: transparent;
-  color: var(--ink);
+  color: var(--users-info);
   cursor: pointer;
   transition: background-color 150ms ease-out;
 }
@@ -17024,7 +17083,7 @@ html[data-theme][data-card-style] .companies-security-note svg {
   padding: 4px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: var(--surface);
+  background: var(--surface-soft);
   color: var(--ink);
 }
 .users-actions-item {
@@ -17045,6 +17104,9 @@ html[data-theme][data-card-style] .companies-security-note svg {
 .users-actions-item:focus-visible {
   background: var(--surface-soft);
   text-decoration: underline;
+}
+.users-actions-item[data-action="delete"] {
+  color: var(--users-danger);
 }
 .users-actions-separator {
   height: 1px;

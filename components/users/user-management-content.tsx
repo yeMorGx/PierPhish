@@ -1451,7 +1451,7 @@ export function UserManagementContent() {
                           >
                             <td data-label="Pessoa" className="px-6 py-4">
                               <div className="flex items-center gap-3">
-                                <span className="grid size-9 flex-none place-items-center rounded-full bg-[var(--surface-soft)] text-[10px] font-bold text-[var(--ink)]">
+                                <span className="users-directory-avatar">
                                   {getInitials(
                                     managedUser.name,
                                     managedUser.email,
@@ -1496,7 +1496,10 @@ export function UserManagementContent() {
                                         className="grid gap-1"
                                         key={`${managedUser.id}-${membership.workspaceId}-role`}
                                       >
-                                        <span className="inline-flex w-fit rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[9px] font-bold text-[var(--text-muted)]">
+                                        <span
+                                          className="users-directory-badge"
+                                          data-tone="info"
+                                        >
                                           {roleLabel(membership.role)}
                                         </span>
                                         {membership.excludeFromStatistics ? (
@@ -1515,7 +1518,15 @@ export function UserManagementContent() {
                               </div>
                             </td>
                             <td data-label="Acesso" className="px-4 py-4">
-                              <span className="inline-flex rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-[9px] font-bold text-[var(--text-muted)]">
+                              <span
+                                className="users-directory-badge"
+                                data-tone={
+                                  !managedUser.emailConfirmed ||
+                                  managedUser.passwordRotationRequired
+                                    ? "warning"
+                                    : "success"
+                                }
+                              >
                                 {!managedUser.emailConfirmed
                                   ? "Convite pendente"
                                   : managedUser.passwordRotationRequired
@@ -1601,6 +1612,7 @@ export function UserManagementContent() {
                                         <Menu.Separator className="users-actions-separator" />
                                         <Menu.Item
                                           className="users-actions-item"
+                                          data-action="delete"
                                           disabled={actionLoading}
                                           onClick={() => {
                                             setDeleteTarget(managedUser);

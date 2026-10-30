@@ -1,5 +1,11 @@
 # Change log e passagem de contexto
 
+### Cores semânticas no diretório — 2026-10-30
+
+- Níveis de permissão recebem pills azuis; acessos ativos verdes e convites/trocas pendentes âmbar. Avatares usam azul suave, cabeçalho tem superfície mais clara e exclusão no menu usa vermelho semântico. Tokens restritos ao diretório e ao menu, com variantes claro/escuro; exceção de cor solicitada pelo usuário.
+- Conferência por leitura dos arquivos JavaScript públicos de /usuarios confirmou que a produção já contém users-actions-trigger, da correção anterior. O print recebido ainda mostra os botões antigos: recarregar a aba é necessário para descartar o código anterior. Não foi alterado cache global nem forçado deploy por esta tarefa.
+- Validações: TypeScript, Prettier, diff check e cálculo de contraste das três pills contra seus fundos nos temas padrão. Detector Impeccable apontou duas ocorrências preexistentes fora do escopo (borda lateral em outro componente e transição de largura); nenhuma alteração nessas áreas. Sem testes automatizados ou verificação visual autenticada. Próximo passo: atualizar a aba após deploy desta versão e conferir o diretório. Commit/push registrados no histórico Git.
+
 ### Ações compactas no diretório de usuários — 2026-10-30
 
 - Corrigida a coluna de ações que espremia três botões e quebrava seus rótulos letra por letra, aumentando a altura das linhas. Cada usuário elegível agora tem um botão de menu de 40 px; a coluna reserva 96 px no desktop.
