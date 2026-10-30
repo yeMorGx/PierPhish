@@ -24,6 +24,7 @@ type AdminMetadata = {
 };
 
 type CreateUserPayload = {
+  delivery?: unknown;
   mode?: unknown;
   name?: unknown;
   email?: unknown;
@@ -33,6 +34,7 @@ type CreateUserPayload = {
 };
 
 type UserActionPayload = {
+  delivery?: unknown;
   action?: unknown;
   userId?: unknown;
   workspaceId?: unknown;
@@ -465,6 +467,7 @@ export async function POST(request: NextRequest) {
   }
 
   const mode = payload.mode === "invite" ? "invite" : "create";
+  const manualDelivery = mode === "create" && payload.delivery === "link";
   const name = typeof payload.name === "string" ? payload.name.trim() : "";
   const email = typeof payload.email === "string" ? payload.email.trim() : "";
   const workspaceId =
@@ -480,7 +483,7 @@ export async function POST(request: NextRequest) {
   }
 
   const appBaseUrl = getAppBaseUrl(request.nextUrl.origin);
-  if (!isResendConfigured() || !appBaseUrl) {
+  if ((!manualDelivery && !isResendConfigured()) || !appBaseUrl) {
     return responseError(
       "O envio de e-mails ainda não está configurado no servidor.",
       503,
@@ -655,6 +658,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const existingAccount = await findAuthUserByEmail(
+    (options) => client.auth.admin.listUsers(options),
+    email,
+  );
+  if (existingAccount.error) {
+    return responseError("Não foi possível verificar a conta existente.", 503);
+  }
+  if (existingAccount.user) {
+    return responseError(
+      "Já existe uma conta com este e-mail. Use as ações da lista ou vincule a conta existente.",
+      409,
+    );
+  }
+
   const { data: inviteData, error: createError } =
     await client.auth.admin.generateLink({
       type: "invite",
@@ -702,13 +719,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const emailResult = await sendPierSecEmail(
-    makeAccountInviteEmail({
-      to: email,
-      name,
-      actionUrl: inviteData.properties.action_link,
-    }),
-  );
+  const emailResult = manualDelivery
+    ? { sent: true }
+    : await sendPierSecEmail(
+        makeAccountInviteEmail({
+          to: email,
+          name,
+          actionUrl: inviteData.properties.action_link,
+        }),
+      );
   if (!emailResult.sent) {
     await client
       .from("pierphish_workspace_members")
@@ -770,12 +789,21 @@ export async function POST(request: NextRequest) {
     resourceId: updatedUserData.user.id,
     resourceName: name,
     outcome: "success",
-    metadata: { role_after: role, email_sent: true },
+    metadata: {
+      role_after: role,
+      email_sent: !manualDelivery,
+      delivery: manualDelivery ? "link" : "email",
+    },
   });
 
   return NextResponse.json(
-    { user: safeUser(updatedUserData.user, workspaceMemberships) },
-    { status: 201 },
+    {
+      user: safeUser(updatedUserData.user, workspaceMemberships),
+      ...(manualDelivery
+        ? { inviteLink: inviteData.properties.action_link }
+        : {}),
+    },
+    { status: 201, headers: { "Cache-Control": "no-store" } },
   );
 }
 
@@ -905,6 +933,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const resendInvite = payload.action === "resend-invite";
+  const manualDelivery = resendInvite && payload.delivery === "link";
   if (payload.action !== "reset-password" && !resendInvite) {
     return responseError("Ação de usuário inválida.", 400);
   }
@@ -962,7 +991,7 @@ export async function PATCH(request: NextRequest) {
     ),
   ).filter(
     (workspaceId) =>
-      ownerWorkspaceIds === null || ownerWorkspaceIds.includes(workspaceId),
+      managedWorkspaceIds === null || managedWorkspaceIds.includes(workspaceId),
   );
   const recordAccessEmail = async (sent: boolean) => {
     const action = resendInvite
@@ -989,7 +1018,11 @@ export async function PATCH(request: NextRequest) {
     }
   };
   const appBaseUrl = getAppBaseUrl(request.nextUrl.origin);
-  if (!targetEmail || !isResendConfigured() || !appBaseUrl) {
+  if (
+    !targetEmail ||
+    (!manualDelivery && !isResendConfigured()) ||
+    !appBaseUrl
+  ) {
     await recordAccessEmail(false);
     return responseError(
       "O envio de e-mails ainda não está configurado no servidor.",
@@ -1031,6 +1064,26 @@ export async function PATCH(request: NextRequest) {
         502,
       );
     }
+  }
+
+  if (manualDelivery) {
+    for (const workspaceId of auditWorkspaceIds) {
+      await recordAuditEvent(client, {
+        workspaceId,
+        actorUserId: adminUser.id,
+        actorName: userDisplayName(adminUser) || adminUser.email,
+        action: "user.invited",
+        resourceType: "user",
+        resourceId: targetId,
+        resourceName: userDisplayName(targetData.user),
+        outcome: "success",
+        metadata: { delivery: "link", email_sent: false },
+      });
+    }
+    return NextResponse.json(
+      { ok: true, inviteLink: linkData.properties.action_link },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   }
 
   const emailResult = await sendPierSecEmail(

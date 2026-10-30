@@ -193,6 +193,10 @@ export function UserManagementContent() {
   const [activePanel, setActivePanel] = useState<
     "directory" | "create" | "invite"
   >("directory");
+  const [delivery, setDelivery] = useState<"email" | "link">("link");
+  const [inviteRecipient, setInviteRecipient] = useState("");
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [copyNotice, setCopyNotice] = useState("");
   const [directorySearch, setDirectorySearch] = useState("");
   const [users, setUsers] = useState<ManagedUser[]>(demoUsers);
   const filteredUsers = useMemo(() => {
@@ -462,6 +466,8 @@ export function UserManagementContent() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setInviteLink(null);
+    setCopyNotice("");
     setSubmitting(true);
     setError(null);
     setNotice(null);
@@ -528,6 +534,7 @@ export function UserManagementContent() {
       body: JSON.stringify({
         name,
         email,
+        delivery,
         workspaceId: selectedWorkspaceId,
         role: selectedRole,
         excludeFromStatistics: selectedExcludeFromStatistics,
@@ -535,6 +542,7 @@ export function UserManagementContent() {
     });
     const body = (await response.json().catch(() => ({}))) as {
       user?: ManagedUser;
+      inviteLink?: string;
       error?: string;
     };
     if (!response.ok || !body.user) {
@@ -547,7 +555,14 @@ export function UserManagementContent() {
     setName("");
     setEmail("");
     setSelectedExcludeFromStatistics(false);
-    setNotice("Usuário criado. Enviamos um convite para definir a senha.");
+    setInviteRecipient(email.trim());
+    setInviteLink(body.inviteLink ?? null);
+    setCopyNotice("");
+    setNotice(
+      body.inviteLink
+        ? "Acesso criado. Compartilhe o link em um canal privado após confirmar a identidade da pessoa."
+        : "Usuário criado. Enviamos um convite para definir a senha.",
+    );
     setSubmitting(false);
   }
 
@@ -763,8 +778,13 @@ export function UserManagementContent() {
     setActionLoading(false);
   }
 
-  async function handleResendInvite(managedUser: ManagedUser) {
+  async function handleResendInvite(
+    managedUser: ManagedUser,
+    delivery: "email" | "link" = "email",
+  ) {
     if (managedUser.emailConfirmed) return;
+    setInviteLink(null);
+    setCopyNotice("");
     setActionLoading(true);
     setError(null);
     setNotice(null);
@@ -789,10 +809,12 @@ export function UserManagementContent() {
       },
       body: JSON.stringify({
         action: "resend-invite",
+        delivery,
         userId: managedUser.id,
       }),
     });
     const body = (await response.json().catch(() => ({}))) as {
+      inviteLink?: string;
       error?: string;
     };
     if (!response.ok) {
@@ -800,7 +822,15 @@ export function UserManagementContent() {
       setActionLoading(false);
       return;
     }
-    setNotice(`Convite reenviado para ${managedUser.email}.`);
+    if (body.inviteLink) {
+      setInviteRecipient(managedUser.email);
+      setInviteLink(body.inviteLink);
+      setCopyNotice("");
+      setActivePanel("create");
+      setNotice(`Link gerado para ${managedUser.email}.`);
+    } else {
+      setNotice(`Convite reenviado para ${managedUser.email}.`);
+    }
     setActionLoading(false);
   }
 
@@ -950,6 +980,25 @@ export function UserManagementContent() {
                 </div>
 
                 <div className="grid gap-4">
+                  <label className="grid gap-2 text-sm text-[var(--text-muted)]">
+                    Entrega do convite
+                    <select
+                      className="h-10 rounded-lg border border-[var(--line)] bg-[var(--surface-soft)] px-3 text-[var(--ink)] focus:bg-[var(--surface)]"
+                      value={delivery}
+                      onChange={(event) =>
+                        setDelivery(event.target.value as "email" | "link")
+                      }
+                    >
+                      <option value="link">
+                        Link privado · sem enviar e-mail
+                      </option>
+                      <option value="email">Enviar por e-mail</option>
+                    </select>
+                    <span>
+                      O e-mail identifica a conta. No convite por link, confirme
+                      a identidade por outro canal antes de compartilhar.
+                    </span>
+                  </label>
                   <label className="grid gap-2 text-[10px] font-extrabold tracking-[0.12em] text-[var(--text-muted)] uppercase">
                     Nome completo
                     <input
@@ -1050,6 +1099,64 @@ export function UserManagementContent() {
                   </label>
                 </div>
 
+                {inviteLink && (
+                  <section
+                    className="mt-4 grid gap-3 rounded-xl border border-[var(--line)] p-5"
+                    aria-label="Convite privado"
+                  >
+                    <h2 className="m-0 text-base font-semibold">
+                      Link privado de primeiro acesso · {inviteRecipient}
+                    </h2>
+                    <p className="m-0 text-sm text-[var(--text-muted)]">
+                      Uso único, com validade definida na autenticação. Quem
+                      tiver o link poderá ativar a conta e definir a senha.
+                      Compartilhe somente com a pessoa correta. Este processo
+                      não comprova a posse da caixa de e-mail.
+                    </p>
+                    <input
+                      aria-label="Link privado para copiar"
+                      type="password"
+                      readOnly
+                      autoComplete="off"
+                      value={inviteLink}
+                      onFocus={(event) => event.target.select()}
+                      className="h-10 min-w-0 rounded-lg border border-[var(--line)] bg-[var(--surface-soft)] px-3 focus:bg-[var(--surface)]"
+                    />
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        className="rounded-lg bg-[var(--ink)] px-4 py-2 text-sm text-[var(--canvas)] focus:underline"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(inviteLink);
+                            setCopyNotice("Link copiado.");
+                          } catch {
+                            setCopyNotice(
+                              "Não foi possível copiar. Selecione o link no campo acima.",
+                            );
+                          }
+                        }}
+                      >
+                        Copiar link privado
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm focus:underline"
+                        onClick={() => {
+                          setInviteLink(null);
+                          setCopyNotice("");
+                        }}
+                      >
+                        Ocultar link
+                      </button>
+                    </div>
+                    {copyNotice && (
+                      <p role="status" className="m-0 text-sm">
+                        {copyNotice}
+                      </p>
+                    )}
+                  </section>
+                )}
                 {(error || notice) && (
                   <p
                     className="mt-4 rounded-[12px] bg-[var(--surface-soft)] px-3.5 py-3 text-[11px] text-[var(--text-muted)]"
@@ -1065,7 +1172,11 @@ export function UserManagementContent() {
                     type="submit"
                     disabled={submitting}
                   >
-                    {submitting ? "Enviando convite…" : "Criar e convidar"}
+                    {submitting
+                      ? "Preparando acesso…"
+                      : delivery === "link"
+                        ? "Criar e gerar link"
+                        : "Criar e convidar"}
                     <Icon name="arrow" size={15} />
                   </button>
                 </div>
@@ -1078,7 +1189,7 @@ export function UserManagementContent() {
                 <div className="mt-8 grid gap-4">
                   {[
                     "Sem cadastro público",
-                    "Confirmação do e-mail por convite",
+                    "Convite privado de uso único",
                     "A própria pessoa define a senha",
                   ].map((item) => (
                     <div className="flex items-start gap-3" key={item}>
@@ -1092,8 +1203,8 @@ export function UserManagementContent() {
                   ))}
                 </div>
                 <div className="mt-8 border-t border-white/15 pt-4 text-[10px] leading-relaxed text-[var(--text-muted)]">
-                  O convite leva a pessoa a confirmar o endereço e definir a
-                  própria senha.
+                  No convite por link, confirme a identidade por outro canal. A
+                  pessoa define a própria senha no primeiro acesso.
                 </div>
               </aside>
             </section>
@@ -1451,6 +1562,21 @@ export function UserManagementContent() {
                                     >
                                       <Icon name="arrow" size={12} />
                                       Reenviar convite
+                                    </button>
+                                  )}
+                                  {!managedUser.emailConfirmed && (
+                                    <button
+                                      type="button"
+                                      disabled={actionLoading}
+                                      className="rounded-lg border border-[var(--line)] px-3 py-2 text-xs text-[var(--ink)] focus:underline disabled:opacity-50"
+                                      onClick={() =>
+                                        void handleResendInvite(
+                                          managedUser,
+                                          "link",
+                                        )
+                                      }
+                                    >
+                                      Gerar link privado
                                     </button>
                                   )}
                                   <button

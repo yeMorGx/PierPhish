@@ -1,5 +1,13 @@
 # Change log e passagem de contexto
 
+### Convite privado sem envio de e-mail — 2026-10-30
+
+- Adicionada a entrega por link privado na criação de usuários, selecionada por padrão. E-mail continua como identificador da conta, mas o modo por link não depende do Resend nem envia mensagens. O administrador confirma a identidade por outro canal e compartilha o convite diretamente com a pessoa.
+- Reutilizado o convite de uso único do Supabase Auth e o fluxo existente de definição de senha obrigatória. A validade segue a configuração remota de autenticação; não foi alterada nem verificada nesta tarefa. Link não comprova posse da caixa de e-mail: trata-se de provisionamento assistido pelo administrador.
+- Usuários ainda pendentes recebem ação para gerar outro link privado. Contas já confirmadas continuam usando o fluxo de recuperação, sem exposição de links de redefinição ao administrador. Autorização, MFA e isolamento por workspace permanecem exigidos na API.
+- Respostas com links usam Cache-Control: no-store. O link fica somente na memória da tela, mascarado, com cópia e opção de ocultar; não vai ao histórico de auditoria ou armazenamento local. Auditoria registra apenas método de entrega e resultado.
+- Validação: TypeScript, Prettier e git diff --check. Sem testes automatizados solicitados, envio de mensagens, criação de contas reais ou alteração de banco. Próximo passo: validar primeiro acesso com conta controlada após deploy; conferir prazo dos convites no Supabase Auth. Commit/push registrados no histórico Git; deploy não confirmado.
+
 ### Ações no diretório de usuários — 2026-10-29
 
 - Corrigido o diretório: administradores de workspace também veem ações para pessoas elegíveis; antes, a coluna mostrava traço porque os controles eram exclusivos de proprietários.

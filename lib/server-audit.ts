@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type AuditOutcome = "success" | "failure" | "partial" | "requested";
 
 export type AuditMetadata = {
+  delivery?: "link" | "email";
   role_before?: string;
   role_after?: string;
   excluded_before?: boolean;
@@ -33,6 +34,7 @@ export type AuditEvent = {
 };
 
 const allowedMetadata = new Set([
+  "delivery",
   "role_before",
   "role_after",
   "excluded_before",
