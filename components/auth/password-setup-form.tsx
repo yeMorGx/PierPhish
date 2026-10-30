@@ -20,6 +20,17 @@ export function PasswordSetupForm() {
 
   const mustChangePassword =
     user?.app_metadata?.password_rotation_required === true;
+  const metadataName =
+    user?.user_metadata?.display_name || user?.user_metadata?.name;
+  const displayName =
+    ready && typeof metadataName === "string"
+      ? metadataName.trim().slice(0, 80)
+      : "";
+  const emailParts = ready ? user?.email?.split("@") : undefined;
+  const maskedEmail =
+    emailParts?.length === 2
+      ? `${emailParts[0].slice(0, Math.min(2, Math.max(1, emailParts[0].length - 1)))}***@${emailParts[1]}`
+      : "";
 
   useEffect(() => {
     if (!ready) return;
@@ -105,10 +116,12 @@ export function PasswordSetupForm() {
       <div className="login-copy">
         <p className="login-eyebrow">Primeiro acesso</p>
         <h1>Defina uma nova senha</h1>
+        {displayName && <p>Olá, {displayName}.</p>}
         <p>
           Confirme seu acesso e defina uma senha pessoal para continuar no
           centro de risco.
         </p>
+        {maskedEmail && <p>Conta: {maskedEmail}</p>}
       </div>
 
       {ready && user ? (

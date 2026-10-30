@@ -1,5 +1,10 @@
 # Change log e passagem de contexto
 
+### Identificação no primeiro acesso — 2026-10-30
+
+- Tela de definição de senha mostra o nome cadastrado no convite e o e-mail parcialmente oculto, obtidos da sessão autenticada. Nome ausente mantém o texto genérico. Nenhum nome ou e-mail foi adicionado à URL; parâmetros externos não são usados para identificar a conta na tela.
+- Validações: TypeScript, Prettier e git diff --check. Sem testes automatizados ou alteração remota. Próximo passo: conferir apresentação com convite controlado após deploy; deploy não confirmado. Commit/push registrados no histórico Git.
+
 ### Bloqueio do dashboard durante primeiro acesso — 2026-10-30
 
 - Dashboard passa a montar seu conteúdo somente após o AuthGuard autorizar o acesso. Navegar para a raiz pelo histórico ou pela marca durante a troca obrigatória de senha retorna para /alterar-senha, sem montar o conteúdo operacional ou iniciar sua sincronização.
